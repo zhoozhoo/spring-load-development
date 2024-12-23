@@ -1,0 +1,114 @@
+package ca.zhoozhoo.loaddev.load_development.dao;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import ca.zhoozhoo.loaddev.load_development.model.Rifle;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+@SpringBootTest
+@ActiveProfiles("test")
+class RifleRepositoryTest {
+
+    @Autowired
+    private RifleRepository rifleRepository;
+
+    @Test
+    void saveRifle() {
+        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+
+        Mono<Rifle> savedRifle = rifleRepository.save(rifle);
+
+        StepVerifier.create(savedRifle)
+                .assertNext(r -> {
+                    assertThat(r.id()).isNotNull();
+                    assertThat(r.name()).isEqualTo("Test Rifle");
+                    assertThat(r.description()).isEqualTo("Description");
+                    assertThat(r.caliber()).isEqualTo("5.56mm");
+                    assertThat(r.barrelLength()).isEqualTo(20.0);
+                    assertThat(r.barrelContour()).isEqualTo("Contour");
+                    assertThat(r.twistRate()).isEqualTo("1:7");
+                    assertThat(r.freeBore()).isEqualTo(0.2);
+                    assertThat(r.rifling()).isEqualTo("Rifling");
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void findRifleById() {
+        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+
+        Mono<Rifle> savedRifle = rifleRepository.save(rifle);
+
+        StepVerifier.create(savedRifle)
+                .assertNext(r -> {
+                    Mono<Rifle> foundRifle = rifleRepository.findById(r.id());
+                    StepVerifier.create(foundRifle)
+                            .assertNext(fr -> {
+                                assertThat(fr.id()).isEqualTo(r.id());
+                                assertThat(fr.name()).isEqualTo("Test Rifle");
+                                assertThat(fr.description()).isEqualTo("Description");
+                                assertThat(fr.caliber()).isEqualTo("5.56mm");
+                                assertThat(fr.barrelLength()).isEqualTo(20.0);
+                                assertThat(fr.barrelContour()).isEqualTo("Contour");
+                                assertThat(fr.twistRate()).isEqualTo("1:7");
+                                assertThat(fr.freeBore()).isEqualTo(0.2);
+                                assertThat(fr.rifling()).isEqualTo("Rifling");
+                            })
+                            .verifyComplete();
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void updateRifle() {
+        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+
+        Mono<Rifle> savedRifle = rifleRepository.save(rifle);
+
+        StepVerifier.create(savedRifle)
+                .assertNext(r -> {
+                    Rifle updatedRifle = new Rifle(r.id(), "Updated Rifle", r.description(), r.caliber(),
+                            r.barrelLength(), r.barrelContour(), r.twistRate(), r.freeBore(), r.rifling());
+                    Mono<Rifle> updatedRifleMono = rifleRepository.save(updatedRifle);
+                    StepVerifier.create(updatedRifleMono)
+                            .assertNext(ur -> {
+                                assertThat(ur.name()).isEqualTo("Updated Rifle");
+                                assertThat(ur.description()).isEqualTo(r.description());
+                                assertThat(ur.caliber()).isEqualTo(r.caliber());
+                                assertThat(ur.barrelLength()).isEqualTo(r.barrelLength());
+                                assertThat(ur.barrelContour()).isEqualTo(r.barrelContour());
+                                assertThat(ur.twistRate()).isEqualTo(r.twistRate());
+                                assertThat(ur.freeBore()).isEqualTo(r.freeBore());
+                                assertThat(ur.rifling()).isEqualTo(r.rifling());
+                            })
+                            .verifyComplete();
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void deleteRifle() {
+        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+
+        Mono<Rifle> savedRifle = rifleRepository.save(rifle);
+
+        StepVerifier.create(savedRifle)
+                .assertNext(r -> {
+                    Mono<Void> deletedRifle = rifleRepository.delete(r);
+                    StepVerifier.create(deletedRifle)
+                            .verifyComplete();
+
+                    Mono<Rifle> foundRifle = rifleRepository.findById(r.id());
+                    StepVerifier.create(foundRifle)
+                            .expectNextCount(0)
+                            .verifyComplete();
+                })
+                .verifyComplete();
+    }
+}
