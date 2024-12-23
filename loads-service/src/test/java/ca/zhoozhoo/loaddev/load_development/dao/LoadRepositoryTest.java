@@ -6,6 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.load_development.model.Load;
+import ca.zhoozhoo.loaddev.load_development.model.Rifle;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -17,9 +18,16 @@ class LoadRepositoryTest {
     @Autowired
     private LoadRepository loadRepository;
 
+    @Autowired
+    private RifleRepository rifleRepository;
+
     @Test
-    void testFindById() {
-        Load load = new Load(1L, "Test Load", "Description", 100.0);
+    void findById() {
+        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        Rifle savedRifle = rifleRepository.save(rifle).block();
+
+        Load load = new Load(1L, "Test Load", "Description", "Powder Manufacturer", "Powder Type", 50.0,
+                "Bullet Manufacturer", "Bullet Type", 150.0, "Primer Manufacturer", "Primer Type", savedRifle.id());
         loadRepository.save(load).block();
 
         Mono<Load> result = loadRepository.findById(1L);
@@ -30,8 +38,12 @@ class LoadRepositoryTest {
     }
 
     @Test
-    void testSave() {
-        Load load = new Load(null, "New Load", "New Description", 200.0);
+    void save() {
+        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        Rifle savedRifle = rifleRepository.save(rifle).block();
+
+        Load load = new Load(null, "New Load", "New Description", "Powder Manufacturer", "Powder Type", 50.0,
+                "Bullet Manufacturer", "Bullet Type", 150.0, "Primer Manufacturer", "Primer Type", savedRifle.id());
 
         Mono<Load> savedLoad = loadRepository.save(load);
 
@@ -41,9 +53,19 @@ class LoadRepositoryTest {
     }
 
     @Test
-    void testFindAll() {
-        Load load1 = new Load(null, "Load 1", "Description 1", 100.0);
-        Load load2 = new Load(null, "Load 2", "Description 2", 200.0);
+    void findAll() {
+        Rifle rifle1 = new Rifle(null, "Rifle 1", "Description 1", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        Rifle savedRifle1 = rifleRepository.save(rifle1).block();
+
+        Rifle rifle2 = new Rifle(null, "Rifle 2", "Description 2", "7.62mm", 24.0, "Heavy", "1:10", 0.3, "Polygonal");
+        Rifle savedRifle2 = rifleRepository.save(rifle2).block();
+
+        Load load1 = new Load(null, "Load 1", "Description 1", "Powder Manufacturer 1", "Powder Type 1", 50.0,
+                "Bullet Manufacturer 1", "Bullet Type 1", 150.0, "Primer Manufacturer 1", "Primer Type 1",
+                savedRifle1.id());
+        Load load2 = new Load(null, "Load 2", "Description 2", "Powder Manufacturer 2", "Powder Type 2", 60.0,
+                "Bullet Manufacturer 2", "Bullet Type 2", 160.0, "Primer Manufacturer 2", "Primer Type 2",
+                savedRifle2.id());
 
         loadRepository.saveAll(Flux.just(load1, load2)).blockLast();
 
@@ -56,8 +78,12 @@ class LoadRepositoryTest {
     }
 
     @Test
-    void testDeleteById() {
-        Load load = new Load(null, "Load to Delete", "Description", 100.0);
+    void deleteById() {
+        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        Rifle savedRifle = rifleRepository.save(rifle).block();
+
+        Load load = new Load(null, "Load to Delete", "Description", "Powder Manufacturer", "Powder Type", 50.0,
+                "Bullet Manufacturer", "Bullet Type", 150.0, "Primer Manufacturer", "Primer Type", savedRifle.id());
         Load savedLoad = loadRepository.save(load).block();
 
         Mono<Void> result = loadRepository.deleteById(savedLoad.id());
@@ -73,15 +99,37 @@ class LoadRepositoryTest {
     }
 
     @Test
-    void testUpdate() {
-        Load load = new Load(null, "Load to Update", "Initial Description", 150.0);
+    void update() {
+        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        Rifle savedRifle = rifleRepository.save(rifle).block();
+
+        Load load = new Load(null, "Load to Update", "Initial Description", "Powder Manufacturer", "Powder Type", 50.0,
+                "Bullet Manufacturer", "Bullet Type", 150.0, "Primer Manufacturer", "Primer Type", savedRifle.id());
         Load savedLoad = loadRepository.save(load).block();
 
-        Load updatedLoad = new Load(savedLoad.id(), "Updated Load", "Updated Description", 150.0);
+        Load updatedLoad = new Load(savedLoad.id(), "Updated Load", "Updated Description",
+                "Updated Powder Manufacturer", "Updated Powder Type", 60.0, "Updated Bullet Manufacturer",
+                "Updated Bullet Type", 160.0, "Updated Primer Manufacturer", "Updated Primer Type", savedRifle.id());
         Mono<Load> result = loadRepository.save(updatedLoad);
 
         StepVerifier.create(result)
                 .expectNextMatches(l -> l.id().equals(savedLoad.id()) && l.name().equals("Updated Load"))
+                .verifyComplete();
+    }
+
+    @Test
+    void findByName() {
+        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        Rifle savedRifle = rifleRepository.save(rifle).block();
+
+        Load load = new Load(null, "Unique Load", "Unique Description", "Powder Manufacturer", "Powder Type", 50.0,
+                "Bullet Manufacturer", "Bullet Type", 150.0, "Primer Manufacturer", "Primer Type", savedRifle.id());
+        loadRepository.save(load).block();
+
+        Flux<Load> result = loadRepository.findByName("Unique Load");
+
+        StepVerifier.create(result)
+                .expectNextMatches(l -> l.name().equals("Unique Load"))
                 .verifyComplete();
     }
 }
