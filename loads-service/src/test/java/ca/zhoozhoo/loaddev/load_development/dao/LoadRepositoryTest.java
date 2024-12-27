@@ -1,5 +1,7 @@
 package ca.zhoozhoo.loaddev.load_development.dao;
 
+import java.util.Random;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,13 +23,31 @@ class LoadRepositoryTest {
     @Autowired
     private RifleRepository rifleRepository;
 
+    private Random random = new Random();
+
     @Test
     void findById() {
-        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        Rifle rifle = new Rifle(null,
+                "Tikka T3X Tact A1 223 Rem.",
+                "Tikka T3X Tact A1 223 Rem. Rifle",
+                "223 Rem.",
+                24.0,
+                "Mideum",
+                "1:8",
+                0.068,
+                "4");
         Rifle savedRifle = rifleRepository.save(rifle).block();
 
-        Load load = new Load(1L, "Test Load", "Description", "Powder Manufacturer", "Powder Type", 50.0,
-                "Bullet Manufacturer", "Bullet Type", 150.0, "Primer Manufacturer", "Primer Type", savedRifle.id());
+        Load load = new Load(1L,
+                "SMK 53 HP H335 " + random.nextInt(100),
+                "SMK 53gr HP with Hodgdon H335",
+                "Hodgdon", "H335",
+                26.9,
+                "Sierra",
+                "MatchKing HP",
+                53.0,
+                "Federal",
+                "205M", savedRifle.id());
         loadRepository.save(load).block();
 
         Mono<Load> result = loadRepository.findById(1L);
@@ -39,52 +59,118 @@ class LoadRepositoryTest {
 
     @Test
     void save() {
-        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        Rifle rifle = new Rifle(null,
+                "Tikka T3X Tact A1 223 Rem.",
+                "Tikka T3X Tact A1 223 Rem. Rifle",
+                "223 Rem.",
+                24.0,
+                "Medium",
+                "1:8",
+                0.068,
+                "4");
         Rifle savedRifle = rifleRepository.save(rifle).block();
 
-        Load load = new Load(null, "New Load", "New Description", "Powder Manufacturer", "Powder Type", 50.0,
-                "Bullet Manufacturer", "Bullet Type", 150.0, "Primer Manufacturer", "Primer Type", savedRifle.id());
+        Load load = new Load(null,
+                "SMK 53 HP H335 " + random.nextInt(100),
+                "SMK 53gr HP with Hodgdon H335",
+                "Hodgdon", "H335",
+                26.9,
+                "Sierra",
+                "MatchKing HP",
+                53.0,
+                "Federal",
+                "205M", savedRifle.id());
 
         Mono<Load> savedLoad = loadRepository.save(load);
 
         StepVerifier.create(savedLoad)
-                .expectNextMatches(l -> l.id() != null && l.name().equals("New Load"))
+                .expectNextMatches(l -> l.id() != null && l.name().equals(load.name()))
                 .verifyComplete();
     }
 
     @Test
     void findAll() {
-        Rifle rifle1 = new Rifle(null, "Rifle 1", "Description 1", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        Rifle rifle1 = new Rifle(null,
+                "Tikka T3X Tact A1 223 Rem.",
+                "Tikka T3X Tact A1 223 Rem. Rifle",
+                "223 Rem.",
+                24.0,
+                "Medium",
+                "1:8",
+                0.068,
+                "4");
         Rifle savedRifle1 = rifleRepository.save(rifle1).block();
 
-        Rifle rifle2 = new Rifle(null, "Rifle 2", "Description 2", "7.62mm", 24.0, "Heavy", "1:10", 0.3, "Polygonal");
+        Rifle rifle2 = new Rifle(null,
+                "Tikka T3X CTR 223 Rem.",
+                "Tikka T3X CTR 223 Rem. Rifle",
+                "223 Rem.",
+                20.0,
+                "Medium",
+                "1:8",
+                0.068,
+                "4");
         Rifle savedRifle2 = rifleRepository.save(rifle2).block();
 
-        Load load1 = new Load(null, "Load 1", "Description 1", "Powder Manufacturer 1", "Powder Type 1", 50.0,
-                "Bullet Manufacturer 1", "Bullet Type 1", 150.0, "Primer Manufacturer 1", "Primer Type 1",
-                savedRifle1.id());
-        Load load2 = new Load(null, "Load 2", "Description 2", "Powder Manufacturer 2", "Powder Type 2", 60.0,
-                "Bullet Manufacturer 2", "Bullet Type 2", 160.0, "Primer Manufacturer 2", "Primer Type 2",
-                savedRifle2.id());
+        Load load1 = new Load(null,
+                "SMK 53 HP H335 " + random.nextInt(100),
+                "SMK 53gr HP with Hodgdon H335",
+                "Hodgdon", "H335",
+                26.9,
+                "Sierra",
+                "MatchKing HP",
+                53.0,
+                "Federal",
+                "205M", savedRifle1.id());
 
-        loadRepository.saveAll(Flux.just(load1, load2)).blockLast();
+        Load load2 = new Load(null,
+                "Hornady 52 BTHP 4198",
+                "Hornady 52gr 4198 BTHP with IMR 4198",
+                "IMR", "4198",
+                20.0,
+                "Hornady",
+                "BTHP Match",
+                52.0,
+                "Federal",
+                "205M", savedRifle2.id());
+
+        loadRepository.saveAll(Flux.just(load1, load2))
+                .blockLast();
 
         Flux<Load> result = loadRepository.findAll();
 
         StepVerifier.create(result)
-                .expectNextMatches(l -> l.name().equals("Load 1"))
-                .expectNextMatches(l -> l.name().equals("Load 2"))
+                .expectNextMatches(l -> l.name().equals(load1.name()))
+                .expectNextMatches(l -> l.name().equals("Hornady 52 BTHP 4198"))
                 .verifyComplete();
     }
 
     @Test
     void deleteById() {
-        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        Rifle rifle = new Rifle(null,
+                "Tikka T3X Tact A1 223 Rem.",
+                "Tikka T3X Tact A1 223 Rem. Rifle",
+                "223 Rem.",
+                24.0,
+                "Medium",
+                "1:8",
+                0.068,
+                "4");
         Rifle savedRifle = rifleRepository.save(rifle).block();
 
-        Load load = new Load(null, "Load to Delete", "Description", "Powder Manufacturer", "Powder Type", 50.0,
-                "Bullet Manufacturer", "Bullet Type", 150.0, "Primer Manufacturer", "Primer Type", savedRifle.id());
-        Load savedLoad = loadRepository.save(load).block();
+        Load load = new Load(null,
+                "SMK 53 HP H335 " + random.nextInt(100),
+                "SMK 53gr HP with Hodgdon H335",
+                "Hodgdon", "H335",
+                26.9,
+                "Sierra",
+                "MatchKing HP",
+                53.0,
+                "Federal",
+                "205M", savedRifle.id());
+
+        Load savedLoad = loadRepository.save(load)
+                .block();
 
         Mono<Void> result = loadRepository.deleteById(savedLoad.id());
 
@@ -100,36 +186,91 @@ class LoadRepositoryTest {
 
     @Test
     void update() {
-        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        Rifle rifle = new Rifle(null,
+                "Tikka T3X Tact A1 223 Rem.",
+                "Tikka T3X Tact A1 223 Rem. Rifle",
+                "223 Rem.",
+                24.0,
+                "Medium",
+                "1:8",
+                0.068,
+                "4");
         Rifle savedRifle = rifleRepository.save(rifle).block();
 
-        Load load = new Load(null, "Load to Update", "Initial Description", "Powder Manufacturer", "Powder Type", 50.0,
-                "Bullet Manufacturer", "Bullet Type", 150.0, "Primer Manufacturer", "Primer Type", savedRifle.id());
-        Load savedLoad = loadRepository.save(load).block();
+        Load load = new Load(null,
+                "SMK 53 HP H335 " + random.nextInt(100),
+                "SMK 53gr HP with Hodgdon H335",
+                "Hodgdon", "H335",
+                26.9,
+                "Sierra",
+                "MatchKing HP",
+                53.0,
+                "Federal",
+                "205M", savedRifle.id());
+        Load savedLoad = loadRepository.save(load)
+                .block();
 
-        Load updatedLoad = new Load(savedLoad.id(), "Updated Load", "Updated Description",
-                "Updated Powder Manufacturer", "Updated Powder Type", 60.0, "Updated Bullet Manufacturer",
-                "Updated Bullet Type", 160.0, "Updated Primer Manufacturer", "Updated Primer Type", savedRifle.id());
+        Load updatedLoad = new Load(savedLoad.id(),
+                "SMK 53 HP H335 " + random.nextInt(100),
+                "SMK 53gr HP with Hodgdon H335",
+                "Hodgdon", "H335",
+                26.5,
+                "Sierra",
+                "MatchKing HP",
+                53.0,
+                "Federal",
+                "205M", savedRifle.id());
+
         Mono<Load> result = loadRepository.save(updatedLoad);
 
         StepVerifier.create(result)
-                .expectNextMatches(l -> l.id().equals(savedLoad.id()) && l.name().equals("Updated Load"))
+                .expectNextMatches(
+                        l -> l.id().equals(savedLoad.id()) && l.name().equals(updatedLoad.name()))
                 .verifyComplete();
     }
 
     @Test
     void findByName() {
-        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        Rifle rifle = new Rifle(null,
+                "Tikka T3X Tact A1 223 Rem.",
+                "Tikka T3X Tact A1 223 Rem. Rifle",
+                "223 Rem.",
+                24.0,
+                "Medium",
+                "1:8",
+                0.068,
+                "4");
         Rifle savedRifle = rifleRepository.save(rifle).block();
 
-        Load load = new Load(null, "Unique Load", "Unique Description", "Powder Manufacturer", "Powder Type", 50.0,
-                "Bullet Manufacturer", "Bullet Type", 150.0, "Primer Manufacturer", "Primer Type", savedRifle.id());
-        loadRepository.save(load).block();
+        Load load1 = new Load(null,
+                "SMK 53 HP H335 " + random.nextInt(100),
+                "SMK 53gr HP with Hodgdon H335",
+                "Hodgdon", "H335",
+                26.9,
+                "Sierra",
+                "MatchKing HP",
+                53.0,
+                "Federal",
+                "205M", savedRifle.id());
 
-        Flux<Load> result = loadRepository.findByName("Unique Load");
+        Load load2 = new Load(null,
+                "Hornady 52 BTHP 4198",
+                "Hornady 52gr 4198 BTHP with IMR 4198",
+                "IMR", "4198",
+                20.0,
+                "Hornady",
+                "BTHP Match",
+                52.0,
+                "Federal",
+                "205M", savedRifle.id());
+
+        loadRepository.saveAll(Flux.just(load1, load2))
+                .blockLast();
+
+        Flux<Load> result = loadRepository.findByName(load1.name());
 
         StepVerifier.create(result)
-                .expectNextMatches(l -> l.name().equals("Unique Load"))
+                .expectNextMatches(l -> l.name().equals(load1.name()))
                 .verifyComplete();
     }
 }
