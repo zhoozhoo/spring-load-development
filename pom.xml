@@ -18,6 +18,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>discovery-server</module>
         <module>loads-service</module>
     </modules>
 
@@ -43,6 +44,11 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <image>
+                        <name>zhoozhoo.ca/spring-load-development/${project.artifactId}:${project.version}</name>
+                    </image>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
