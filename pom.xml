@@ -18,8 +18,8 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>discovery-server</module>
-        <module>loads-service</module>
+        <module>spring-loaddev-discovery-server</module>
+        <module>spring-loaddev-loads-service</module>
     </modules>
 
     <properties>

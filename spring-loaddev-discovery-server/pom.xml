@@ -10,8 +10,8 @@
     </parent>
 
     <groupId>ca.zhoozhoo.loaddev</groupId>
-    <artifactId>discovery-server</artifactId>
-    <name>Discovery Server</name>
+    <artifactId>spring-loaddev-discovery-server</artifactId>
+    <name>Spring Load Development Discovery Server</name>
     <description>Spring Load Development Discovery Server</description>
 
     <dependencies>

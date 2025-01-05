@@ -10,8 +10,8 @@
     </parent>
 
     <groupId>ca.zhoozhoo.loaddev</groupId>
-    <artifactId>loads-service</artifactId>
-    <name>Loads Service</name>
+    <artifactId>spring-loaddev-loads-service</artifactId>
+    <name>Spring Load Development Loads Service</name>
     <description>Spring Load Development Loads Service</description>
 
     <dependencies>
