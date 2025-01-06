@@ -18,6 +18,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>spring-loaddev-config-server</module>
         <module>spring-loaddev-discovery-server</module>
         <module>spring-loaddev-loads-service</module>
     </modules>

@@ -10,3 +10,8 @@ spring:
         enabled: true   
         max-size: 20
         initial-size: 10
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
