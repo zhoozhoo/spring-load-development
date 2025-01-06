@@ -2,3 +2,11 @@ spring:
   application:
     name: load-development
 
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/loadsdb
+    username: user
+    password: password
+    pool:
+        enabled: true   
+        max-size: 20
+        initial-size: 10
