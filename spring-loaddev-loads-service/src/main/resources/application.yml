@@ -1,17 +1,12 @@
 spring:
   application:
-    name: load-development
+    name: loads-service
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
 
-  r2dbc:
-    url: r2dbc:postgresql://localhost:5432/loadsdb
-    username: user
-    password: password
-    pool:
-        enabled: true   
-        max-size: 20
-        initial-size: 10
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: configserver:http://config-server:8888
