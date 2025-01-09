@@ -29,6 +29,8 @@ public record Load(
 
         @Column("primer_type") String primerType,
 
+        @Column("distance_from_lands") Double distanceFromLands,
+
         @Column("rifle_id") Long rifleId) {
     public Load {
         if (name == null || powderManufacturer == null || powderType == null || powderCharge == null

@@ -59,6 +59,7 @@ public class LoadsController {
                             load.bulletWeight(),
                             load.primerManufacturer(),
                             load.primerType(),
+                            load.distanceFromLands(),
                             load.rifleId());
                     return loadRepository.save(updatedLoad);
                 })

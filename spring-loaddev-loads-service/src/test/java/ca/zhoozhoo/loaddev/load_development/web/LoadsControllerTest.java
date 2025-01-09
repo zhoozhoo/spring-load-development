@@ -25,9 +25,9 @@ class LoadsControllerTest {
     @Test
     void shouldGetAllLoads() {
         Load load1 = new Load(1L, "Load1", "Description1", "Manufacturer1", "Type1", 10.0,
-                "BulletManufacturer1", "BulletType1", 100.0, "PrimerManufacturer1", "PrimerType1", 1L);
+                "BulletManufacturer1", "BulletType1", 100.0, "PrimerManufacturer1", "PrimerType1", 0.020, 1L);
         Load load2 = new Load(2L, "Load2", "Description2", "Manufacturer2", "Type2", 20.0,
-                "BulletManufacturer2", "BulletType2", 200.0, "PrimerManufacturer2", "PrimerType2", 2L);
+                "BulletManufacturer2", "BulletType2", 200.0, "PrimerManufacturer2", "PrimerType2", 0.020, 2L);
 
         given(loadRepository.findAll()).willReturn(Flux.just(load1, load2));
 

@@ -47,7 +47,9 @@ class LoadRepositoryTest {
                 "MatchKing HP",
                 53.0,
                 "Federal",
-                "205M", savedRifle.id());
+                "205M",
+                0.020,
+                savedRifle.id());
         loadRepository.save(load).block();
 
         Mono<Load> result = loadRepository.findById(1L);
@@ -79,7 +81,9 @@ class LoadRepositoryTest {
                 "MatchKing HP",
                 53.0,
                 "Federal",
-                "205M", savedRifle.id());
+                "205M",
+                0.020,
+                savedRifle.id());
 
         Mono<Load> savedLoad = loadRepository.save(load);
 
@@ -121,7 +125,9 @@ class LoadRepositoryTest {
                 "MatchKing HP",
                 53.0,
                 "Federal",
-                "205M", savedRifle1.id());
+                "205M",
+                0.020,
+                savedRifle1.id());
 
         Load load2 = new Load(null,
                 "Hornady 52 BTHP 4198",
@@ -132,7 +138,9 @@ class LoadRepositoryTest {
                 "BTHP Match",
                 52.0,
                 "Federal",
-                "205M", savedRifle2.id());
+                "205M",
+                0.020,
+                savedRifle2.id());
 
         loadRepository.saveAll(Flux.just(load1, load2))
                 .blockLast();
@@ -167,7 +175,9 @@ class LoadRepositoryTest {
                 "MatchKing HP",
                 53.0,
                 "Federal",
-                "205M", savedRifle.id());
+                "205M",
+                0.020,
+                savedRifle.id());
 
         Load savedLoad = loadRepository.save(load)
                 .block();
@@ -206,7 +216,9 @@ class LoadRepositoryTest {
                 "MatchKing HP",
                 53.0,
                 "Federal",
-                "205M", savedRifle.id());
+                "205M",
+                0.020,
+                savedRifle.id());
         Load savedLoad = loadRepository.save(load)
                 .block();
 
@@ -219,7 +231,9 @@ class LoadRepositoryTest {
                 "MatchKing HP",
                 53.0,
                 "Federal",
-                "205M", savedRifle.id());
+                "205M",
+                0.020,
+                savedRifle.id());
 
         Mono<Load> result = loadRepository.save(updatedLoad);
 
@@ -251,7 +265,9 @@ class LoadRepositoryTest {
                 "MatchKing HP",
                 53.0,
                 "Federal",
-                "205M", savedRifle.id());
+                "205M",
+                0.020,
+                savedRifle.id());
 
         Load load2 = new Load(null,
                 "Hornady 52 BTHP 4198",
@@ -262,7 +278,9 @@ class LoadRepositoryTest {
                 "BTHP Match",
                 52.0,
                 "Federal",
-                "205M", savedRifle.id());
+                "205M",
+                0.020,
+                savedRifle.id());
 
         loadRepository.saveAll(Flux.just(load1, load2))
                 .blockLast();
