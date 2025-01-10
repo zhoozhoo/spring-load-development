@@ -19,5 +19,16 @@ services:
       timeout: 10s
       retries: 5
 
+  tracing-server:
+    image: openzipkin/zipkin-slim:3.4
+    container_name: zipkin
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    environment:
+     - STORAGE_TYPE=mem
+    ports:
+     - 9411:9411
 volumes:
   postgres_data:
