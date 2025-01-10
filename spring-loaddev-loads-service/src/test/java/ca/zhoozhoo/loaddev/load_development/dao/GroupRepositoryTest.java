@@ -1,6 +1,5 @@
 package ca.zhoozhoo.loaddev.load_development.dao;
 
-import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -23,18 +22,22 @@ class GroupRepositoryTest {
     @Test
     void saveGroup() {
         var group = new Group(null, 15, 100, 0.40, 2874, 2732, 2721, 2995, 27, 54);
-        Group savedGroup = groupRepository.save(group).block();
+        Mono<Group> savedGroup = groupRepository.save(group);
 
-        assertNotNull(savedGroup.id());
-        assertEquals(15, savedGroup.numberOfShots());
-        assertEquals(100, savedGroup.targetRange());
-        assertEquals(0.40, savedGroup.groupSize());
-        assertEquals(2874, savedGroup.mean());
-        assertEquals(2732, savedGroup.median());
-        assertEquals(2721, savedGroup.min());
-        assertEquals(2995, savedGroup.max());
-        assertEquals(27, savedGroup.standardDeviation());
-        assertEquals(54, savedGroup.extremeSpread());
+        StepVerifier.create(savedGroup)
+                .assertNext(g -> {
+                    assertNotNull(g.id());
+                    assertEquals(15, g.numberOfShots());
+                    assertEquals(100, g.targetRange());
+                    assertEquals(0.40, g.groupSize());
+                    assertEquals(2874, g.mean());
+                    assertEquals(2732, g.median());
+                    assertEquals(2721, g.min());
+                    assertEquals(2995, g.max());
+                    assertEquals(27, g.standardDeviation());
+                    assertEquals(54, g.extremeSpread());
+                })
+                .verifyComplete();
     }
 
     @Test
