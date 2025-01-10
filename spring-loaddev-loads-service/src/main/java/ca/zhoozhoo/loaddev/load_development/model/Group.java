@@ -15,15 +15,15 @@ public record Group(
 
         @Column Double groupSize,
 
-        @Column Double mean,
+        @Column Integer mean,
 
-        @Column Double median,
+        @Column Integer median,
 
-        @Column Double min,
+        @Column Integer min,
 
-        @Column Double max,
+        @Column Integer max,
 
-        @Column Double standardDeviation,
+        @Column Integer standardDeviation,
 
-        @Column Double extremeSpread) {
+        @Column Integer extremeSpread) {
 }

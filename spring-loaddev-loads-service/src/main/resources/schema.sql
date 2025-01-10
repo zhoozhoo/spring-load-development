@@ -23,14 +23,14 @@ CREATE TABLE loads (
     primer_manufacturer VARCHAR(255) NOT NULL,
     primer_type VARCHAR(255) NOT NULL,
     distance_from_lands DOUBLE PRECISION NOT NULL,
-    rifle_id BIGINT NOT NULL,
+    rifle_id BIGSERIAL NOT NULL,
     CONSTRAINT fk_rifle
         FOREIGN KEY (rifle_id)
         REFERENCES rifles(id)
 );
 
 CREATE TABLE groups (
-    id BIGINT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     number_of_shots INTEGER NOT NULL,
     target_range INTEGER NOT NULL,
     group_size DOUBLE PRECISION NOT NULL,
@@ -40,4 +40,13 @@ CREATE TABLE groups (
     max DOUBLE PRECISION,
     standard_deviation DOUBLE PRECISION,
     extreme_spread DOUBLE PRECISION
+);
+
+CREATE TABLE shots (
+    id BIGSERIAL PRIMARY KEY,
+    group_id BIGSERIAL NOT NULL,
+    velocity INTEGER,
+    CONSTRAINT fk_group
+        FOREIGN KEY (group_id)
+        REFERENCES groups(id)
 );

@@ -8,9 +8,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @EnableTransactionManagement
 @EnableDiscoveryClient
-public class LoadDevelopmentApplication {
+public class LoadsServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(LoadDevelopmentApplication.class, args);
+        SpringApplication.run(LoadsServiceApplication.class, args);
     }
 }
