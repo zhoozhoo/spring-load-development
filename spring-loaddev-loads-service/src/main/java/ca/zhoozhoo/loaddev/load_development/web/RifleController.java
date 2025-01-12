@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ca.zhoozhoo.loaddev.load_development.dao.RifleRepository;
 import ca.zhoozhoo.loaddev.load_development.model.Rifle;
+import jakarta.validation.Valid;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -39,12 +40,12 @@ public class RifleController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<Rifle> createRifle(@RequestBody Rifle rifle) {
+    public Mono<Rifle> createRifle(@Valid @RequestBody Rifle rifle) {
         return rifleRepository.save(rifle);
     }
 
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<Rifle>> updateRifle(@PathVariable Long id, @RequestBody Rifle rifle) {
+    public Mono<ResponseEntity<Rifle>> updateRifle(@PathVariable Long id, @Valid @RequestBody Rifle rifle) {
         return rifleRepository.findById(id)
                 .flatMap(existingRifle -> {
                     Rifle updatedRifle = new Rifle(

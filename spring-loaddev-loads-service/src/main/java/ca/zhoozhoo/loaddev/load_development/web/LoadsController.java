@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ca.zhoozhoo.loaddev.load_development.dao.LoadRepository;
 import ca.zhoozhoo.loaddev.load_development.model.Load;
+import jakarta.validation.Valid;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -39,12 +40,12 @@ public class LoadsController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<Load> createLoad(@RequestBody Load load) {
+    public Mono<Load> createLoad(@Valid @RequestBody Load load) {
         return loadRepository.save(load);
     }
 
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<Load>> updateLoad(@PathVariable Long id, @RequestBody Load load) {
+    public Mono<ResponseEntity<Load>> updateLoad(@PathVariable Long id, @Valid @RequestBody Load load) {
         return loadRepository.findById(id)
                 .flatMap(existingLoad -> {
                     Load updatedLoad = new Load(

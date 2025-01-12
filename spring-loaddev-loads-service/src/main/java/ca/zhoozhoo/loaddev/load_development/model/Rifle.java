@@ -4,11 +4,14 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import io.micrometer.common.lang.NonNull;
+
 @Table(name = "rifles")
 public record Rifle(
 
         @Id Long id,
 
+        @NonNull
         @Column("name") String name,
 
         @Column("description") String description,
