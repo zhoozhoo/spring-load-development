@@ -30,5 +30,25 @@ services:
      - STORAGE_TYPE=mem
     ports:
      - 9411:9411
+
+  keycloak:
+    build:
+      context: ./docker/keycloack
+      dockerfile: Dockerfile
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db:5432/loadsdb
+      KC_DB_USERNAME: user
+      KC_DB_PASSWORD: password
+      KC_HOSTNAME: localhost
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: change_me
+    ports:
+      - "8443:8443"
+      - "9000:9000"
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   postgres_data:
