@@ -32,6 +32,7 @@ services:
      - 9411:9411
 
   keycloak:
+    container_name: keycloak
     build:
       context: ./docker/keycloack
       dockerfile: Dockerfile
@@ -42,13 +43,15 @@ services:
       KC_DB_PASSWORD: password
       KC_HOSTNAME: localhost
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: change_me
+      KC_BOOTSTRAP_ADMIN_PASSWORD: changeme
     ports:
       - "8443:8443"
       - "9000:9000"
     depends_on:
       db:
         condition: service_healthy
+    post_start:
+      - command: ["sh", "-c", "/opt/keycloak/bin/bootstrap.sh"]
 
 volumes:
   postgres_data:
