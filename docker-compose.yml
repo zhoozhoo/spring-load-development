@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:17.2
@@ -43,15 +41,18 @@ services:
       KC_DB_PASSWORD: password
       KC_HOSTNAME: localhost
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: changeme
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
     ports:
       - "8443:8443"
       - "9000:9000"
     depends_on:
       db:
         condition: service_healthy
-    post_start:
-      - command: ["sh", "-c", "/opt/keycloak/bin/bootstrap.sh"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8443/health/ready"]
+      interval: 15s
+      timeout: 2s
+      retries: 15
 
 volumes:
   postgres_data:
