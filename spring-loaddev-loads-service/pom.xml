@@ -55,6 +55,14 @@
             <artifactId>r2dbc-postgresql</artifactId>
             <version>0.8.13.RELEASE</version>
         </dependency>
+        <dependency>
+            <groupId>io.zipkin.reporter2</groupId>
+            <artifactId>zipkin-reporter-brave</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-brave</artifactId>
+        </dependency>
 
         <!-- Test dependencies -->
         <dependency>
