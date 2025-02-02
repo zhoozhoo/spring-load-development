@@ -1,0 +1,16 @@
+= Spring Load Development
+:author: Zhubin Salehi
+:email: zhoozhoo@yahoo.com
+:doctype: book
+
+image::https://github.com/zhoozhoo/spring-load-development/actions/workflows/github-code-scanning/codeql/badge.svg[CodeQL]
+image::https://github.com/zhoozhoo/spring-load-development/actions/workflows/ci.yml/badge.svg[Continuous Integration]
+
+== This is a showcase of the following technologies and frameworks:
+
+* Microservices using link:https://spring.io/projects/spring-boot[Spring Boot]
+* Reactive RESTful Web Services using link:https://docs.spring.io/spring-framework/reference/web/webflux.html[Spring WebFlux]
+* Reactive Relational Database Connectivity using link:https://spring.io/projects/spring-data-r2dbc[Spring Data R2DBC]
+* Externalized Configuration Management using link:https://spring.io/projects/spring-cloud-config[Spring Cloud Config]
+* API Gateway using link:https://spring.io/projects/spring-cloud-gateway[Spring Cloud Gateway]
+* Circuit Breaker using link:https://spring.io/projects/spring-cloud-circuitbreaker[Spring Cloud Circuit Breaker] and link:https://resilience4j.readme.io/docs/getting-started[Resilience4J]
