@@ -3,7 +3,8 @@
 :email: zhoozhoo@yahoo.com
 :doctype: book
 
-image::https://github.com/zhoozhoo/spring-load-development/actions/workflows/github-code-scanning/codeql/badge.svg["CodeQL", link="https://github.com/zhoozhoo/spring-load-development/actions/workflows/github-code-scanning/codeql"] image::https://github.com/zhoozhoo/spring-load-development/actions/workflows/ci.yml/badge.svg["Continuous Integration", link="https://github.com/zhoozhoo/spring-load-development/actions/workflows/ci.yml"]
+image::https://github.com/zhoozhoo/spring-load-development/actions/workflows/github-code-scanning/codeql/badge.svg["CodeQL", link="https://github.com/zhoozhoo/spring-load-development/actions/workflows/github-code-scanning/codeql"]
+image::https://github.com/zhoozhoo/spring-load-development/actions/workflows/ci.yml/badge.svg["Continuous Integration", link="https://github.com/zhoozhoo/spring-load-development/actions/workflows/ci.yml"]
 
 == This is a showcase of the following technologies and frameworks:
 
