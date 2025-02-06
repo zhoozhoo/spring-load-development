@@ -23,6 +23,7 @@
         <module>spring-loaddev-loads-service</module>
         <module>spring-loaddev-genai-service</module>
         <module>spring-loaddev-admin-server</module>
+        <module>spring-loaddev-api-gateway</module>
     </modules>
 
     <properties>
