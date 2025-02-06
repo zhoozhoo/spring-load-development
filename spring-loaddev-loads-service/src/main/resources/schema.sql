@@ -1,4 +1,4 @@
-CREATE TABLE rifles (
+CREATE TABLE IF NOT EXISTS rifles (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
@@ -10,7 +10,7 @@ CREATE TABLE rifles (
     rifling VARCHAR(32)
 );
 
-CREATE TABLE loads (
+CREATE TABLE IF NOT EXISTS loads (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
@@ -29,7 +29,7 @@ CREATE TABLE loads (
         REFERENCES rifles(id)
 );
 
-CREATE TABLE groups (
+CREATE TABLE IF NOT EXISTS groups (
     id BIGSERIAL PRIMARY KEY,
     number_of_shots INTEGER NOT NULL,
     target_range INTEGER NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE groups (
     extreme_spread DOUBLE PRECISION
 );
 
-CREATE TABLE shots (
+CREATE TABLE IF NOT EXISTS shots (
     id BIGSERIAL PRIMARY KEY,
     group_id BIGSERIAL NOT NULL,
     velocity INTEGER,
