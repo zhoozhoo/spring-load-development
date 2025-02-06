@@ -3,6 +3,25 @@ spring:
     name: api-gateway
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
+  cloud:
+    gateway:
+      default-filters:
+        - name: CircuitBreaker
+          args:
+            name: defaultCircuitBreaker
+            fallbackUri: forward:/fallback
+        - name: Retry
+          args:
+            retries: 1
+            statuses: SERVICE_UNAVAILABLE
+            methods: POST
+      routes:
+        - id: loads-service
+          uri: lb://loads-service
+          predicates:
+            - Path=/api/loads/**
+          filters:
+            - StripPrefix=2
 
 ---
 spring:
