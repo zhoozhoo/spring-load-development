@@ -4,9 +4,7 @@ spring:
     name: "sa"
   sql:
     init:
-      mode: always
-      schema-locations: classpath:/schema.sql
-      data-locations: classpath:/data.sql
+      mode: always  
 
 eureka:
   client:
