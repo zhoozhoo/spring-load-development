@@ -22,6 +22,12 @@ spring:
             - Path=/api/loads/**
           filters:
             - StripPrefix=2
+        - id: rifles-service
+          uri: lb://rifles-service
+          predicates:
+            - Path=/api/rifles/**
+          filters:
+            - StripPrefix=2
 
 ---
 spring:
