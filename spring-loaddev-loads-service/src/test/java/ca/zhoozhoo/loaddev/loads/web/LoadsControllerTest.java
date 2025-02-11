@@ -1,11 +1,12 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -36,80 +37,74 @@ class LoadsControllerTest {
     }
 
     @Test
-    void shouldGetAllLoads() {
-        Load load1 = createLoad("Load1", 1L);
-        Load load2 = createLoad("Load2", 2L);
-
-        loadRepository.saveAll(Flux.just(load1, load2)).blockLast();
+    void getAllLoads() {
+        loadRepository.saveAll(Flux.just(createLoad("Load1", 1L), createLoad("Load2", 2L))).blockLast();
 
         webTestClient.get().uri("/loads")
-                .accept(MediaType.APPLICATION_JSON)
+                .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectHeader().contentType(APPLICATION_JSON)
                 .expectBody()
                 .jsonPath("$[0].name").isEqualTo("Load1")
                 .jsonPath("$[1].name").isEqualTo("Load2");
     }
 
     @Test
-    void shouldGetLoadById() {
-        Load load = createLoad("Load1", 1L);
-        Load savedLoad = loadRepository.save(load).block();
+    void getLoadById() {
+        var load = loadRepository.save(createLoad("Load1", 1L)).block();
 
-        webTestClient.get().uri("/loads/{id}", savedLoad.id())
-                .accept(MediaType.APPLICATION_JSON)
+        webTestClient.get().uri("/loads/{id}", load.id())
+                .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectHeader().contentType(APPLICATION_JSON)
                 .expectBody()
                 .jsonPath("$.name").isEqualTo("Load1");
     }
 
     @Test
-    void shouldCreateLoad() {
-        Load load = createLoad("Load1", 1L);
+    void createLoad() {
+        var load = createLoad("Load1", 1L);
 
         webTestClient.post().uri("/loads")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
                 .body(Mono.just(load), Load.class)
                 .exchange()
                 .expectStatus().isCreated()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectHeader().contentType(APPLICATION_JSON)
                 .expectBody()
                 .jsonPath("$.name").isEqualTo("Load1");
     }
 
     @Test
-    void shouldUpdateLoad() {
-        Load load = createLoad("Load1", 1L);
-        Load savedLoad = loadRepository.save(load).block();
+    void updateLoad() {
+        var load = loadRepository.save(createLoad("Load1", 1L)).block();
 
-        Load updatedLoad = new Load(savedLoad.id(), "UpdatedLoad", "UpdatedDescription", "UpdatedManufacturer",
+        var updatedLoad = new Load(load.id(), "UpdatedLoad", "UpdatedDescription", "UpdatedManufacturer",
                 "UpdatedType", 15.0,
                 "UpdatedBulletManufacturer", "UpdatedBulletType", 150.0, "UpdatedPrimerManufacturer",
                 "UpdatedPrimerType", 0.025, 1L);
 
-        webTestClient.put().uri("/loads/{id}", savedLoad.id())
-                .contentType(MediaType.APPLICATION_JSON)
+        webTestClient.put().uri("/loads/{id}", load.id())
+                .contentType(APPLICATION_JSON)
                 .body(Mono.just(updatedLoad), Load.class)
                 .exchange()
                 .expectStatus().isOk()
-                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectHeader().contentType(APPLICATION_JSON)
                 .expectBody()
                 .jsonPath("$.name").isEqualTo("UpdatedLoad");
     }
 
     @Test
-    void shouldDeleteLoad() {
-        Load load = createLoad("Load1", 1L);
-        Load savedLoad = loadRepository.save(load).block();
+    void deleteLoad() {
+        var load = loadRepository.save(createLoad("Load1", 1L)).block();
 
-        webTestClient.delete().uri("/loads/{id}", savedLoad.id())
+        webTestClient.delete().uri("/loads/{id}", load.id())
                 .exchange()
                 .expectStatus().isNoContent();
 
-        webTestClient.get().uri("/loads/{id}", savedLoad.id())
+        webTestClient.get().uri("/loads/{id}", load.id())
                 .exchange()
                 .expectStatus().isNotFound();
     }
