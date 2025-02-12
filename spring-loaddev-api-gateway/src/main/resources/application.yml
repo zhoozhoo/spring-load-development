@@ -3,6 +3,13 @@ spring:
     name: api-gateway
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
+  security:
+    oauth2:
+      resourceserver:
+        opaquetoken:
+          introspection-uri: http://localhost:8443/auth/realms/load-development-realm/protocol/openid-connect/token/introspect
+          client-id: load-development-client
+          client-secret: EKIskGbNrgO8Hek6se23tFzTXD0VgI5Q 
   cloud:
     gateway:
       default-filters:
