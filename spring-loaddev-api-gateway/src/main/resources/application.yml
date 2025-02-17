@@ -7,9 +7,9 @@ spring:
     oauth2:
       resourceserver:
         opaquetoken:
-          introspection-uri: http://localhost:8443/auth/realms/load-development-realm/protocol/openid-connect/token/introspect
-          client-id: load-development-client
-          client-secret: EKIskGbNrgO8Hek6se23tFzTXD0VgI5Q 
+          introspection-uri: http://localhost:8443/auth/realms/reloading/protocol/openid-connect/token/introspect
+          client-id: api-gateway
+          client-secret: AWTw2q0fwMAFW36M3qhrGnTMARIc8Dis 
   cloud:
     gateway:
       default-filters:
