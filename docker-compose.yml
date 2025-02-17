@@ -54,7 +54,7 @@ services:
       timeout: 2s
       retries: 15
     volumes:
-      - ./docker/keycloack/load-development-realm.json:/opt/keycloak/data/import/load-development-realm.json
+      - ./docker/keycloack/realm.json:/opt/keycloak/data/import/realm.json
     command: ["--import-realm"]
 volumes:
   postgres_data:
