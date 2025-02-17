@@ -1,0 +1,9 @@
+### Parameterized variables
+
+### Authenticate to Keycloak and get a token
+POST {{authorization_host}}/realms/{{realm}}/protocol/openid-connect/auth
+Content-Type: application/x-www-form-urlencoded
+
+response_type=code&grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&username={{username}}&password={{password}}
+
+###
