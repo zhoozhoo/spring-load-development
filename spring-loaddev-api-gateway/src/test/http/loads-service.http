@@ -1,0 +1,66 @@
+### Get OpenID configuration from Keycloak
+GET {{authorization_host}}/realms/{{realm}}/.well-known/openid-configuration
+
+### Authenticate to Keycloak and get a token
+# @name Authenticate
+POST {{authorization_host}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&username={{username}}&password={{password}}
+
+### Get list of all loads
+# @name GetLoads
+GET http://localhost:8080/api/loads/loads
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Get a load by ID
+# @name GetLoadById
+GET http://localhost:8080/api/loads/loads/1
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new load
+# @name CreateLoad
+POST http://localhost:8080/api/loads/loads
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "New Load",
+  "description": "Description of the new load",
+  "powderManufacturer": "Hodgdon",
+  "powderType": "H335",
+  "powderCharge": 25.0,
+  "bulletManufacturer": "Hornady",
+  "bulletType": "FMJ",
+  "bulletWeight": 55,
+  "primerManufacturer": "CCI",
+  "primerType": "Small Rifle",
+  "distanceFromLands": 0.02,
+  "rifleId": 1
+}
+
+### Update an existing load
+# @name UpdateLoad
+PUT http://localhost:8080/api/loads/loads/1
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "Updated Load",
+  "description": "Updated description of the load",
+  "powderManufacturer": "IMR",
+  "powderType": "4064",
+  "powderCharge": 42.0,
+  "bulletManufacturer": "Sierra",
+  "bulletType": "HPBT",
+  "bulletWeight": 168,
+  "primerManufacturer": "Federal",
+  "primerType": "Large Rifle",
+  "distanceFromLands": 0.03,
+  "rifleId": 2
+}
+
+### Delete a load by ID
+# @name DeleteLoad
+DELETE http://localhost:8080/api/loads/loads/1
+Authorization: Bearer {{Authenticate.response.body.access_token}}

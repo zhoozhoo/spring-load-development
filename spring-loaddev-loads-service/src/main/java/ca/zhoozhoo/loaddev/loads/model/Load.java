@@ -31,7 +31,7 @@ public record Load(
 
         @NotNull @Column("primer_type") String primerType,
 
-        @Column("distance_from_lands") Double distanceFromLands,
+        @NotNull @Column("distance_from_lands") Double distanceFromLands,
 
         @NotNull @Column("rifle_id") Long rifleId) {
     public Load {

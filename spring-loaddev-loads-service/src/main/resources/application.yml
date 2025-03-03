@@ -3,6 +3,11 @@ spring:
     name: loads-service
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:7080/realms/reloading/protocol/openid-connect/certs
 
 ---
 spring:
