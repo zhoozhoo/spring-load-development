@@ -6,10 +6,19 @@ spring:
   security:
     oauth2:
       resourceserver:
-        opaquetoken:
-          introspection-uri: http://localhost:8443/auth/realms/reloading/protocol/openid-connect/token/introspect
-          client-id: api-gateway
-          client-secret: AWTw2q0fwMAFW36M3qhrGnTMARIc8Dis 
+        jwt:
+          jwk-set-uri: http://localhost:7080/realms/reloading/protocol/openid-connect/certs
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:7080/realms/reloading
+        registration:
+          spring-with-test-scope:
+            provider: keycloak
+            client-id: api-gateway
+            client-secret: AWTw2q0fwMAFW36M3qhrGnTMARIc8Dis 
+            authorization-grant-type: authorization_code
+            scope: openid
   cloud:
     gateway:
       default-filters:

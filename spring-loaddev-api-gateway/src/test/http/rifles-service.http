@@ -1,0 +1,58 @@
+### Get OpenID configuration from Keycloak
+GET {{authorization_host}}/realms/{{realm}}/.well-known/openid-configuration
+
+### Authenticate to Keycloak and get a token
+# @name Authenticate
+POST {{authorization_host}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&username={{username}}&password={{password}}
+
+### Get list of all rifles
+# @name GetRifles
+GET http://localhost:8080/api/rifles/rifles
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Get a rifle by ID
+# @name GetRifleById
+GET http://localhost:8080/api/rifles/rifles/1
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new rifle
+# @name CreateRifle
+POST http://localhost:8080/api/rifles/rifles
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "New Rifle",
+  "description": "Description of the new rifle",
+  "caliber": "5.56",
+  "barrelLength": 16,
+  "barrelContour": "Heavy",
+  "twistRate": "1:7",
+  "freeBore": 0.1,
+  "rifling": "Button"
+}
+
+### Update an existing rifle
+# @name UpdateRifle
+PUT http://localhost:8080/api/rifles/rifles/1
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "Updated Rifle",
+  "description": "Updated description of the rifle",
+  "caliber": "7.62",
+  "barrelLength": 20,
+  "barrelContour": "Medium",
+  "twistRate": "1:10",
+  "freeBore": 0.2,
+  "rifling": "Cut"
+}
+
+### Delete a rifle by ID
+# @name DeleteRifle
+DELETE http://localhost:8080/api/rifles/rifles/1
+Authorization: Bearer {{Authenticate.response.body.access_token}}

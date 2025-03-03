@@ -1,4 +1,4 @@
-package ca.zhoozhoo.loaddev.api.config;
+package ca.zhoozhoo.loaddev.rifles.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -15,12 +15,8 @@ public class SecurityConfiguration {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
-                .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/actuator/**").permitAll()
-                        .anyExchange().authenticated())
-                .oauth2Login(withDefaults())
+                .authorizeExchange(exchanges -> exchanges.anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()))
-                .csrf(csrf -> csrf.disable())
                 .build();
     }
 }
