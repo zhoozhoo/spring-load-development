@@ -3,47 +3,6 @@ spring:
     name: api-gateway
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: http://localhost:7080/realms/reloading/protocol/openid-connect/certs
-      client:
-        provider:
-          keycloak:
-            issuer-uri: http://localhost:7080/realms/reloading
-        registration:
-          spring-with-test-scope:
-            provider: keycloak
-            client-id: api-gateway
-            client-secret: AWTw2q0fwMAFW36M3qhrGnTMARIc8Dis 
-            authorization-grant-type: authorization_code
-            scope: openid
-  cloud:
-    gateway:
-      default-filters:
-        - name: CircuitBreaker
-          args:
-            name: defaultCircuitBreaker
-            fallbackUri: forward:/fallback
-        - name: Retry
-          args:
-            retries: 1
-            statuses: SERVICE_UNAVAILABLE
-            methods: POST
-      routes:
-        - id: loads-service
-          uri: lb://loads-service
-          predicates:
-            - Path=/api/loads/**
-          filters:
-            - StripPrefix=2
-        - id: rifles-service
-          uri: lb://rifles-service
-          predicates:
-            - Path=/api/rifles/**
-          filters:
-            - StripPrefix=2
 
 ---
 spring:
