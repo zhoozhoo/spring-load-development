@@ -32,6 +32,10 @@
         <spring-cloud.version>2024.0.0</spring-cloud.version>
     </properties>
 
+    <scm>
+        <developerConnection>scm:git:git@github.com:zhoozhoo/spring-load-development.git</developerConnection>
+    </scm>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -51,7 +55,8 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <image>
-                        <name>zhoozhoo.ca/spring-load-development/${project.artifactId}:${project.version}</name>
+                        <name>
+                            zhoozhoo.ca/spring-load-development/${project.artifactId}:${project.version}</name>
                     </image>
                 </configuration>
                 <executions>
@@ -61,6 +66,11 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.1.1</version>
             </plugin>
         </plugins>
     </build>
