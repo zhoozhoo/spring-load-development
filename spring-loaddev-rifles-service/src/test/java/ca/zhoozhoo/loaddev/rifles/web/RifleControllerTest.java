@@ -10,13 +10,16 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.context.annotation.Import;
 
 import ca.zhoozhoo.loaddev.rifles.dao.RifleRepository;
 import ca.zhoozhoo.loaddev.rifles.model.Rifle;
+import ca.zhoozhoo.loaddev.rifles.config.TestSecurityConfig;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
+@Import(TestSecurityConfig.class)
 public class RifleControllerTest {
 
     @Autowired
