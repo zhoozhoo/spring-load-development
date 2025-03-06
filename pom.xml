@@ -33,7 +33,7 @@
     </properties>
 
     <scm>
-        <developerConnection>scm:git:git@github.com:zhoozhoo/spring-load-development.git</developerConnection>
+        <developerConnection>scm:git:https://github.com/zhoozhoo/spring-load-development.git</developerConnection>
     </scm>
 
     <dependencyManagement>
