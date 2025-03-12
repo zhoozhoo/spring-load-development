@@ -60,16 +60,18 @@
                         <buildpacks>
                             <buildpack>docker.io/paketobuildpacks/adoptium</buildpack>
                             <buildpack>docker.io/paketobuildpacks/java</buildpack>
+                            <buildpack>gcr.io/paketo-buildpacks/health-checker</buildpack>
                         </buildpacks>
                         <env>
                             <BP_JVM_VERSION>${java.version}</BP_JVM_VERSION>
+                            <BP_HEALTH_CHECKER_ENABLED>true</BP_HEALTH_CHECKER_ENABLED>
                         </env>
                     </image>
                 </configuration>
                 <executions>
                     <execution>
                         <goals>
-                            <goal>build-image</goal>
+                            <goal>build-image-no-fork</goal>
                         </goals>
                     </execution>
                 </executions>
