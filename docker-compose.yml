@@ -62,8 +62,10 @@ services:
       - "8888:8888"
     environment:
       - SPRING_PROFILES_ACTIVE=native
+      - THC_PATH=/actuator/health/readiness
+      - THC_PORT=8888
     healthcheck:
-      test: ["CMD", "curl", "--fail --silent localhost:8888/actuator/health/readiness | grep UP || exit 1"]
+      test: ["CMD", "/workspace/health-check"]
       interval: 10s
       timeout: 5s
       retries: 5
