@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -32,8 +34,8 @@
 
     <scm>
         <developerConnection>scm:git:https://github.com/zhoozhoo/spring-load-development.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <dependencyManagement>
         <dependencies>
@@ -54,14 +56,20 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <image>
-                        <name>
-                            zhoozhoo.ca/spring-load-development/${project.artifactId}:${project.version}</name>
+                        <name>zhoozhoo.ca/spring-load-development/${project.artifactId}:${project.version}</name>
+                        <buildpacks>
+                            <buildpack>docker.io/paketobuildpacks/adoptium</buildpack>
+                            <buildpack>docker.io/paketobuildpacks/java</buildpack>
+                        </buildpacks>
+                        <env>
+                            <BP_JVM_VERSION>${java.version}</BP_JVM_VERSION>
+                        </env>
                     </image>
                 </configuration>
                 <executions>
                     <execution>
                         <goals>
-                            <goal>build-image-no-fork</goal>
+                            <goal>build-image</goal>
                         </goals>
                     </execution>
                 </executions>
