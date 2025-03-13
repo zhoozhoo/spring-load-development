@@ -61,7 +61,6 @@ services:
     ports:
       - "8888:8888"
     environment:
-      - SPRING_PROFILES_ACTIVE=native
       - THC_PATH=/actuator/health/readiness
       - THC_PORT=8888
     healthcheck:
