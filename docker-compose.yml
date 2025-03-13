@@ -76,7 +76,7 @@ services:
       - "8761:8761"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - CONFIG_SERVER_URL=http://config-server:8888
       - THC_PATH=/actuator/health/readiness
       - THC_PORT=8761
     depends_on:
@@ -95,12 +95,21 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - CONFIG_SERVER_URL=:http://config-server:8888
       - SPRING_CLOUD_DISCOVERY_ENABLED=true
       - SPRING_ZIPKIN_BASE_URL=http://tracing-server:9411
+      - THC_PATH=/actuator/health/readiness
+      - THC_PORT=8080
     depends_on:
       discovery-server:
         condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/workspace/health-check"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rifles-service:
     image: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:0.0.2-SNAPSHOT
@@ -109,16 +118,23 @@ services:
       - "8081:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - CONFIG_SERVER_URL=http://config-server:8888
       - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/loadsdb
       - SPRING_R2DBC_USERNAME=user
       - SPRING_R2DBC_PASSWORD=password
       - SPRING_ZIPKIN_BASE_URL=http://tracing-server:9411
+      - THC_PATH=/actuator/health/readiness
+      - THC_PORT=8081
     depends_on:
       db:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/workspace/health-check"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   loads-service:
     image: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:0.0.2-SNAPSHOT
@@ -127,16 +143,23 @@ services:
       - "8082:8082"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-server:8888
+      - CONFIG_SERVER_URL=http://config-server:8888
       - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/loadsdb
       - SPRING_R2DBC_USERNAME=user
       - SPRING_R2DBC_PASSWORD=password
       - SPRING_ZIPKIN_BASE_URL=http://tracing-server:9411
+      - THC_PATH=/actuator/health/readiness
+      - THC_PORT=8082
     depends_on:
       db:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/workspace/health-check"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

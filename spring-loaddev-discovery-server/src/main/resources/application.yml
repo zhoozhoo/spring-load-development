@@ -12,9 +12,3 @@ management:
     health:
       probes:
         enabled: true
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-    import: configserver:http://config-server:8888
