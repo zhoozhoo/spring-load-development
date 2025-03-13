@@ -2,7 +2,7 @@ spring:
   application:
     name: discovery-server
   config:
-    import: optional:configserver:${SPRING_CONFIG_IMPORT:http://localhost:8888/}
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
 management:
   endpoints:
     web:
@@ -12,3 +12,9 @@ management:
     health:
       probes:
         enabled: true
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: configserver:http://config-server:8888
