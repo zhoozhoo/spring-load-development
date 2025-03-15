@@ -8,7 +8,12 @@ spring:
         git:
           uri: https://github.com/zhoozhoo/spring-load-development-config
           default-label: main
-        # Use the File System Backend to avoid git pulling. Enable "native" profile in the Config Server.
-        native:
-          searchLocations: file:///${GIT_REPO}
-
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      probes:
+        enabled: true
