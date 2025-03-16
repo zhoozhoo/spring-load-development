@@ -2,6 +2,7 @@ package ca.zhoozhoo.loaddev.loads.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static reactor.core.publisher.Mono.just;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
 import ca.zhoozhoo.loaddev.loads.model.Group;
-import reactor.core.publisher.Mono;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -74,7 +74,7 @@ public class GroupsControllerTest {
 
         webTestClient.post().uri("/groups")
                 .contentType(APPLICATION_JSON)
-                .body(Mono.just(newGroup), Group.class)
+                .body(just(newGroup), Group.class)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(Group.class)
@@ -100,7 +100,7 @@ public class GroupsControllerTest {
 
         webTestClient.put().uri("/groups/" + group.id())
                 .contentType(APPLICATION_JSON)
-                .body(Mono.just(updatedGroup), Group.class)
+                .body(just(updatedGroup), Group.class)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Group.class)
@@ -127,6 +127,66 @@ public class GroupsControllerTest {
                 .expectStatus().isNoContent();
 
         webTestClient.get().uri("/groups/" + group.id())
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    public void getNonExistentGroup() {
+        webTestClient.get().uri("/groups/999")
+                .accept(APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    public void createGroupWithInvalidData() {
+        var invalidGroup = new Group(null, -5, -100, -1.5, 0, 0, 0, 0, -50, -200);
+
+        webTestClient.post().uri("/groups")
+                .contentType(APPLICATION_JSON)
+                .body(just(invalidGroup), Group.class)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    public void createGroupWithNullData() {
+        var invalidGroup = new Group(null, null, null, null, null, null, null, null, null, null);
+
+        webTestClient.post().uri("/groups")
+                .contentType(APPLICATION_JSON)
+                .body(just(invalidGroup), Group.class)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    public void updateNonExistentGroup() {
+        var group = new Group(null, 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200);
+
+        webTestClient.put().uri("/groups/999")
+                .contentType(APPLICATION_JSON)
+                .body(just(group), Group.class)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    public void updateGroupWithInvalidData() {
+        var group = createAndSaveGroup();
+        var invalidGroup = new Group(null, -5, -100, -1.5, 0, 0, 0, 0, -50, -200);
+
+        webTestClient.put().uri("/groups/" + group.id())
+                .contentType(APPLICATION_JSON)
+                .body(just(invalidGroup), Group.class)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    public void deleteNonExistentGroup() {
+        webTestClient.delete().uri("/groups/999")
                 .exchange()
                 .expectStatus().isNotFound();
     }

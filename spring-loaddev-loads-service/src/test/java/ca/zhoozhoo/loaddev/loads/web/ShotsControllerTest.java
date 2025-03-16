@@ -131,4 +131,75 @@ public class ShotsControllerTest {
                 .exchange()
                 .expectStatus().isNotFound();
     }
+
+    @Test
+    public void getNonExistentShot() {
+        webTestClient.get().uri("/shots/999")
+                .accept(APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    public void getShotsByNonExistentGroup() {
+        webTestClient.get().uri("/shots/group/999")
+                .accept(APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Shot.class).hasSize(0);
+    }
+
+    @Test
+    public void createShotWithInvalidData() {
+        var invalidShot = new Shot(null, null, -100);
+
+        webTestClient.post().uri("/shots")
+                .contentType(APPLICATION_JSON)
+                .body(Mono.just(invalidShot), Shot.class)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    public void createShotWithNullData() {
+        var invalidShot = new Shot(null, null, null);
+
+        webTestClient.post().uri("/shots")
+                .contentType(APPLICATION_JSON)
+                .body(Mono.just(invalidShot), Shot.class)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    public void updateNonExistentShot() {
+        var group = createAndSaveGroup();
+        var shot = new Shot(null, group.id(), 3000);
+
+        webTestClient.put().uri("/shots/999")
+                .contentType(APPLICATION_JSON)
+                .body(Mono.just(shot), Shot.class)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    public void updateShotWithInvalidData() {
+        var group = createAndSaveGroup();
+        var shot = createAndSaveShot(group, 3000);
+        var invalidShot = new Shot(shot.id(), null, -100);
+
+        webTestClient.put().uri("/shots/{id}", shot.id())
+                .contentType(APPLICATION_JSON)
+                .body(Mono.just(invalidShot), Shot.class)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    public void deleteNonExistentShot() {
+        webTestClient.delete().uri("/shots/999")
+                .exchange()
+                .expectStatus().isNotFound();
+    }
 }

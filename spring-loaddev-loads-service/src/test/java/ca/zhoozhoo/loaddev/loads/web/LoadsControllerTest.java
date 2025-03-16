@@ -111,4 +111,67 @@ class LoadsControllerTest {
                 .exchange()
                 .expectStatus().isNotFound();
     }
+
+    @Test
+    void getNonExistentLoad() {
+        webTestClient.get().uri("/loads/999")
+                .accept(APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    void createLoadWithInvalidData() {
+        var invalidLoad = new Load(null, "", "", "", "", -1.0,
+                "", "", -1.0, "", "", -1.0, null);
+
+        webTestClient.post().uri("/loads")
+                .contentType(APPLICATION_JSON)
+                .body(Mono.just(invalidLoad), Load.class)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void createLoadWithNullData() {
+        var invalidLoad = new Load(null, null, null, null, null, null,
+                null, null, null, null, null, null, null);
+
+        webTestClient.post().uri("/loads")
+                .contentType(APPLICATION_JSON)
+                .body(Mono.just(invalidLoad), Load.class)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void updateNonExistentLoad() {
+        var load = createLoad("TestLoad", 1L);
+
+        webTestClient.put().uri("/loads/999")
+                .contentType(APPLICATION_JSON)
+                .body(Mono.just(load), Load.class)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    void updateLoadWithInvalidData() {
+        var load = loadRepository.save(createLoad("Load1", 1L)).block();
+        var invalidLoad = new Load(load.id(), "", "", "", "", -1.0,
+                "", "", -1.0, "", "", -1.0, null);
+
+        webTestClient.put().uri("/loads/{id}", load.id())
+                .contentType(APPLICATION_JSON)
+                .body(Mono.just(invalidLoad), Load.class)
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    void deleteNonExistentLoad() {
+        webTestClient.delete().uri("/loads/999")
+                .exchange()
+                .expectStatus().isNotFound();
+    }
 }

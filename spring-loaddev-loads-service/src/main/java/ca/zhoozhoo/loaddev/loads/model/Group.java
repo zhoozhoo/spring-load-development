@@ -3,27 +3,30 @@ package ca.zhoozhoo.loaddev.loads.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 @Table(name = "groups")
 public record Group(
 
         @Id Long id,
 
-        @Column Integer numberOfShots,
+        @NotNull @Positive @Column Integer numberOfShots,
 
-        @Column Integer targetRange,
+        @NotNull @Positive @Column Integer targetRange,
 
-        @Column Double groupSize,
+        @NotNull @Positive @Column Double groupSize,
 
-        @Column Integer mean,
+        @NotNull @Column Integer mean,
 
-        @Column Integer median,
+        @NotNull @Column Integer median,
 
-        @Column Integer min,
+        @NotNull @Column Integer min,
 
-        @Column Integer max,
+        @NotNull @Column Integer max,
 
-        @Column Integer standardDeviation,
+        @NotNull @Min(0) @Column Integer standardDeviation,
 
-        @Column Integer extremeSpread) {
+        @NotNull @Positive @Column Integer extremeSpread) {
 }
