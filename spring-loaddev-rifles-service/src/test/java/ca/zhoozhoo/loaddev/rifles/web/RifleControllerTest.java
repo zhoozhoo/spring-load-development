@@ -58,6 +58,14 @@ public class RifleControllerTest {
     }
 
     @Test
+    void getRifleByIdNotFound() {
+        webTestClient.get().uri("/rifles/999")
+                .accept(APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
     void createRifle() {
         Rifle rifle = new Rifle(null, "New Rifle", "Description", "Caliber", 20.0, "Contour", "1:10", 0.5, "Rifling");
 
@@ -70,6 +78,25 @@ public class RifleControllerTest {
                 .value(createdRifle -> {
                     assert createdRifle.id() != null;
                     assert createdRifle.name().equals("New Rifle");
+                });
+    }
+
+    @Test
+    void createRifleInvalidInput() {
+        Rifle invalidRifle = new Rifle(null, "", null, null, -1.0, "Contour", "", -0.5, "Rifling");
+
+        webTestClient.post().uri("/rifles")
+                .contentType(APPLICATION_JSON)
+                .body(fromValue(invalidRifle))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class)
+                .value(errorMessage -> {
+                    assert errorMessage.contains("Name is required");
+                    assert errorMessage.contains("Caliber is required");
+                    assert errorMessage.contains("Barrel length must be positive");
+                    assert errorMessage.contains("Twist rate is required");
+                    assert errorMessage.contains("Free bore must be positive");
                 });
     }
 
@@ -94,6 +121,17 @@ public class RifleControllerTest {
     }
 
     @Test
+    void updateRifleNotFound() {
+        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "Caliber", 20.0, "Contour", "1:10", 0.5, "Rifling");
+
+        webTestClient.put().uri("/rifles/999")
+                .contentType(APPLICATION_JSON)
+                .body(fromValue(rifle))
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
     void deleteRifle() {
         Rifle rifle = new Rifle(null, "Rifle to be deleted", "Description", "Caliber", 20.0, "Contour", "1:10", 0.5,
                 "Rifling");
@@ -104,6 +142,13 @@ public class RifleControllerTest {
                 .expectStatus().isNoContent();
 
         webTestClient.get().uri("/rifles/{id}", savedRifle.id())
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    void deleteRifleNotFound() {
+        webTestClient.delete().uri("/rifles/999")
                 .exchange()
                 .expectStatus().isNotFound();
     }
