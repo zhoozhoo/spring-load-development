@@ -12,6 +12,7 @@ import static org.springframework.http.ResponseEntity.status;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,56 +28,57 @@ import org.springframework.web.bind.support.WebExchangeBindException;
 import ca.zhoozhoo.loaddev.rifles.dao.RifleRepository;
 import ca.zhoozhoo.loaddev.rifles.model.Rifle;
 import jakarta.validation.Valid;
+import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/rifles")
+@Log4j2
 public class RifleController {
 
     @Autowired
     private RifleRepository rifleRepository;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('rifles:view')")
     public Flux<Rifle> getAllRifles() {
+        log.debug("Retrieving all rifles");
         return rifleRepository.findAll();
     }
 
+    @PreAuthorize("hasAuthority('rifles:view')")
     @GetMapping("/{id}")
     public Mono<ResponseEntity<Rifle>> getRifleById(@PathVariable Long id) {
+        log.debug("Retrieving rifle with id: {}", id);
         return rifleRepository.findById(id)
-                .map(rifle -> ok(rifle))
+                .map(rifle -> {
+                    log.debug("Found rifle: {}", rifle);
+                    return ok(rifle);
+                })
                 .defaultIfEmpty(notFound().build());
-    }
-
-    @ExceptionHandler(WebExchangeBindException.class)
-    @ResponseStatus(BAD_REQUEST)
-    public Mono<String> handleValidationException(WebExchangeBindException ex) {
-        return Mono.just(ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .reduce((a, b) -> a + "; " + b)
-                .orElse("Validation failed"));
-    }
-
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    @ResponseStatus(CONFLICT)
-    public Mono<String> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
-        return Mono.just("Database error: " + ex.getMessage());
     }
 
     @PostMapping
     @ResponseStatus(CREATED)
+    @PreAuthorize("hasAuthority('rifles:edit')")
     public Mono<ResponseEntity<Rifle>> createRifle(@Valid @RequestBody Rifle rifle) {
+        log.debug("Creating new rifle: {}", rifle);
         return rifleRepository.save(rifle)
-                .map(savedRifle -> status(CREATED).body(savedRifle))
-                .onErrorMap(DataIntegrityViolationException.class, 
-                    e -> new DataIntegrityViolationException("Rifle creation failed: " + e.getMessage()));
+                .map(savedRifle -> {
+                    log.info("Created new rifle with id: {}", savedRifle.id());
+                    return status(CREATED).body(savedRifle);
+                })
+                .onErrorMap(DataIntegrityViolationException.class, e -> {
+                    log.error("Failed to create rifle: {}", e.getMessage());
+                    return new DataIntegrityViolationException("Rifle creation failed: " + e.getMessage());
+                });
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('rifles:edit')")
     public Mono<ResponseEntity<Rifle>> updateRifle(@PathVariable Long id, @Valid @RequestBody Rifle rifle) {
+        log.debug("Updating rifle with id: {}", id);
         return rifleRepository.findById(id)
                 .flatMap(existingRifle -> {
                     Rifle updatedRifle = new Rifle(
@@ -91,15 +93,40 @@ public class RifleController {
                             rifle.rifling());
                     return rifleRepository.save(updatedRifle);
                 })
-                .map(updatedRifle -> ok(updatedRifle))
+                .map(updatedRifle -> {
+                    log.info("Updated rifle with id: {}", updatedRifle.id());
+                    return ok(updatedRifle);
+                })
                 .defaultIfEmpty(notFound().build());
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('rifles:delete')")
     public Mono<ResponseEntity<Void>> deleteRifle(@PathVariable Long id) {
+        log.debug("Deleting rifle with id: {}", id);
         return rifleRepository.findById(id)
                 .flatMap(existingRifle -> rifleRepository.delete(existingRifle)
-                        .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT))))
+                        .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT)))
+                        .doOnSuccess(result -> log.info("Deleted rifle with id: {}", id)))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
+    }
+
+    @ExceptionHandler(WebExchangeBindException.class)
+    @ResponseStatus(BAD_REQUEST)
+    public Mono<String> handleValidationException(WebExchangeBindException ex) {
+        log.error("Validation error: {}", ex.getMessage());
+        return Mono.just(ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .reduce((a, b) -> a + "; " + b)
+                .orElse("Validation failed"));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(CONFLICT)
+    public Mono<String> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        log.error("Data integrity violation: {}", ex.getMessage());
+        return Mono.just("Database error: " + ex.getMessage());
     }
 }
