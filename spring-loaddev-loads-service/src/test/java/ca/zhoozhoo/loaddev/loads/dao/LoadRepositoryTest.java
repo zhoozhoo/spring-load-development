@@ -1,5 +1,7 @@
 package ca.zhoozhoo.loaddev.loads.dao;
 
+import static java.util.UUID.randomUUID;
+
 import java.util.Random;
 
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,7 @@ class LoadRepositoryTest {
     @Test
     void findById() {
         Load load = new Load(1L,
+                randomUUID().toString(),
                 "SMK 53 HP H335 " + random.nextInt(100),
                 "SMK 53gr HP with Hodgdon H335",
                 "Hodgdon", "H335",
@@ -50,6 +53,7 @@ class LoadRepositoryTest {
     @Test
     void save() {
         Load load = new Load(null,
+                randomUUID().toString(),
                 "SMK 53 HP H335 " + random.nextInt(100),
                 "SMK 53gr HP with Hodgdon H335",
                 "Hodgdon", "H335",
@@ -73,6 +77,7 @@ class LoadRepositoryTest {
     void findAll() {
 
         Load load1 = new Load(null,
+                randomUUID().toString(),
                 "SMK 53 HP H335 " + random.nextInt(100),
                 "SMK 53gr HP with Hodgdon H335",
                 "Hodgdon", "H335",
@@ -86,6 +91,7 @@ class LoadRepositoryTest {
                 1L);
 
         Load load2 = new Load(null,
+                randomUUID().toString(),
                 "Hornady 52 BTHP 4198",
                 "Hornady 52gr 4198 BTHP with IMR 4198",
                 "IMR", "4198",
@@ -112,6 +118,7 @@ class LoadRepositoryTest {
     @Test
     void deleteById() {
         Load load = new Load(null,
+                randomUUID().toString(),
                 "SMK 53 HP H335 " + random.nextInt(100),
                 "SMK 53gr HP with Hodgdon H335",
                 "Hodgdon", "H335",
@@ -142,6 +149,7 @@ class LoadRepositoryTest {
     @Test
     void update() {
         Load load = new Load(null,
+                randomUUID().toString(),
                 "SMK 53 HP H335 " + random.nextInt(100),
                 "SMK 53gr HP with Hodgdon H335",
                 "Hodgdon", "H335",
@@ -157,6 +165,7 @@ class LoadRepositoryTest {
                 .block();
 
         Load updatedLoad = new Load(savedLoad.id(),
+                randomUUID().toString(),
                 "SMK 53 HP H335 " + random.nextInt(100),
                 "SMK 53gr HP with Hodgdon H335",
                 "Hodgdon", "H335",
@@ -180,6 +189,7 @@ class LoadRepositoryTest {
     @Test
     void findByName() {
         Load load1 = new Load(null,
+                randomUUID().toString(),
                 "SMK 53 HP H335 " + random.nextInt(100),
                 "SMK 53gr HP with Hodgdon H335",
                 "Hodgdon", "H335",
@@ -193,6 +203,7 @@ class LoadRepositoryTest {
                 1L);
 
         Load load2 = new Load(null,
+                randomUUID().toString(),
                 "Hornady 52 BTHP 4198",
                 "Hornady 52gr 4198 BTHP with IMR 4198",
                 "IMR", "4198",

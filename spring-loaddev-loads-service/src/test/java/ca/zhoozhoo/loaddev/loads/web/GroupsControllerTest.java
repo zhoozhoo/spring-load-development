@@ -1,5 +1,6 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static reactor.core.publisher.Mono.just;
@@ -35,13 +36,15 @@ public class GroupsControllerTest {
     }
 
     private Group createAndSaveGroup() {
-        return groupRepository.save(new Group(null, 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200)).block();
+        return groupRepository
+                .save(new Group(null, randomUUID().toString(), 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200)).block();
     }
 
     @Test
     public void getAllGroups() {
         var group1 = createAndSaveGroup();
-        var group2 = groupRepository.save(new Group(null, 10, 200, 2.5, 3100, 3100, 3000, 3200, 60, 300)).block();
+        var group2 = groupRepository
+                .save(new Group(null, randomUUID().toString(), 10, 200, 2.5, 3100, 3100, 3000, 3200, 60, 300)).block();
 
         webTestClient.get().uri("/groups")
                 .accept(APPLICATION_JSON)
@@ -70,7 +73,7 @@ public class GroupsControllerTest {
 
     @Test
     public void createGroup() {
-        var newGroup = new Group(null, 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200);
+        var newGroup = new Group(null, randomUUID().toString(), 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200);
 
         webTestClient.post().uri("/groups")
                 .contentType(APPLICATION_JSON)
@@ -96,7 +99,7 @@ public class GroupsControllerTest {
     public void updateGroup() {
         var group = createAndSaveGroup();
 
-        var updatedGroup = new Group(null, 10, 200, 2.5, 3100, 3100, 3000, 3200, 60, 300);
+        var updatedGroup = new Group(null, randomUUID().toString(), 10, 200, 2.5, 3100, 3100, 3000, 3200, 60, 300);
 
         webTestClient.put().uri("/groups/" + group.id())
                 .contentType(APPLICATION_JSON)
@@ -141,7 +144,7 @@ public class GroupsControllerTest {
 
     @Test
     public void createGroupWithInvalidData() {
-        var invalidGroup = new Group(null, -5, -100, -1.5, 0, 0, 0, 0, -50, -200);
+        var invalidGroup = new Group(null, randomUUID().toString(), -5, -100, -1.5, 0, 0, 0, 0, -50, -200);
 
         webTestClient.post().uri("/groups")
                 .contentType(APPLICATION_JSON)
@@ -152,7 +155,7 @@ public class GroupsControllerTest {
 
     @Test
     public void createGroupWithNullData() {
-        var invalidGroup = new Group(null, null, null, null, null, null, null, null, null, null);
+        var invalidGroup = new Group(null, null, null, null, null, null, null, null, null, null, null);
 
         webTestClient.post().uri("/groups")
                 .contentType(APPLICATION_JSON)
@@ -163,7 +166,7 @@ public class GroupsControllerTest {
 
     @Test
     public void updateNonExistentGroup() {
-        var group = new Group(null, 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200);
+        var group = new Group(null, randomUUID().toString(), 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200);
 
         webTestClient.put().uri("/groups/999")
                 .contentType(APPLICATION_JSON)
@@ -175,7 +178,7 @@ public class GroupsControllerTest {
     @Test
     public void updateGroupWithInvalidData() {
         var group = createAndSaveGroup();
-        var invalidGroup = new Group(null, -5, -100, -1.5, 0, 0, 0, 0, -50, -200);
+        var invalidGroup = new Group(null, randomUUID().toString(), -5, -100, -1.5, 0, 0, 0, 0, -50, -200);
 
         webTestClient.put().uri("/groups/" + group.id())
                 .contentType(APPLICATION_JSON)

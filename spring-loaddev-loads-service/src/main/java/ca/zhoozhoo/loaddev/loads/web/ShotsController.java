@@ -13,6 +13,8 @@ import static reactor.core.publisher.Mono.just;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
+import ca.zhoozhoo.loaddev.loads.security.CurrentUser;
+import ca.zhoozhoo.loaddev.loads.security.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
@@ -32,12 +36,17 @@ import reactor.core.publisher.Mono;
 @RestController
 @RequestMapping("/shots")
 @Log4j2
+@PreAuthorize("hasRole('RELOADER')")
 public class ShotsController {
 
     @Autowired
     private ShotRepository shotRepository;
 
+    @Autowired
+    private SecurityUtils securityUtils;
+
     @GetMapping("/group/{groupId}")
+    @PreAuthorize("hasAuthority('shots:view') and isGroupOwner(#groupId)")
     public Flux<Shot> getShotsByGroupId(@PathVariable Long groupId) {
         return shotRepository.findByGroupId(groupId)
                 .onErrorResume(e -> {
@@ -47,7 +56,9 @@ public class ShotsController {
     }
 
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<Shot>> getShotById(@PathVariable Long id) {
+    @PreAuthorize("hasAuthority('shots:view') and isShotOwner(#id)")
+    public Mono<ResponseEntity<Shot>> getShotById(@CurrentUser JwtAuthenticationToken principal,
+            @PathVariable Long id) {
         return shotRepository.findById(id)
                 .map(shot -> ok(shot))
                 .defaultIfEmpty(notFound().build())
@@ -58,8 +69,18 @@ public class ShotsController {
     }
 
     @PostMapping
-    public Mono<ResponseEntity<Shot>> createShot(@Valid @RequestBody Shot shot) {
-        return shotRepository.save(shot)
+    @PreAuthorize("hasAuthority('shots:edit')")
+    public Mono<ResponseEntity<Shot>> createShot(@CurrentUser JwtAuthenticationToken principal,
+            @Valid @RequestBody Shot shot) {
+        return securityUtils.getCurrentUserId()
+                .flatMap(ownerid -> {
+                    Shot newShot = new Shot(
+                            shot.id(),
+                            ownerid, // Set current user as owner
+                            shot.groupId(),
+                            shot.velocity());
+                    return shotRepository.save(newShot);
+                })
                 .map(savedShot -> status(CREATED).body(savedShot))
                 .onErrorResume(e -> {
                     log.error("Error creating shot", e);
@@ -71,11 +92,17 @@ public class ShotsController {
     }
 
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<Shot>> updateShot(@PathVariable Long id, @Valid @RequestBody Shot shot) {
+    @PreAuthorize("hasAuthority('shots:edit') and isShotOwner(#id)")
+    public Mono<ResponseEntity<Shot>> updateShot(@CurrentUser JwtAuthenticationToken principal, @PathVariable Long id,
+            @Valid @RequestBody Shot shot) {
         return shotRepository.findById(id)
                 .flatMap(existingShot -> {
                     try {
-                        Shot updatedShot = new Shot(existingShot.id(), shot.groupId(), shot.velocity());
+                        Shot updatedShot = new Shot(
+                                existingShot.id(),
+                                existingShot.ownerId(), // Preserve original owner
+                                shot.groupId(),
+                                shot.velocity());
                         return shotRepository.save(updatedShot);
                     } catch (Exception e) {
                         log.error("Error updating shot with id: " + id, e);
@@ -91,7 +118,8 @@ public class ShotsController {
     }
 
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> deleteShot(@PathVariable Long id) {
+    @PreAuthorize("hasAuthority('shots:delete') and isShotOwner(#id)")
+    public Mono<ResponseEntity<Void>> deleteShot(@CurrentUser JwtAuthenticationToken principal, @PathVariable Long id) {
         return shotRepository.findById(id)
                 .flatMap(existingShot -> shotRepository.delete(existingShot)
                         .then(just(new ResponseEntity<Void>(NO_CONTENT))))

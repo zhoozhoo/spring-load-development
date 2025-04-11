@@ -1,5 +1,6 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
+import static java.util.UUID.randomUUID;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +36,7 @@ class LoadsControllerTest {
     }
 
     private Load createLoad(String name, Long rifleId) {
-        return new Load(null, name, name + " Description", "Manufacturer", "Type", 10.0,
+        return new Load(null, randomUUID().toString(), name, name + " Description", "Manufacturer", "Type", 10.0,
                 "BulletManufacturer", "BulletType", 100.0, "PrimerManufacturer", "PrimerType", 0.020, 1L);
     }
 
@@ -77,14 +78,17 @@ class LoadsControllerTest {
                 .expectStatus().isCreated()
                 .expectHeader().contentType(APPLICATION_JSON)
                 .expectBody()
-                .jsonPath("$.name").isEqualTo("Load1");
+                .jsonPath("$.name").isEqualTo("Load1")
+                .jsonPath("$.id").exists()
+                .jsonPath("$.rifleId").isEqualTo(1);
     }
 
     @Test
     void updateLoad() {
         var load = loadRepository.save(createLoad("Load1", 1L)).block();
 
-        var updatedLoad = new Load(load.id(), "UpdatedLoad", "UpdatedDescription", "UpdatedManufacturer",
+        var updatedLoad = new Load(load.id(), randomUUID().toString(), "UpdatedLoad", "UpdatedDescription",
+                "UpdatedManufacturer",
                 "UpdatedType", 15.0,
                 "UpdatedBulletManufacturer", "UpdatedBulletType", 150.0, "UpdatedPrimerManufacturer",
                 "UpdatedPrimerType", 0.025, 1L);
@@ -122,7 +126,7 @@ class LoadsControllerTest {
 
     @Test
     void createLoadWithInvalidData() {
-        var invalidLoad = new Load(null, "", "", "", "", -1.0,
+        var invalidLoad = new Load(null, "", "", "", "", "", -1.0,
                 "", "", -1.0, "", "", -1.0, null);
 
         webTestClient.post().uri("/loads")
@@ -134,7 +138,7 @@ class LoadsControllerTest {
 
     @Test
     void createLoadWithNullData() {
-        var invalidLoad = new Load(null, null, null, null, null, null,
+        var invalidLoad = new Load(null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null);
 
         webTestClient.post().uri("/loads")
@@ -158,7 +162,7 @@ class LoadsControllerTest {
     @Test
     void updateLoadWithInvalidData() {
         var load = loadRepository.save(createLoad("Load1", 1L)).block();
-        var invalidLoad = new Load(load.id(), "", "", "", "", -1.0,
+        var invalidLoad = new Load(load.id(), randomUUID().toString(), "", "", "", "", -1.0,
                 "", "", -1.0, "", "", -1.0, null);
 
         webTestClient.put().uri("/loads/{id}", load.id())

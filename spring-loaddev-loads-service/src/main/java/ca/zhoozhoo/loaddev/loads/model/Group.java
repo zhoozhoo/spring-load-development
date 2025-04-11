@@ -12,6 +12,8 @@ public record Group(
 
         @Id Long id,
 
+        @NotNull String ownerId,
+
         @NotNull @Positive @Column Integer numberOfShots,
 
         @NotNull @Positive @Column Integer targetRange,

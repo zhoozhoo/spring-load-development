@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS loads (
     id BIGSERIAL PRIMARY KEY,
+    owner_id VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     powder_manufacturer VARCHAR(255) NOT NULL,
@@ -19,6 +20,7 @@ CREATE TABLE IF NOT EXISTS loads (
 
 CREATE TABLE IF NOT EXISTS groups (
     id BIGSERIAL PRIMARY KEY,
+    owner_id VARCHAR(255) NOT NULL,
     number_of_shots INTEGER NOT NULL,
     target_range INTEGER NOT NULL,
     group_size DOUBLE PRECISION NOT NULL,
@@ -32,6 +34,7 @@ CREATE TABLE IF NOT EXISTS groups (
 
 CREATE TABLE IF NOT EXISTS shots (
     id BIGSERIAL PRIMARY KEY,
+    owner_id VARCHAR(255) NOT NULL,
     group_id BIGSERIAL NOT NULL,
     velocity INTEGER,
     CONSTRAINT fk_group

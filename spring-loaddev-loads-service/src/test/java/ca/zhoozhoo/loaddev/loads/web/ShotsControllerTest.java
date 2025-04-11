@@ -1,5 +1,6 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
@@ -41,11 +42,12 @@ public class ShotsControllerTest {
     }
 
     private Group createAndSaveGroup() {
-        return groupRepository.save(new Group(null, 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200)).block();
+        return groupRepository
+                .save(new Group(null, randomUUID().toString(), 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200)).block();
     }
 
     private Shot createAndSaveShot(Group group, int velocity) {
-        return shotRepository.save(new Shot(null, group.id(), velocity)).block();
+        return shotRepository.save(new Shot(null, randomUUID().toString(), group.id(), velocity)).block();
     }
 
     @Test
@@ -83,7 +85,7 @@ public class ShotsControllerTest {
     @Test
     public void createShot() {
         var group = createAndSaveGroup();
-        var newShot = new Shot(null, group.id(), 3200);
+        var newShot = new Shot(null, randomUUID().toString(), group.id(), 3200);
 
         webTestClient.post().uri("/shots")
                 .contentType(APPLICATION_JSON)
@@ -103,7 +105,7 @@ public class ShotsControllerTest {
         var group = createAndSaveGroup();
         var shot1 = createAndSaveShot(group, 3000);
 
-        var updatedShot = new Shot(null, group.id(), 3300);
+        var updatedShot = new Shot(null, randomUUID().toString(), group.id(), 3300);
 
         webTestClient.put().uri("/shots/" + shot1.id())
                 .contentType(APPLICATION_JSON)
@@ -151,7 +153,7 @@ public class ShotsControllerTest {
 
     @Test
     public void createShotWithInvalidData() {
-        var invalidShot = new Shot(null, null, -100);
+        var invalidShot = new Shot(null, randomUUID().toString(), null, -100);
 
         webTestClient.post().uri("/shots")
                 .contentType(APPLICATION_JSON)
@@ -162,7 +164,7 @@ public class ShotsControllerTest {
 
     @Test
     public void createShotWithNullData() {
-        var invalidShot = new Shot(null, null, null);
+        var invalidShot = new Shot(null, randomUUID().toString(), null, null);
 
         webTestClient.post().uri("/shots")
                 .contentType(APPLICATION_JSON)
@@ -174,7 +176,7 @@ public class ShotsControllerTest {
     @Test
     public void updateNonExistentShot() {
         var group = createAndSaveGroup();
-        var shot = new Shot(null, group.id(), 3000);
+        var shot = new Shot(null, randomUUID().toString(), group.id(), 3000);
 
         webTestClient.put().uri("/shots/999")
                 .contentType(APPLICATION_JSON)
@@ -187,7 +189,7 @@ public class ShotsControllerTest {
     public void updateShotWithInvalidData() {
         var group = createAndSaveGroup();
         var shot = createAndSaveShot(group, 3000);
-        var invalidShot = new Shot(shot.id(), null, -100);
+        var invalidShot = new Shot(shot.id(), randomUUID().toString(), null, -100);
 
         webTestClient.put().uri("/shots/{id}", shot.id())
                 .contentType(APPLICATION_JSON)
