@@ -2,7 +2,6 @@ package ca.zhoozhoo.loaddev.api.config;
 
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -14,13 +13,14 @@ import reactor.core.publisher.Mono;
 
 /**
  * A global filter that forwards permission tokens to downstream services.
- * This filter runs after the PermissionTokenExchangeFilter and forwards the 
- * exchanged permission token by adding it to the Authorization header of the request.
+ * This filter runs after the PermissionTokenExchangeFilter and forwards the
+ * exchanged permission token by adding it to the Authorization header of the
+ * request.
  */
 @Component
-@Order(1)  // Explicit order after PermissionTokenExchangeFilter
+@Order(1) // Explicit order after PermissionTokenExchangeFilter
 @Log4j2
-public class TokenForwardingFilter implements GlobalFilter, Ordered {
+public class TokenForwardingFilter implements GlobalFilter {
 
     /**
      * Filters incoming requests by forwarding the permission token.
@@ -28,7 +28,7 @@ public class TokenForwardingFilter implements GlobalFilter, Ordered {
      * and adds it to the Authorization header of the forwarded request.
      *
      * @param exchange the current server exchange
-     * @param chain the filter chain
+     * @param chain    the filter chain
      * @return Mono<Void> representing the completion of the filter operation
      */
     @Override
@@ -59,14 +59,5 @@ public class TokenForwardingFilter implements GlobalFilter, Ordered {
             log.debug("Forwarding request with permission token to: {}", request.getPath());
         }
         return exchange;
-    }
-
-    /**
-     * Defines the order of this filter in the filter chain.
-     * Order is set to 1 to ensure it runs after PermissionTokenExchangeFilter (order 0).
-     */
-    @Override
-    public int getOrder() {
-        return 1;
     }
 }

@@ -1,12 +1,13 @@
 package ca.zhoozhoo.loaddev.api.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -19,8 +20,11 @@ import org.springframework.web.server.WebFilterChain;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
+
+import java.util.Objects;
 
 /**
  * This filter handles the exchange of user tokens for permission tokens in a Keycloak-secured application.
@@ -31,21 +35,27 @@ import reactor.core.publisher.Mono;
 @Component
 @Order(0)  // Ensure this runs before TokenForwardingFilter
 @Log4j2
-public class PermissionTokenExchangeFilter implements WebFilter, Ordered {
+public class PermissionTokenExchangeFilter implements WebFilter {
 
-    private final WebClient webClient;
-    private final String tokenUri;
-    private final String clientId;
-    private final String clientSecret;
+    @Qualifier("keycloakWebClient")
+    @Autowired
+    private WebClient webClient;
 
-    public PermissionTokenExchangeFilter(@Qualifier("keycloakWebClient") WebClient webClient,
-            @Value("${spring.security.oauth2.client.provider.keycloak.token-uri}") String tokenUri,
-            @Value("${spring.security.oauth2.client.registration.api-gateway.client-id}") String clientId,
-            @Value("${spring.security.oauth2.client.registration.api-gateway.client-secret}") String clientSecret) {
-        this.webClient = webClient;
-        this.tokenUri = tokenUri;
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
+    @Value("${spring.security.oauth2.client.provider.keycloak.token-uri}")
+    private String tokenUri;
+
+    @Value("${spring.security.oauth2.client.registration.api-gateway.client-id}")
+    private String clientId;
+
+    @Value("${spring.security.oauth2.client.registration.api-gateway.client-secret}")
+    private String clientSecret;
+
+    @PostConstruct
+    private void validateProperties() {
+        Objects.requireNonNull(webClient, "webClient must not be null");
+        Objects.requireNonNull(tokenUri, "tokenUri must not be null");
+        Objects.requireNonNull(clientId, "clientId must not be null");
+        Objects.requireNonNull(clientSecret, "clientSecret must not be null");
     }
 
     /**
@@ -58,8 +68,9 @@ public class PermissionTokenExchangeFilter implements WebFilter, Ordered {
      * @return Mono<Void> representing the completion of the filter operation
      */
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        ServerHttpRequest request = exchange.getRequest();
+    @NonNull
+    public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
+        ServerHttpRequest request = Objects.requireNonNull(exchange.getRequest(), "request must not be null");
         String originalToken = extractToken(request);
 
         if (originalToken == null) {
@@ -88,23 +99,32 @@ public class PermissionTokenExchangeFilter implements WebFilter, Ordered {
      * @param request the incoming server request
      * @return the token string without the "Bearer " prefix, or null if not present
      */
-    private String extractToken(ServerHttpRequest request) {
-        String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
+    private String extractToken(@NonNull ServerHttpRequest request) {
+        Objects.requireNonNull(request, "request must not be null");
+        HttpHeaders headers = request.getHeaders();
+        if (headers != null) {
+            String authHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                return authHeader.substring(7);
+            }
         }
         return null;
     }
 
     /**
      * Performs the token exchange with Keycloak server using UMA grant type.
-     * This method sends a POST request to the Keycloak token endpoint with required parameters
-     * to obtain a permission token.
+     * Makes a POST request to exchange the original access token for a permission token
+     * that contains resource-specific permissions.
      *
-     * @param originalToken the original Bearer token from the request
-     * @return Mono<String> containing the new permission token
+     * @param originalToken the original Bearer token to be exchanged
+     * @return Mono<String> containing the new permission token, or error if exchange fails
+     * @throws NullPointerException if originalToken is null
+     * @throws WebClientResponseException if the token exchange request fails
      */
-    private Mono<String> getPermissionToken(String originalToken) {
+    @NonNull
+    private Mono<String> getPermissionToken(@NonNull String originalToken) {
+        Objects.requireNonNull(originalToken, "originalToken must not be null");
+
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "urn:ietf:params:oauth:grant-type:uma-ticket");
         formData.add("client_id", clientId);
@@ -129,14 +149,5 @@ public class PermissionTokenExchangeFilter implements WebFilter, Ordered {
                     return Mono.error(e);
                 })
                 .doOnError(e -> log.error("Failed to exchange token", e));
-    }
-
-    /**
-     * Defines the order of this filter in the filter chain.
-     * Lower values have higher priority.
-     */
-    @Override
-    public int getOrder() {
-        return 0;
     }
 }
