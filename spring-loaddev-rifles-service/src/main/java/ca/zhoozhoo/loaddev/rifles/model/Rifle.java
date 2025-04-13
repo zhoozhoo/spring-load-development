@@ -12,6 +12,8 @@ import jakarta.validation.constraints.Positive;
 public record Rifle(
         @Id Long id,
 
+        @Column("owner_id") String ownerId,
+
         @NotBlank(message = "Name is required")
         @Column("name") String name,
 

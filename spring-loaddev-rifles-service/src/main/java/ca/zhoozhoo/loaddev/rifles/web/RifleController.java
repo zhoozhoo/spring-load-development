@@ -27,6 +27,7 @@ import org.springframework.web.bind.support.WebExchangeBindException;
 
 import ca.zhoozhoo.loaddev.rifles.dao.RifleRepository;
 import ca.zhoozhoo.loaddev.rifles.model.Rifle;
+import ca.zhoozhoo.loaddev.rifles.security.CurrentUser;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
@@ -42,16 +43,14 @@ public class RifleController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('rifles:view')")
-    public Flux<Rifle> getAllRifles() {
-        log.debug("Retrieving all rifles");
-        return rifleRepository.findAll();
+    public Flux<Rifle> getAllRifles(@CurrentUser String userId) {
+        return rifleRepository.findAllByOwnerId(userId);
     }
 
     @PreAuthorize("hasAuthority('rifles:view')")
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<Rifle>> getRifleById(@PathVariable Long id) {
-        log.debug("Retrieving rifle with id: {}", id);
-        return rifleRepository.findById(id)
+    public Mono<ResponseEntity<Rifle>> getRifleById(@CurrentUser String userId, @PathVariable Long id) {
+        return rifleRepository.findByIdAndOwnerId(id, userId)
                 .map(rifle -> {
                     log.debug("Found rifle: {}", rifle);
                     return ok(rifle);
@@ -62,27 +61,33 @@ public class RifleController {
     @PostMapping
     @ResponseStatus(CREATED)
     @PreAuthorize("hasAuthority('rifles:edit')")
-    public Mono<ResponseEntity<Rifle>> createRifle(@Valid @RequestBody Rifle rifle) {
-        log.debug("Creating new rifle: {}", rifle);
-        return rifleRepository.save(rifle)
+    public Mono<ResponseEntity<Rifle>> createRifle(@CurrentUser String userId, @Valid @RequestBody Rifle rifle) {
+        return Mono.just(new Rifle(
+                rifle.id(),
+                userId,
+                rifle.name(),
+                rifle.description(),
+                rifle.caliber(),
+                rifle.barrelLength(),
+                rifle.barrelContour(),
+                rifle.twistRate(),
+                rifle.freeBore(),
+                rifle.rifling()))
+                .flatMap(rifleRepository::save)
                 .map(savedRifle -> {
                     log.info("Created new rifle with id: {}", savedRifle.id());
                     return status(CREATED).body(savedRifle);
-                })
-                .onErrorMap(DataIntegrityViolationException.class, e -> {
-                    log.error("Failed to create rifle: {}", e.getMessage());
-                    return new DataIntegrityViolationException("Rifle creation failed: " + e.getMessage());
                 });
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('rifles:edit')")
     public Mono<ResponseEntity<Rifle>> updateRifle(@PathVariable Long id, @Valid @RequestBody Rifle rifle) {
-        log.debug("Updating rifle with id: {}", id);
         return rifleRepository.findById(id)
                 .flatMap(existingRifle -> {
                     Rifle updatedRifle = new Rifle(
                             existingRifle.id(),
+                            existingRifle.ownerId(),
                             rifle.name(),
                             rifle.description(),
                             rifle.caliber(),
@@ -102,9 +107,8 @@ public class RifleController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('rifles:delete')")
-    public Mono<ResponseEntity<Void>> deleteRifle(@PathVariable Long id) {
-        log.debug("Deleting rifle with id: {}", id);
-        return rifleRepository.findById(id)
+    public Mono<ResponseEntity<Void>> deleteRifle(@CurrentUser String userId, @PathVariable Long id) {
+        return rifleRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingRifle -> rifleRepository.delete(existingRifle)
                         .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT)))
                         .doOnSuccess(result -> log.info("Deleted rifle with id: {}", id)))

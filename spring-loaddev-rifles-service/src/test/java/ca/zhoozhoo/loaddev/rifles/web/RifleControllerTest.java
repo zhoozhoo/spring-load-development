@@ -1,20 +1,22 @@
 package ca.zhoozhoo.loaddev.rifles.web;
 
-import static org.springframework.web.reactive.function.BodyInserters.fromValue;
+import static java.util.UUID.randomUUID;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
+import static org.springframework.web.reactive.function.BodyInserters.fromValue;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.context.annotation.Import;
 
+import ca.zhoozhoo.loaddev.rifles.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.rifles.dao.RifleRepository;
 import ca.zhoozhoo.loaddev.rifles.model.Rifle;
-import ca.zhoozhoo.loaddev.rifles.config.TestSecurityConfig;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -45,10 +47,13 @@ public class RifleControllerTest {
 
     @Test
     void getRifleById() {
-        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "Caliber", 20.0, "Contour", "1:10", 0.5, "Rifling");
-        Rifle savedRifle = rifleRepository.save(rifle).block();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.get().uri("/rifles/{id}", savedRifle.id())
+        var savedRifle = rifleRepository.save(new Rifle(null, userId, "Test Rifle", "Description", "Caliber", 20.0,
+                "Contour", "1:10", 0.5, "Rifling")).block();
+
+        webTestClient.mutateWith(jwt).get().uri("/rifles/{id}", savedRifle.id())
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -67,9 +72,13 @@ public class RifleControllerTest {
 
     @Test
     void createRifle() {
-        Rifle rifle = new Rifle(null, "New Rifle", "Description", "Caliber", 20.0, "Contour", "1:10", 0.5, "Rifling");
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.post().uri("/rifles")
+        var rifle = new Rifle(null, userId, "New Rifle", "Description", "Caliber", 20.0,
+                "Contour", "1:10", 0.5, "Rifling");
+
+        webTestClient.mutateWith(jwt).post().uri("/rifles")
                 .contentType(APPLICATION_JSON)
                 .body(fromValue(rifle))
                 .exchange()
@@ -83,7 +92,8 @@ public class RifleControllerTest {
 
     @Test
     void createRifleInvalidInput() {
-        Rifle invalidRifle = new Rifle(null, "", null, null, -1.0, "Contour", "", -0.5, "Rifling");
+        var invalidRifle = new Rifle(null, randomUUID().toString(), "", null, null, -1.0, "Contour", "", -0.5,
+                "Rifling");
 
         webTestClient.post().uri("/rifles")
                 .contentType(APPLICATION_JSON)
@@ -102,13 +112,19 @@ public class RifleControllerTest {
 
     @Test
     void updateRifle() {
-        Rifle rifle = new Rifle(null, "Old Rifle", "Description", "Caliber", 20.0, "Contour", "1:10", 0.5, "Rifling");
-        Rifle savedRifle = rifleRepository.save(rifle).block();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        Rifle updatedRifle = new Rifle(null, "Updated Rifle", "Updated Description", "Updated Caliber", 22.0,
+        var savedRifle = rifleRepository
+                .save(new Rifle(null, userId, "Old Rifle", "Description", "Caliber", 20.0,
+                        "Contour", "1:10", 0.5, "Rifling"))
+                .block();
+
+        var updatedRifle = new Rifle(null, userId, "Updated Rifle", "Updated Description",
+                "Updated Caliber", 22.0,
                 "Updated Contour", "1:12", 0.6, "Updated Rifling");
 
-        webTestClient.put().uri("/rifles/{id}", savedRifle.id())
+        webTestClient.mutateWith(jwt).put().uri("/rifles/{id}", savedRifle.id())
                 .contentType(APPLICATION_JSON)
                 .body(fromValue(updatedRifle))
                 .exchange()
@@ -122,7 +138,8 @@ public class RifleControllerTest {
 
     @Test
     void updateRifleNotFound() {
-        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "Caliber", 20.0, "Contour", "1:10", 0.5, "Rifling");
+        var rifle = new Rifle(null, randomUUID().toString(), "Test Rifle", "Description", "Caliber", 20.0,
+                "Contour", "1:10", 0.5, "Rifling");
 
         webTestClient.put().uri("/rifles/999")
                 .contentType(APPLICATION_JSON)
@@ -133,15 +150,20 @@ public class RifleControllerTest {
 
     @Test
     void deleteRifle() {
-        Rifle rifle = new Rifle(null, "Rifle to be deleted", "Description", "Caliber", 20.0, "Contour", "1:10", 0.5,
-                "Rifling");
-        Rifle savedRifle = rifleRepository.save(rifle).block();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.delete().uri("/rifles/{id}", savedRifle.id())
+        var savedRifle = rifleRepository.save(new Rifle(null, userId, "Rifle to be deleted", "Description", "Caliber",
+                20.0, "Contour", "1:10", 0.5,
+                "Rifling")).block();
+
+        webTestClient.mutateWith(jwt)
+                .delete().uri("/rifles/{id}", savedRifle.id())
                 .exchange()
                 .expectStatus().isNoContent();
 
-        webTestClient.get().uri("/rifles/{id}", savedRifle.id())
+        webTestClient.mutateWith(jwt)
+                .get().uri("/rifles/{id}", savedRifle.id())
                 .exchange()
                 .expectStatus().isNotFound();
     }

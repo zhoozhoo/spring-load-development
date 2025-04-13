@@ -37,6 +37,8 @@ import reactor.core.publisher.Mono;
 @Profile("!test")
 public class SecurityConfiguration {
 
+    public static final String PERMISSION_TOKEN_ATTR = "permission_token";
+
     /**
      * Configures the security filter chain for the application.
      * Permits access to actuator endpoints and requires authentication for all
@@ -67,6 +69,7 @@ public class SecurityConfiguration {
         var jwtAuthenticationConverter = new ReactiveJwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(
                 new ReactiveJwtGrantedAuthoritiesConverterAdapter(new KeycloakPermissionsConverter()));
+        jwtAuthenticationConverter.setPrincipalClaimName("sub"); // Ensure subject claim is used for principal
         return jwtAuthenticationConverter;
     }
 

@@ -2,6 +2,8 @@ package ca.zhoozhoo.loaddev.rifles.dao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -10,7 +12,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.rifles.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.rifles.model.Rifle;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @SpringBootTest
@@ -23,13 +24,15 @@ class RifleRepositoryTest {
 
     @Test
     void saveRifle() {
-        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
-
-        Mono<Rifle> savedRifle = rifleRepository.save(rifle);
+        var userId = UUID.randomUUID().toString();
+        var savedRifle = rifleRepository
+                .save(new Rifle(null, userId, "Test Rifle", "Description", "5.56mm", 20.0,
+                        "Contour", "1:7", 0.2, "Rifling"));
 
         StepVerifier.create(savedRifle)
                 .assertNext(r -> {
                     assertThat(r.id()).isNotNull();
+                    assertThat(r.ownerId()).isEqualTo(userId);
                     assertThat(r.name()).isEqualTo("Test Rifle");
                     assertThat(r.description()).isEqualTo("Description");
                     assertThat(r.caliber()).isEqualTo("5.56mm");
@@ -44,15 +47,16 @@ class RifleRepositoryTest {
 
     @Test
     void findRifleById() {
-        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        var userId = UUID.randomUUID().toString();
+        var savedRifle = rifleRepository.save(new Rifle(null, userId, "Test Rifle", "Description", "5.56mm", 20.0,
+                "Contour", "1:7", 0.2, "Rifling")).block();
 
-        Rifle savedRifle = rifleRepository.save(rifle).block();
-
-        Mono<Rifle> foundRifle = rifleRepository.findById(savedRifle.id());
+        var foundRifle = rifleRepository.findById(savedRifle.id());
 
         StepVerifier.create(foundRifle)
                 .assertNext(fr -> {
                     assertThat(fr.id()).isEqualTo(savedRifle.id());
+                    assertThat(fr.ownerId()).isEqualTo(userId);
                     assertThat(fr.name()).isEqualTo("Test Rifle");
                     assertThat(fr.description()).isEqualTo("Description");
                     assertThat(fr.caliber()).isEqualTo("5.56mm");
@@ -67,15 +71,17 @@ class RifleRepositoryTest {
 
     @Test
     void updateRifle() {
-        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        var userId = UUID.randomUUID().toString();
+        var savedRifle = rifleRepository
+                .save(new Rifle(null, userId, "Test Rifle", "Description", "5.56mm", 20.0,
+                        "Contour", "1:7", 0.2, "Rifling"))
+                .block();
 
-        Rifle savedRifle = rifleRepository.save(rifle).block();
+        var updatedRifle = rifleRepository.save(new Rifle(savedRifle.id(), userId, "Updated Rifle",
+                "Updated Description", "7.62mm", 24.0, "Heavy",
+                "1:10", 0.3, "Polygonal"));
 
-        Rifle updatedRifle = new Rifle(savedRifle.id(), "Updated Rifle", "Updated Description", "7.62mm", 24.0, "Heavy",
-                "1:10", 0.3, "Polygonal");
-        Mono<Rifle> result = rifleRepository.save(updatedRifle);
-
-        StepVerifier.create(result)
+        StepVerifier.create(updatedRifle)
                 .assertNext(r -> {
                     assertThat(r.id()).isEqualTo(savedRifle.id());
                     assertThat(r.name()).isEqualTo("Updated Rifle");
@@ -92,16 +98,16 @@ class RifleRepositoryTest {
 
     @Test
     void deleteRifle() {
-        Rifle rifle = new Rifle(null, "Test Rifle", "Description", "5.56mm", 20.0, "Contour", "1:7", 0.2, "Rifling");
+        var userId = UUID.randomUUID().toString();
+        var savedRifle = rifleRepository.save(new Rifle(null, userId, "Test Rifle", "Description", "5.56mm", 20.0,
+                "Contour", "1:7", 0.2, "Rifling")).block();
 
-        Rifle savedRifle = rifleRepository.save(rifle).block();
-
-        Mono<Void> deletedRifle = rifleRepository.delete(savedRifle);
+        var deletedRifle = rifleRepository.delete(savedRifle);
 
         StepVerifier.create(deletedRifle)
                 .verifyComplete();
 
-        Mono<Rifle> foundRifle = rifleRepository.findById(savedRifle.id());
+        var foundRifle = rifleRepository.findById(savedRifle.id());
 
         StepVerifier.create(foundRifle)
                 .expectNextCount(0)
