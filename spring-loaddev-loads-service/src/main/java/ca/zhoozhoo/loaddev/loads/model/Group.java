@@ -12,7 +12,7 @@ public record Group(
 
         @Id Long id,
 
-        @NotNull String ownerId,
+        @NotNull @Column String ownerId,
 
         @NotNull @Positive @Column Integer numberOfShots,
 

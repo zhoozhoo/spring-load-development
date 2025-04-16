@@ -3,6 +3,7 @@ package ca.zhoozhoo.loaddev.loads.web;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,22 +42,25 @@ public class ShotsControllerTest {
         groupRepository.deleteAll().block();
     }
 
-    private Group createAndSaveGroup() {
+    private Group createAndSaveGroup(String ownerId) {
         return groupRepository
-                .save(new Group(null, randomUUID().toString(), 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200)).block();
+                .save(new Group(null, ownerId, 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200)).block();
     }
 
     private Shot createAndSaveShot(Group group, int velocity) {
-        return shotRepository.save(new Shot(null, randomUUID().toString(), group.id(), velocity)).block();
+        return shotRepository.save(new Shot(null, group.ownerId(), group.id(), velocity)).block();
     }
 
     @Test
     public void getShotsByGroupId() {
-        var group = createAndSaveGroup();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        var group = createAndSaveGroup(userId);
         var shot1 = createAndSaveShot(group, 3000);
         var shot2 = createAndSaveShot(group, 3100);
 
-        webTestClient.get().uri("/shots/group/" + group.id())
+        webTestClient.mutateWith(jwt).get().uri("/shots/group/" + group.id())
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -69,10 +73,13 @@ public class ShotsControllerTest {
 
     @Test
     public void getShotById() {
-        var group = createAndSaveGroup();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        var group = createAndSaveGroup(userId);
         var shot1 = createAndSaveShot(group, 3000);
 
-        webTestClient.get().uri("/shots/" + shot1.id())
+        webTestClient.mutateWith(jwt).get().uri("/shots/" + shot1.id())
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -84,10 +91,13 @@ public class ShotsControllerTest {
 
     @Test
     public void createShot() {
-        var group = createAndSaveGroup();
-        var newShot = new Shot(null, randomUUID().toString(), group.id(), 3200);
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.post().uri("/shots")
+        var group = createAndSaveGroup(userId);
+        var newShot = new Shot(null, userId, group.id(), 3200);
+
+        webTestClient.mutateWith(jwt).post().uri("/shots")
                 .contentType(APPLICATION_JSON)
                 .body(Mono.just(newShot), Shot.class)
                 .exchange()
@@ -102,12 +112,15 @@ public class ShotsControllerTest {
 
     @Test
     public void updateShot() {
-        var group = createAndSaveGroup();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        var group = createAndSaveGroup(userId);
         var shot1 = createAndSaveShot(group, 3000);
 
-        var updatedShot = new Shot(null, randomUUID().toString(), group.id(), 3300);
+        var updatedShot = new Shot(null, userId, group.id(), 3300);
 
-        webTestClient.put().uri("/shots/" + shot1.id())
+        webTestClient.mutateWith(jwt).put().uri("/shots/" + shot1.id())
                 .contentType(APPLICATION_JSON)
                 .body(Mono.just(updatedShot), Shot.class)
                 .exchange()
@@ -122,21 +135,27 @@ public class ShotsControllerTest {
 
     @Test
     public void deleteShot() {
-        var group = createAndSaveGroup();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        var group = createAndSaveGroup(userId);
         var shot1 = createAndSaveShot(group, 3000);
 
-        webTestClient.delete().uri("/shots/" + shot1.id())
+        webTestClient.mutateWith(jwt).delete().uri("/shots/" + shot1.id())
                 .exchange()
                 .expectStatus().isNoContent();
 
-        webTestClient.get().uri("/shots/" + shot1.id())
+        webTestClient.mutateWith(jwt).get().uri("/shots/" + shot1.id())
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
     public void getNonExistentShot() {
-        webTestClient.get().uri("/shots/999")
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        webTestClient.mutateWith(jwt).get().uri("/shots/999")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -144,7 +163,10 @@ public class ShotsControllerTest {
 
     @Test
     public void getShotsByNonExistentGroup() {
-        webTestClient.get().uri("/shots/group/999")
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        webTestClient.mutateWith(jwt).get().uri("/shots/group/999")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -153,9 +175,12 @@ public class ShotsControllerTest {
 
     @Test
     public void createShotWithInvalidData() {
-        var invalidShot = new Shot(null, randomUUID().toString(), null, -100);
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.post().uri("/shots")
+        var invalidShot = new Shot(null, userId, null, -100);
+
+        webTestClient.mutateWith(jwt).post().uri("/shots")
                 .contentType(APPLICATION_JSON)
                 .body(Mono.just(invalidShot), Shot.class)
                 .exchange()
@@ -164,9 +189,12 @@ public class ShotsControllerTest {
 
     @Test
     public void createShotWithNullData() {
-        var invalidShot = new Shot(null, randomUUID().toString(), null, null);
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.post().uri("/shots")
+        var invalidShot = new Shot(null, userId, null, null);
+
+        webTestClient.mutateWith(jwt).post().uri("/shots")
                 .contentType(APPLICATION_JSON)
                 .body(Mono.just(invalidShot), Shot.class)
                 .exchange()
@@ -175,10 +203,13 @@ public class ShotsControllerTest {
 
     @Test
     public void updateNonExistentShot() {
-        var group = createAndSaveGroup();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        var group = createAndSaveGroup(userId);
         var shot = new Shot(null, randomUUID().toString(), group.id(), 3000);
 
-        webTestClient.put().uri("/shots/999")
+        webTestClient.mutateWith(jwt).put().uri("/shots/999")
                 .contentType(APPLICATION_JSON)
                 .body(Mono.just(shot), Shot.class)
                 .exchange()
@@ -187,11 +218,14 @@ public class ShotsControllerTest {
 
     @Test
     public void updateShotWithInvalidData() {
-        var group = createAndSaveGroup();
-        var shot = createAndSaveShot(group, 3000);
-        var invalidShot = new Shot(shot.id(), randomUUID().toString(), null, -100);
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.put().uri("/shots/{id}", shot.id())
+        var group = createAndSaveGroup(userId);
+        var shot = createAndSaveShot(group, 3000);
+        var invalidShot = new Shot(shot.id(), userId, null, -100);
+
+        webTestClient.mutateWith(jwt).put().uri("/shots/{id}", shot.id())
                 .contentType(APPLICATION_JSON)
                 .body(Mono.just(invalidShot), Shot.class)
                 .exchange()
@@ -200,7 +234,10 @@ public class ShotsControllerTest {
 
     @Test
     public void deleteNonExistentShot() {
-        webTestClient.delete().uri("/shots/999")
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        webTestClient.mutateWith(jwt).delete().uri("/shots/999")
                 .exchange()
                 .expectStatus().isNotFound();
     }

@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
 import ca.zhoozhoo.loaddev.loads.model.Group;
+import ca.zhoozhoo.loaddev.loads.security.CurrentUser;
 import ca.zhoozhoo.loaddev.loads.security.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
@@ -45,7 +46,7 @@ public class GroupsController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('groups:view')")
-    public Flux<Group> getAllGroups() {
+    public Flux<Group> getAllGroups(@CurrentUser String userId) {
         return groupRepository.findAll()
                 .onErrorResume(e -> {
                     log.error("Error retrieving all groups", e);
@@ -54,8 +55,8 @@ public class GroupsController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('groups:view') and isGroupOwner(#id)")
-    public Mono<ResponseEntity<Group>> getGroupById(@PathVariable Long id) {
+    @PreAuthorize("hasAuthority('groups:view')")
+    public Mono<ResponseEntity<Group>> getGroupById(@CurrentUser String userId, @PathVariable Long id) {
         return groupRepository.findById(id)
                 .map(group -> ok(group))
                 .defaultIfEmpty(notFound().build())
@@ -67,7 +68,7 @@ public class GroupsController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('groups:edit')")
-    public Mono<ResponseEntity<Group>> createGroup(@Valid @RequestBody Group group) {
+    public Mono<ResponseEntity<Group>> createGroup(@CurrentUser String userId, @Valid @RequestBody Group group) {
         return securityUtils.getCurrentUserId()
                 .flatMap(ownerid -> {
                     Group newGroup = new Group(
@@ -95,8 +96,8 @@ public class GroupsController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('groups:edit') and isGroupOwner(#id)")
-    public Mono<ResponseEntity<Group>> updateGroup(@PathVariable Long id, @Valid @RequestBody Group group) {
+    @PreAuthorize("hasAuthority('groups:edit')")
+    public Mono<ResponseEntity<Group>> updateGroup(@CurrentUser String userId, @PathVariable Long id, @Valid @RequestBody Group group) {
         return groupRepository.findById(id)
                 .flatMap(existingGroup -> {
                     try {
@@ -127,8 +128,8 @@ public class GroupsController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('groups:delete') and isGroupOwner(#id)")
-    public Mono<ResponseEntity<Void>> deleteGroup(@PathVariable Long id) {
+    @PreAuthorize("hasAuthority('groups:delete')")
+    public Mono<ResponseEntity<Void>> deleteGroup(@CurrentUser String userId, @PathVariable Long id) {
         return groupRepository.findById(id)
                 .flatMap(existingGroup -> groupRepository.delete(existingGroup)
                         .then(just(new ResponseEntity<Void>(NO_CONTENT))))

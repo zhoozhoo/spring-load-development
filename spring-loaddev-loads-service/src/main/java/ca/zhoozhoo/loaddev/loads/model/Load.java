@@ -11,7 +11,7 @@ public record Load(
 
         @Id Long id,
 
-        @NotNull String ownerId,
+        @NotNull @Column String ownerId,
 
         @NotNull @Column("name") String name,
 

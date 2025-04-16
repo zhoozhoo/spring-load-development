@@ -219,7 +219,7 @@ class LoadRepositoryTest {
         loadRepository.saveAll(Flux.just(load1, load2))
                 .blockLast();
 
-        Flux<Load> result = loadRepository.findByName(load1.name());
+        Flux<Load> result = loadRepository.findByNameAndOwnerId(load1.name(), load1.ownerId());
 
         StepVerifier.create(result)
                 .expectNextMatches(l -> l.name().equals(load1.name()))

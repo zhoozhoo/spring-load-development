@@ -8,13 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
-import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -26,10 +24,6 @@ import org.springframework.security.oauth2.server.resource.authentication.Reacti
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtGrantedAuthoritiesConverterAdapter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
-import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
-import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
-import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
-import ca.zhoozhoo.loaddev.loads.security.CustomMethodSecurityExpressionHandler;
 import reactor.core.publisher.Mono;
 
 /**
@@ -43,14 +37,7 @@ import reactor.core.publisher.Mono;
 @Profile("!test")
 public class SecurityConfiguration {
 
-    @Autowired
-    private GroupRepository groupRepository;
-
-    @Autowired
-    private LoadRepository loadRepository;
-
-    @Autowired
-    private ShotRepository shotRepository;
+    public static final String PERMISSION_TOKEN_ATTR = "permission_token";
 
     /**
      * Configures the security filter chain for the application.
@@ -82,16 +69,8 @@ public class SecurityConfiguration {
         var jwtAuthenticationConverter = new ReactiveJwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(
                 new ReactiveJwtGrantedAuthoritiesConverterAdapter(new KeycloakPermissionsConverter()));
+        jwtAuthenticationConverter.setPrincipalClaimName("sub"); // Ensure subject claim is used for principal
         return jwtAuthenticationConverter;
-    }
-
-    @Bean
-    public MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
-        CustomMethodSecurityExpressionHandler expressionHandler = new CustomMethodSecurityExpressionHandler();
-        expressionHandler.setGroupRepository(groupRepository);
-        expressionHandler.setLoadRepository(loadRepository);
-        expressionHandler.setShotRepository(shotRepository);
-        return expressionHandler;
     }
 
     /**

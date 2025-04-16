@@ -3,6 +3,7 @@ package ca.zhoozhoo.loaddev.loads.web;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 import static reactor.core.publisher.Mono.just;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -35,18 +36,21 @@ public class GroupsControllerTest {
         groupRepository.deleteAll().block();
     }
 
-    private Group createAndSaveGroup() {
+    private Group createAndSaveGroup(String ownerId) {
         return groupRepository
-                .save(new Group(null, randomUUID().toString(), 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200)).block();
+                .save(new Group(null, ownerId, 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200)).block();
     }
 
     @Test
     public void getAllGroups() {
-        var group1 = createAndSaveGroup();
-        var group2 = groupRepository
-                .save(new Group(null, randomUUID().toString(), 10, 200, 2.5, 3100, 3100, 3000, 3200, 60, 300)).block();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.get().uri("/groups")
+        var group1 = createAndSaveGroup(userId);
+        var group2 = groupRepository
+                .save(new Group(null, userId, 10, 200, 2.5, 3100, 3100, 3000, 3200, 60, 300)).block();
+
+        webTestClient.mutateWith(jwt).get().uri("/groups")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -59,9 +63,12 @@ public class GroupsControllerTest {
 
     @Test
     public void getGroupById() {
-        var group = createAndSaveGroup();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.get().uri("/groups/" + group.id())
+        var group = createAndSaveGroup(userId);
+
+        webTestClient.mutateWith(jwt).get().uri("/groups/" + group.id())
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -73,9 +80,12 @@ public class GroupsControllerTest {
 
     @Test
     public void createGroup() {
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
         var newGroup = new Group(null, randomUUID().toString(), 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200);
 
-        webTestClient.post().uri("/groups")
+        webTestClient.mutateWith(jwt).post().uri("/groups")
                 .contentType(APPLICATION_JSON)
                 .body(just(newGroup), Group.class)
                 .exchange()
@@ -97,11 +107,14 @@ public class GroupsControllerTest {
 
     @Test
     public void updateGroup() {
-        var group = createAndSaveGroup();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        var group = createAndSaveGroup(userId);
 
         var updatedGroup = new Group(null, randomUUID().toString(), 10, 200, 2.5, 3100, 3100, 3000, 3200, 60, 300);
 
-        webTestClient.put().uri("/groups/" + group.id())
+        webTestClient.mutateWith(jwt).put().uri("/groups/" + group.id())
                 .contentType(APPLICATION_JSON)
                 .body(just(updatedGroup), Group.class)
                 .exchange()
@@ -123,20 +136,26 @@ public class GroupsControllerTest {
 
     @Test
     public void deleteGroup() {
-        var group = createAndSaveGroup();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.delete().uri("/groups/" + group.id())
+        var group = createAndSaveGroup(userId);
+
+        webTestClient.mutateWith(jwt).delete().uri("/groups/" + group.id())
                 .exchange()
                 .expectStatus().isNoContent();
 
-        webTestClient.get().uri("/groups/" + group.id())
+        webTestClient.mutateWith(jwt).get().uri("/groups/" + group.id())
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
     public void getNonExistentGroup() {
-        webTestClient.get().uri("/groups/999")
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        webTestClient.mutateWith(jwt).get().uri("/groups/999")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -144,9 +163,12 @@ public class GroupsControllerTest {
 
     @Test
     public void createGroupWithInvalidData() {
-        var invalidGroup = new Group(null, randomUUID().toString(), -5, -100, -1.5, 0, 0, 0, 0, -50, -200);
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.post().uri("/groups")
+        var invalidGroup = new Group(null, userId, -5, -100, -1.5, 0, 0, 0, 0, -50, -200);
+
+        webTestClient.mutateWith(jwt).post().uri("/groups")
                 .contentType(APPLICATION_JSON)
                 .body(just(invalidGroup), Group.class)
                 .exchange()
@@ -155,9 +177,12 @@ public class GroupsControllerTest {
 
     @Test
     public void createGroupWithNullData() {
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
         var invalidGroup = new Group(null, null, null, null, null, null, null, null, null, null, null);
 
-        webTestClient.post().uri("/groups")
+        webTestClient.mutateWith(jwt).post().uri("/groups")
                 .contentType(APPLICATION_JSON)
                 .body(just(invalidGroup), Group.class)
                 .exchange()
@@ -166,9 +191,12 @@ public class GroupsControllerTest {
 
     @Test
     public void updateNonExistentGroup() {
-        var group = new Group(null, randomUUID().toString(), 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200);
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.put().uri("/groups/999")
+        var group = new Group(null, userId, 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200);
+
+        webTestClient.mutateWith(jwt).put().uri("/groups/999")
                 .contentType(APPLICATION_JSON)
                 .body(just(group), Group.class)
                 .exchange()
@@ -177,10 +205,13 @@ public class GroupsControllerTest {
 
     @Test
     public void updateGroupWithInvalidData() {
-        var group = createAndSaveGroup();
-        var invalidGroup = new Group(null, randomUUID().toString(), -5, -100, -1.5, 0, 0, 0, 0, -50, -200);
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.put().uri("/groups/" + group.id())
+        var group = createAndSaveGroup(userId);
+        var invalidGroup = new Group(null, userId, -5, -100, -1.5, 0, 0, 0, 0, -50, -200);
+
+        webTestClient.mutateWith(jwt).put().uri("/groups/" + group.id())
                 .contentType(APPLICATION_JSON)
                 .body(just(invalidGroup), Group.class)
                 .exchange()
@@ -189,7 +220,10 @@ public class GroupsControllerTest {
 
     @Test
     public void deleteNonExistentGroup() {
-        webTestClient.delete().uri("/groups/999")
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        webTestClient.mutateWith(jwt).delete().uri("/groups/999")
                 .exchange()
                 .expectStatus().isNotFound();
     }

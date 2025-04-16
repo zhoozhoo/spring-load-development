@@ -12,7 +12,7 @@ public record Shot(
 
         @Id Long id,
 
-        @NotNull String ownerId,
+        @NotNull @Column String ownerId,
 
         @NotNull @Column Long groupId,
 

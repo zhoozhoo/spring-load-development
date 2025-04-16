@@ -2,6 +2,7 @@ package ca.zhoozhoo.loaddev.loads.web;
 
 import static java.util.UUID.randomUUID;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,16 +36,19 @@ class LoadsControllerTest {
         loadRepository.deleteAll().block();
     }
 
-    private Load createLoad(String name, Long rifleId) {
-        return new Load(null, randomUUID().toString(), name, name + " Description", "Manufacturer", "Type", 10.0,
+    private Load createLoad(String ownerId, String name, Long rifleId) {
+        return new Load(null, ownerId, name, name + " Description", "Manufacturer", "Type", 10.0,
                 "BulletManufacturer", "BulletType", 100.0, "PrimerManufacturer", "PrimerType", 0.020, 1L);
     }
 
     @Test
     void getAllLoads() {
-        loadRepository.saveAll(Flux.just(createLoad("Load1", 1L), createLoad("Load2", 2L))).blockLast();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.get().uri("/loads")
+        loadRepository.saveAll(Flux.just(createLoad(userId, "Load1", 1L), createLoad(userId, "Load2", 2L))).blockLast();
+
+        webTestClient.mutateWith(jwt).get().uri("/loads")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -56,9 +60,11 @@ class LoadsControllerTest {
 
     @Test
     void getLoadById() {
-        var load = loadRepository.save(createLoad("Load1", 1L)).block();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+        var load = loadRepository.save(createLoad(userId, "Load1", 1L)).block();
 
-        webTestClient.get().uri("/loads/{id}", load.id())
+        webTestClient.mutateWith(jwt).get().uri("/loads/{id}", load.id())
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -69,9 +75,11 @@ class LoadsControllerTest {
 
     @Test
     void createLoad() {
-        var load = createLoad("Load1", 1L);
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+        var load = createLoad(userId, "Load1", 1L);
 
-        webTestClient.post().uri("/loads")
+        webTestClient.mutateWith(jwt).post().uri("/loads")
                 .contentType(APPLICATION_JSON)
                 .body(Mono.just(load), Load.class)
                 .exchange()
@@ -85,15 +93,17 @@ class LoadsControllerTest {
 
     @Test
     void updateLoad() {
-        var load = loadRepository.save(createLoad("Load1", 1L)).block();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+        var load = loadRepository.save(createLoad(userId, "Load1", 1L)).block();
 
-        var updatedLoad = new Load(load.id(), randomUUID().toString(), "UpdatedLoad", "UpdatedDescription",
+        var updatedLoad = new Load(load.id(), userId, "UpdatedLoad", "UpdatedDescription",
                 "UpdatedManufacturer",
                 "UpdatedType", 15.0,
                 "UpdatedBulletManufacturer", "UpdatedBulletType", 150.0, "UpdatedPrimerManufacturer",
                 "UpdatedPrimerType", 0.025, 1L);
 
-        webTestClient.put().uri("/loads/{id}", load.id())
+        webTestClient.mutateWith(jwt).put().uri("/loads/{id}", load.id())
                 .contentType(APPLICATION_JSON)
                 .body(Mono.just(updatedLoad), Load.class)
                 .exchange()
@@ -105,20 +115,25 @@ class LoadsControllerTest {
 
     @Test
     void deleteLoad() {
-        var load = loadRepository.save(createLoad("Load1", 1L)).block();
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+        var load = loadRepository.save(createLoad(userId, "Load1", 1L)).block();
 
-        webTestClient.delete().uri("/loads/{id}", load.id())
+        webTestClient.mutateWith(jwt).delete().uri("/loads/{id}", load.id())
                 .exchange()
                 .expectStatus().isNoContent();
 
-        webTestClient.get().uri("/loads/{id}", load.id())
+        webTestClient.mutateWith(jwt).get().uri("/loads/{id}", load.id())
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
     void getNonExistentLoad() {
-        webTestClient.get().uri("/loads/999")
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        webTestClient.mutateWith(jwt).get().uri("/loads/999")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -126,10 +141,12 @@ class LoadsControllerTest {
 
     @Test
     void createLoadWithInvalidData() {
-        var invalidLoad = new Load(null, "", "", "", "", "", -1.0,
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+        var invalidLoad = new Load(null, userId, "", "", "", "", -1.0,
                 "", "", -1.0, "", "", -1.0, null);
 
-        webTestClient.post().uri("/loads")
+        webTestClient.mutateWith(jwt).post().uri("/loads")
                 .contentType(APPLICATION_JSON)
                 .body(Mono.just(invalidLoad), Load.class)
                 .exchange()
@@ -138,10 +155,12 @@ class LoadsControllerTest {
 
     @Test
     void createLoadWithNullData() {
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
         var invalidLoad = new Load(null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null);
 
-        webTestClient.post().uri("/loads")
+        webTestClient.mutateWith(jwt).post().uri("/loads")
                 .contentType(APPLICATION_JSON)
                 .body(Mono.just(invalidLoad), Load.class)
                 .exchange()
@@ -150,9 +169,11 @@ class LoadsControllerTest {
 
     @Test
     void updateNonExistentLoad() {
-        var load = createLoad("TestLoad", 1L);
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+        var load = createLoad(userId, "TestLoad", 1L);
 
-        webTestClient.put().uri("/loads/999")
+        webTestClient.mutateWith(jwt).put().uri("/loads/999")
                 .contentType(APPLICATION_JSON)
                 .body(Mono.just(load), Load.class)
                 .exchange()
@@ -161,11 +182,13 @@ class LoadsControllerTest {
 
     @Test
     void updateLoadWithInvalidData() {
-        var load = loadRepository.save(createLoad("Load1", 1L)).block();
-        var invalidLoad = new Load(load.id(), randomUUID().toString(), "", "", "", "", -1.0,
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+        var load = loadRepository.save(createLoad(userId, "Load1", 1L)).block();
+        var invalidLoad = new Load(load.id(), userId, "", "", "", "", -1.0,
                 "", "", -1.0, "", "", -1.0, null);
 
-        webTestClient.put().uri("/loads/{id}", load.id())
+        webTestClient.mutateWith(jwt).put().uri("/loads/{id}", load.id())
                 .contentType(APPLICATION_JSON)
                 .body(Mono.just(invalidLoad), Load.class)
                 .exchange()
@@ -174,7 +197,10 @@ class LoadsControllerTest {
 
     @Test
     void deleteNonExistentLoad() {
-        webTestClient.delete().uri("/loads/999")
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        webTestClient.mutateWith(jwt).delete().uri("/loads/999")
                 .exchange()
                 .expectStatus().isNotFound();
     }
