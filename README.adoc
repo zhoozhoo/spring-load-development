@@ -14,3 +14,118 @@ Spring Load Development is a project that demonstrates the integration of variou
 * Externalized Configuration Management using link:https://spring.io/projects/spring-cloud-config[Spring Cloud Config]
 * API Gateway using link:https://spring.io/projects/spring-cloud-gateway[Spring Cloud Gateway]
 * Circuit Breaker using link:https://spring.io/projects/spring-cloud-circuitbreaker[Spring Cloud Circuit Breaker] and link:https://resilience4j.readme.io/docs/getting-started[Resilience4J]
+* Role-Based Access Control (RBAC) using link:https://spring.io/projects/spring-security[Spring Security] and link:https://www.keycloak.org/[Keycloak]
+
+== Getting Started
+
+=== Prerequisites
+
+* Java 21 or later
+* Docker and Docker Compose
+* PostgreSQL (if running locally)
+* Maven 3.8+
+
+=== Running Locally
+
+. Clone the repository:
+[source,bash]
+----
+git clone https://github.com/zhoozhoo/spring-load-development.git
+cd spring-load-development
+----
+
+. Start the infrastructure services using Docker Compose:
+[source,bash]
+----
+docker-compose up -d
+----
+
+. Start the services in order:
+* PostgreSQL (port 5432)
+* Zipkin (port 9411)
+* Config Server (port 8888)
+* Discovery Server (port 8761)
+* API Gateway (port 8080)
+* Rifles Service (port 8081)
+* Loads Service (port 8082)
+
+Each service can be started using:
+[source,bash]
+----
+./mvnw spring-boot:run -pl spring-loaddev-{service-name}
+----
+
+=== Accessing Services
+
+* Config Server: http://localhost:8888
+* Discovery Server: http://localhost:8761
+* API Gateway: http://localhost:8080
+* Keycloak Admin Console: http://localhost:7080
+* Trace Server: http://localhost:9411
+
+=== Services Architecture
+
+The application is composed of the following services:
+
+* *Config Server*: Centralized configuration management for all services
+* *Discovery Server*: Service registry and discovery using Eureka
+* *API Gateway*: Routes and filters requests to appropriate services
+* *Rifles Service*: Manages rifle data and configurations
+* *Loads Service*: Handles load development data including groups and shots
+* *Admin Server*: Monitoring and management of all services
+
+=== Security
+
+The application uses Keycloak for identity and access management with the following features:
+
+* Role-based access control (RBAC)
+* JWT token-based authentication
+* OAuth2/OpenID Connect integration
+* Predefined roles: RELOADER
+* Fine-grained permissions for loads and rifles management
+
+=== Monitoring and Observability
+
+The project includes Spring Boot Admin Server for monitoring and managing your Spring Boot applications:
+
+* Access the Admin Server dashboard at http://localhost:9090
+* Monitor application health, metrics, and environment
+* View detailed information about each service
+* Access actuator endpoints through a user-friendly interface
+* Track service status and configurations
+
+=== Troubleshooting
+
+==== Common Issues
+
+[cols="1,2"]
+|===
+|Problem |Solution
+
+|Services fail to start
+|Ensure Config Server is running and accessible at http://localhost:8888
+
+|Authentication fails
+|Verify Keycloak is running and the realm is properly imported
+
+|Database connection issues
+|Check PostgreSQL is running and credentials match in configuration
+
+|Service discovery issues
+|Ensure Eureka Server is running and services can reach http://localhost:8761
+|===
+
+==== Debug Mode
+
+To run a service in debug mode:
+
+[source,bash]
+----
+./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000"
+----
+
+Then connect your IDE to port 8000.
+
+=== License
+
+This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
