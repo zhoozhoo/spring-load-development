@@ -1,15 +1,11 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.ResponseEntity.notFound;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
-import static reactor.core.publisher.Mono.error;
-import static reactor.core.publisher.Mono.just;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -47,11 +43,7 @@ public class GroupsController {
     @GetMapping
     @PreAuthorize("hasAuthority('groups:view')")
     public Flux<Group> getAllGroups(@CurrentUser String userId) {
-        return groupRepository.findAll()
-                .onErrorResume(e -> {
-                    log.error("Error retrieving all groups", e);
-                    return Flux.error(new RuntimeException("Failed to retrieve groups"));
-                });
+        return groupRepository.findAll();
     }
 
     @GetMapping("/{id}")
@@ -59,11 +51,7 @@ public class GroupsController {
     public Mono<ResponseEntity<Group>> getGroupById(@CurrentUser String userId, @PathVariable Long id) {
         return groupRepository.findById(id)
                 .map(group -> ok(group))
-                .defaultIfEmpty(notFound().build())
-                .onErrorResume(e -> {
-                    log.error("Error retrieving group with id: " + id, e);
-                    return just(status(INTERNAL_SERVER_ERROR).build());
-                });
+                .defaultIfEmpty(notFound().build());
     }
 
     @PostMapping
@@ -73,7 +61,7 @@ public class GroupsController {
                 .flatMap(ownerid -> {
                     Group newGroup = new Group(
                             group.id(),
-                            ownerid, // Set the current user as owner
+                            ownerid,
                             group.numberOfShots(),
                             group.targetRange(),
                             group.groupSize(),
@@ -85,46 +73,31 @@ public class GroupsController {
                             group.extremeSpread());
                     return groupRepository.save(newGroup);
                 })
-                .map(savedGroup -> status(CREATED).body(savedGroup))
-                .onErrorResume(e -> {
-                    log.error("Error creating group", e);
-                    if (e instanceof jakarta.validation.ConstraintViolationException) {
-                        return just(status(BAD_REQUEST).build());
-                    }
-                    return just(status(INTERNAL_SERVER_ERROR).build());
-                });
+                .map(savedGroup -> status(CREATED).body(savedGroup));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('groups:edit')")
-    public Mono<ResponseEntity<Group>> updateGroup(@CurrentUser String userId, @PathVariable Long id, @Valid @RequestBody Group group) {
+    public Mono<ResponseEntity<Group>> updateGroup(@CurrentUser String userId, @PathVariable Long id,
+            @Valid @RequestBody Group group) {
         return groupRepository.findById(id)
                 .flatMap(existingGroup -> {
-                    try {
-                        Group updatedGroup = new Group(
-                                existingGroup.id(),
-                                existingGroup.ownerId(), // Preserve the original owner
-                                group.numberOfShots(),
-                                group.targetRange(),
-                                group.groupSize(),
-                                group.mean(),
-                                group.median(),
-                                group.min(),
-                                group.max(),
-                                group.standardDeviation(),
-                                group.extremeSpread());
-                        return groupRepository.save(updatedGroup);
-                    } catch (Exception e) {
-                        log.error("Error updating group with id: " + id, e);
-                        return error(e);
-                    }
+                    Group updatedGroup = new Group(
+                            existingGroup.id(),
+                            existingGroup.ownerId(),
+                            group.numberOfShots(),
+                            group.targetRange(),
+                            group.groupSize(),
+                            group.mean(),
+                            group.median(),
+                            group.min(),
+                            group.max(),
+                            group.standardDeviation(),
+                            group.extremeSpread());
+                    return groupRepository.save(updatedGroup);
                 })
-                .map(updatedGroup -> ResponseEntity.ok(updatedGroup))
-                .defaultIfEmpty(ResponseEntity.notFound().build())
-                .onErrorResume(e -> {
-                    log.error("Error in update operation for group with id: " + id, e);
-                    return just(status(INTERNAL_SERVER_ERROR).build());
-                });
+                .map(updatedGroup -> ok(updatedGroup))
+                .defaultIfEmpty(notFound().build());
     }
 
     @DeleteMapping("/{id}")
@@ -132,11 +105,7 @@ public class GroupsController {
     public Mono<ResponseEntity<Void>> deleteGroup(@CurrentUser String userId, @PathVariable Long id) {
         return groupRepository.findById(id)
                 .flatMap(existingGroup -> groupRepository.delete(existingGroup)
-                        .then(just(new ResponseEntity<Void>(NO_CONTENT))))
-                .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND))
-                .onErrorResume(e -> {
-                    log.error("Error deleting group with id: " + id, e);
-                    return just(new ResponseEntity<>(INTERNAL_SERVER_ERROR));
-                });
+                        .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT))))
+                .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
     }
 }

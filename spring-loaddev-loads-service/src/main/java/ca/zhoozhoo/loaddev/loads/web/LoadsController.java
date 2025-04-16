@@ -1,7 +1,5 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
@@ -10,11 +8,9 @@ import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.support.WebExchangeBindException;
 
 import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
 import ca.zhoozhoo.loaddev.loads.model.Load;
@@ -122,24 +117,5 @@ public class LoadsController {
                         .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT)))
                         .doOnSuccess(result -> log.info("Deleted load with id: {}", id)))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
-    }
-
-    @ExceptionHandler(WebExchangeBindException.class)
-    @ResponseStatus(BAD_REQUEST)
-    public Mono<String> handleValidationException(WebExchangeBindException ex) {
-        log.error("Validation error: {}", ex.getMessage());
-        return Mono.just(ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .reduce((a, b) -> a + "; " + b)
-                .orElse("Validation failed"));
-    }
-
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    @ResponseStatus(CONFLICT)
-    public Mono<String> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
-        log.error("Data integrity violation: {}", ex.getMessage());
-        return Mono.just("Database error: " + ex.getMessage());
     }
 }
