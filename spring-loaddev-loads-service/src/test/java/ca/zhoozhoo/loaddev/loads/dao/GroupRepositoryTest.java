@@ -1,5 +1,6 @@
 package ca.zhoozhoo.loaddev.loads.dao;
 
+import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -24,7 +25,7 @@ class GroupRepositoryTest {
 
     @Test
     void saveGroup() {
-        var group = new Group(null, 15, 100, 0.40, 2874, 2732, 2721, 2995, 27, 54);
+        var group = new Group(null, randomUUID().toString(), 15, 100, 0.40, 2874, 2732, 2721, 2995, 27, 54);
         Mono<Group> savedGroup = groupRepository.save(group);
 
         StepVerifier.create(savedGroup)
@@ -45,7 +46,7 @@ class GroupRepositoryTest {
 
     @Test
     void findGroupById() {
-        var group = new Group(null, 15, 100, 0.40, 2874, 2732, 2721, 2995, 27, 54);
+        var group = new Group(null, randomUUID().toString(), 15, 100, 0.40, 2874, 2732, 2721, 2995, 27, 54);
 
         var savedGroup = groupRepository.save(group).block();
 
@@ -69,11 +70,12 @@ class GroupRepositoryTest {
 
     @Test
     void updateGroup() {
-        var group = new Group(null, 15, 100, 0.40, 2874, 2732, 2721, 2995, 27, 54);
+        var group = new Group(null, randomUUID().toString(), 15, 100, 0.40, 2874, 2732, 2721, 2995, 27, 54);
 
         var savedGroup = groupRepository.save(group).block();
 
-        var updatedGroup = new Group(savedGroup.id(), 20, 200, 0.50, 3000, 2800, 2750, 3050, 30, 60);
+        var updatedGroup = new Group(savedGroup.id(), savedGroup.ownerId(), 20, 200, 0.50, 3000, 2800, 2750, 3050,
+                30, 60);
         var updatedGroupResult = groupRepository.save(updatedGroup).block();
 
         assertEquals(20, updatedGroupResult.numberOfShots());
@@ -89,7 +91,7 @@ class GroupRepositoryTest {
 
     @Test
     void deleteGroup() {
-        var group = new Group(null, 10, 100, 1.5, 5, 4, 1, 9, 2, 8);
+        var group = new Group(null, randomUUID().toString(), 10, 100, 1.5, 5, 4, 1, 9, 2, 8);
 
         var savedGroup = groupRepository.save(group).block();
 

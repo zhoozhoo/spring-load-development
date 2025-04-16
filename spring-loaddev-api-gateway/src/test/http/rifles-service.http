@@ -1,3 +1,4 @@
+
 ### Get OpenID configuration from Keycloak
 GET {{authorization_host}}/realms/{{realm}}/.well-known/openid-configuration
 
@@ -6,7 +7,7 @@ GET {{authorization_host}}/realms/{{realm}}/.well-known/openid-configuration
 POST {{authorization_host}}/realms/{{realm}}/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&username={{username}}&password={{password}}
+grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&username={{username}}&password={{password}}&scope=openid
 
 ### Get list of all rifles
 # @name GetRifles

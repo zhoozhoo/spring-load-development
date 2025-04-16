@@ -12,9 +12,9 @@ public record Shot(
 
         @Id Long id,
 
-        @NotNull
-        @Column Long groupId,
-        
-        @Positive
-        @Column Integer velocity) {
+        @NotNull @Column String ownerId,
+
+        @NotNull @Column Long groupId,
+
+        @Positive @Column Integer velocity) {
 }
