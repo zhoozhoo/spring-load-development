@@ -1,6 +1,23 @@
 services:
+  tracing-server:
+    image: openzipkin/zipkin-slim:3
+    container_name: zipkin
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    environment:
+     - STORAGE_TYPE=mem
+    ports:
+     - 9411:9411
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9411/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   db:
-    image: postgres:17
+    image: postgres:17.4
     container_name: postgres
     environment:
       POSTGRES_USER: user
@@ -18,7 +35,7 @@ services:
       retries: 5
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.1
+    image: quay.io/keycloak/keycloak:26.2
     container_name: keycloak
     environment:
       KC_DB: postgres
@@ -30,11 +47,20 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_HEALTH_ENABLED: true
+      KC_TRACING_ENABLED: true
+      KC_TRACING_SAMPLER_RATIO: 1.0
+      KC_TRACING_ENDPOINT: http://tracing-server:9411/api/v2/spans
+      KC_TRACING_SAMPLER_TYPE: parentbased_traceidratio
+      KC_TRACING_JDBC_ENABLED: false
+      QUARKUS_OTEL_TRACES_EXPORTER: zipkin
+      QUARKUS_OTEL_EXPORTER_ZIPKIN_ENDPOINT: http://tracing-server:9411/api/v2/spans
     ports:
       - "7080:7080"
       - "9000:9000"
     depends_on:
       db:
+        condition: service_healthy
+      tracing-server:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000; echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n' >&3;cat <&3 | grep -q '\"status\": \"UP\"' && exit 0 || exit 1"]
@@ -42,23 +68,12 @@ services:
       timeout: 2s
       retries: 15
     volumes:
-      - ./docker/keycloack/realm.json:/opt/keycloak/data/import/realm.json
+      - ./docker/keycloak/realm/realm.json:/opt/keycloak/data/import/realm.json
+      - ./docker/keycloak/providers:/opt/keycloak/providers
     command: ["start-dev", "--import-realm"]
 
-  tracing-server:
-    image: openzipkin/zipkin-slim:3
-    container_name: zipkin
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-    environment:
-     - STORAGE_TYPE=mem
-    ports:
-     - 9411:9411
-
   config-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-config-server:0.0.2-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-config-server:0.0.3-SNAPSHOT
     container_name: config-server
     ports:
       - "8888:8888"
@@ -72,7 +87,7 @@ services:
       retries: 5
 
   discovery-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-discovery-server:0.0.2-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-discovery-server:0.0.3-SNAPSHOT
     container_name: discovery-server
     ports:
       - "8761:8761"
@@ -91,7 +106,7 @@ services:
       retries: 5
 
   api-gateway:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:0.0.2-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:0.0.3-SNAPSHOT
     container_name: api-gateway
     ports:
       - "8080:8080"
@@ -114,7 +129,7 @@ services:
       retries: 5
 
   rifles-service:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:0.0.2-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:0.0.3-SNAPSHOT
     container_name: rifles-service
     ports:
       - "8081:8081"
@@ -139,7 +154,7 @@ services:
       retries: 5
 
   loads-service:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:0.0.2-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:0.0.3-SNAPSHOT
     container_name: loads-service
     ports:
       - "8082:8082"
