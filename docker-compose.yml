@@ -47,6 +47,7 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_HEALTH_ENABLED: true
+      KC_FEATURES_DISABLED: opentelemetry
       KC_TRACING_ENABLED: true
       KC_TRACING_SAMPLER_RATIO: 1.0
       KC_TRACING_ENDPOINT: http://tracing-server:9411/api/v2/spans
@@ -54,6 +55,7 @@ services:
       KC_TRACING_JDBC_ENABLED: false
       QUARKUS_OTEL_TRACES_EXPORTER: zipkin
       QUARKUS_OTEL_EXPORTER_ZIPKIN_ENDPOINT: http://tracing-server:9411/api/v2/spans
+      QUARKUS_OTEL_TRACES_SUPPRESS_NON_APPLICATION_URIS: true
     ports:
       - "7080:7080"
       - "9000:9000"
