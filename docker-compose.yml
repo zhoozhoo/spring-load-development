@@ -1,20 +1,13 @@
 services:
-  tracing-server:
-    image: openzipkin/zipkin-slim:3
-    container_name: zipkin
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-    environment:
-     - STORAGE_TYPE=mem
+  jaeger:
+    image: jaegertracing/all-in-one:1.68.0
+    container_name: jaeger
     ports:
-     - 9411:9411
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9411/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    environment:
+      - LOG_LEVEL=debug
 
   db:
     image: postgres:17.4
@@ -49,12 +42,9 @@ services:
       KC_HEALTH_ENABLED: true
       KC_FEATURES_DISABLED: opentelemetry
       KC_TRACING_ENABLED: true
-      KC_TRACING_SAMPLER_RATIO: 1.0
-      KC_TRACING_ENDPOINT: http://tracing-server:9411/api/v2/spans
+      KC_TRACING_ENDPOINT: http://jaeger:4317
       KC_TRACING_SAMPLER_TYPE: parentbased_traceidratio
       KC_TRACING_JDBC_ENABLED: false
-      QUARKUS_OTEL_TRACES_EXPORTER: zipkin
-      QUARKUS_OTEL_EXPORTER_ZIPKIN_ENDPOINT: http://tracing-server:9411/api/v2/spans
       QUARKUS_OTEL_TRACES_SUPPRESS_NON_APPLICATION_URIS: true
     ports:
       - "7080:7080"
@@ -62,7 +52,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      tracing-server:
+      jaeger:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000; echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n' >&3;cat <&3 | grep -q '\"status\": \"UP\"' && exit 0 || exit 1"]
@@ -124,6 +114,8 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
+      jaeger:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "/workspace/health-check"]
       interval: 10s
@@ -149,12 +141,14 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
+      jaeger:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "/workspace/health-check"]
       interval: 10s
       timeout: 5s
       retries: 5
-
+      
   loads-service:
     image: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:0.0.3-SNAPSHOT
     container_name: loads-service
@@ -172,6 +166,27 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/workspace/health-check"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  admin-server:
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-admin-server:0.0.3-SNAPSHOT
+    container_name: admin-server
+    ports:
+      - "9090:9090"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - THC_PATH=/actuator/health/readiness
+      - THC_PORT=9090
+    depends_on:
       discovery-server:
         condition: service_healthy
     healthcheck:
