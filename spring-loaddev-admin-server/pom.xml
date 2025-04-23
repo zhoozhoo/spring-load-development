@@ -12,10 +12,6 @@
     <name>Spring Load Development Admin Server</name>
     <description>Spring Load Development Admin Server</description>
 
-    <properties>
-        <spring-boot-admin.version>3.4.1</spring-boot-admin.version>
-    </properties>
-
     <dependencies>
         <!-- Spring Boot -->
         <dependency>
