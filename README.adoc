@@ -14,6 +14,8 @@ Spring Load Development is a project that demonstrates the integration of variou
 * Externalized Configuration Management using link:https://spring.io/projects/spring-cloud-config[Spring Cloud Config]
 * API Gateway using link:https://spring.io/projects/spring-cloud-gateway[Spring Cloud Gateway]
 * Circuit Breaker using link:https://spring.io/projects/spring-cloud-circuitbreaker[Spring Cloud Circuit Breaker] and link:https://resilience4j.readme.io/docs/getting-started[Resilience4J]
+* Distributed Tracing using link:https://opentelemetry.io/[OpenTelemetry] and link:https://www.jaegertracing.io/[Jaeger]
+* Application Monitoring using link:https://github.com/codecentric/spring-boot-admin[Spring Boot Admin]
 * Role-Based Access Control (RBAC) using link:https://spring.io/projects/spring-security[Spring Security] and link:https://www.keycloak.org/[Keycloak]
 
 == Getting Started
@@ -22,7 +24,6 @@ Spring Load Development is a project that demonstrates the integration of variou
 
 * Java 21 or later
 * Docker and Docker Compose
-* PostgreSQL (if running locally)
 * Maven 3.8+
 
 === Running Locally
@@ -42,12 +43,13 @@ docker-compose up -d
 
 . Start the services in order:
 * PostgreSQL (port 5432)
-* Zipkin (port 9411)
+* Jaeger (port 16686)
 * Config Server (port 8888)
 * Discovery Server (port 8761)
 * API Gateway (port 8080)
 * Rifles Service (port 8081)
 * Loads Service (port 8082)
+* Admin Server (port 9090)
 
 Each service can be started using:
 [source,bash]
@@ -61,7 +63,7 @@ Each service can be started using:
 * Discovery Server: http://localhost:8761
 * API Gateway: http://localhost:8080
 * Keycloak Admin Console: http://localhost:7080
-* Trace Server: http://localhost:9411
+* Jaeger UI: http://localhost:16686
 
 === Services Architecture
 
