@@ -1,6 +1,6 @@
 services:
   jaeger:
-    image: jaegertracing/all-in-one:1.68.0
+    image: jaegertracing/jaeger:2.5.0
     container_name: jaeger
     ports:
       - "16686:16686"
@@ -8,6 +8,11 @@ services:
       - "4318:4318"
     environment:
       - LOG_LEVEL=debug
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   db:
     image: postgres:17.4
