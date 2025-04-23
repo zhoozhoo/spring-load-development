@@ -1,5 +1,7 @@
 package ca.zhoozhoo.loaddev.api.config;
 
+import java.util.Objects;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,11 +22,8 @@ import org.springframework.web.server.WebFilterChain;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
-
-import java.util.Objects;
 
 /**
  * This filter handles the exchange of user tokens for permission tokens in a Keycloak-secured application.
@@ -33,14 +32,14 @@ import java.util.Objects;
  * for use by downstream filters.
  */
 @Component
-@Order(0)  // Ensure this runs before TokenForwardingFilter
+@Order(0)
 @Log4j2
 public class PermissionTokenExchangeFilter implements WebFilter {
 
     @Qualifier("keycloakWebClient")
     @Autowired
     private WebClient webClient;
-
+    
     @Value("${spring.security.oauth2.client.provider.keycloak.token-uri}")
     private String tokenUri;
 
@@ -49,14 +48,6 @@ public class PermissionTokenExchangeFilter implements WebFilter {
 
     @Value("${spring.security.oauth2.client.registration.api-gateway.client-secret}")
     private String clientSecret;
-
-    @PostConstruct
-    private void validateProperties() {
-        Objects.requireNonNull(webClient, "webClient must not be null");
-        Objects.requireNonNull(tokenUri, "tokenUri must not be null");
-        Objects.requireNonNull(clientId, "clientId must not be null");
-        Objects.requireNonNull(clientSecret, "clientSecret must not be null");
-    }
 
     /**
      * Main filter method that processes each incoming request.
@@ -100,7 +91,6 @@ public class PermissionTokenExchangeFilter implements WebFilter {
      * @return the token string without the "Bearer " prefix, or null if not present
      */
     private String extractToken(@NonNull ServerHttpRequest request) {
-        Objects.requireNonNull(request, "request must not be null");
         HttpHeaders headers = request.getHeaders();
         if (headers != null) {
             String authHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
@@ -123,8 +113,6 @@ public class PermissionTokenExchangeFilter implements WebFilter {
      */
     @NonNull
     private Mono<String> getPermissionToken(@NonNull String originalToken) {
-        Objects.requireNonNull(originalToken, "originalToken must not be null");
-
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "urn:ietf:params:oauth:grant-type:uma-ticket");
         formData.add("client_id", clientId);

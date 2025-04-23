@@ -15,6 +15,7 @@ import org.springframework.security.oauth2.server.resource.web.reactive.function
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -79,9 +80,7 @@ public class SecurityConfiguration {
      */
     @Bean
     public WebClient webClient(ReactorLoadBalancerExchangeFilterFunction lbFunction) {
-        return WebClient.builder()
-                .filter(lbFunction)
-                .build();
+        return WebClient.builder().filter(lbFunction).build();
     }
 
     /**
@@ -99,10 +98,9 @@ public class SecurityConfiguration {
             ReactiveClientRegistrationRepository clientRegistrations,
             ServerOAuth2AuthorizedClientRepository authorizedClients,
             @Value("${spring.security.oauth2.client.registration.api-gateway.client-id}") String clientRegistrationId) {
-
-        ServerOAuth2AuthorizedClientExchangeFilterFunction oauth2 = new ServerOAuth2AuthorizedClientExchangeFilterFunction(
-                clientRegistrations, authorizedClients);
+        var oauth2 = new ServerOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients);
         oauth2.setDefaultClientRegistrationId(clientRegistrationId);
+        
         return oauth2;
     }
 
@@ -110,14 +108,14 @@ public class SecurityConfiguration {
      * Creates a dedicated WebClient for Keycloak interactions.
      * This WebClient is specifically configured for communication with the Keycloak authorization server,
      * used for authentication, token introspection, and other identity management operations.
+     * The client includes observability support for monitoring and tracing HTTP requests.
      *
      * @param baseUrl the base URL of the Keycloak server
-     * @return a WebClient configured for Keycloak communication
+     * @param observationRegistry registry for recording metrics and traces of HTTP client operations
+     * @return a WebClient configured for Keycloak communication with observability support
      */
     @Bean
-    public WebClient keycloakWebClient(@Value("${spring.webclient.keycloak.base-url}") String baseUrl) {
-        return WebClient.builder()
-                .baseUrl(baseUrl)
-                .build();
+    public WebClient keycloakWebClient(@Value("${spring.webclient.keycloak.base-url}") String baseUrl, ObservationRegistry observationRegistry) {
+        return WebClient.builder().baseUrl(baseUrl).observationRegistry(observationRegistry).build();
     }
 }
