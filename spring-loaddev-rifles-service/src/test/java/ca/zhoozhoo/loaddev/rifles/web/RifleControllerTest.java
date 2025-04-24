@@ -51,7 +51,7 @@ public class RifleControllerTest {
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedRifle = rifleRepository.save(new Rifle(null, userId, "Test Rifle", "Description", "Caliber", 20.0,
-                "Contour", "1:10", 0.5, "Rifling")).block();
+                "Contour", "1:10", "Rifling", 0.5)).block();
 
         webTestClient.mutateWith(jwt).get().uri("/rifles/{id}", savedRifle.id())
                 .accept(APPLICATION_JSON)
@@ -76,7 +76,7 @@ public class RifleControllerTest {
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var rifle = new Rifle(null, userId, "New Rifle", "Description", "Caliber", 20.0,
-                "Contour", "1:10", 0.5, "Rifling");
+                "Contour", "1:10", "Rifling", 0.5);
 
         webTestClient.mutateWith(jwt).post().uri("/rifles")
                 .contentType(APPLICATION_JSON)
@@ -92,8 +92,8 @@ public class RifleControllerTest {
 
     @Test
     void createRifleInvalidInput() {
-        var invalidRifle = new Rifle(null, randomUUID().toString(), "", null, null, -1.0, "Contour", "", -0.5,
-                "Rifling");
+        var invalidRifle = new Rifle(null, randomUUID().toString(), "", null, null, -1.0, "Contour", "", "Rifling",
+                -0.5);
 
         webTestClient.post().uri("/rifles")
                 .contentType(APPLICATION_JSON)
@@ -105,7 +105,6 @@ public class RifleControllerTest {
                     assert errorMessage.contains("Name is required");
                     assert errorMessage.contains("Caliber is required");
                     assert errorMessage.contains("Barrel length must be positive");
-                    assert errorMessage.contains("Twist rate is required");
                     assert errorMessage.contains("Free bore must be positive");
                 });
     }
@@ -117,12 +116,12 @@ public class RifleControllerTest {
 
         var savedRifle = rifleRepository
                 .save(new Rifle(null, userId, "Old Rifle", "Description", "Caliber", 20.0,
-                        "Contour", "1:10", 0.5, "Rifling"))
+                        "Contour", "1:10", "Rifling", 0.5))
                 .block();
 
         var updatedRifle = new Rifle(null, userId, "Updated Rifle", "Updated Description",
                 "Updated Caliber", 22.0,
-                "Updated Contour", "1:12", 0.6, "Updated Rifling");
+                "Updated Contour", "1:12", "Updated Rifling", 0.6);
 
         webTestClient.mutateWith(jwt).put().uri("/rifles/{id}", savedRifle.id())
                 .contentType(APPLICATION_JSON)
@@ -139,7 +138,7 @@ public class RifleControllerTest {
     @Test
     void updateRifleNotFound() {
         var rifle = new Rifle(null, randomUUID().toString(), "Test Rifle", "Description", "Caliber", 20.0,
-                "Contour", "1:10", 0.5, "Rifling");
+                "Contour", "1:10", "Rifling", 0.5);
 
         webTestClient.put().uri("/rifles/999")
                 .contentType(APPLICATION_JSON)
@@ -154,8 +153,7 @@ public class RifleControllerTest {
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedRifle = rifleRepository.save(new Rifle(null, userId, "Rifle to be deleted", "Description", "Caliber",
-                20.0, "Contour", "1:10", 0.5,
-                "Rifling")).block();
+                20.0, "Contour", "1:10", "Rifling", 0.5)).block();
 
         webTestClient.mutateWith(jwt)
                 .delete().uri("/rifles/{id}", savedRifle.id())

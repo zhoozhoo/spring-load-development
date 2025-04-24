@@ -62,15 +62,12 @@ public class GroupsController {
                     Group newGroup = new Group(
                             group.id(),
                             ownerid,
-                            group.numberOfShots(),
+                            group.powderCharge(),
+                            group.powderChargeUnit(),
                             group.targetRange(),
+                            group.targetRangeUnit(),
                             group.groupSize(),
-                            group.mean(),
-                            group.median(),
-                            group.min(),
-                            group.max(),
-                            group.standardDeviation(),
-                            group.extremeSpread());
+                            group.groupSizeUnit());
                     return groupRepository.save(newGroup);
                 })
                 .map(savedGroup -> status(CREATED).body(savedGroup));
@@ -85,15 +82,12 @@ public class GroupsController {
                     Group updatedGroup = new Group(
                             existingGroup.id(),
                             existingGroup.ownerId(),
-                            group.numberOfShots(),
+                            group.powderCharge(),
+                            group.powderChargeUnit(),
                             group.targetRange(),
+                            group.targetRangeUnit(),
                             group.groupSize(),
-                            group.mean(),
-                            group.median(),
-                            group.min(),
-                            group.max(),
-                            group.standardDeviation(),
-                            group.extremeSpread());
+                            group.groupSizeUnit());
                     return groupRepository.save(updatedGroup);
                 })
                 .map(updatedGroup -> ok(updatedGroup))

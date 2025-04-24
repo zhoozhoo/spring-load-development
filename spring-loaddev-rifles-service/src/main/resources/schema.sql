@@ -7,6 +7,6 @@ CREATE TABLE IF NOT EXISTS rifles (
     barrel_length DOUBLE PRECISION,
     barrel_contour VARCHAR(32),
     twist_rate  VARCHAR(32),
-    free_bore DOUBLE PRECISION,
-    rifling VARCHAR(32)
+    rifling VARCHAR(32),
+    free_bore DOUBLE PRECISION
 );

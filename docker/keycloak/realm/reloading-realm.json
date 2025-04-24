@@ -478,6 +478,35 @@
     "webAuthnPolicyPasswordlessExtraOrigins": [],
     "users": [
         {
+            "id": "9ef05302-6cae-4614-a2e4-ba26576a3e38",
+            "username": "reloader1",
+            "firstName": "First1",
+            "lastName": "Last1",
+            "email": "reloader1@re.loading",
+            "emailVerified": true,
+            "createdTimestamp": 1743206038500,
+            "enabled": true,
+            "totp": false,
+            "credentials": [
+                {
+                    "id": "12e36dfd-f96d-4b7f-ba27-7d9f601fe6bf",
+                    "type": "password",
+                    "userLabel": "My password",
+                    "createdDate": 1743206060192,
+                    "secretData": "{\"value\":\"zz3p12Wgf5841OGfZDIUBdpYGM3oFasZ4niLTXo9kJg=\",\"salt\":\"mVTYrIlN8/1NXqYwXTwJWw==\",\"additionalParameters\":{}}",
+                    "credentialData": "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+                }
+            ],
+            "disableableCredentialTypes": [],
+            "requiredActions": [],
+            "realmRoles": [
+                "reloader",
+                "default-roles-reloading"
+            ],
+            "notBefore": 0,
+            "groups": []
+        },
+        {
             "id": "18b1a958-281f-48ec-b21a-c7107e11102d",
             "username": "service-account-reloading-client",
             "emailVerified": false,
@@ -485,6 +514,7 @@
             "enabled": true,
             "totp": false,
             "serviceAccountClientId": "reloading-client",
+            "credentials": [],
             "disableableCredentialTypes": [],
             "requiredActions": [],
             "realmRoles": [
@@ -910,6 +940,16 @@
                 ],
                 "policies": [
                     {
+                        "name": "Default Policy",
+                        "description": "A policy that grants access only for users within this realm",
+                        "type": "js",
+                        "logic": "POSITIVE",
+                        "decisionStrategy": "AFFIRMATIVE",
+                        "config": {
+                            "code": "// by default, grants any permission associated with this policy\n$evaluation.grant();\n"
+                        }
+                    },
+                    {
                         "name": "policy:reloader",
                         "description": "policy:reloader",
                         "type": "role",
@@ -918,6 +958,17 @@
                         "config": {
                             "fetchRoles": "true",
                             "roles": "[{\"id\":\"reloader\",\"required\":false}]"
+                        }
+                    },
+                    {
+                        "name": "Default Permission",
+                        "description": "A permission that applies to the default resource type",
+                        "type": "resource",
+                        "logic": "POSITIVE",
+                        "decisionStrategy": "UNANIMOUS",
+                        "config": {
+                            "defaultResourceType": "urn:reloading-client:resources:default",
+                            "applyPolicies": "[\"Default Policy\"]"
                         }
                     },
                     {
@@ -1903,6 +1954,15 @@
                 "providerId": "rsa-generated",
                 "subComponents": {},
                 "config": {
+                    "privateKey": [
+                        "MIIEowIBAAKCAQEAyHP1Rh3qPKvI1Xd75O8kwUQfCOimtA6Pp6o/Edt4GJj6n37065Z5h0mn2DITagGhPcJL2H9K+sEIEAe8w9oQugPrO5AK4ZazGYpj5Y5OBk816NYACagigLvqDdzVRbqqmwpJmSnC/TftxZkvAYDIc64Zez3J5/m5VUxSTmZ+7RpK3dlzCev3YQoJEh0phAfSk8dnXp+82ZeksB6FTfLVxnVXUShtq1UCqdq4LBGXRC4uxvPXLC2mCsc/i/PeWDhKhgGJx0x0c1rUeTA8vhB0GfPY+EzmSIHmhmxQ7pS7+k2jU9A3d1saKCOdVnCViuW89897pWSiEOZDZEpOsGYyrQIDAQABAoIBADuZSpRJ4bKfSsu5RlN3jQCPfgC6l5ISgEDUHAN1svvxRBb2+uAu8bw5OJfNr7sFeAjyQ3W/xy3OBdUqT8QVioKcFq0zcyDGm0KdRH1ktasnkvpC4mj8niGTfZAYmCquyPnm8aIB6jE6l034cSLrxO2sFnRvlyALPkDvu8sGq3dYIc2GG0v6pH8QuXYS4OpQHdZVkaJwfDsfoBi8z/1Tu0AHtlVgqq1o4FyQIXM2r1uBDMbEihh3sZrjWZKA3d3qGl+96YjOxQQVl0AeipcWUsaS9ZcUbUxNHUO3dsFOJucbr1op17a5sUlHF+IVFrlD2CWeYMHEDodLHiN6tryAEysCgYEA/lAvKAVb9rzKgCBz82eXIz4n8FqFp4oyALVmUlz9z+H8Eh9D7xYupi+IO+uZzUsMbKR+UTHyD/S9vPpKiPNPvwMZL7iXgqbb8310RDZS/8dFtKe0d0Ss6NKKKOZG4IUIJcfOdyyDjCrwZZZrnWSFMijgF9EHflYe3rT+uMjoZRsCgYEAychSJWpyw6cCxX404Z5GmhxXsvpF6nWO5BF2agblBsn7Qlsc6i5+3kMYyi6IZqd3qfMyl/8BLjJMKoN+Ml1ZDgaqI80hlbJsAiCwAzQBnbIf4bfJlZyAwzpO5KhJVcaZ1jQ1s0c+UdmyPyoGBd4tLjMBucNdoN085MdaUtNVa9cCgYBuxHwVoWfx6z8EWZ5HWUpiJlN9A+CNHcsztc8QdsJyRkrllcqgG3hMGA3tk2vVGCgcNfVy5h85xe7Sne3TAq8sUmwo9ezAEm9g+banc0XpdGEvE5CuFjJ94h4dPFeIuUjYM9QA4lmVtqoohUDwN/Uv6M/ab8gkxdwCQrFjyNY4GwKBgFAigRUg6EDxU7VxALlVbT6I4P9QS3Hoi/3hPYCwCkae8m0Q2DPckT/dr7ujrUHvYiOZVM9uU16wVPVRUU3ZKqPaW7lqHttfh2t05dHv1nB1LBotLh5/j9d4kZpXhwBMpg2eoHD5azOAXDyfiNLNwG2njhjjEIzxL9y/mwxnp3XzAoGBAK/4YAiPC/28nz3lOTxSXmgydWxFVJSaWjPtIpT1tH9c5mSfV1yWlNwKB+WA/vN6/AhzSZw7nvS0Jv/DsKj/tFFVbx9BS5R9SyyaJ/pHiROKCkimdYcPinSfzyIvJJyjb8tiOZODmutuX4KTEM6KoWPe/cqihN2RwKDhpAF/NdqX"
+                    ],
+                    "keyUse": [
+                        "SIG"
+                    ],
+                    "certificate": [
+                        "MIICoTCCAYkCBgGV3yrCEzANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAlyZWxvYWRpbmcwHhcNMjUwMzI4MjM0OTM2WhcNMzUwMzI4MjM1MTE2WjAUMRIwEAYDVQQDDAlyZWxvYWRpbmcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDIc/VGHeo8q8jVd3vk7yTBRB8I6Ka0Do+nqj8R23gYmPqffvTrlnmHSafYMhNqAaE9wkvYf0r6wQgQB7zD2hC6A+s7kArhlrMZimPljk4GTzXo1gAJqCKAu+oN3NVFuqqbCkmZKcL9N+3FmS8BgMhzrhl7Pcnn+blVTFJOZn7tGkrd2XMJ6/dhCgkSHSmEB9KTx2den7zZl6SwHoVN8tXGdVdRKG2rVQKp2rgsEZdELi7G89csLaYKxz+L895YOEqGAYnHTHRzWtR5MDy+EHQZ89j4TOZIgeaGbFDulLv6TaNT0Dd3WxooI51WcJWK5bz3z3ulZKIQ5kNkSk6wZjKtAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAEYNWJsmpx6gJACKZOWf+ZPhMl6k7xEXsNuiuIah+MDoKNr9wfkM84LPCZlVWAmcRUzRHFiSvuEPy3a8zb3jv7Y/OFVhfrYZMnUoy8eKnmY61pGBd0VSkN3rvIFfRXLw2Y5/yB6TycSXjtCECA2MSBeUHH+DsqzuXY9oK1lilee4fqHOqcJdB6qubcV6F6VTWu/CayA0kK5sYks5CgTiB6YVuG01NAVCVURpqJBi8Ew7AC5SMmxV1U3tiF3v5kqpU7tJ8cyjyQHAS2/N9J8REW+b2D5K48iWv6S0OTRkxAPIIz9/bv8LGVEhOg9bF4monSIQ/aSPB9AtCqFFMZluTHc="
+                    ],
                     "priority": [
                         "100"
                     ]
@@ -1914,6 +1974,12 @@
                 "providerId": "aes-generated",
                 "subComponents": {},
                 "config": {
+                    "kid": [
+                        "5764d154-cde7-446b-a635-53fee854e7bf"
+                    ],
+                    "secret": [
+                        "W1YLCsIPg-WI7YKKv_i98Q"
+                    ],
                     "priority": [
                         "100"
                     ]
@@ -1925,6 +1991,12 @@
                 "providerId": "hmac-generated",
                 "subComponents": {},
                 "config": {
+                    "kid": [
+                        "dcfb7b74-f14d-4c42-ac1b-e97978d0cc0c"
+                    ],
+                    "secret": [
+                        "88us7qV2qR0eCzSre1AX-HEnsQb3_0dHXZrQcYdcq1pKtE7chdiAjSW_xpCMl0K5tAqj8v1jT4bkKSAOP2Fnb2KVTHXSi0dn8BxbDsyvj9dUFfl-TCyu3VsM5ldVaNqtJC-YLG7HRcD9AG_8QzanIuaeMJ0hHGLl_y-KzH8YiKU"
+                    ],
                     "priority": [
                         "100"
                     ],
@@ -1939,6 +2011,15 @@
                 "providerId": "rsa-enc-generated",
                 "subComponents": {},
                 "config": {
+                    "privateKey": [
+                        "MIIEpAIBAAKCAQEAwXSlNwPD0dent8dtrDqfCidWbEGykiLt6YqXOMIdXOSNyNU0ZgUZHKa4J2esqqP5kze1nee2Sjoh1+pNcjz/LKvF14KoL+NZS9JWb9E60V7wSQ3Ym9VgaS8Z23sArMUVrV2GxvxMNlONezwyXSOfzYjG3Jts6tnEXgAII9VY2JpbtYmG3MJYtBTuw1nzczj/RvjHXeS+6lCv3g0Zizo25p5Vqk9VuTLNkjyWG41BB8tvj6tRr6jOEhQpdWDrOtLxz72pmKAZlZA7Wb6N+zLeqQwf5TJcqsag2wwGfcxOMBpuAKv4SdJmrWA+ZdzN1zKy4GYmKVvCFtsE1+QQx7tEgwIDAQABAoIBACnKFcptkMZqrHtBpEpZG3PpDX0zL+zriLMzUflbzVX8tTgV/kyvez46MXuppJ3z7/zCQwRKQpGEPz1SCsrLrF+s937XZZd6qBZ96FgdPXRu6r8NM6ZuEHaISzCjQIERzd32Xx/q7lep8t0VItgF0wZmLncHSB7vTcD0hs2ez6NyS6BsBJErsXx1QjuWL4ZI1VbohdcwkU+MoZJxO7W37LQeBYYlxn8e12jMTXRrsJr2WLGRVUg3ItfO3NSk6qZ/8uIvPs0+Z2/mEak1Ihfoz83hGPdcfUyxeM2SvpBVu0bD94GNto+RwubjYY4r91NvaaOfIk+DIBeKdeIYyPPyLpkCgYEA/2AFZrpaPGOxviGlad5ewi9VvT545g60kPn9+0CDltoJzLRn03RM8pHJda8BClg9D2kTNsGD7/MoCxhFfyQIqT8TTCupP8+dF9jvN71+JO+y0pwtxFn2JGmNNqmgVdJgBO9iYfQgC+31W/y9UTEzhsi13Or4uJG8/hgo1Y9PI5cCgYEAwe3VxSfhj86TIiZog8lSmvvKqe1AeaYtBFgCo2tS0WDsiHOAwAGRq3yA+T5J+bLGmgSGg2Kpr4pJN08Y8IVWnj1WR5KXUwgpCKUfyEoO7aVL8P/vxQNscT/LJ80BbZa4nYRF144E6aCUvQXyYQvvWSwy4doXUCPNlflG+ay2E/UCgYBK6Mes0o0VmcjRlN0IqQnyvB/SWzjrgvTEchBmWw4+ecbWHTU3ea34mXsW4jbT6f4/Pvs73JfvEsx0NLJuEQvZWX83oLcM2MGj9SZ2m0cdXpJ95QInzpu9Ipkhp7A4fHVd/TpGsW2VEkAes4x0/JG4v7dZDjPXMCjYAA46VsdIEQKBgQCbKMI3ixASchIQabCHeIVKERj2WieS7Rzpc80wmQbbFPRKvDcP6HF3Rhce0/J2AM6bnfFNn5vqIfcwdG2cyuIhmyuz+hpuyYGjNBI4uuA0zWL0QKHC/FlARu0xO/nfh47QIGuM6kkN73fxwJdLhDQNIarYPxkV+n9bdeWOj9viHQKBgQDDLB9i3qwBdx5DGkmynCqRwSffeQitM2+y/6nHgN+VLAEGA7jFcq2no4zFgOwd9jtciE7aFiLOaanRJiOq/8zEOVD0BBEmb47FzRbd5cTa+JXIsEJhxfwd+bxGESTaaCiEu0bdbdAwpMUFN6OfKzUqIqswtWLrGDWHMWl/CUPbOA=="
+                    ],
+                    "keyUse": [
+                        "ENC"
+                    ],
+                    "certificate": [
+                        "MIICoTCCAYkCBgGV3yrCpzANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAlyZWxvYWRpbmcwHhcNMjUwMzI4MjM0OTM2WhcNMzUwMzI4MjM1MTE2WjAUMRIwEAYDVQQDDAlyZWxvYWRpbmcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDBdKU3A8PR16e3x22sOp8KJ1ZsQbKSIu3pipc4wh1c5I3I1TRmBRkcprgnZ6yqo/mTN7Wd57ZKOiHX6k1yPP8sq8XXgqgv41lL0lZv0TrRXvBJDdib1WBpLxnbewCsxRWtXYbG/Ew2U417PDJdI5/NiMbcm2zq2cReAAgj1VjYmlu1iYbcwli0FO7DWfNzOP9G+Mdd5L7qUK/eDRmLOjbmnlWqT1W5Ms2SPJYbjUEHy2+Pq1GvqM4SFCl1YOs60vHPvamYoBmVkDtZvo37Mt6pDB/lMlyqxqDbDAZ9zE4wGm4Aq/hJ0matYD5l3M3XMrLgZiYpW8IW2wTX5BDHu0SDAgMBAAEwDQYJKoZIhvcNAQELBQADggEBACYshG2xPv3Gtoa6JfI9cqZuThpSYT4VIJuW33uKlbzBxonOxAoP177K7zLq2V+UWLsTv6lmF0r6cDzW7xEYDZhPWKpDXGYGqqlRh/i0yxGwbSTWmndZF29W+VXcF9ngyP6AK4AWekjzwmca0bYEkCx5vEV6hAQ412xjgoABdkWtiG9+7eDTRak8HOgX1LraCgy3304F5mzhBjG2bZJld8KEX3JFlyNhwR9UCMa7bmSVqpblslAmmhmm6oNUeXonA1P2/vrJq2LrZVUc20j0/qhFBKMxyEs611PFnSiKXCKNHRT/ZGfdOvERcTESq7pOPUy1Oivn7JX12n4+nWwayYs="
+                    ],
                     "priority": [
                         "100"
                     ],
@@ -2691,7 +2772,7 @@
         "cibaInterval": "5",
         "realmReusableOtpCode": "false"
     },
-    "keycloakVersion": "26.1.3",
+    "keycloakVersion": "26.2.0",
     "userManagedAccessAllowed": false,
     "organizationsEnabled": false,
     "verifiableCredentialsEnabled": false,

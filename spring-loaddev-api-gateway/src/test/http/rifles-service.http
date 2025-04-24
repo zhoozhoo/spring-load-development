@@ -1,4 +1,3 @@
-
 ### Get OpenID configuration from Keycloak
 GET {{authorization_host}}/realms/{{realm}}/.well-known/openid-configuration
 

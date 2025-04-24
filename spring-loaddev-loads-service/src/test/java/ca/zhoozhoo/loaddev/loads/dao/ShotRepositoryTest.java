@@ -15,6 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.model.Group;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
+import ca.zhoozhoo.loaddev.loads.model.Unit;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -37,12 +38,31 @@ class ShotRepositoryTest {
         groupRepository.deleteAll().block();
     }
 
+    private Shot createTestShot(String ownerId, Long groupId) {
+        return new Shot(null, 
+                ownerId, 
+                groupId, 
+                random.nextInt(1000),
+                Unit.METERS);
+    }
+
+    private Group createTestGroup(String ownerId) {
+        return new Group(null, 
+                ownerId, 
+                26.5, 
+                Unit.GRAINS,
+                100, 
+                Unit.YARDS,
+                0.40, 
+                Unit.INCHES);
+    }
+
     @Test
     void findById() {
-        var group = new Group(null, randomUUID().toString(), 15, 100, 0.40, 2874, 2732, 2721, 2995, 27, 54);
+        var group = createTestGroup(randomUUID().toString());
         var savedGroup = groupRepository.save(group).block();
 
-        var shot = new Shot(null, group.ownerId(), savedGroup.id(), random.nextInt(1000));
+        var shot = createTestShot(group.ownerId(), savedGroup.id());
         var savedShot = shotRepository.save(shot).block();
 
         var result = shotRepository.findById(savedShot.id());
@@ -54,10 +74,10 @@ class ShotRepositoryTest {
 
     @Test
     void save() {
-        var group = new Group(null, randomUUID().toString(), 15, 100, 0.40, 2874, 2732, 2721, 2995, 27, 54);
+        var group = createTestGroup(randomUUID().toString());
         var savedGroup = groupRepository.save(group).block();
 
-        var shot = new Shot(null, group.ownerId(), savedGroup.id(), random.nextInt(1000));
+        var shot = createTestShot(group.ownerId(), savedGroup.id());
 
         var savedShot = shotRepository.save(shot);
 
@@ -68,11 +88,11 @@ class ShotRepositoryTest {
 
     @Test
     void findAll() {
-        var group = new Group(null, randomUUID().toString(), 15, 100, 0.40, 2874, 2732, 2721, 2995, 27, 54);
+        var group = createTestGroup(randomUUID().toString());
         var savedGroup = groupRepository.save(group).block();
 
-        var shot1 = new Shot(null, group.ownerId(), savedGroup.id(), random.nextInt(1000));
-        var shot2 = new Shot(null, group.ownerId(), savedGroup.id(), random.nextInt(1000));
+        var shot1 = createTestShot(group.ownerId(), savedGroup.id());
+        var shot2 = createTestShot(group.ownerId(), savedGroup.id());
 
         shotRepository.saveAll(Flux.just(shot1, shot2)).blockLast();
 
@@ -87,10 +107,10 @@ class ShotRepositoryTest {
     @Test
     void deleteById() {
         var userId = UUID.randomUUID().toString();
-        var group = new Group(null, userId, 15, 100, 0.40, 2874, 2732, 2721, 2995, 27, 54);
+        var group = createTestGroup(userId);
         var savedGroup = groupRepository.save(group).block();
 
-        var shot = new Shot(null, userId, savedGroup.id(), random.nextInt(1000));
+        var shot = createTestShot(userId, savedGroup.id());
         var savedShot = shotRepository.save(shot).block();
 
         var result = shotRepository.deleteById(savedShot.id());
@@ -108,13 +128,13 @@ class ShotRepositoryTest {
     @Test
     void update() {
         var userId = UUID.randomUUID().toString();
-        var group = new Group(null, userId, 15, 100, 0.40, 2874, 2732, 2721, 2995, 27, 54);
+        var group = createTestGroup(userId);
         var savedGroup = groupRepository.save(group).block();
 
-        var shot = new Shot(null, userId, savedGroup.id(), random.nextInt(1000));
+        var shot = createTestShot(userId, savedGroup.id());
         var savedShot = shotRepository.save(shot).block();
 
-        var updatedShot = new Shot(savedShot.id(), userId, savedGroup.id(), random.nextInt(1000));
+        var updatedShot = new Shot(savedShot.id(), userId, savedGroup.id(), random.nextInt(1000), Unit.METERS);
 
         var result = shotRepository.save(updatedShot);
 
@@ -126,11 +146,11 @@ class ShotRepositoryTest {
     @Test
     void findByGroupId() {
         var userId = UUID.randomUUID().toString();
-        var group = new Group(null, userId, 15, 100, 0.40, 2874, 2732, 2721, 2995, 27, 54);
+        var group = createTestGroup(userId);
         var savedGroup = groupRepository.save(group).block();
 
-        var shot1 = new Shot(null, userId, savedGroup.id(), random.nextInt(1000));
-        var shot2 = new Shot(null, userId, savedGroup.id(), random.nextInt(1000));
+        var shot1 = createTestShot(userId, savedGroup.id());
+        var shot2 = createTestShot(userId, savedGroup.id());
 
         shotRepository.saveAll(Flux.just(shot1, shot2)).blockLast();
 

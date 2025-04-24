@@ -3,32 +3,33 @@ package ca.zhoozhoo.loaddev.loads.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 @Table(name = "groups")
 public record Group(
-
         @Id Long id,
 
-        @NotNull @Column String ownerId,
+        @NotBlank(message = "Owner ID is required") 
+        @Column("owner_id") String ownerId,
 
-        @NotNull @Positive @Column Integer numberOfShots,
+        @NotNull(message = "Powder charge is required")
+        @Positive(message = "Powder charge must be positive")
+        @Column("powder_charge") Double powderCharge,
 
-        @NotNull @Positive @Column Integer targetRange,
+        @NotNull(message = "Powder charge unit is required")
+        @Column("powder_charge_unit") Unit powderChargeUnit,
 
-        @NotNull @Positive @Column Double groupSize,
+        @NotNull(message = "Target range is required")
+        @Positive(message = "Target range must be positive")
+        @Column("target_range") Integer targetRange,
 
-        @NotNull @Column Integer mean,
+        @NotNull(message = "Target range unit is required")
+        @Column("target_range_unit") Unit targetRangeUnit,
 
-        @NotNull @Column Integer median,
+        @Positive(message = "Group size must be positive")
+        @Column("group_size") Double groupSize,
 
-        @NotNull @Column Integer min,
-
-        @NotNull @Column Integer max,
-
-        @NotNull @Min(0) @Column Integer standardDeviation,
-
-        @NotNull @Positive @Column Integer extremeSpread) {
-}
+        @Column("group_size_unit") Unit groupSizeUnit
+) {}

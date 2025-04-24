@@ -4,38 +4,65 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+import ca.zhoozhoo.loaddev.loads.validation.LoadMeasurement;
 
 @Table(name = "loads")
+@LoadMeasurement
 public record Load(
 
         @Id Long id,
 
-        @NotNull @Column String ownerId,
+        @NotBlank(message = "Owner ID is required")
+        @Column String ownerId,
 
-        @NotNull @Column("name") String name,
+        @NotBlank(message = "Name is required")
+        @Column("name") String name,
 
         @Column("description") String description,
 
-        @NotNull @Column("powder_manufacturer") String powderManufacturer,
+        @NotBlank(message = "Powder manufacturer is required")
+        @Column("powder_manufacturer") String powderManufacturer,
 
-        @NotNull @Column("powder_type") String powderType,
+        @NotBlank(message = "Powder type is required")
+        @Column("powder_type") String powderType,
 
-        @NotNull @Column("powder_charge") Double powderCharge,
+        @NotBlank(message = "Bullet manufacturer is required")
+        @Column("bullet_manufacturer") String bulletManufacturer,
 
-        @NotNull @Column("bullet_manufacturer") String bulletManufacturer,
+        @NotBlank(message = "Bullet type is required")
+        @Column("bullet_type") String bulletType,
 
-        @NotNull @Column("bullet_type") String bulletType,
+        @NotNull(message = "Bullet weight is required")
+        @Positive(message = "Bullet weight must be positive")
+        @Column("bullet_weight") Double bulletWeight,
 
-        @NotNull @Column("bullet_weight") Double bulletWeight,
+        @NotNull(message = "Bullet weight unit is required")
+        @Column("bullet_weight_unit") Unit bulletWeightUnit,
 
-        @NotNull @Column("primer_manufacturer") String primerManufacturer,
+        @NotBlank(message = "Primer manufacturer is required")
+        @Column("primer_manufacturer") String primerManufacturer,
 
-        @NotNull @Column("primer_type") String primerType,
+        @NotBlank(message = "Primer type is required")
+        @Column("primer_type") String primerType,
 
-        @NotNull @Column("distance_from_lands") Double distanceFromLands,
+        @Positive(message = "Distance from lands must be positive")
+        @Column("distance_from_lands") Double distanceFromLands,
 
-        @NotNull @Column("rifle_id") Long rifleId) {
-    public Load {
-    }
+        @Column("distance_from_lands_unit") Unit distanceFromLandsUnit,
+
+        @Positive(message = "Case overall length must be positive")
+        @Column("case_overall_length") Double caseOverallLength,
+
+        @Column("case_overall_length_unit") Unit caseOverallLengthUnit,
+
+        @Positive(message = "Neck tension must be positive")
+        @Column("neck_tension") Double neckTension,
+
+        @Column("neck_tension_unit") Unit neckTensionUnit,
+        
+        @Column("rifle_id") Long rifleId) {
 }

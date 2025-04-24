@@ -19,6 +19,7 @@ import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
 import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
 import ca.zhoozhoo.loaddev.loads.model.Group;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
+import ca.zhoozhoo.loaddev.loads.model.Unit;
 import reactor.core.publisher.Mono;
 
 @SpringBootTest
@@ -44,11 +45,18 @@ public class ShotsControllerTest {
 
     private Group createAndSaveGroup(String ownerId) {
         return groupRepository
-                .save(new Group(null, ownerId, 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200)).block();
+                .save(new Group(null, ownerId, 
+                    26.5, Unit.GRAINS,
+                    100, Unit.YARDS,
+                    0.40, Unit.INCHES)).block();
     }
 
     private Shot createAndSaveShot(Group group, int velocity) {
-        return shotRepository.save(new Shot(null, group.ownerId(), group.id(), velocity)).block();
+        return shotRepository.save(new Shot(null, 
+            group.ownerId(), 
+            group.id(), 
+            velocity,
+            Unit.METERS)).block();
     }
 
     @Test
@@ -95,7 +103,7 @@ public class ShotsControllerTest {
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var group = createAndSaveGroup(userId);
-        var newShot = new Shot(null, userId, group.id(), 3200);
+        var newShot = new Shot(null, userId, group.id(), 3200, Unit.METERS);
 
         webTestClient.mutateWith(jwt).post().uri("/shots")
                 .contentType(APPLICATION_JSON)
@@ -107,6 +115,7 @@ public class ShotsControllerTest {
                     assertThat(shot.id()).isNotNull();
                     assertThat(shot.groupId()).isEqualTo(newShot.groupId());
                     assertThat(shot.velocity()).isEqualTo(newShot.velocity());
+                    assertThat(shot.velocityUnit()).isEqualTo(Unit.METERS);
                 });
     }
 
@@ -118,7 +127,7 @@ public class ShotsControllerTest {
         var group = createAndSaveGroup(userId);
         var shot1 = createAndSaveShot(group, 3000);
 
-        var updatedShot = new Shot(null, userId, group.id(), 3300);
+        var updatedShot = new Shot(null, userId, group.id(), 3300, Unit.METERS);
 
         webTestClient.mutateWith(jwt).put().uri("/shots/" + shot1.id())
                 .contentType(APPLICATION_JSON)
@@ -130,6 +139,7 @@ public class ShotsControllerTest {
                     assertThat(shot.id()).isEqualTo(shot1.id());
                     assertThat(shot.groupId()).isEqualTo(updatedShot.groupId());
                     assertThat(shot.velocity()).isEqualTo(updatedShot.velocity());
+                    assertThat(shot.velocityUnit()).isEqualTo(Unit.METERS);
                 });
     }
 
@@ -178,7 +188,7 @@ public class ShotsControllerTest {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidShot = new Shot(null, userId, null, -100);
+        var invalidShot = new Shot(null, userId, null, -100, null);
 
         webTestClient.mutateWith(jwt).post().uri("/shots")
                 .contentType(APPLICATION_JSON)
@@ -192,7 +202,7 @@ public class ShotsControllerTest {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidShot = new Shot(null, userId, null, null);
+        var invalidShot = new Shot(null, userId, null, null, null);
 
         webTestClient.mutateWith(jwt).post().uri("/shots")
                 .contentType(APPLICATION_JSON)
@@ -207,7 +217,7 @@ public class ShotsControllerTest {
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var group = createAndSaveGroup(userId);
-        var shot = new Shot(null, randomUUID().toString(), group.id(), 3000);
+        var shot = new Shot(null, randomUUID().toString(), group.id(), 3000, Unit.METERS);
 
         webTestClient.mutateWith(jwt).put().uri("/shots/999")
                 .contentType(APPLICATION_JSON)
@@ -223,7 +233,7 @@ public class ShotsControllerTest {
 
         var group = createAndSaveGroup(userId);
         var shot = createAndSaveShot(group, 3000);
-        var invalidShot = new Shot(shot.id(), userId, null, -100);
+        var invalidShot = new Shot(shot.id(), userId, null, -100, null);
 
         webTestClient.mutateWith(jwt).put().uri("/shots/{id}", shot.id())
                 .contentType(APPLICATION_JSON)

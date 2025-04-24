@@ -27,7 +27,7 @@ class RifleRepositoryTest {
         var userId = UUID.randomUUID().toString();
         var savedRifle = rifleRepository
                 .save(new Rifle(null, userId, "Test Rifle", "Description", "5.56mm", 20.0,
-                        "Contour", "1:7", 0.2, "Rifling"));
+                        "Contour", "1:7", "Rifling", 0.2));
 
         StepVerifier.create(savedRifle)
                 .assertNext(r -> {
@@ -49,7 +49,7 @@ class RifleRepositoryTest {
     void findRifleById() {
         var userId = UUID.randomUUID().toString();
         var savedRifle = rifleRepository.save(new Rifle(null, userId, "Test Rifle", "Description", "5.56mm", 20.0,
-                "Contour", "1:7", 0.2, "Rifling")).block();
+                "Contour", "1:7", "Rifling", 0.2)).block();
 
         var foundRifle = rifleRepository.findById(savedRifle.id());
 
@@ -74,12 +74,12 @@ class RifleRepositoryTest {
         var userId = UUID.randomUUID().toString();
         var savedRifle = rifleRepository
                 .save(new Rifle(null, userId, "Test Rifle", "Description", "5.56mm", 20.0,
-                        "Contour", "1:7", 0.2, "Rifling"))
+                        "Contour", "1:7", "Rifling", 0.2))
                 .block();
 
         var updatedRifle = rifleRepository.save(new Rifle(savedRifle.id(), userId, "Updated Rifle",
                 "Updated Description", "7.62mm", 24.0, "Heavy",
-                "1:10", 0.3, "Polygonal"));
+                "1:10", "Polygonal", 0.3));
 
         StepVerifier.create(updatedRifle)
                 .assertNext(r -> {
@@ -100,7 +100,7 @@ class RifleRepositoryTest {
     void deleteRifle() {
         var userId = UUID.randomUUID().toString();
         var savedRifle = rifleRepository.save(new Rifle(null, userId, "Test Rifle", "Description", "5.56mm", 20.0,
-                "Contour", "1:7", 0.2, "Rifling")).block();
+                "Contour", "1:7", "Rifling", 0.2)).block();
 
         var deletedRifle = rifleRepository.delete(savedRifle);
 

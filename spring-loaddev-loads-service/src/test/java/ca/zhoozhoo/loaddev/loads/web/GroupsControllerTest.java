@@ -18,6 +18,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
 import ca.zhoozhoo.loaddev.loads.model.Group;
+import ca.zhoozhoo.loaddev.loads.model.Unit;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -38,7 +39,10 @@ public class GroupsControllerTest {
 
     private Group createAndSaveGroup(String ownerId) {
         return groupRepository
-                .save(new Group(null, ownerId, 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200)).block();
+                .save(new Group(null, ownerId, 
+                    26.5, Unit.GRAINS,
+                    100, Unit.YARDS,
+                    0.40, Unit.INCHES)).block();
     }
 
     @Test
@@ -48,7 +52,10 @@ public class GroupsControllerTest {
 
         var group1 = createAndSaveGroup(userId);
         var group2 = groupRepository
-                .save(new Group(null, userId, 10, 200, 2.5, 3100, 3100, 3000, 3200, 60, 300)).block();
+                .save(new Group(null, userId, 
+                    28.0, Unit.GRAINS,
+                    200, Unit.YARDS,
+                    0.50, Unit.INCHES)).block();
 
         webTestClient.mutateWith(jwt).get().uri("/groups")
                 .accept(APPLICATION_JSON)
@@ -83,7 +90,10 @@ public class GroupsControllerTest {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var newGroup = new Group(null, randomUUID().toString(), 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200);
+        var newGroup = new Group(null, randomUUID().toString(), 
+            26.5, Unit.GRAINS,
+            100, Unit.YARDS,
+            0.40, Unit.INCHES);
 
         webTestClient.mutateWith(jwt).post().uri("/groups")
                 .contentType(APPLICATION_JSON)
@@ -93,15 +103,12 @@ public class GroupsControllerTest {
                 .expectBody(Group.class)
                 .value(group -> {
                     assertThat(group.id()).isNotNull();
-                    assertThat(group.numberOfShots()).isEqualTo(newGroup.numberOfShots());
+                    assertThat(group.powderCharge()).isEqualTo(newGroup.powderCharge());
+                    assertThat(group.powderChargeUnit()).isEqualTo(Unit.GRAINS);
                     assertThat(group.targetRange()).isEqualTo(newGroup.targetRange());
+                    assertThat(group.targetRangeUnit()).isEqualTo(Unit.YARDS);
                     assertThat(group.groupSize()).isEqualTo(newGroup.groupSize());
-                    assertThat(group.mean()).isEqualTo(newGroup.mean());
-                    assertThat(group.median()).isEqualTo(newGroup.median());
-                    assertThat(group.min()).isEqualTo(newGroup.min());
-                    assertThat(group.max()).isEqualTo(newGroup.max());
-                    assertThat(group.standardDeviation()).isEqualTo(newGroup.standardDeviation());
-                    assertThat(group.extremeSpread()).isEqualTo(newGroup.extremeSpread());
+                    assertThat(group.groupSizeUnit()).isEqualTo(Unit.INCHES);
                 });
     }
 
@@ -112,7 +119,10 @@ public class GroupsControllerTest {
 
         var group = createAndSaveGroup(userId);
 
-        var updatedGroup = new Group(null, randomUUID().toString(), 10, 200, 2.5, 3100, 3100, 3000, 3200, 60, 300);
+        var updatedGroup = new Group(null, randomUUID().toString(), 
+            28.0, Unit.GRAINS,
+            200, Unit.YARDS,
+            0.50, Unit.INCHES);
 
         webTestClient.mutateWith(jwt).put().uri("/groups/" + group.id())
                 .contentType(APPLICATION_JSON)
@@ -122,15 +132,12 @@ public class GroupsControllerTest {
                 .expectBody(Group.class)
                 .value(returnedGroup -> {
                     assertThat(returnedGroup.id()).isEqualTo(group.id());
-                    assertThat(returnedGroup.numberOfShots()).isEqualTo(updatedGroup.numberOfShots());
+                    assertThat(returnedGroup.powderCharge()).isEqualTo(updatedGroup.powderCharge());
+                    assertThat(returnedGroup.powderChargeUnit()).isEqualTo(Unit.GRAINS);
                     assertThat(returnedGroup.targetRange()).isEqualTo(updatedGroup.targetRange());
+                    assertThat(returnedGroup.targetRangeUnit()).isEqualTo(Unit.YARDS);
                     assertThat(returnedGroup.groupSize()).isEqualTo(updatedGroup.groupSize());
-                    assertThat(returnedGroup.mean()).isEqualTo(updatedGroup.mean());
-                    assertThat(returnedGroup.median()).isEqualTo(updatedGroup.median());
-                    assertThat(returnedGroup.min()).isEqualTo(updatedGroup.min());
-                    assertThat(returnedGroup.max()).isEqualTo(updatedGroup.max());
-                    assertThat(returnedGroup.standardDeviation()).isEqualTo(updatedGroup.standardDeviation());
-                    assertThat(returnedGroup.extremeSpread()).isEqualTo(updatedGroup.extremeSpread());
+                    assertThat(returnedGroup.groupSizeUnit()).isEqualTo(Unit.INCHES);
                 });
     }
 
@@ -166,7 +173,10 @@ public class GroupsControllerTest {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidGroup = new Group(null, userId, -5, -100, -1.5, 0, 0, 0, 0, -50, -200);
+        var invalidGroup = new Group(null, userId, 
+            -5.0, null,
+            -100, null,
+            -1.5, null);
 
         webTestClient.mutateWith(jwt).post().uri("/groups")
                 .contentType(APPLICATION_JSON)
@@ -180,7 +190,10 @@ public class GroupsControllerTest {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidGroup = new Group(null, null, null, null, null, null, null, null, null, null, null);
+        var invalidGroup = new Group(null, null, 
+            null, null,
+            null, null,
+            null, null);
 
         webTestClient.mutateWith(jwt).post().uri("/groups")
                 .contentType(APPLICATION_JSON)
@@ -194,7 +207,10 @@ public class GroupsControllerTest {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var group = new Group(null, userId, 5, 100, 1.5, 3000, 3000, 2900, 3100, 50, 200);
+        var group = new Group(null, userId, 
+            26.5, Unit.GRAINS,
+            100, Unit.YARDS,
+            0.40, Unit.INCHES);
 
         webTestClient.mutateWith(jwt).put().uri("/groups/999")
                 .contentType(APPLICATION_JSON)
@@ -209,7 +225,10 @@ public class GroupsControllerTest {
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var group = createAndSaveGroup(userId);
-        var invalidGroup = new Group(null, userId, -5, -100, -1.5, 0, 0, 0, 0, -50, -200);
+        var invalidGroup = new Group(null, userId, 
+            -5.0, null,
+            -100, null,
+            -1.5, null);
 
         webTestClient.mutateWith(jwt).put().uri("/groups/" + group.id())
                 .contentType(APPLICATION_JSON)

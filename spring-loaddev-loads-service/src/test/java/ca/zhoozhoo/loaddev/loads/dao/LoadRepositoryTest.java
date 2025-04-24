@@ -12,6 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.model.Load;
+import ca.zhoozhoo.loaddev.loads.model.Unit;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -26,21 +27,31 @@ class LoadRepositoryTest {
 
     private Random random = new Random();
 
-    @Test
-    void findById() {
-        Load load = new Load(1L,
-                randomUUID().toString(),
+    private Load createTestLoad(String ownerId) {
+        return new Load(null,
+                ownerId,
                 "SMK 53 HP H335 " + random.nextInt(100),
                 "SMK 53gr HP with Hodgdon H335",
-                "Hodgdon", "H335",
-                26.9,
+                "Hodgdon", 
+                "H335",
                 "Sierra",
                 "MatchKing HP",
                 53.0,
+                Unit.GRAINS,
                 "Federal",
                 "205M",
                 0.020,
+                Unit.INCHES,
+                2.260,
+                Unit.INCHES,
+                0.002,
+                Unit.INCHES,
                 1L);
+    }
+
+    @Test
+    void findById() {
+        Load load = createTestLoad(randomUUID().toString());
         loadRepository.save(load).block();
 
         Mono<Load> result = loadRepository.findById(1L);
@@ -52,19 +63,7 @@ class LoadRepositoryTest {
 
     @Test
     void save() {
-        Load load = new Load(null,
-                randomUUID().toString(),
-                "SMK 53 HP H335 " + random.nextInt(100),
-                "SMK 53gr HP with Hodgdon H335",
-                "Hodgdon", "H335",
-                26.9,
-                "Sierra",
-                "MatchKing HP",
-                53.0,
-                "Federal",
-                "205M",
-                0.020,
-                1L);
+        Load load = createTestLoad(randomUUID().toString());
 
         Mono<Load> savedLoad = loadRepository.save(load);
 
@@ -76,32 +75,25 @@ class LoadRepositoryTest {
     @Test
     void findAll() {
 
-        Load load1 = new Load(null,
-                randomUUID().toString(),
-                "SMK 53 HP H335 " + random.nextInt(100),
-                "SMK 53gr HP with Hodgdon H335",
-                "Hodgdon", "H335",
-                26.9,
-                "Sierra",
-                "MatchKing HP",
-                53.0,
-                "Federal",
-                "205M",
-                0.020,
-                1L);
-
+        Load load1 = createTestLoad(randomUUID().toString());
         Load load2 = new Load(null,
                 randomUUID().toString(),
                 "Hornady 52 BTHP 4198",
                 "Hornady 52gr 4198 BTHP with IMR 4198",
-                "IMR", "4198",
-                20.0,
+                "IMR", 
+                "4198",
                 "Hornady",
                 "BTHP Match",
                 52.0,
+                Unit.GRAINS,
                 "Federal",
                 "205M",
                 0.020,
+                Unit.INCHES,
+                2.250,
+                Unit.INCHES,
+                0.003,
+                Unit.INCHES,
                 2L);
 
         loadRepository.saveAll(Flux.just(load1, load2))
@@ -117,19 +109,7 @@ class LoadRepositoryTest {
 
     @Test
     void deleteById() {
-        Load load = new Load(null,
-                randomUUID().toString(),
-                "SMK 53 HP H335 " + random.nextInt(100),
-                "SMK 53gr HP with Hodgdon H335",
-                "Hodgdon", "H335",
-                26.9,
-                "Sierra",
-                "MatchKing HP",
-                53.0,
-                "Federal",
-                "205M",
-                0.020,
-                1L);
+        Load load = createTestLoad(randomUUID().toString());
 
         Load savedLoad = loadRepository.save(load)
                 .block();
@@ -148,19 +128,7 @@ class LoadRepositoryTest {
 
     @Test
     void update() {
-        Load load = new Load(null,
-                randomUUID().toString(),
-                "SMK 53 HP H335 " + random.nextInt(100),
-                "SMK 53gr HP with Hodgdon H335",
-                "Hodgdon", "H335",
-                26.9,
-                "Sierra",
-                "MatchKing HP",
-                53.0,
-                "Federal",
-                "205M",
-                0.020,
-                1L);
+        Load load = createTestLoad(randomUUID().toString());
         Load savedLoad = loadRepository.save(load)
                 .block();
 
@@ -168,14 +136,20 @@ class LoadRepositoryTest {
                 randomUUID().toString(),
                 "SMK 53 HP H335 " + random.nextInt(100),
                 "SMK 53gr HP with Hodgdon H335",
-                "Hodgdon", "H335",
-                26.5,
+                "Hodgdon", 
+                "H335",
                 "Sierra",
                 "MatchKing HP",
                 53.0,
+                Unit.GRAINS,
                 "Federal",
                 "205M",
                 0.020,
+                Unit.INCHES,
+                2.260,
+                Unit.INCHES,
+                0.002,
+                Unit.INCHES,
                 1L);
 
         Mono<Load> result = loadRepository.save(updatedLoad);
@@ -188,32 +162,26 @@ class LoadRepositoryTest {
 
     @Test
     void findByName() {
-        Load load1 = new Load(null,
-                randomUUID().toString(),
-                "SMK 53 HP H335 " + random.nextInt(100),
-                "SMK 53gr HP with Hodgdon H335",
-                "Hodgdon", "H335",
-                26.9,
-                "Sierra",
-                "MatchKing HP",
-                53.0,
-                "Federal",
-                "205M",
-                0.020,
-                1L);
+        Load load1 = createTestLoad(randomUUID().toString());
 
         Load load2 = new Load(null,
                 randomUUID().toString(),
                 "Hornady 52 BTHP 4198",
                 "Hornady 52gr 4198 BTHP with IMR 4198",
-                "IMR", "4198",
-                20.0,
+                "IMR", 
+                "4198",
                 "Hornady",
                 "BTHP Match",
                 52.0,
+                Unit.GRAINS,
                 "Federal",
                 "205M",
                 0.020,
+                Unit.INCHES,
+                2.250,
+                Unit.INCHES,
+                0.003,
+                Unit.INCHES,
                 1L);
 
         loadRepository.saveAll(Flux.just(load1, load2))

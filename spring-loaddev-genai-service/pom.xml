@@ -12,6 +12,18 @@
     <name>Spring Load Development GenAI Service</name>
     <description>Spring Load Development GenAI Service</description>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>1.0.0-M6</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    
     <dependencies>
         <!-- Spring Boot -->
         <dependency>

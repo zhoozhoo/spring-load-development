@@ -1,12 +1,10 @@
 spring:
   r2dbc:
-    url: "r2dbc:tc:postgresql:///databasename?TC_IMAGE_TAG=17.2"
+    url: "r2dbc:tc:postgresql:///databasename?TC_IMAGE_TAG=17.4"
     name: "sa"
   sql:
     init:
       mode: always
-      schema-locations: classpath:/schema.sql
-      data-locations: classpath:/data.sql
 
 eureka:
   client:

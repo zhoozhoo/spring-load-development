@@ -71,8 +71,8 @@ public class RifleController {
                 rifle.barrelLength(),
                 rifle.barrelContour(),
                 rifle.twistRate(),
-                rifle.freeBore(),
-                rifle.rifling()))
+                rifle.rifling(),
+                rifle.freeBore()))
                 .flatMap(rifleRepository::save)
                 .map(savedRifle -> {
                     log.info("Created new rifle with id: {}", savedRifle.id());
@@ -94,8 +94,8 @@ public class RifleController {
                             rifle.barrelLength(),
                             rifle.barrelContour(),
                             rifle.twistRate(),
-                            rifle.freeBore(),
-                            rifle.rifling());
+                            rifle.rifling(),
+                            rifle.freeBore());
                     return rifleRepository.save(updatedRifle);
                 })
                 .map(updatedRifle -> {
