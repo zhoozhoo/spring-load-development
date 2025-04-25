@@ -10,7 +10,7 @@
 
     <groupId>ca.zhoozhoo.load-development</groupId>
     <artifactId>spring-load-development-parent</artifactId>
-    <version>0.0.3</version>
+    <version>0.0.4-SNAPSHOT</version>
     <name>Spring Load Development Parent</name>
     <description>Parent Project for Spring Load Development</description>
     <packaging>pom</packaging>
@@ -33,7 +33,7 @@
 
     <scm>
         <developerConnection>scm:git:https://github.com/zhoozhoo/spring-load-development.git</developerConnection>
-        <tag>v0.0.3</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <dependencyManagement>
