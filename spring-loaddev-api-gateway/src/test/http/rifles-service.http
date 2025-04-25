@@ -13,11 +13,6 @@ grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&user
 GET http://localhost:8080/api/rifles/rifles
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
-### Get a rifle by ID
-# @name GetRifleById
-GET http://localhost:8080/api/rifles/rifles/1
-Authorization: Bearer {{Authenticate.response.body.access_token}}
-
 ### Create a new rifle
 # @name CreateRifle
 POST http://localhost:8080/api/rifles/rifles
@@ -25,34 +20,43 @@ Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 {
-  "name": "New Rifle",
-  "description": "Description of the new rifle",
-  "caliber": "5.56",
-  "barrelLength": 16,
-  "barrelContour": "Heavy",
-  "twistRate": "1:7",
-  "freeBore": 0.1,
-  "rifling": "Button"
+  "name": "Savage 110 Elite Precision",
+  "description": "Long range precision rifle with MDT chassis",
+  "caliber": ".308 Winchester",
+  "barrelLength": 24.0,
+  "barrelLengthUnit": "INCHES",
+  "barrelContour": "Medium Palma",
+  "twistRate": "1:10",
+  "freeBore": 0.160,
+  "freeBoreUnit": "INCHES",
+  "rifling": "6 Groove"
 }
 
-### Update an existing rifle
-# @name UpdateRifle
-PUT http://localhost:8080/api/rifles/rifles/1
+### Get created rifle by ID
+# @name GetCreatedRifle
+GET http://localhost:8080/api/rifles/rifles/{{CreateRifle.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Update created rifle
+# @name UpdateCreatedRifle
+PUT http://localhost:8080/api/rifles/rifles/{{CreateRifle.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 {
-  "name": "Updated Rifle",
-  "description": "Updated description of the rifle",
-  "caliber": "7.62",
-  "barrelLength": 20,
-  "barrelContour": "Medium",
-  "twistRate": "1:10",
-  "freeBore": 0.2,
-  "rifling": "Cut"
+  "name": "Tikka T3x Custom",
+  "description": "Tikka T3x with Bartlein barrel and MDT chassis",
+  "caliber": "6mm Creedmoor",
+  "barrelLength": 26.0,
+  "barrelLengthUnit": "INCHES",
+  "barrelContour": "M24",
+  "twistRate": "1:7.5",
+  "freeBore": 0.153,
+  "freeBoreUnit": "INCHES",
+  "rifling": "6 Groove"
 }
 
-### Delete a rifle by ID
-# @name DeleteRifle
-DELETE http://localhost:8080/api/rifles/rifles/1
+### Delete created rifle
+# @name DeleteCreatedRifle
+DELETE http://localhost:8080/api/rifles/rifles/{{CreateRifle.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
