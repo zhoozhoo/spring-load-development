@@ -1,5 +1,7 @@
 package ca.zhoozhoo.loaddev.loads.dao;
 
+import static ca.zhoozhoo.loaddev.loads.model.Unit.GRAINS;
+import static ca.zhoozhoo.loaddev.loads.model.Unit.INCHES;
 import static java.util.UUID.randomUUID;
 
 import java.util.Random;
@@ -12,9 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.model.Load;
-import ca.zhoozhoo.loaddev.loads.model.Unit;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @SpringBootTest
@@ -32,29 +32,28 @@ class LoadRepositoryTest {
                 ownerId,
                 "SMK 53 HP H335 " + random.nextInt(100),
                 "SMK 53gr HP with Hodgdon H335",
-                "Hodgdon", 
+                "Hodgdon",
                 "H335",
                 "Sierra",
                 "MatchKing HP",
                 53.0,
-                Unit.GRAINS,
+                GRAINS,
                 "Federal",
                 "205M",
                 0.020,
-                Unit.INCHES,
+                INCHES,
                 2.260,
-                Unit.INCHES,
+                INCHES,
                 0.002,
-                Unit.INCHES,
+                INCHES,
                 1L);
     }
 
     @Test
     void findById() {
-        Load load = createTestLoad(randomUUID().toString());
-        loadRepository.save(load).block();
+        loadRepository.save(createTestLoad(randomUUID().toString())).block();
 
-        Mono<Load> result = loadRepository.findById(1L);
+        var result = loadRepository.findById(1L);
 
         StepVerifier.create(result)
                 .expectNextMatches(l -> l.id().equals(1L))
@@ -63,9 +62,8 @@ class LoadRepositoryTest {
 
     @Test
     void save() {
-        Load load = createTestLoad(randomUUID().toString());
-
-        Mono<Load> savedLoad = loadRepository.save(load);
+        var load = createTestLoad(randomUUID().toString());
+        var savedLoad = loadRepository.save(load);
 
         StepVerifier.create(savedLoad)
                 .expectNextMatches(l -> l.id() != null && l.name().equals(load.name()))
@@ -74,32 +72,31 @@ class LoadRepositoryTest {
 
     @Test
     void findAll() {
-
-        Load load1 = createTestLoad(randomUUID().toString());
-        Load load2 = new Load(null,
+        var load1 = createTestLoad(randomUUID().toString());
+        var load2 = new Load(null,
                 randomUUID().toString(),
                 "Hornady 52 BTHP 4198",
                 "Hornady 52gr 4198 BTHP with IMR 4198",
-                "IMR", 
+                "IMR",
                 "4198",
                 "Hornady",
                 "BTHP Match",
                 52.0,
-                Unit.GRAINS,
+                GRAINS,
                 "Federal",
                 "205M",
                 0.020,
-                Unit.INCHES,
+                INCHES,
                 2.250,
-                Unit.INCHES,
+                INCHES,
                 0.003,
-                Unit.INCHES,
+                INCHES,
                 2L);
 
         loadRepository.saveAll(Flux.just(load1, load2))
                 .blockLast();
 
-        Flux<Load> result = loadRepository.findAll();
+        var result = loadRepository.findAll();
 
         StepVerifier.create(result)
                 .expectNextMatches(l -> l.name().equals(load1.name()))
@@ -109,18 +106,11 @@ class LoadRepositoryTest {
 
     @Test
     void deleteById() {
-        Load load = createTestLoad(randomUUID().toString());
+        var savedLoad = loadRepository.save(createTestLoad(randomUUID().toString())).block();
+        var result = loadRepository.deleteById(savedLoad.id());
+        StepVerifier.create(result).verifyComplete();
 
-        Load savedLoad = loadRepository.save(load)
-                .block();
-
-        Mono<Void> result = loadRepository.deleteById(savedLoad.id());
-
-        StepVerifier.create(result)
-                .verifyComplete();
-
-        Mono<Load> deletedLoad = loadRepository.findById(savedLoad.id());
-
+        var deletedLoad = loadRepository.findById(savedLoad.id());
         StepVerifier.create(deletedLoad)
                 .expectNextCount(0)
                 .verifyComplete();
@@ -128,31 +118,29 @@ class LoadRepositoryTest {
 
     @Test
     void update() {
-        Load load = createTestLoad(randomUUID().toString());
-        Load savedLoad = loadRepository.save(load)
-                .block();
+        var savedLoad = loadRepository.save(createTestLoad(randomUUID().toString())).block();
 
-        Load updatedLoad = new Load(savedLoad.id(),
+        var updatedLoad = new Load(savedLoad.id(),
                 randomUUID().toString(),
                 "SMK 53 HP H335 " + random.nextInt(100),
                 "SMK 53gr HP with Hodgdon H335",
-                "Hodgdon", 
+                "Hodgdon",
                 "H335",
                 "Sierra",
                 "MatchKing HP",
                 53.0,
-                Unit.GRAINS,
+                GRAINS,
                 "Federal",
                 "205M",
                 0.020,
-                Unit.INCHES,
+                INCHES,
                 2.260,
-                Unit.INCHES,
+                INCHES,
                 0.002,
-                Unit.INCHES,
+                INCHES,
                 1L);
 
-        Mono<Load> result = loadRepository.save(updatedLoad);
+        var result = loadRepository.save(updatedLoad);
 
         StepVerifier.create(result)
                 .expectNextMatches(
@@ -162,32 +150,30 @@ class LoadRepositoryTest {
 
     @Test
     void findByName() {
-        Load load1 = createTestLoad(randomUUID().toString());
-
-        Load load2 = new Load(null,
+        var load1 = createTestLoad(randomUUID().toString());
+        var load2 = new Load(null,
                 randomUUID().toString(),
                 "Hornady 52 BTHP 4198",
                 "Hornady 52gr 4198 BTHP with IMR 4198",
-                "IMR", 
+                "IMR",
                 "4198",
                 "Hornady",
                 "BTHP Match",
                 52.0,
-                Unit.GRAINS,
+                GRAINS,
                 "Federal",
                 "205M",
                 0.020,
-                Unit.INCHES,
+                INCHES,
                 2.250,
-                Unit.INCHES,
+                INCHES,
                 0.003,
-                Unit.INCHES,
+                INCHES,
                 1L);
 
-        loadRepository.saveAll(Flux.just(load1, load2))
-                .blockLast();
+        loadRepository.saveAll(Flux.just(load1, load2)).blockLast();
 
-        Flux<Load> result = loadRepository.findByNameAndOwnerId(load1.name(), load1.ownerId());
+        var result = loadRepository.findByNameAndOwnerId(load1.name(), load1.ownerId());
 
         StepVerifier.create(result)
                 .expectNextMatches(l -> l.name().equals(load1.name()))

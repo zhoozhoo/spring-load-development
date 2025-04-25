@@ -1,5 +1,9 @@
 package ca.zhoozhoo.loaddev.loads.dao;
 
+import static ca.zhoozhoo.loaddev.loads.model.Unit.GRAINS;
+import static ca.zhoozhoo.loaddev.loads.model.Unit.INCHES;
+import static ca.zhoozhoo.loaddev.loads.model.Unit.YARDS;
+import static java.time.LocalDate.now;
 import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -12,8 +16,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.model.Group;
-import ca.zhoozhoo.loaddev.loads.model.Unit;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 @SpringBootTest
@@ -27,25 +29,26 @@ class GroupRepositoryTest {
     @Test
     void saveGroup() {
         var group = new Group(null, 
-                randomUUID().toString(), 
+                randomUUID().toString(),
+                now(), 
                 26.5, 
-                Unit.GRAINS,
+                GRAINS,
                 100, 
-                Unit.YARDS,
+                YARDS,
                 0.40, 
-                Unit.INCHES);
+                INCHES);
                 
-        Mono<Group> savedGroup = groupRepository.save(group);
+        var savedGroup = groupRepository.save(group);
 
         StepVerifier.create(savedGroup)
                 .assertNext(g -> {
                     assertNotNull(g.id());
                     assertEquals(26.5, g.powderCharge());
-                    assertEquals(Unit.GRAINS, g.powderChargeUnit());
+                    assertEquals(GRAINS, g.powderChargeUnit());
                     assertEquals(100, g.targetRange());
-                    assertEquals(Unit.YARDS, g.targetRangeUnit());
+                    assertEquals(YARDS, g.targetRangeUnit());
                     assertEquals(0.40, g.groupSize());
-                    assertEquals(Unit.INCHES, g.groupSizeUnit());
+                    assertEquals(INCHES, g.groupSizeUnit());
                 })
                 .verifyComplete();
     }
@@ -53,27 +56,28 @@ class GroupRepositoryTest {
     @Test
     void findGroupById() {
         var group = new Group(null, 
-                randomUUID().toString(), 
+                randomUUID().toString(),
+                now(), 
                 26.5, 
-                Unit.GRAINS,
+                GRAINS,
                 100, 
-                Unit.YARDS,
+                YARDS,
                 0.40, 
-                Unit.INCHES);
+                INCHES);
 
         var savedGroup = groupRepository.save(group).block();
 
-        Mono<Group> foundGroup = groupRepository.findById(savedGroup.id());
+        var foundGroup = groupRepository.findById(savedGroup.id());
 
         StepVerifier.create(foundGroup)
                 .assertNext(fg -> {
                     assertEquals(savedGroup.id(), fg.id());
                     assertEquals(26.5, fg.powderCharge());
-                    assertEquals(Unit.GRAINS, fg.powderChargeUnit());
+                    assertEquals(GRAINS, fg.powderChargeUnit());
                     assertEquals(100, fg.targetRange());
-                    assertEquals(Unit.YARDS, fg.targetRangeUnit());
+                    assertEquals(YARDS, fg.targetRangeUnit());
                     assertEquals(0.40, fg.groupSize());
-                    assertEquals(Unit.INCHES, fg.groupSizeUnit());
+                    assertEquals(INCHES, fg.groupSizeUnit());
                 })
                 .verifyComplete();
     }
@@ -81,50 +85,53 @@ class GroupRepositoryTest {
     @Test
     void updateGroup() {
         var group = new Group(null, 
-                randomUUID().toString(), 
+                randomUUID().toString(),
+                now(), 
                 26.5, 
-                Unit.GRAINS,
+                GRAINS,
                 100, 
-                Unit.YARDS,
+                YARDS,
                 0.40, 
-                Unit.INCHES);
+                INCHES);
 
         var savedGroup = groupRepository.save(group).block();
 
         var updatedGroup = new Group(savedGroup.id(), 
-                savedGroup.ownerId(), 
+                savedGroup.ownerId(),
+                now(), 
                 28.0, 
-                Unit.GRAINS,
+                GRAINS,
                 200, 
-                Unit.YARDS,
+                YARDS,
                 0.50, 
-                Unit.INCHES);
+                INCHES);
         var updatedGroupResult = groupRepository.save(updatedGroup).block();
 
         assertEquals(28.0, updatedGroupResult.powderCharge());
-        assertEquals(Unit.GRAINS, updatedGroupResult.powderChargeUnit());
+        assertEquals(GRAINS, updatedGroupResult.powderChargeUnit());
         assertEquals(200, updatedGroupResult.targetRange());
-        assertEquals(Unit.YARDS, updatedGroupResult.targetRangeUnit());
+        assertEquals(YARDS, updatedGroupResult.targetRangeUnit());
         assertEquals(0.50, updatedGroupResult.groupSize());
-        assertEquals(Unit.INCHES, updatedGroupResult.groupSizeUnit());
+        assertEquals(INCHES, updatedGroupResult.groupSizeUnit());
     }
 
     @Test
     void deleteGroup() {
         var group = new Group(null, 
-                randomUUID().toString(), 
+                randomUUID().toString(),
+                now(), 
                 26.5, 
-                Unit.GRAINS,
+                GRAINS,
                 100, 
-                Unit.YARDS,
+                YARDS,
                 0.40, 
-                Unit.INCHES);
+                INCHES);
 
         var savedGroup = groupRepository.save(group).block();
 
         groupRepository.delete(savedGroup).block();
 
-        Mono<Group> foundGroup = groupRepository.findById(savedGroup.id());
+        var foundGroup = groupRepository.findById(savedGroup.id());
 
         StepVerifier.create(foundGroup)
                 .expectNextCount(0)

@@ -1,11 +1,7 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
-import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.NO_CONTENT;
-import static org.springframework.http.ResponseEntity.notFound;
-import static org.springframework.http.ResponseEntity.ok;
-import static org.springframework.http.ResponseEntity.status;
+import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.ResponseEntity.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -59,9 +55,10 @@ public class GroupsController {
     public Mono<ResponseEntity<Group>> createGroup(@CurrentUser String userId, @Valid @RequestBody Group group) {
         return securityUtils.getCurrentUserId()
                 .flatMap(ownerid -> {
-                    Group newGroup = new Group(
+                    var newGroup = new Group(
                             group.id(),
                             ownerid,
+                            group.date(),
                             group.powderCharge(),
                             group.powderChargeUnit(),
                             group.targetRange(),
@@ -79,9 +76,10 @@ public class GroupsController {
             @Valid @RequestBody Group group) {
         return groupRepository.findById(id)
                 .flatMap(existingGroup -> {
-                    Group updatedGroup = new Group(
+                    var updatedGroup = new Group(
                             existingGroup.id(),
                             existingGroup.ownerId(),
+                            group.date(),
                             group.powderCharge(),
                             group.powderChargeUnit(),
                             group.targetRange(),

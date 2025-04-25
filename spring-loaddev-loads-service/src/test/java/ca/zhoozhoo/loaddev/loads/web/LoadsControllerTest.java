@@ -1,8 +1,11 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
+import static ca.zhoozhoo.loaddev.loads.model.Unit.GRAINS;
+import static ca.zhoozhoo.loaddev.loads.model.Unit.INCHES;
 import static java.util.UUID.randomUUID;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
+import static reactor.core.publisher.Mono.just;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,9 +19,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
 import ca.zhoozhoo.loaddev.loads.model.Load;
-import ca.zhoozhoo.loaddev.loads.model.Unit;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -40,11 +41,11 @@ class LoadsControllerTest {
     private Load createLoad(String ownerId, String name) {
         return new Load(null, ownerId, name, name + " Description",
                 "Manufacturer", "Type",
-                "BulletManufacturer", "BulletType", 100.0, Unit.GRAINS,
+                "BulletManufacturer", "BulletType", 100.0, GRAINS,
                 "PrimerManufacturer", "PrimerType",
-                0.020, Unit.INCHES,
-                2.800, Unit.INCHES,
-                0.002, Unit.INCHES,
+                0.020, INCHES,
+                2.800, INCHES,
+                0.002, INCHES,
                 null);
     }
 
@@ -88,7 +89,7 @@ class LoadsControllerTest {
 
         webTestClient.mutateWith(jwt).post().uri("/loads")
                 .contentType(APPLICATION_JSON)
-                .body(Mono.just(load), Load.class)
+                .body(just(load), Load.class)
                 .exchange()
                 .expectStatus().isCreated()
                 .expectHeader().contentType(APPLICATION_JSON)
@@ -105,16 +106,16 @@ class LoadsControllerTest {
 
         var updatedLoad = new Load(load.id(), userId, "UpdatedLoad", "UpdatedDescription",
                 "UpdatedManufacturer", "UpdatedType",
-                "UpdatedBulletManufacturer", "UpdatedBulletType", 150.0, Unit.GRAINS,
+                "UpdatedBulletManufacturer", "UpdatedBulletType", 150.0, GRAINS,
                 "UpdatedPrimerManufacturer", "UpdatedPrimerType",
-                0.025, Unit.INCHES,
-                2.850, Unit.INCHES,
-                0.003, Unit.INCHES,
+                0.025, INCHES,
+                2.850, INCHES,
+                0.003, INCHES,
                 1L);
 
         webTestClient.mutateWith(jwt).put().uri("/loads/{id}", load.id())
                 .contentType(APPLICATION_JSON)
-                .body(Mono.just(updatedLoad), Load.class)
+                .body(just(updatedLoad), Load.class)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(APPLICATION_JSON)
@@ -163,7 +164,7 @@ class LoadsControllerTest {
 
         webTestClient.mutateWith(jwt).post().uri("/loads")
                 .contentType(APPLICATION_JSON)
-                .body(Mono.just(invalidLoad), Load.class)
+                .body(just(invalidLoad), Load.class)
                 .exchange()
                 .expectStatus().isBadRequest();
     }
@@ -183,7 +184,7 @@ class LoadsControllerTest {
 
         webTestClient.mutateWith(jwt).post().uri("/loads")
                 .contentType(APPLICATION_JSON)
-                .body(Mono.just(invalidLoad), Load.class)
+                .body(just(invalidLoad), Load.class)
                 .exchange()
                 .expectStatus().isBadRequest();
     }
@@ -196,7 +197,7 @@ class LoadsControllerTest {
 
         webTestClient.mutateWith(jwt).put().uri("/loads/999")
                 .contentType(APPLICATION_JSON)
-                .body(Mono.just(load), Load.class)
+                .body(just(load), Load.class)
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -217,7 +218,7 @@ class LoadsControllerTest {
 
         webTestClient.mutateWith(jwt).put().uri("/loads/{id}", load.id())
                 .contentType(APPLICATION_JSON)
-                .body(Mono.just(invalidLoad), Load.class)
+                .body(just(invalidLoad), Load.class)
                 .exchange()
                 .expectStatus().isBadRequest();
     }

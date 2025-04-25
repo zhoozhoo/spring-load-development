@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS loads (
 CREATE TABLE IF NOT EXISTS groups (
     id BIGSERIAL PRIMARY KEY,
     owner_id VARCHAR(255) NOT NULL,
+    date DATE NOT NULL,
     powder_charge DOUBLE PRECISION NOT NULL,
     powder_charge_unit VARCHAR(32) NOT NULL,
     target_range INTEGER NOT NULL,
