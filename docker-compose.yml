@@ -24,10 +24,28 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - reloading_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d loadsdb"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  keycloak-db:
+    image: postgres:17.4
+    container_name: keycloak-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: keycloak
+    ports:
+      - "5433:5433"
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d keycloak"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -37,7 +55,7 @@ services:
     container_name: keycloak
     environment:
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://db:5432/loadsdb
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
       KC_DB_USERNAME: user
       KC_DB_PASSWORD: password
       KC_HTTP_PORT: 7080
@@ -45,7 +63,6 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_HEALTH_ENABLED: true
-      KC_FEATURES_DISABLED: opentelemetry
       KC_TRACING_ENABLED: true
       KC_TRACING_ENDPOINT: http://jaeger:4317
       KC_TRACING_SAMPLER_TYPE: parentbased_traceidratio
@@ -55,7 +72,7 @@ services:
       - "7080:7080"
       - "9000:9000"
     depends_on:
-      db:
+      keycloak-db:
         condition: service_healthy
       jaeger:
         condition: service_healthy
@@ -66,7 +83,6 @@ services:
       retries: 15
     volumes:
       - ./docker/keycloak/realm/realm.json:/opt/keycloak/data/import/realm.json
-      - ./docker/keycloak/providers:/opt/keycloak/providers
     command: ["start-dev", "--import-realm"]
 
   config-server:
@@ -201,4 +217,5 @@ services:
       retries: 5
 
 volumes:
-  postgres_data:
+  reloading_data:
+  keycloak_data:

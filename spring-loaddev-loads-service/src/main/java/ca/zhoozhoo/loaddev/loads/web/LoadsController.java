@@ -64,13 +64,18 @@ public class LoadsController {
                 load.description(),
                 load.powderManufacturer(),
                 load.powderType(),
-                load.powderCharge(),
                 load.bulletManufacturer(),
                 load.bulletType(),
                 load.bulletWeight(),
+                load.bulletWeightUnit(),
                 load.primerManufacturer(),
                 load.primerType(),
                 load.distanceFromLands(),
+                load.distanceFromLandsUnit(),
+                load.caseOverallLength(),
+                load.caseOverallLengthUnit(),
+                load.neckTension(),
+                load.neckTensionUnit(),
                 load.rifleId()))
                 .flatMap(loadRepository::save)
                 .map(savedLoad -> {
@@ -92,13 +97,18 @@ public class LoadsController {
                             load.description(),
                             load.powderManufacturer(),
                             load.powderType(),
-                            load.powderCharge(),
                             load.bulletManufacturer(),
                             load.bulletType(),
                             load.bulletWeight(),
+                            load.bulletWeightUnit(),
                             load.primerManufacturer(),
                             load.primerType(),
                             load.distanceFromLands(),
+                            load.distanceFromLandsUnit(),
+                            load.caseOverallLength(),
+                            load.caseOverallLengthUnit(),
+                            load.neckTension(),
+                            load.neckTensionUnit(),
                             load.rifleId());
                     return loadRepository.save(updatedLoad);
                 })

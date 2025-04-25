@@ -63,7 +63,8 @@ public class ShotsController {
                             shot.id(),
                             ownerid,
                             shot.groupId(),
-                            shot.velocity());
+                            shot.velocity(),
+                            shot.velocityUnit());
                     return shotRepository.save(newShot);
                 })
                 .map(savedShot -> status(CREATED).body(savedShot));
@@ -79,7 +80,8 @@ public class ShotsController {
                             existingShot.id(),
                             existingShot.ownerId(),
                             shot.groupId(),
-                            shot.velocity());
+                            shot.velocity(),
+                            shot.velocityUnit());
                     return shotRepository.save(updatedShot);
                 })
                 .map(updatedShot -> ok(updatedShot))

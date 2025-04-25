@@ -1,11 +1,7 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
-import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.NO_CONTENT;
-import static org.springframework.http.ResponseEntity.notFound;
-import static org.springframework.http.ResponseEntity.ok;
-import static org.springframework.http.ResponseEntity.status;
+import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.ResponseEntity.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -59,18 +55,16 @@ public class GroupsController {
     public Mono<ResponseEntity<Group>> createGroup(@CurrentUser String userId, @Valid @RequestBody Group group) {
         return securityUtils.getCurrentUserId()
                 .flatMap(ownerid -> {
-                    Group newGroup = new Group(
+                    var newGroup = new Group(
                             group.id(),
                             ownerid,
-                            group.numberOfShots(),
+                            group.date(),
+                            group.powderCharge(),
+                            group.powderChargeUnit(),
                             group.targetRange(),
+                            group.targetRangeUnit(),
                             group.groupSize(),
-                            group.mean(),
-                            group.median(),
-                            group.min(),
-                            group.max(),
-                            group.standardDeviation(),
-                            group.extremeSpread());
+                            group.groupSizeUnit());
                     return groupRepository.save(newGroup);
                 })
                 .map(savedGroup -> status(CREATED).body(savedGroup));
@@ -82,18 +76,16 @@ public class GroupsController {
             @Valid @RequestBody Group group) {
         return groupRepository.findById(id)
                 .flatMap(existingGroup -> {
-                    Group updatedGroup = new Group(
+                    var updatedGroup = new Group(
                             existingGroup.id(),
                             existingGroup.ownerId(),
-                            group.numberOfShots(),
+                            group.date(),
+                            group.powderCharge(),
+                            group.powderChargeUnit(),
                             group.targetRange(),
+                            group.targetRangeUnit(),
                             group.groupSize(),
-                            group.mean(),
-                            group.median(),
-                            group.min(),
-                            group.max(),
-                            group.standardDeviation(),
-                            group.extremeSpread());
+                            group.groupSizeUnit());
                     return groupRepository.save(updatedGroup);
                 })
                 .map(updatedGroup -> ok(updatedGroup))
