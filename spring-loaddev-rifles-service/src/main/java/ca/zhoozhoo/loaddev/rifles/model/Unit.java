@@ -1,4 +1,4 @@
-package ca.zhoozhoo.loaddev.loads.model;
+package ca.zhoozhoo.loaddev.rifles.model;
 
 public enum Unit {
     INCHES("in."),

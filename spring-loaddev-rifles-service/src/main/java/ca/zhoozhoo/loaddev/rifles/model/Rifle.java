@@ -25,6 +25,8 @@ public record Rifle(
         @Positive(message = "Barrel length must be positive")
         @Column("barrel_length") Double barrelLength,
 
+        @Column("barrel_length_unit") Unit barrelLengthUnit,
+
         @Column("barrel_contour") String barrelContour,
 
         @Column("twist_rate") String twistRate,
@@ -32,5 +34,7 @@ public record Rifle(
         @Column("rifling") String rifling,
 
         @Positive(message = "Free bore must be positive")
-        @Column("free_bore") Double freeBore) {
+        @Column("free_bore") Double freeBore,
+
+        @Column("free_bore_unit") Unit freeBoreUnit) {
 }
