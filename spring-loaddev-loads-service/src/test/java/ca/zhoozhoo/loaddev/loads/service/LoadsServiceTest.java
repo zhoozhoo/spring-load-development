@@ -64,9 +64,9 @@ class LoadsServiceTest {
                     assertEquals(group, stats.group());
                     assertEquals(LOAD_ID, stats.group().loadId());
                     assertEquals(3, stats.shotCount());
-                    assertEquals(2810.0, stats.averageVelocity(), 0.01);
-                    assertEquals(8.16, stats.standardDeviation(), 0.01);
-                    assertEquals(20.0, stats.extremeSpread(), 0.01);
+                    assertEquals(2810.0, stats.averageVelocity(), 0.0);
+                    assertEquals(8.2, stats.standardDeviation(), 0.0);
+                    assertEquals(20.0, stats.extremeSpread(), 0.0);
                     assertEquals(shots, stats.shots());
                 })
                 .verifyComplete();
@@ -82,9 +82,9 @@ class LoadsServiceTest {
         StepVerifier.create(loadsService.getGroupStatistics(GROUP_ID, USER_ID))
                 .assertNext(stats -> {
                     assertEquals(0, stats.shotCount());
-                    assertEquals(0.0, stats.averageVelocity());
-                    assertEquals(0.0, stats.standardDeviation());
-                    assertEquals(0.0, stats.extremeSpread());
+                    assertEquals(0.0, stats.averageVelocity(), 0.0);
+                    assertEquals(0.0, stats.standardDeviation(), 0.0);
+                    assertEquals(0.0, stats.extremeSpread(), 0.0);
                 })
                 .verifyComplete();
     }
@@ -108,9 +108,9 @@ class LoadsServiceTest {
         StepVerifier.create(loadsService.getGroupStatistics(GROUP_ID, USER_ID))
                 .assertNext(stats -> {
                     assertEquals(1, stats.shotCount());
-                    assertEquals(2800.0, stats.averageVelocity());
-                    assertEquals(0.0, stats.standardDeviation());
-                    assertEquals(0.0, stats.extremeSpread());
+                    assertEquals(2800.0, stats.averageVelocity(), 0.0);
+                    assertEquals(0.0, stats.standardDeviation(), 0.0);
+                    assertEquals(0.0, stats.extremeSpread(), 0.0);
                 })
                 .verifyComplete();
     }
