@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 import ca.zhoozhoo.loaddev.loads.security.CurrentUser;
+import ca.zhoozhoo.loaddev.loads.service.LoadsService;
+import ca.zhoozhoo.loaddev.loads.model.GroupStatistics;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
@@ -35,6 +37,9 @@ public class LoadsController {
 
     @Autowired
     private LoadRepository loadRepository;
+
+    @Autowired
+    private LoadsService loadsService;
 
     @GetMapping
     @PreAuthorize("hasAuthority('loads:view')")
@@ -51,6 +56,12 @@ public class LoadsController {
                     return ok(load);
                 })
                 .defaultIfEmpty(notFound().build());
+    }
+
+    @GetMapping("/{id}/statistics")
+    @PreAuthorize("hasAuthority('loads:view')")
+    public Flux<GroupStatistics> getLoadStatistics(@CurrentUser String userId, @PathVariable Long id) {
+        return loadsService.getGroupStatisticsForLoad(id, userId);
     }
 
     @PostMapping
