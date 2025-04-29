@@ -17,7 +17,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
+import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
 import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
+import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 import reactor.core.publisher.Flux;
 
@@ -33,8 +35,16 @@ class LoadsControllerTest {
     @Autowired
     private LoadRepository loadRepository;
 
+    @Autowired
+    private ShotRepository shotRepository;
+
+    @Autowired
+    private GroupRepository groupRepository;
+
     @BeforeEach
     void setUp() {
+        shotRepository.deleteAll().block();
+        groupRepository.deleteAll().block();
         loadRepository.deleteAll().block();
     }
 

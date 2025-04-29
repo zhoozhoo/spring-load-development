@@ -16,13 +16,25 @@ import static org.springframework.http.HttpStatus.*;
 @Log4j2
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(NumberFormatException.class)
+    public Mono<ResponseEntity<String>> handleNumberFormatException(NumberFormatException ex) {
+        log.error("Number format error: {}", ex.getMessage());
+        return Mono.just(ResponseEntity.status(BAD_REQUEST)
+                .body("Invalid number format: Please provide valid numeric values"));
+    }
+
     @ExceptionHandler(WebExchangeBindException.class)
     public Mono<ResponseEntity<String>> handleValidationException(WebExchangeBindException ex) {
         log.error("Validation error: {}", ex.getMessage());
         String error = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .map(err -> {
+                    String field = err.getField();
+                    String message = err.getDefaultMessage();
+                    Object rejectedValue = err.getRejectedValue();
+                    return String.format("%s: %s (rejected value: %s)", field, message, rejectedValue);
+                })
                 .reduce((a, b) -> a + "; " + b)
                 .orElse("Validation failed");
         return Mono.just(ResponseEntity.status(BAD_REQUEST).body(error));

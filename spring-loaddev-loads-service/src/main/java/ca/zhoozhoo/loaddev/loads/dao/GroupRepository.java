@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono;
 
 public interface GroupRepository extends R2dbcRepository<Group, Long> {
 
-    Flux<Group> findAllByOwnerId(String ownerId);
+    Flux<Group> findAllByLoadIdAndOwnerId(Long loadId, String ownerId);
 
     Mono<Group> findByIdAndOwnerId(Long id, String ownerId);
 }

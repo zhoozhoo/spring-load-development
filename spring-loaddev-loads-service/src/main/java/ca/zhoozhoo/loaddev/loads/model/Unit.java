@@ -1,20 +1,28 @@
 package ca.zhoozhoo.loaddev.loads.model;
 
+import org.springframework.data.convert.ReadingConverter;
+import org.springframework.data.convert.WritingConverter;
+
+@WritingConverter
+@ReadingConverter
 public enum Unit {
-    INCHES("in."),
+    INCHES("in"),
     MILLIMETERS("mm"),
-    YARDS("yd."),
+    YARDS("yd"),
+    FEET("ft"),
     METERS("m"),
     GRAINS("gr"),
-    GRAMS("g");
+    GRAMS("g"),
+    FEET_PER_SECOND("fps"),
+    METERS_PER_SECOND("mps");
 
-    private final String symbol;
+    private final String value;
 
-    Unit(String symbol) {
-        this.symbol = symbol;
+    Unit(String value) {
+        this.value = value;
     }
 
-    public String getSymbol() {
-        return symbol;
+    public String getValue() {
+        return value;
     }
 }

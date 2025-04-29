@@ -17,12 +17,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
 import ca.zhoozhoo.loaddev.loads.security.CurrentUser;
-import ca.zhoozhoo.loaddev.loads.security.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
@@ -36,9 +36,6 @@ public class ShotsController {
 
     @Autowired
     private ShotRepository shotRepository;
-
-    @Autowired
-    private SecurityUtils securityUtils;
 
     @GetMapping("/group/{groupId}")
     @PreAuthorize("hasAuthority('shots:view')")
@@ -55,19 +52,17 @@ public class ShotsController {
     }
 
     @PostMapping
+    @ResponseStatus(CREATED)
     @PreAuthorize("hasAuthority('shots:edit')")
     public Mono<ResponseEntity<Shot>> createShot(@CurrentUser String userId, @Valid @RequestBody Shot shot) {
-        return securityUtils.getCurrentUserId()
-                .flatMap(ownerid -> {
-                    Shot newShot = new Shot(
-                            shot.id(),
-                            ownerid,
-                            shot.groupId(),
-                            shot.velocity(),
-                            shot.velocityUnit());
-                    return shotRepository.save(newShot);
-                })
-                .map(savedShot -> status(CREATED).body(savedShot));
+        return Mono.just(new Shot(
+                null,
+                userId,
+                shot.groupId(),
+                shot.velocity(),
+                shot.velocityUnit()))
+            .flatMap(shotRepository::save)
+            .map(savedShot -> status(CREATED).body(savedShot));
     }
 
     @PutMapping("/{id}")

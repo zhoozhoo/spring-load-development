@@ -6,6 +6,7 @@ import static java.util.UUID.randomUUID;
 
 import java.util.Random;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,7 +26,20 @@ class LoadRepositoryTest {
     @Autowired
     private LoadRepository loadRepository;
 
+    @Autowired
+    private ShotRepository shotRepository;
+
+    @Autowired
+    private GroupRepository groupRepository;
+
     private Random random = new Random();
+
+    @BeforeEach
+    public void setup() {
+        shotRepository.deleteAll().block();
+        groupRepository.deleteAll().block();
+        loadRepository.deleteAll().block();
+    }
 
     private Load createTestLoad(String ownerId) {
         return new Load(null,
@@ -50,31 +64,23 @@ class LoadRepositoryTest {
     }
 
     @Test
-    void findById() {
-        loadRepository.save(createTestLoad(randomUUID().toString())).block();
+    void findByIdAndOwnerId() {
+        var ownerId = randomUUID().toString();
+        var load = loadRepository.save(createTestLoad(ownerId)).block();
 
-        var result = loadRepository.findById(1L);
+        var result = loadRepository.findByIdAndOwnerId(load.id(), load.ownerId());
 
         StepVerifier.create(result)
-                .expectNextMatches(l -> l.id().equals(1L))
+                .expectNextMatches(l -> l.id().equals(load.id()))
                 .verifyComplete();
     }
 
     @Test
-    void save() {
-        var load = createTestLoad(randomUUID().toString());
-        var savedLoad = loadRepository.save(load);
-
-        StepVerifier.create(savedLoad)
-                .expectNextMatches(l -> l.id() != null && l.name().equals(load.name()))
-                .verifyComplete();
-    }
-
-    @Test
-    void findAll() {
-        var load1 = createTestLoad(randomUUID().toString());
+    void findAllByOwnerId() {
+        var ownerId = randomUUID().toString();
+        var load1 = createTestLoad(ownerId);
         var load2 = new Load(null,
-                randomUUID().toString(),
+                ownerId,
                 "Hornady 52 BTHP 4198",
                 "Hornady 52gr 4198 BTHP with IMR 4198",
                 "IMR",
@@ -96,7 +102,7 @@ class LoadRepositoryTest {
         loadRepository.saveAll(Flux.just(load1, load2))
                 .blockLast();
 
-        var result = loadRepository.findAll();
+        var result = loadRepository.findAllByOwnerId(ownerId);
 
         StepVerifier.create(result)
                 .expectNextMatches(l -> l.name().equals(load1.name()))
@@ -105,14 +111,44 @@ class LoadRepositoryTest {
     }
 
     @Test
-    void deleteById() {
-        var savedLoad = loadRepository.save(createTestLoad(randomUUID().toString())).block();
-        var result = loadRepository.deleteById(savedLoad.id());
-        StepVerifier.create(result).verifyComplete();
+    void findByNameAndOwnerId() {
+        var load1 = createTestLoad(randomUUID().toString());
+        var load2 = new Load(null,
+                randomUUID().toString(),
+                "Hornady 52 BTHP 4198",
+                "Hornady 52gr 4198 BTHP with IMR 4198",
+                "IMR",
+                "4198",
+                "Hornady",
+                "BTHP Match",
+                52.0,
+                GRAINS,
+                "Federal",
+                "205M",
+                0.020,
+                INCHES,
+                2.250,
+                INCHES,
+                0.003,
+                INCHES,
+                1L);
 
-        var deletedLoad = loadRepository.findById(savedLoad.id());
-        StepVerifier.create(deletedLoad)
-                .expectNextCount(0)
+        loadRepository.saveAll(Flux.just(load1, load2)).blockLast();
+
+        var result = loadRepository.findByNameAndOwnerId(load1.name(), load1.ownerId());
+
+        StepVerifier.create(result)
+                .expectNextMatches(l -> l.name().equals(load1.name()))
+                .verifyComplete();
+    }
+
+    @Test
+    void save() {
+        var load = createTestLoad(randomUUID().toString());
+        var savedLoad = loadRepository.save(load);
+
+        StepVerifier.create(savedLoad)
+                .expectNextMatches(l -> l.id() != null && l.name().equals(load.name()))
                 .verifyComplete();
     }
 
@@ -149,34 +185,14 @@ class LoadRepositoryTest {
     }
 
     @Test
-    void findByName() {
-        var load1 = createTestLoad(randomUUID().toString());
-        var load2 = new Load(null,
-                randomUUID().toString(),
-                "Hornady 52 BTHP 4198",
-                "Hornady 52gr 4198 BTHP with IMR 4198",
-                "IMR",
-                "4198",
-                "Hornady",
-                "BTHP Match",
-                52.0,
-                GRAINS,
-                "Federal",
-                "205M",
-                0.020,
-                INCHES,
-                2.250,
-                INCHES,
-                0.003,
-                INCHES,
-                1L);
+    void delete() {
+        var savedLoad = loadRepository.save(createTestLoad(randomUUID().toString())).block();
+        var result = loadRepository.deleteById(savedLoad.id());
+        StepVerifier.create(result).verifyComplete();
 
-        loadRepository.saveAll(Flux.just(load1, load2)).blockLast();
-
-        var result = loadRepository.findByNameAndOwnerId(load1.name(), load1.ownerId());
-
-        StepVerifier.create(result)
-                .expectNextMatches(l -> l.name().equals(load1.name()))
+        var deletedLoad = loadRepository.findById(savedLoad.id());
+        StepVerifier.create(deletedLoad)
+                .expectNextCount(0)
                 .verifyComplete();
     }
 }

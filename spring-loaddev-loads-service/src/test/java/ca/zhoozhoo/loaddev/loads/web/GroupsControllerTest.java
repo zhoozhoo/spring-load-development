@@ -21,7 +21,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
+import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
 import ca.zhoozhoo.loaddev.loads.model.Group;
+import ca.zhoozhoo.loaddev.loads.model.Load;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -33,6 +35,9 @@ public class GroupsControllerTest {
     private WebTestClient webTestClient;
 
     @Autowired
+    private LoadRepository loadRepository;
+
+    @Autowired
     private GroupRepository groupRepository;
 
     @BeforeEach
@@ -40,13 +45,22 @@ public class GroupsControllerTest {
         groupRepository.deleteAll().block();
     }
 
+    private Load createAndSaveLoad(String ownerId) {
+        return loadRepository.save(new Load(null, ownerId, "Load", "Description",
+                "Manufacturer", "Type",
+                "BulletManufacturer", "BulletType", 100.0, GRAINS,
+                "PrimerManufacturer", "PrimerType",
+                0.020, INCHES,
+                2.800, INCHES,
+                0.002, INCHES,
+                null)).block();
+    }
+
     private Group createAndSaveGroup(String ownerId) {
+        var load = createAndSaveLoad(ownerId);
+
         return groupRepository
-                .save(new Group(null, ownerId, 
-                    now(),
-                    26.5, GRAINS,
-                    100, YARDS,
-                    0.40, INCHES)).block();
+                .save(new Group(null, ownerId, load.id(), now(), 26.5, GRAINS, 100, YARDS, 0.40, INCHES)).block();
     }
 
     @Test
@@ -56,13 +70,15 @@ public class GroupsControllerTest {
 
         var group1 = createAndSaveGroup(userId);
         var group2 = groupRepository
-                .save(new Group(null, userId, 
-                    now(),
-                    28.0, GRAINS,
-                    200, YARDS,
-                    0.50, INCHES)).block();
+                .save(new Group(null, userId,
+                        group1.loadId(),
+                        now(),
+                        28.0, GRAINS,
+                        200, YARDS,
+                        0.50, INCHES))
+                .block();
 
-        webTestClient.mutateWith(jwt).get().uri("/groups")
+        webTestClient.mutateWith(jwt).get().uri("/groups/load/" + group1.loadId())
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -95,11 +111,13 @@ public class GroupsControllerTest {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var newGroup = new Group(null, randomUUID().toString(), 
-            now(),
-            26.5, GRAINS,
-            100, YARDS,
-            0.40, INCHES);
+        var load = createAndSaveLoad(userId);
+        var newGroup = new Group(null, userId,
+                load.id(),
+                now(),
+                26.5, GRAINS,
+                100, YARDS,
+                0.40, INCHES);
 
         webTestClient.mutateWith(jwt).post().uri("/groups")
                 .contentType(APPLICATION_JSON)
@@ -125,11 +143,12 @@ public class GroupsControllerTest {
 
         var group = createAndSaveGroup(userId);
 
-        var updatedGroup = new Group(null, randomUUID().toString(), 
-            now(),
-            28.0, GRAINS,
-            200, YARDS,
-            0.50, INCHES);
+        var updatedGroup = new Group(null, userId,
+                group.loadId(),
+                now(),
+                28.0, GRAINS,
+                200, YARDS,
+                0.50, INCHES);
 
         webTestClient.mutateWith(jwt).put().uri("/groups/" + group.id())
                 .contentType(APPLICATION_JSON)
@@ -180,11 +199,13 @@ public class GroupsControllerTest {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidGroup = new Group(null, userId, 
-            now(),
-            -5.0, null,
-            -100, null,
-            -1.5, null);
+        var load = createAndSaveLoad(userId);
+        var invalidGroup = new Group(null, userId,
+                load.id(),
+                now(),
+                -5.0, null,
+                -100, null,
+                -1.5, null);
 
         webTestClient.mutateWith(jwt).post().uri("/groups")
                 .contentType(APPLICATION_JSON)
@@ -198,11 +219,7 @@ public class GroupsControllerTest {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidGroup = new Group(null, null, 
-            null,
-            null, null,
-            null, null,
-            null, null);
+        var invalidGroup = new Group(null, null, null, null, null, null, null, null, null, null);
 
         webTestClient.mutateWith(jwt).post().uri("/groups")
                 .contentType(APPLICATION_JSON)
@@ -216,11 +233,13 @@ public class GroupsControllerTest {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var group = new Group(null, userId, 
-            now(),
-            26.5, GRAINS,
-            100, YARDS,
-            0.40, INCHES);
+        var load = createAndSaveLoad(userId);
+        var group = new Group(null, userId,
+                load.id(),
+                now(),
+                26.5, GRAINS,
+                100, YARDS,
+                0.40, INCHES);
 
         webTestClient.mutateWith(jwt).put().uri("/groups/999")
                 .contentType(APPLICATION_JSON)
@@ -235,11 +254,12 @@ public class GroupsControllerTest {
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var group = createAndSaveGroup(userId);
-        var invalidGroup = new Group(null, userId, 
-            now(),
-            -5.0, null,
-            -100, null,
-            -1.5, null);
+        var invalidGroup = new Group(null, userId,
+                group.loadId(),
+                now(),
+                -5.0, null,
+                -100, null,
+                -1.5, null);
 
         webTestClient.mutateWith(jwt).put().uri("/groups/" + group.id())
                 .contentType(APPLICATION_JSON)

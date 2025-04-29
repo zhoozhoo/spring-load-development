@@ -4,11 +4,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import ca.zhoozhoo.loaddev.loads.validation.LoadMeasurement;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-
-import ca.zhoozhoo.loaddev.loads.validation.LoadMeasurement;
 
 @Table(name = "loads")
 @LoadMeasurement
@@ -16,7 +15,6 @@ public record Load(
 
         @Id Long id,
 
-        @NotBlank(message = "Owner ID is required")
         @Column String ownerId,
 
         @NotBlank(message = "Name is required")

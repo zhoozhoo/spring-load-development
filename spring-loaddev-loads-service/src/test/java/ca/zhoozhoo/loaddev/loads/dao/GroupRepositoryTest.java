@@ -8,6 +8,7 @@ import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,6 +17,8 @@ import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.model.Group;
+import ca.zhoozhoo.loaddev.loads.model.Load;
+import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 @SpringBootTest
@@ -24,25 +27,61 @@ import reactor.test.StepVerifier;
 class GroupRepositoryTest {
 
     @Autowired
+    private ShotRepository shotRepository;
+
+    @Autowired
     private GroupRepository groupRepository;
+
+    @Autowired
+    private LoadRepository loadRepository;
+
+    private Load testLoad;
+
+    @BeforeEach
+    void setup() {
+        shotRepository.deleteAll().block();
+        groupRepository.deleteAll().block();
+        loadRepository.deleteAll().block();
+
+        testLoad = loadRepository.save(new Load(
+                null,
+                randomUUID().toString(),
+                "Test Load",
+                "Test Description",
+                "Hodgdon",
+                "H335",
+                "Hornady",
+                "FMJ",
+                55.0,
+                GRAINS,
+                "CCI",
+                "Small Rifle",
+                0.02,
+                INCHES,
+                2.260,
+                INCHES,
+                0.002,
+                INCHES,
+                1L)).block();
+    }
+
+    private Group createTestGroup() {
+        return createTestGroup(testLoad.ownerId(), testLoad.id());
+    }
+
+    private Group createTestGroup(String ownerId, Long loadId) {
+        return new Group(null, ownerId, loadId, now(), 26.5, GRAINS, 100, YARDS, 0.40, INCHES);
+    }
 
     @Test
     void saveGroup() {
-        var group = new Group(null, 
-                randomUUID().toString(),
-                now(), 
-                26.5, 
-                GRAINS,
-                100, 
-                YARDS,
-                0.40, 
-                INCHES);
-                
+        var group = createTestGroup();
         var savedGroup = groupRepository.save(group);
 
         StepVerifier.create(savedGroup)
                 .assertNext(g -> {
                     assertNotNull(g.id());
+                    assertEquals(testLoad.id(), g.loadId());
                     assertEquals(26.5, g.powderCharge());
                     assertEquals(GRAINS, g.powderChargeUnit());
                     assertEquals(100, g.targetRange());
@@ -55,23 +94,14 @@ class GroupRepositoryTest {
 
     @Test
     void findGroupById() {
-        var group = new Group(null, 
-                randomUUID().toString(),
-                now(), 
-                26.5, 
-                GRAINS,
-                100, 
-                YARDS,
-                0.40, 
-                INCHES);
-
+        var group = createTestGroup();
         var savedGroup = groupRepository.save(group).block();
-
         var foundGroup = groupRepository.findById(savedGroup.id());
 
         StepVerifier.create(foundGroup)
                 .assertNext(fg -> {
                     assertEquals(savedGroup.id(), fg.id());
+                    assertEquals(savedGroup.loadId(), fg.loadId());
                     assertEquals(26.5, fg.powderCharge());
                     assertEquals(GRAINS, fg.powderChargeUnit());
                     assertEquals(100, fg.targetRange());
@@ -84,29 +114,23 @@ class GroupRepositoryTest {
 
     @Test
     void updateGroup() {
-        var group = new Group(null, 
-                randomUUID().toString(),
-                now(), 
-                26.5, 
-                GRAINS,
-                100, 
-                YARDS,
-                0.40, 
-                INCHES);
-
+        var group = createTestGroup();
         var savedGroup = groupRepository.save(group).block();
 
-        var updatedGroup = new Group(savedGroup.id(), 
+        var updatedGroup = new Group(savedGroup.id(),
                 savedGroup.ownerId(),
-                now(), 
-                28.0, 
+                savedGroup.loadId(),
+                now(),
+                28.0,
                 GRAINS,
-                200, 
+                200,
                 YARDS,
-                0.50, 
+                0.50,
                 INCHES);
+
         var updatedGroupResult = groupRepository.save(updatedGroup).block();
 
+        assertEquals(savedGroup.loadId(), updatedGroupResult.loadId());
         assertEquals(28.0, updatedGroupResult.powderCharge());
         assertEquals(GRAINS, updatedGroupResult.powderChargeUnit());
         assertEquals(200, updatedGroupResult.targetRange());
@@ -117,16 +141,7 @@ class GroupRepositoryTest {
 
     @Test
     void deleteGroup() {
-        var group = new Group(null, 
-                randomUUID().toString(),
-                now(), 
-                26.5, 
-                GRAINS,
-                100, 
-                YARDS,
-                0.40, 
-                INCHES);
-
+        var group = createTestGroup();
         var savedGroup = groupRepository.save(group).block();
 
         groupRepository.delete(savedGroup).block();
@@ -135,6 +150,19 @@ class GroupRepositoryTest {
 
         StepVerifier.create(foundGroup)
                 .expectNextCount(0)
+                .verifyComplete();
+    }
+
+    @Test
+    void findAllByLoadIdAndOwnerId() {
+        var group1 = createTestGroup();
+        var group2 = createTestGroup();
+        groupRepository.saveAll(Flux.just(group1, group2)).blockLast();
+
+        var result = groupRepository.findAllByLoadIdAndOwnerId(testLoad.id(), testLoad.ownerId());
+
+        StepVerifier.create(result)
+                .expectNextCount(2)
                 .verifyComplete();
     }
 }
