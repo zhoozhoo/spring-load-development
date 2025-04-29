@@ -8,6 +8,63 @@ Content-Type: application/x-www-form-urlencoded
 
 grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&username={{username}}&password={{password}}&scope=openid
 
+// ==================== RIFLES ====================
+
+### Get list of all rifles
+# @name GetRifles
+GET http://localhost:8080/api/rifles/rifles
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new rifle
+# @name CreateRifle
+POST http://localhost:8080/api/rifles/rifles
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "Savage 110 Elite Precision",
+  "description": "Long range precision rifle with MDT chassis",
+  "caliber": ".308 Winchester",
+  "barrelLength": 24.0,
+  "barrelLengthUnit": "INCHES",
+  "barrelContour": "Medium Palma",
+  "twistRate": "1:10",
+  "freeBore": 0.160,
+  "freeBoreUnit": "INCHES",
+  "rifling": "6 Groove"
+}
+
+### Get created rifle by ID
+# @name GetCreatedRifle
+GET http://localhost:8080/api/rifles/rifles/{{CreateRifle.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Update created rifle
+# @name UpdateCreatedRifle
+PUT http://localhost:8080/api/rifles/rifles/{{CreateRifle.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "Tikka T3x Custom",
+  "description": "Tikka T3x with Bartlein barrel and MDT chassis",
+  "caliber": "6mm Creedmoor",
+  "barrelLength": 26.0,
+  "barrelLengthUnit": "INCHES",
+  "barrelContour": "M24",
+  "twistRate": "1:7.5",
+  "freeBore": 0.153,
+  "freeBoreUnit": "INCHES",
+  "rifling": "6 Groove"
+}
+
+### Delete created rifle
+# @name DeleteCreatedRifle
+DELETE http://localhost:8080/api/rifles/rifles/{{CreateRifle.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+// ==================== LOADS ====================
+
 ### Get list of all loads
 # @name GetLoads
 GET http://localhost:8080/api/loads/loads
@@ -42,6 +99,11 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 GET http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
+### Get load statistics
+# @name GetLoadStats
+GET http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}/statistics
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
 ### Update the created load
 # @name UpdateLoad
 PUT http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}
@@ -70,6 +132,8 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 # @name DeleteLoad
 DELETE http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+// ==================== GROUPS ====================
 
 ### Get list of all groups
 # @name GetGroups
@@ -118,6 +182,8 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 # @name DeleteGroup
 DELETE http://localhost:8080/api/loads/groups/{{CreateGroup.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+// ==================== SHOTS ====================
 
 ### Get all shots for a group
 # @name GetShots
