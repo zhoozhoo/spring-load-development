@@ -19,13 +19,14 @@ public record Rifle(
 
         @Column("description") String description,
 
+        @NotBlank(message = "Measurement Units is required")
+        @Column("measurement_units") String measurementUnits,
+
         @NotBlank(message = "Caliber is required")
         @Column("caliber") String caliber,
 
         @Positive(message = "Barrel length must be positive")
         @Column("barrel_length") Double barrelLength,
-
-        @Column("barrel_length_unit") Unit barrelLengthUnit,
 
         @Column("barrel_contour") String barrelContour,
 
@@ -34,7 +35,9 @@ public record Rifle(
         @Column("rifling") String rifling,
 
         @Positive(message = "Free bore must be positive")
-        @Column("free_bore") Double freeBore,
+        @Column("free_bore") Double freeBore) {
 
-        @Column("free_bore_unit") Unit freeBoreUnit) {
+    public static final String METRIC = "Metric";
+
+    public static final String IMPERIAL = "Imperial";
 }

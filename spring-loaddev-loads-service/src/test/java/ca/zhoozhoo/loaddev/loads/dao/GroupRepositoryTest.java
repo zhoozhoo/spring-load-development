@@ -1,8 +1,6 @@
 package ca.zhoozhoo.loaddev.loads.dao;
 
-import static ca.zhoozhoo.loaddev.loads.model.Unit.GRAINS;
-import static ca.zhoozhoo.loaddev.loads.model.Unit.INCHES;
-import static ca.zhoozhoo.loaddev.loads.model.Unit.YARDS;
+import static ca.zhoozhoo.loaddev.loads.model.Load.IMPERIAL;
 import static java.time.LocalDate.now;
 import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,20 +46,17 @@ class GroupRepositoryTest {
                 randomUUID().toString(),
                 "Test Load",
                 "Test Description",
+                IMPERIAL,
                 "Hodgdon",
                 "H335",
                 "Hornady",
                 "FMJ",
                 55.0,
-                GRAINS,
                 "CCI",
                 "Small Rifle",
                 0.02,
-                INCHES,
                 2.260,
-                INCHES,
                 0.002,
-                INCHES,
                 1L)).block();
     }
 
@@ -70,7 +65,7 @@ class GroupRepositoryTest {
     }
 
     private Group createTestGroup(String ownerId, Long loadId) {
-        return new Group(null, ownerId, loadId, now(), 26.5, GRAINS, 100, YARDS, 0.40, INCHES);
+        return new Group(null, ownerId, loadId, now(), 26.5, 100, 0.40);
     }
 
     @Test
@@ -83,11 +78,8 @@ class GroupRepositoryTest {
                     assertNotNull(g.id());
                     assertEquals(testLoad.id(), g.loadId());
                     assertEquals(26.5, g.powderCharge());
-                    assertEquals(GRAINS, g.powderChargeUnit());
                     assertEquals(100, g.targetRange());
-                    assertEquals(YARDS, g.targetRangeUnit());
                     assertEquals(0.40, g.groupSize());
-                    assertEquals(INCHES, g.groupSizeUnit());
                 })
                 .verifyComplete();
     }
@@ -103,11 +95,8 @@ class GroupRepositoryTest {
                     assertEquals(savedGroup.id(), fg.id());
                     assertEquals(savedGroup.loadId(), fg.loadId());
                     assertEquals(26.5, fg.powderCharge());
-                    assertEquals(GRAINS, fg.powderChargeUnit());
                     assertEquals(100, fg.targetRange());
-                    assertEquals(YARDS, fg.targetRangeUnit());
                     assertEquals(0.40, fg.groupSize());
-                    assertEquals(INCHES, fg.groupSizeUnit());
                 })
                 .verifyComplete();
     }
@@ -122,21 +111,15 @@ class GroupRepositoryTest {
                 savedGroup.loadId(),
                 now(),
                 28.0,
-                GRAINS,
                 200,
-                YARDS,
-                0.50,
-                INCHES);
+                0.50);
 
         var updatedGroupResult = groupRepository.save(updatedGroup).block();
 
         assertEquals(savedGroup.loadId(), updatedGroupResult.loadId());
         assertEquals(28.0, updatedGroupResult.powderCharge());
-        assertEquals(GRAINS, updatedGroupResult.powderChargeUnit());
         assertEquals(200, updatedGroupResult.targetRange());
-        assertEquals(YARDS, updatedGroupResult.targetRangeUnit());
         assertEquals(0.50, updatedGroupResult.groupSize());
-        assertEquals(INCHES, updatedGroupResult.groupSizeUnit());
     }
 
     @Test

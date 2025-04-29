@@ -6,16 +6,11 @@ GET {{authorization_host}}/realms/{{realm}}/.well-known/openid-configuration
 POST {{authorization_host}}/realms/{{realm}}/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&username={{username}}&password={{password}}
+grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&username={{username}}&password={{password}}&scope=openid
 
 ### Get list of all loads
 # @name GetLoads
 GET http://localhost:8080/api/loads/loads
-Authorization: Bearer {{Authenticate.response.body.access_token}}
-
-### Get a load by ID
-# @name GetLoadById
-GET http://localhost:8080/api/loads/loads/1
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Create a new load
@@ -27,6 +22,7 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 {
   "name": "New Load",
   "description": "Description of the new load",
+  "measurementUnits": "Imperial",
   "powderManufacturer": "Hodgdon",
   "powderType": "H335",
   "powderCharge": 25.0,
@@ -36,18 +32,26 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
   "primerManufacturer": "CCI",
   "primerType": "Small Rifle",
   "distanceFromLands": 0.02,
+  "caseOverallLength": 2.260,
+  "neckTension": 0.002,
   "rifleId": 1
 }
 
-### Update an existing load
+### Get the created load by ID
+# @name GetLoadById
+GET http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Update the created load
 # @name UpdateLoad
-PUT http://localhost:8080/api/loads/loads/1
+PUT http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 {
   "name": "Updated Load",
   "description": "Updated description of the load",
+  "measurementUnits": "Imperial",
   "powderManufacturer": "IMR",
   "powderType": "4064",
   "powderCharge": 42.0,
@@ -57,10 +61,98 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
   "primerManufacturer": "Federal",
   "primerType": "Large Rifle",
   "distanceFromLands": 0.03,
+  "caseOverallLength": 2.800,
+  "neckTension": 0.003,
   "rifleId": 2
 }
 
-### Delete a load by ID
+### Delete the created load
 # @name DeleteLoad
-DELETE http://localhost:8080/api/loads/loads/1
+DELETE http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Get list of all groups
+# @name GetGroups
+GET http://localhost:8080/api/loads/groups/load/{{CreateLoad.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new group
+# @name CreateGroup
+POST http://localhost:8080/api/loads/groups
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "date": "2024-01-15",
+  "loadId": "{{CreateLoad.response.body.id}}",
+  "powderCharge": 26.5,
+  "targetRange": 100,
+  "groupSize": 0.40
+}
+
+### Get group by ID
+# @name GetGroupById
+GET http://localhost:8080/api/loads/groups/{{CreateGroup.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Get group statistics
+# @name GetGroupStats
+GET http://localhost:8080/api/loads/groups/{{CreateGroup.response.body.id}}/statistics
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Update group
+# @name UpdateGroup
+PUT http://localhost:8080/api/loads/groups/{{CreateGroup.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "date": "2024-01-15",
+  "loadId": "{{CreateLoad.response.body.id}}",
+  "powderCharge": 28.0,
+  "targetRange": 200,
+  "groupSize": 0.50
+}
+
+### Delete group
+# @name DeleteGroup
+DELETE http://localhost:8080/api/loads/groups/{{CreateGroup.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Get all shots for a group
+# @name GetShots
+GET http://localhost:8080/api/loads/shots/group/{{CreateGroup.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new shot
+# @name CreateShot
+POST http://localhost:8080/api/loads/shots
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "groupId": "{{CreateGroup.response.body.id}}",
+  "velocity": 2800
+}
+
+### Get shot by ID
+# @name GetShotById
+GET http://localhost:8080/api/loads/shots/{{CreateShot.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Update shot
+# @name UpdateShot
+PUT http://localhost:8080/api/loads/shots/{{CreateShot.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "groupId": "{{CreateGroup.response.body.id}}",
+  "velocity": 2850
+}
+
+### Delete shot
+# @name DeleteShot  
+DELETE http://localhost:8080/api/loads/shots/{{CreateShot.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+

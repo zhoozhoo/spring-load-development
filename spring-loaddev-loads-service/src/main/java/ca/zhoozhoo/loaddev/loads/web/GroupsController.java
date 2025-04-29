@@ -1,7 +1,11 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
-import static org.springframework.http.HttpStatus.*;
-import static org.springframework.http.ResponseEntity.*;
+import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.NO_CONTENT;
+import static org.springframework.http.ResponseEntity.notFound;
+import static org.springframework.http.ResponseEntity.ok;
+import static org.springframework.http.ResponseEntity.status;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -74,11 +78,8 @@ public class GroupsController {
                             group.loadId(),
                             group.date(),
                             group.powderCharge(),
-                            group.powderChargeUnit(),
                             group.targetRange(),
-                            group.targetRangeUnit(),
-                            group.groupSize(),
-                            group.groupSizeUnit());
+                            group.groupSize());
                     return groupRepository.save(newGroup);
                 })
                 .map(savedGroup -> status(CREATED).body(savedGroup));
@@ -93,14 +94,11 @@ public class GroupsController {
                     var updatedGroup = new Group(
                             existingGroup.id(),
                             existingGroup.ownerId(),
-                            existingGroup.loadId(), // Keep existing loadId
+                            existingGroup.loadId(),
                             group.date(),
                             group.powderCharge(),
-                            group.powderChargeUnit(),
                             group.targetRange(),
-                            group.targetRangeUnit(),
-                            group.groupSize(),
-                            group.groupSizeUnit());
+                            group.groupSize());
                     return groupRepository.save(updatedGroup);
                 })
                 .map(updatedGroup -> ok(updatedGroup))

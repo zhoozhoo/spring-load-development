@@ -1,7 +1,6 @@
 package ca.zhoozhoo.loaddev.loads.dao;
 
-import static ca.zhoozhoo.loaddev.loads.model.Unit.GRAINS;
-import static ca.zhoozhoo.loaddev.loads.model.Unit.INCHES;
+import static ca.zhoozhoo.loaddev.loads.model.Load.IMPERIAL;
 import static java.util.UUID.randomUUID;
 
 import java.util.Random;
@@ -46,20 +45,17 @@ class LoadRepositoryTest {
                 ownerId,
                 "SMK 53 HP H335 " + random.nextInt(100),
                 "SMK 53gr HP with Hodgdon H335",
+                IMPERIAL,
                 "Hodgdon",
                 "H335",
                 "Sierra",
                 "MatchKing HP",
                 53.0,
-                GRAINS,
                 "Federal",
                 "205M",
                 0.020,
-                INCHES,
                 2.260,
-                INCHES,
                 0.002,
-                INCHES,
                 1L);
     }
 
@@ -83,20 +79,17 @@ class LoadRepositoryTest {
                 ownerId,
                 "Hornady 52 BTHP 4198",
                 "Hornady 52gr 4198 BTHP with IMR 4198",
+                IMPERIAL,
                 "IMR",
                 "4198",
                 "Hornady",
                 "BTHP Match",
                 52.0,
-                GRAINS,
                 "Federal",
                 "205M",
                 0.020,
-                INCHES,
                 2.250,
-                INCHES,
                 0.003,
-                INCHES,
                 2L);
 
         loadRepository.saveAll(Flux.just(load1, load2))
@@ -117,20 +110,17 @@ class LoadRepositoryTest {
                 randomUUID().toString(),
                 "Hornady 52 BTHP 4198",
                 "Hornady 52gr 4198 BTHP with IMR 4198",
+                IMPERIAL,
                 "IMR",
                 "4198",
                 "Hornady",
                 "BTHP Match",
                 52.0,
-                GRAINS,
                 "Federal",
                 "205M",
                 0.020,
-                INCHES,
                 2.250,
-                INCHES,
                 0.003,
-                INCHES,
                 1L);
 
         loadRepository.saveAll(Flux.just(load1, load2)).blockLast();
@@ -160,20 +150,17 @@ class LoadRepositoryTest {
                 randomUUID().toString(),
                 "SMK 53 HP H335 " + random.nextInt(100),
                 "SMK 53gr HP with Hodgdon H335",
+                IMPERIAL,
                 "Hodgdon",
                 "H335",
                 "Sierra",
                 "MatchKing HP",
                 53.0,
-                GRAINS,
                 "Federal",
                 "205M",
                 0.020,
-                INCHES,
                 2.260,
-                INCHES,
                 0.002,
-                INCHES,
                 1L);
 
         var result = loadRepository.save(updatedLoad);

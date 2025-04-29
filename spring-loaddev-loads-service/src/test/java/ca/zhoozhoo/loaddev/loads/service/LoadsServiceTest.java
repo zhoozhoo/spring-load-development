@@ -1,10 +1,5 @@
 package ca.zhoozhoo.loaddev.loads.service;
 
-import static ca.zhoozhoo.loaddev.loads.model.Unit.FEET;
-import static ca.zhoozhoo.loaddev.loads.model.Unit.FEET_PER_SECOND;
-import static ca.zhoozhoo.loaddev.loads.model.Unit.GRAINS;
-import static ca.zhoozhoo.loaddev.loads.model.Unit.INCHES;
-import static ca.zhoozhoo.loaddev.loads.model.Unit.YARDS;
 import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -29,7 +24,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-@ExtendWith({MockitoExtension.class, SpringExtension.class})
+@ExtendWith({ MockitoExtension.class, SpringExtension.class })
 class LoadsServiceTest {
 
     @Mock
@@ -46,21 +41,14 @@ class LoadsServiceTest {
     private static final Long LOAD_ID = 1L;
 
     private Group createTestGroup() {
-        return new Group(GROUP_ID, 
-                        USER_ID,
-                        LOAD_ID,
-                        LocalDate.now(), 
-                        24.0, GRAINS,  // powder charge
-                        100, YARDS,  // target range 
-                        1.0, INCHES);  // group size
+        return new Group(GROUP_ID, USER_ID, LOAD_ID, LocalDate.now(), 24.0, 100, 1.0);
     }
 
     private List<Shot> createTestShots() {
         return List.of(
-            new Shot(1L, USER_ID, GROUP_ID, 2800, FEET_PER_SECOND),
-            new Shot(2L, USER_ID, GROUP_ID, 2820, FEET_PER_SECOND),
-            new Shot(3L, USER_ID, GROUP_ID, 2810, FEET_PER_SECOND)
-        );
+                new Shot(1L, USER_ID, GROUP_ID, 2800),
+                new Shot(2L, USER_ID, GROUP_ID, 2820),
+                new Shot(3L, USER_ID, GROUP_ID, 2810));
     }
 
     @Test
@@ -72,33 +60,33 @@ class LoadsServiceTest {
         when(shotRepository.findByGroupIdAndOwnerId(GROUP_ID, USER_ID)).thenReturn(Flux.fromIterable(shots));
 
         StepVerifier.create(loadsService.getGroupStatistics(GROUP_ID, USER_ID))
-            .assertNext(stats -> {
-                assertEquals(group, stats.group());
-                assertEquals(LOAD_ID, stats.group().loadId());
-                assertEquals(3, stats.shotCount());
-                assertEquals(2810.0, stats.averageVelocity(), 0.01);
-                assertEquals(8.16, stats.standardDeviation(), 0.01);
-                assertEquals(20.0, stats.extremeSpread(), 0.01);
-                assertEquals(shots, stats.shots());
-            })
-            .verifyComplete();
+                .assertNext(stats -> {
+                    assertEquals(group, stats.group());
+                    assertEquals(LOAD_ID, stats.group().loadId());
+                    assertEquals(3, stats.shotCount());
+                    assertEquals(2810.0, stats.averageVelocity(), 0.01);
+                    assertEquals(8.16, stats.standardDeviation(), 0.01);
+                    assertEquals(20.0, stats.extremeSpread(), 0.01);
+                    assertEquals(shots, stats.shots());
+                })
+                .verifyComplete();
     }
 
     @Test
     void whenNoShots_thenReturnZeroStatistics() {
         Group group = createTestGroup();
-        
+
         when(groupRepository.findByIdAndOwnerId(GROUP_ID, USER_ID)).thenReturn(Mono.just(group));
         when(shotRepository.findByGroupIdAndOwnerId(GROUP_ID, USER_ID)).thenReturn(Flux.empty());
 
         StepVerifier.create(loadsService.getGroupStatistics(GROUP_ID, USER_ID))
-            .assertNext(stats -> {
-                assertEquals(0, stats.shotCount());
-                assertEquals(0.0, stats.averageVelocity());
-                assertEquals(0.0, stats.standardDeviation());
-                assertEquals(0.0, stats.extremeSpread());
-            })
-            .verifyComplete();
+                .assertNext(stats -> {
+                    assertEquals(0, stats.shotCount());
+                    assertEquals(0.0, stats.averageVelocity());
+                    assertEquals(0.0, stats.standardDeviation());
+                    assertEquals(0.0, stats.extremeSpread());
+                })
+                .verifyComplete();
     }
 
     @Test
@@ -106,26 +94,24 @@ class LoadsServiceTest {
         when(groupRepository.findByIdAndOwnerId(anyLong(), anyString())).thenReturn(Mono.empty());
 
         StepVerifier.create(loadsService.getGroupStatistics(GROUP_ID, USER_ID))
-            .verifyComplete();
+                .verifyComplete();
     }
 
     @Test
     void whenSingleShot_thenCalculateStatisticsCorrectly() {
         Group group = createTestGroup();
-        List<Shot> shots = List.of(
-            new Shot(1L, USER_ID, GROUP_ID, 2800, FEET)
-        );
+        List<Shot> shots = List.of(new Shot(1L, USER_ID, GROUP_ID, 2800));
 
         when(groupRepository.findByIdAndOwnerId(GROUP_ID, USER_ID)).thenReturn(Mono.just(group));
         when(shotRepository.findByGroupIdAndOwnerId(GROUP_ID, USER_ID)).thenReturn(Flux.fromIterable(shots));
 
         StepVerifier.create(loadsService.getGroupStatistics(GROUP_ID, USER_ID))
-            .assertNext(stats -> {
-                assertEquals(1, stats.shotCount());
-                assertEquals(2800.0, stats.averageVelocity());
-                assertEquals(0.0, stats.standardDeviation());
-                assertEquals(0.0, stats.extremeSpread());
-            })
-            .verifyComplete();
+                .assertNext(stats -> {
+                    assertEquals(1, stats.shotCount());
+                    assertEquals(2800.0, stats.averageVelocity());
+                    assertEquals(0.0, stats.standardDeviation());
+                    assertEquals(0.0, stats.extremeSpread());
+                })
+                .verifyComplete();
     }
 }

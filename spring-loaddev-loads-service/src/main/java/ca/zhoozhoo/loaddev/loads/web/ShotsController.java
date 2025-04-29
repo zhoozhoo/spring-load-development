@@ -59,8 +59,7 @@ public class ShotsController {
                 null,
                 userId,
                 shot.groupId(),
-                shot.velocity(),
-                shot.velocityUnit()))
+                shot.velocity()))
             .flatMap(shotRepository::save)
             .map(savedShot -> status(CREATED).body(savedShot));
     }
@@ -75,8 +74,7 @@ public class ShotsController {
                             existingShot.id(),
                             existingShot.ownerId(),
                             shot.groupId(),
-                            shot.velocity(),
-                            shot.velocityUnit());
+                            shot.velocity());
                     return shotRepository.save(updatedShot);
                 })
                 .map(updatedShot -> ok(updatedShot))

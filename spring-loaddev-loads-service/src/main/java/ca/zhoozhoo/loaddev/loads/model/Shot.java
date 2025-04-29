@@ -18,7 +18,5 @@ public record Shot(
         @Column("group_id") Long groupId,
 
         @Positive(message = "Velocity must be a positive number")
-        @Column("velocity") Integer velocity,
-
-        @Column("velocity_unit") Unit velocityUnit) {
+        @Column("velocity") Integer velocity) {
 }

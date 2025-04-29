@@ -1,7 +1,6 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
-import static ca.zhoozhoo.loaddev.loads.model.Unit.GRAINS;
-import static ca.zhoozhoo.loaddev.loads.model.Unit.INCHES;
+import static ca.zhoozhoo.loaddev.loads.model.Load.IMPERIAL;
 import static java.util.UUID.randomUUID;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
@@ -49,13 +48,13 @@ class LoadsControllerTest {
     }
 
     private Load createLoad(String ownerId, String name) {
-        return new Load(null, ownerId, name, name + " Description",
+        return new Load(null, ownerId, name, name + " Description", IMPERIAL,
                 "Manufacturer", "Type",
-                "BulletManufacturer", "BulletType", 100.0, GRAINS,
+                "BulletManufacturer", "BulletType", 100.0,
                 "PrimerManufacturer", "PrimerType",
-                0.020, INCHES,
-                2.800, INCHES,
-                0.002, INCHES,
+                0.020,
+                2.800,
+                0.002,
                 null);
     }
 
@@ -114,13 +113,13 @@ class LoadsControllerTest {
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
         var load = loadRepository.save(createLoad(userId, "Load1")).block();
 
-        var updatedLoad = new Load(load.id(), userId, "UpdatedLoad", "UpdatedDescription",
+        var updatedLoad = new Load(load.id(), userId, "UpdatedLoad", "UpdatedDescription", IMPERIAL,
                 "UpdatedManufacturer", "UpdatedType",
-                "UpdatedBulletManufacturer", "UpdatedBulletType", 150.0, GRAINS,
+                "UpdatedBulletManufacturer", "UpdatedBulletType", 150.0,
                 "UpdatedPrimerManufacturer", "UpdatedPrimerType",
-                0.025, INCHES,
-                2.850, INCHES,
-                0.003, INCHES,
+                0.025,
+                2.850,
+                0.003,
                 1L);
 
         webTestClient.mutateWith(jwt).put().uri("/loads/{id}", load.id())
@@ -163,14 +162,14 @@ class LoadsControllerTest {
     void createLoadWithInvalidData() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
-        var invalidLoad = new Load(null, userId, "", "",
+        var invalidLoad = new Load(null, userId, "", "", "",
                 "", "",
-                "", "", -1.0, null,
-                "", "",
-                -1.0, null,
-                -1.0, null,
-                -1.0, null,
-                null);
+                "", "", -1.0,
+                null, "",
+                -1.0,
+                -1.0,
+                -1.0,
+                -1L);
 
         webTestClient.mutateWith(jwt).post().uri("/loads")
                 .contentType(APPLICATION_JSON)
@@ -187,9 +186,9 @@ class LoadsControllerTest {
                 null, null,
                 null, null, null, null,
                 null, null,
-                null, null,
-                null, null,
-                null, null,
+                null,
+                null,
+                null,
                 null);
 
         webTestClient.mutateWith(jwt).post().uri("/loads")
@@ -219,11 +218,11 @@ class LoadsControllerTest {
         var load = loadRepository.save(createLoad(userId, "Load1")).block();
         var invalidLoad = new Load(load.id(), userId, "", "",
                 "", "",
-                "", "", -1.0, null,
+                "", "", null, -1.0,
                 "", "",
-                -1.0, null,
-                -1.0, null,
-                -1.0, null,
+                -1.0,
+                -1.0,
+                -1.0,
                 null);
 
         webTestClient.mutateWith(jwt).put().uri("/loads/{id}", load.id())

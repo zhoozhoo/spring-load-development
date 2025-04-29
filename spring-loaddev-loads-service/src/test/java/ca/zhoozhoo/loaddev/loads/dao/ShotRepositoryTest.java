@@ -1,9 +1,6 @@
 package ca.zhoozhoo.loaddev.loads.dao;
 
-import static ca.zhoozhoo.loaddev.loads.model.Unit.FEET_PER_SECOND;
-import static ca.zhoozhoo.loaddev.loads.model.Unit.GRAINS;
-import static ca.zhoozhoo.loaddev.loads.model.Unit.INCHES;
-import static ca.zhoozhoo.loaddev.loads.model.Unit.YARDS;
+import static ca.zhoozhoo.loaddev.loads.model.Load.IMPERIAL;
 import static java.time.LocalDate.now;
 import static java.util.UUID.randomUUID;
 
@@ -53,20 +50,17 @@ class ShotRepositoryTest {
                 randomUUID().toString(),
                 "Test Load",
                 "Test Description",
+                IMPERIAL,
                 "Hodgdon",
                 "H335",
                 "Hornady",
                 "FMJ",
                 55.0,
-                GRAINS,
                 "CCI",
                 "Small Rifle",
                 0.02,
-                INCHES,
                 2.260,
-                INCHES,
                 0.002,
-                INCHES,
                 1L)).block();
     }
 
@@ -74,8 +68,7 @@ class ShotRepositoryTest {
         return new Shot(null,
                 ownerId,
                 groupId,
-                random.nextInt(1000),
-                FEET_PER_SECOND);
+                random.nextInt(1000));
     }
 
     private Group createTestGroup(String ownerId) {
@@ -84,11 +77,8 @@ class ShotRepositoryTest {
                 testLoad.id(),
                 now(),
                 26.5,
-                GRAINS,
                 100,
-                YARDS,
-                0.40,
-                INCHES);
+                0.40);
     }
 
     @Test
@@ -150,7 +140,7 @@ class ShotRepositoryTest {
         var savedGroup = groupRepository.save(createTestGroup(UUID.randomUUID().toString())).block();
         var savedShot = shotRepository.save(createTestShot(savedGroup.ownerId(), savedGroup.id())).block();
 
-        var updatedShot = new Shot(savedShot.id(), savedGroup.ownerId(), savedGroup.id(), random.nextInt(1000), FEET_PER_SECOND);
+        var updatedShot = new Shot(savedShot.id(), savedGroup.ownerId(), savedGroup.id(), random.nextInt(1000));
 
         var result = shotRepository.save(updatedShot);
 
