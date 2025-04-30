@@ -96,38 +96,111 @@ The project includes Spring Boot Admin Server for monitoring and managing your S
 * Access actuator endpoints through a user-friendly interface
 * Track service status and configurations
 
-=== Troubleshooting
+== Architecture Overview
 
-==== Common Issues
+[mermaid]
+....
+flowchart TD
+    subgraph External
+        User[User]
+    end
 
-[cols="1,2"]
-|===
-|Problem |Solution
+    subgraph Infra
+        ConfigServer[Config Server]
+        DiscoveryServer[Discovery Server]
+        Keycloak[Keycloak Auth]
+        Postgres[PostgreSQL DB]
+        Jaeger[Tracing Server Jaeger]
+    end
 
-|Services fail to start
-|Ensure Config Server is running and accessible at http://localhost:8888
+    subgraph Gateway
+        APIGateway[API Gateway]
+    end
 
-|Authentication fails
-|Verify Keycloak is running and the realm is properly imported
+    subgraph Services
+        LoadsService[Loads Service]
+        RiflesService[Rifles Service]
+        AdminServer[Admin Server]
+        GenAIService[GenAI Service]
+    end
 
-|Database connection issues
-|Check PostgreSQL is running and credentials match in configuration
+    User --> APIGateway
+    APIGateway -->|REST| LoadsService
+    APIGateway -->|REST| RiflesService
+    APIGateway -->|REST| AdminServer
+    APIGateway -->|REST| GenAIService
 
-|Service discovery issues
-|Ensure Eureka Server is running and services can reach http://localhost:8761
-|===
+    LoadsService -- DB --> Postgres
+    RiflesService -- DB --> Postgres
 
-==== Debug Mode
+    LoadsService -- Discovery --> DiscoveryServer
+    RiflesService -- Discovery --> DiscoveryServer
+    AdminServer -- Discovery --> DiscoveryServer
+    GenAIService -- Discovery --> DiscoveryServer
+    APIGateway -- Discovery --> DiscoveryServer
 
-To run a service in debug mode:
+    LoadsService -- Config --> ConfigServer
+    RiflesService -- Config --> ConfigServer
+    AdminServer -- Config --> ConfigServer
+....
 
-[source,bash]
-----
-./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000"
-----
+== Database Schema
 
-Then connect your IDE to port 8000.
+[mermaid]
+....
+erDiagram
+    LOADS {
+        BIGSERIAL id PK
+        VARCHAR owner_id
+        VARCHAR name
+        TEXT description
+        VARCHAR measurement_units
+        VARCHAR powder_manufacturer
+        VARCHAR powder_type
+        VARCHAR bullet_manufacturer
+        VARCHAR bullet_type
+        DOUBLE bullet_weight
+        VARCHAR primer_manufacturer
+        VARCHAR primer_type
+        DOUBLE distance_from_lands
+        DOUBLE case_overall_length
+        DOUBLE neck_tension
+        BIGSERIAL rifle_id
+    }
+    GROUPS {
+        BIGSERIAL id PK
+        VARCHAR owner_id
+        BIGSERIAL load_id FK
+        DATE date
+        DOUBLE powder_charge
+        INTEGER target_range
+        DOUBLE group_size
+    }
+    SHOTS {
+        BIGSERIAL id PK
+        VARCHAR owner_id
+        BIGSERIAL group_id FK
+        INTEGER velocity
+    }
+    RIFLES {
+        BIGSERIAL id PK
+        VARCHAR owner_id
+        VARCHAR name
+        TEXT description
+        VARCHAR measurement_units
+        VARCHAR caliber
+        DOUBLE barrel_length
+        VARCHAR barrel_contour
+        VARCHAR twist_rate
+        VARCHAR rifling
+        DOUBLE free_bore
+    }
 
-=== License
+    LOADS ||--o{ GROUPS : "has"
+    GROUPS ||--o{ SHOTS : "has"
+    RIFLES ||--o{ LOADS : "has"
+....
+
+== License
 
 This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
