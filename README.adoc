@@ -6,6 +6,11 @@
 
 Spring Load Development is a project that demonstrates the integration of various modern technologies and frameworks to build a robust microservices architecture. This project showcases the use of Spring Boot for microservices, Spring WebFlux for reactive RESTful web services, Spring Data R2DBC for reactive database connectivity, Spring Cloud Config for externalized configuration management, Spring Cloud Gateway for API gateway, and Resilience4J for circuit breaker patterns.
 
+[NOTE]
+====
+*Load development* is the process of systematically testing and refining ammunition components (such as powder charge, bullet, primer, and case dimensions) to achieve optimal accuracy, consistency, and performance for a specific firearm. This process is widely used in competitive shooting to gain a precision edge. This project is an example implementation for managing and analyzing load development data, and reflects a personal hobby of mine.
+====
+
 == Technologies and Frameworks Used
 
 * Microservices using link:https://spring.io/projects/spring-boot[Spring Boot]
@@ -96,7 +101,7 @@ The project includes Spring Boot Admin Server for monitoring and managing your S
 * Access actuator endpoints through a user-friendly interface
 * Track service status and configurations
 
-== Architecture Overview
+== Architecture Diagram
 
 [source,mermaid]
 ....
@@ -113,35 +118,29 @@ flowchart TD
         Jaeger[Tracing Server Jaeger]
     end
 
-    subgraph Gateway
+    subgraph API Gateway
         APIGateway[API Gateway]
     end
 
-    subgraph Services
+    subgraph Microservices
         LoadsService[Loads Service]
         RiflesService[Rifles Service]
-        AdminServer[Admin Server]
-        GenAIService[GenAI Service]
     end
 
-    User --> APIGateway
+    User -- REST --> APIGateway
+    User -- Auth --> Keycloak
     APIGateway -->|REST| LoadsService
     APIGateway -->|REST| RiflesService
-    APIGateway -->|REST| AdminServer
-    APIGateway -->|REST| GenAIService
 
     LoadsService -- DB --> Postgres
     RiflesService -- DB --> Postgres
 
     LoadsService -- Discovery --> DiscoveryServer
     RiflesService -- Discovery --> DiscoveryServer
-    AdminServer -- Discovery --> DiscoveryServer
-    GenAIService -- Discovery --> DiscoveryServer
     APIGateway -- Discovery --> DiscoveryServer
 
     LoadsService -- Config --> ConfigServer
     RiflesService -- Config --> ConfigServer
-    AdminServer -- Config --> ConfigServer
 ....
 
 == Database Schema
