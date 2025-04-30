@@ -1,0 +1,51 @@
+// ==================== VARIABLES ====================
+// Set the group ID to use for shot operations
+@group_id = 
+
+### Get OpenID configuration from Keycloak
+GET {{authorization_host}}/realms/{{realm}}/.well-known/openid-configuration
+
+### Authenticate to Keycloak and get a token
+# @name Authenticate
+POST {{authorization_host}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&username={{username}}&password={{password}}&scope=openid
+
+### Get all shots for a group
+# @name GetShots
+# Set {{group_id}} to the group ID you want to use
+GET http://localhost:8080/api/loads/shots/group/{{group_id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new shot
+# @name CreateShot
+POST http://localhost:8080/api/loads/shots
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "groupId": "{{group_id}}",
+  "velocity": 2800
+}
+
+### Get shot by ID
+# @name GetShotById
+GET http://localhost:8080/api/loads/shots/{{CreateShot.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Update shot
+# @name UpdateShot
+PUT http://localhost:8080/api/loads/shots/{{CreateShot.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "groupId": "{{group_id}}",
+  "velocity": 2850
+}
+
+### Delete shot
+# @name DeleteShot  
+DELETE http://localhost:8080/api/loads/shots/{{CreateShot.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}

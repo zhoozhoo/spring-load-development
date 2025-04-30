@@ -5,7 +5,7 @@
 
 == Overview
 
-This directory contains HTTP request files for testing the Spring Load Development API services using VS Code's REST Client extension.
+This directory contains HTTP request files for testing the Spring Load Development API services using VS Code's REST Client extension. The test files cover authentication and full CRUD operations for rifles, loads, groups, and shots APIs.
 
 == Prerequisites
 
@@ -19,7 +19,6 @@ This directory contains HTTP request files for testing the Spring Load Developme
 ** API Gateway service (default: localhost:8080)
 ** Rifles service (default: localhost:8081)
 ** Loads service (default: localhost:8082)
-** PostgreSQL database (default: localhost:5432)
 
 == Configuration
 
@@ -43,7 +42,22 @@ Contains requests for testing the Rifles API endpoints:
 Contains requests for testing the Loads API endpoints:
 
 * Authentication with Keycloak
-* CRUD operations for loads, groups and shots
+* CRUD operations for loads, groups, and shots
+
+=== groups-service.http
+
+Contains requests for testing the Groups API endpoints:
+
+* Authentication with Keycloak
+* CRUD operations for groups
+* Group statistics
+
+=== shots-service.http
+
+Contains requests for testing the Shots API endpoints:
+
+* Authentication with Keycloak
+* CRUD operations for shots
 
 == How to Use
 
@@ -94,3 +108,5 @@ TIP: This allows you to use these variables in any `.http` file across your work
 * Use the response of one request in another with the syntax `{{RequestName.response.body.field}}`
 * Headers can be modified directly in the `.http` files
 * Add new environments by creating new objects in `http-client.env.json`
+* You can chain requests using dynamic variables (e.g., use IDs from previous responses in subsequent requests)
+* The `.http` files are updated as new endpoints or changes are introduced in the API

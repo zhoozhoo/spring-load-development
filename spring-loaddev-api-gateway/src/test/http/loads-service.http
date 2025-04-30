@@ -1,0 +1,81 @@
+// ==================== VARIABLES ====================
+// Set the rifle ID to use for load operations
+@rifle_id = 
+
+### Get OpenID configuration from Keycloak
+GET {{authorization_host}}/realms/{{realm}}/.well-known/openid-configuration
+
+### Authenticate to Keycloak and get a token
+# @name Authenticate
+POST {{authorization_host}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&username={{username}}&password={{password}}&scope=openid
+
+### Get list of all loads
+# @name GetLoads
+GET http://localhost:8080/api/loads/loads
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new load
+# @name CreateLoad
+POST http://localhost:8080/api/loads/loads
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "223 Remington Varmint Load",
+  "description": "Accurate varmint load for 223 Remington using Hodgdon H335 and Hornady 55gr FMJ",
+  "measurementUnits": "Imperial",
+  "powderManufacturer": "Hodgdon",
+  "powderType": "H335",
+  "powderCharge": 25.0,
+  "bulletManufacturer": "Hornady",
+  "bulletType": "FMJ",
+  "bulletWeight": 55,
+  "primerManufacturer": "CCI",
+  "primerType": "Small Rifle",
+  "distanceFromLands": 0.02,
+  "caseOverallLength": 2.260,
+  "neckTension": 0.002,
+  "rifleId": "{{rifle_id}}"
+}
+
+### Get the created load by ID
+# @name GetLoadById
+GET http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Get load statistics
+# @name GetLoadStats
+GET http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}/statistics
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Update the created load
+# @name UpdateLoad
+PUT http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "308 Winchester Match Load",
+  "description": "Match load for 308 Win using IMR 4064 and Sierra 168gr HPBT",
+  "measurementUnits": "Imperial",
+  "powderManufacturer": "IMR",
+  "powderType": "4064",
+  "powderCharge": 42.0,
+  "bulletManufacturer": "Sierra",
+  "bulletType": "HPBT",
+  "bulletWeight": 168,
+  "primerManufacturer": "Federal",
+  "primerType": "Large Rifle",
+  "distanceFromLands": 0.03,
+  "caseOverallLength": 2.800,
+  "neckTension": 0.003,
+  "rifleId": 2
+}
+
+### Delete the created load
+# @name DeleteLoad
+DELETE http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
