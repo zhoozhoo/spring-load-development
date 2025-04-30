@@ -98,7 +98,7 @@ The project includes Spring Boot Admin Server for monitoring and managing your S
 
 == Architecture Overview
 
-[mermaid]
+[source,mermaid]
 ....
 flowchart TD
     subgraph External
@@ -146,7 +146,7 @@ flowchart TD
 
 == Database Schema
 
-[mermaid]
+[source,mermaid]
 ....
 erDiagram
     LOADS {
