@@ -63,6 +63,11 @@
 
         <!-- Third parties -->
         <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
@@ -70,7 +75,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>r2dbc-postgresql</artifactId>
-            <version>1.0.7.RELEASE</version>
+            <version>${r2dbc-postgresql.version}</version>
         </dependency>
         <dependency>
             <groupId>io.micrometer</groupId>
