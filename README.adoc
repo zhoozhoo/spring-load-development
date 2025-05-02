@@ -17,11 +17,17 @@ Spring Load Development is a project that demonstrates the integration of variou
 * Reactive RESTful Web Services using link:https://docs.spring.io/spring-framework/reference/web/webflux.html[Spring WebFlux]
 * Reactive Relational Database Connectivity using link:https://spring.io/projects/spring-data-r2dbc[Spring Data R2DBC]
 * Externalized Configuration Management using link:https://spring.io/projects/spring-cloud-config[Spring Cloud Config]
+* Service Discovery using link:https://spring.io/projects/spring-cloud-netflix[Spring Cloud Netflix] 
+* Role-Based Access Control (RBAC) using link:https://spring.io/projects/spring-security[Spring Security] and link:https://www.keycloak.org/[Keycloak]
 * API Gateway using link:https://spring.io/projects/spring-cloud-gateway[Spring Cloud Gateway]
 * Circuit Breaker using link:https://spring.io/projects/spring-cloud-circuitbreaker[Spring Cloud Circuit Breaker] and link:https://resilience4j.readme.io/docs/getting-started[Resilience4J]
 * Distributed Tracing using link:https://opentelemetry.io/[OpenTelemetry] and link:https://www.jaegertracing.io/[Jaeger]
 * Application Monitoring using link:https://github.com/codecentric/spring-boot-admin[Spring Boot Admin]
-* Role-Based Access Control (RBAC) using link:https://spring.io/projects/spring-security[Spring Security] and link:https://www.keycloak.org/[Keycloak]
+
+[NOTE]
+====
+All technologies are open source and widely adopted in cloud-native Java ecosystems. Version details can be found in the respective `pom.xml` files.
+====
 
 == Getting Started
 
