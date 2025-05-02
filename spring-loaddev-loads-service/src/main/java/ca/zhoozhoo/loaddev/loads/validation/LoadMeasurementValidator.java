@@ -11,6 +11,16 @@ public class LoadMeasurementValidator implements ConstraintValidator<LoadMeasure
         if (load == null) {
             return true;
         }
-        return load.distanceFromLands() != null || load.caseOverallLength() != null;
+        boolean valid = load.distanceFromLands() != null || load.caseOverallLength() != null;
+        if (!valid) {
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate("Either distance from lands or case overall length must be specified")
+                .addPropertyNode("distanceFromLands")
+                .addConstraintViolation();
+            context.buildConstraintViolationWithTemplate("Either distance from lands or case overall length must be specified")
+                .addPropertyNode("caseOverallLength")
+                .addConstraintViolation();
+        }
+        return valid;
     }
 }

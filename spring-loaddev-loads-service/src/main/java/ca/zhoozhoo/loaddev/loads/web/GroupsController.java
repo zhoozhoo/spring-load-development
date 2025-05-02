@@ -1,7 +1,11 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
-import static org.springframework.http.HttpStatus.*;
-import static org.springframework.http.ResponseEntity.*;
+import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.NO_CONTENT;
+import static org.springframework.http.ResponseEntity.notFound;
+import static org.springframework.http.ResponseEntity.ok;
+import static org.springframework.http.ResponseEntity.status;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,8 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
 import ca.zhoozhoo.loaddev.loads.model.Group;
+import ca.zhoozhoo.loaddev.loads.model.GroupStatistics;
 import ca.zhoozhoo.loaddev.loads.security.CurrentUser;
 import ca.zhoozhoo.loaddev.loads.security.SecurityUtils;
+import ca.zhoozhoo.loaddev.loads.service.LoadsService;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
@@ -36,10 +42,13 @@ public class GroupsController {
     @Autowired
     private SecurityUtils securityUtils;
 
-    @GetMapping
+    @Autowired
+    private LoadsService loadsService;
+
+    @GetMapping("/load/{loadId}")
     @PreAuthorize("hasAuthority('groups:view')")
-    public Flux<Group> getAllGroups(@CurrentUser String userId) {
-        return groupRepository.findAll();
+    public Flux<Group> getAllGroupsByLoadId(@CurrentUser String userId, @PathVariable Long loadId) {
+        return groupRepository.findAllByLoadIdAndOwnerId(loadId, userId);
     }
 
     @GetMapping("/{id}")
@@ -47,6 +56,14 @@ public class GroupsController {
     public Mono<ResponseEntity<Group>> getGroupById(@CurrentUser String userId, @PathVariable Long id) {
         return groupRepository.findById(id)
                 .map(group -> ok(group))
+                .defaultIfEmpty(notFound().build());
+    }
+
+    @GetMapping("/{id}/statistics")
+    @PreAuthorize("hasAuthority('groups:view')")
+    public Mono<ResponseEntity<GroupStatistics>> getGroupStatistics(@CurrentUser String userId, @PathVariable Long id) {
+        return loadsService.getGroupStatistics(id, userId)
+                .map(stats -> ok(stats))
                 .defaultIfEmpty(notFound().build());
     }
 
@@ -58,13 +75,11 @@ public class GroupsController {
                     var newGroup = new Group(
                             group.id(),
                             ownerid,
+                            group.loadId(),
                             group.date(),
                             group.powderCharge(),
-                            group.powderChargeUnit(),
                             group.targetRange(),
-                            group.targetRangeUnit(),
-                            group.groupSize(),
-                            group.groupSizeUnit());
+                            group.groupSize());
                     return groupRepository.save(newGroup);
                 })
                 .map(savedGroup -> status(CREATED).body(savedGroup));
@@ -79,13 +94,11 @@ public class GroupsController {
                     var updatedGroup = new Group(
                             existingGroup.id(),
                             existingGroup.ownerId(),
+                            existingGroup.loadId(),
                             group.date(),
                             group.powderCharge(),
-                            group.powderChargeUnit(),
                             group.targetRange(),
-                            group.targetRangeUnit(),
-                            group.groupSize(),
-                            group.groupSizeUnit());
+                            group.groupSize());
                     return groupRepository.save(updatedGroup);
                 })
                 .map(updatedGroup -> ok(updatedGroup))

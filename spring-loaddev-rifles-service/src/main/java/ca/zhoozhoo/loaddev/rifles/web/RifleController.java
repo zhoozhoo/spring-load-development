@@ -67,14 +67,13 @@ public class RifleController {
                 userId,
                 rifle.name(),
                 rifle.description(),
+                rifle.measurementUnits(),
                 rifle.caliber(),
                 rifle.barrelLength(),
-                rifle.barrelLengthUnit(),
                 rifle.barrelContour(),
                 rifle.twistRate(),
                 rifle.rifling(),
-                rifle.freeBore(),
-                rifle.freeBoreUnit()))
+                rifle.freeBore()))
                 .flatMap(rifleRepository::save)
                 .map(savedRifle -> {
                     log.info("Created new rifle with id: {}", savedRifle.id());
@@ -92,14 +91,13 @@ public class RifleController {
                             existingRifle.ownerId(),
                             rifle.name(),
                             rifle.description(),
+                            rifle.measurementUnits(),
                             rifle.caliber(),
                             rifle.barrelLength(),
-                            rifle.barrelLengthUnit(),
                             rifle.barrelContour(),
                             rifle.twistRate(),
                             rifle.rifling(),
-                            rifle.freeBore(),
-                            rifle.freeBoreUnit());
+                            rifle.freeBore());
                     return rifleRepository.save(updatedRifle);
                 })
                 .map(updatedRifle -> {

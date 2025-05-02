@@ -1,3 +1,7 @@
+// ==================== VARIABLES ====================
+// Set the group ID to use for shot operations
+@group_id = 
+
 ### Get OpenID configuration from Keycloak
 GET {{authorization_host}}/realms/{{realm}}/.well-known/openid-configuration
 
@@ -19,53 +23,40 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 grant_type=urn:ietf:params:oauth:grant-type:uma-ticket&client_id={{client_id}}&client_secret={{client_secret}}&audience={{client_id}}&scope=openid
 
-### Get list of all rifles
-# @name GetRifles
-GET http://localhost:8080/api/rifles
+### Get all shots for a group
+# @name GetShots
+# Set {{group_id}} to the group ID you want to use
+GET http://localhost:8080/api/shots/group/{{group_id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
-### Create a new rifle
-# @name CreateRifle
-POST http://localhost:8080/api/rifles
+### Create a new shot
+# @name CreateShot
+POST http://localhost:8080/api/shots
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 {
-  "name": "Savage 110 Elite Precision",
-  "description": "Long range precision rifle with MDT chassis",
-  "measurementUnits": "Imperial",
-  "caliber": ".308 Winchester",
-  "barrelLength": 24.0,
-  "barrelContour": "Medium Palma",
-  "twistRate": "1:10",
-  "freeBore": 0.160,
-  "rifling": "6 Groove"
+  "groupId": "{{group_id}}",
+  "velocity": 2800
 }
 
-### Get created rifle by ID
-# @name GetCreatedRifle
-GET http://localhost:8080/api/rifles/{{CreateRifle.response.body.id}}
+### Get shot by ID
+# @name GetShotById
+GET http://localhost:8080/api/shots/{{CreateShot.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
-### Update created rifle
-# @name UpdateCreatedRifle
-PUT http://localhost:8080/api/rifles/{{CreateRifle.response.body.id}}
+### Update shot
+# @name UpdateShot
+PUT http://localhost:8080/api/shots/{{CreateShot.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 {
-  "name": "Tikka T3x Custom",
-  "description": "Tikka T3x with Bartlein barrel and MDT chassis",
-  "measurementUnits": "Imperial",
-  "caliber": "6mm Creedmoor",
-  "barrelLength": 26.0,
-  "barrelContour": "M24",
-  "twistRate": "1:7.5",
-  "freeBore": 0.153,
-  "rifling": "6 Groove"
+  "groupId": "{{group_id}}",
+  "velocity": 2850
 }
 
-### Delete created rifle
-# @name DeleteCreatedRifle
-DELETE http://localhost:8080/api/rifles/{{CreateRifle.response.body.id}}
+### Delete shot
+# @name DeleteShot  
+DELETE http://localhost:8080/api/shots/{{CreateShot.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}

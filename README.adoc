@@ -6,6 +6,11 @@
 
 Spring Load Development is a project that demonstrates the integration of various modern technologies and frameworks to build a robust microservices architecture. This project showcases the use of Spring Boot for microservices, Spring WebFlux for reactive RESTful web services, Spring Data R2DBC for reactive database connectivity, Spring Cloud Config for externalized configuration management, Spring Cloud Gateway for API gateway, and Resilience4J for circuit breaker patterns.
 
+[NOTE]
+====
+*Load development* is the process of systematically testing and refining ammunition components (such as powder charge, bullet, primer, and case dimensions) to achieve optimal accuracy, consistency, and performance for a specific firearm. This process is widely used in competitive shooting to gain a precision edge. This project is an example implementation for managing and analyzing load development data, and reflects a personal hobby of mine.
+====
+
 == Technologies and Frameworks Used
 
 * Microservices using link:https://spring.io/projects/spring-boot[Spring Boot]
@@ -28,33 +33,19 @@ Spring Load Development is a project that demonstrates the integration of variou
 
 === Running Locally
 
-. Clone the repository:
+==== Clone the repository:
+
 [source,bash]
 ----
 git clone https://github.com/zhoozhoo/spring-load-development.git
 cd spring-load-development
 ----
 
-. Start the infrastructure services using Docker Compose:
+==== Start the infrastructure services using Docker Compose:
+
 [source,bash]
 ----
 docker-compose up -d
-----
-
-. Start the services in order:
-* PostgreSQL (port 5432)
-* Jaeger (port 16686)
-* Config Server (port 8888)
-* Discovery Server (port 8761)
-* API Gateway (port 8080)
-* Rifles Service (port 8081)
-* Loads Service (port 8082)
-* Admin Server (port 9090)
-
-Each service can be started using:
-[source,bash]
-----
-./mvnw spring-boot:run -pl spring-loaddev-{service-name}
 ----
 
 === Accessing Services
@@ -64,6 +55,14 @@ Each service can be started using:
 * API Gateway: http://localhost:8080
 * Keycloak Admin Console: http://localhost:7080
 * Jaeger UI: http://localhost:16686
+
+=== API Documentation
+
+API endpoints are documented using OpenAPI (Swagger). Once services are running, access the documentation at:
+
+http://localhost:8080/swagger-ui.html
+
+Alternatively, use the `.http` files in `spring-loaddev-api-gateway/src/test/http/` with the VS Code REST Client extension for manual testing.
 
 === Services Architecture
 
@@ -75,6 +74,13 @@ The application is composed of the following services:
 * *Rifles Service*: Manages rifle data and configurations
 * *Loads Service*: Handles load development data including groups and shots
 * *Admin Server*: Monitoring and management of all services
+
+=== Configuration Repository
+
+The centralized configuration for all services is stored in a separate GitHub repository:
+https://github.com/zhoozhoo/spring-load-development-config
+
+The Config Server automatically picks up configuration files from this repository at startup.
 
 === Security
 
@@ -96,38 +102,105 @@ The project includes Spring Boot Admin Server for monitoring and managing your S
 * Access actuator endpoints through a user-friendly interface
 * Track service status and configurations
 
-=== Troubleshooting
+== Architecture Diagram
 
-==== Common Issues
+[source,mermaid]
+....
+flowchart TD
+    subgraph External
+        User[User]
+    end
 
-[cols="1,2"]
-|===
-|Problem |Solution
+    subgraph Infra
+        ConfigServer[Config Server]
+        DiscoveryServer[Discovery Server]
+        Keycloak[Keycloak Auth]
+        Postgres[PostgreSQL DB]
+        Jaeger[Tracing Server Jaeger]
+    end
 
-|Services fail to start
-|Ensure Config Server is running and accessible at http://localhost:8888
+    subgraph API Gateway
+        APIGateway[API Gateway]
+    end
 
-|Authentication fails
-|Verify Keycloak is running and the realm is properly imported
+    subgraph Microservices
+        LoadsService[Loads Service]
+        RiflesService[Rifles Service]
+    end
 
-|Database connection issues
-|Check PostgreSQL is running and credentials match in configuration
+    User -- REST --> APIGateway
+    User -- Auth --> Keycloak
+    APIGateway -->|REST| LoadsService
+    APIGateway -->|REST| RiflesService
 
-|Service discovery issues
-|Ensure Eureka Server is running and services can reach http://localhost:8761
-|===
+    LoadsService -- DB --> Postgres
+    RiflesService -- DB --> Postgres
 
-==== Debug Mode
+    LoadsService -- Discovery --> DiscoveryServer
+    RiflesService -- Discovery --> DiscoveryServer
+    APIGateway -- Discovery --> DiscoveryServer
 
-To run a service in debug mode:
+    LoadsService -- Config --> ConfigServer
+    RiflesService -- Config --> ConfigServer
+....
 
-[source,bash]
-----
-./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000"
-----
+== Database Schema
 
-Then connect your IDE to port 8000.
+[source,mermaid]
+....
+erDiagram
+    LOADS {
+        BIGSERIAL id PK
+        VARCHAR owner_id
+        VARCHAR name
+        TEXT description
+        VARCHAR measurement_units
+        VARCHAR powder_manufacturer
+        VARCHAR powder_type
+        VARCHAR bullet_manufacturer
+        VARCHAR bullet_type
+        DOUBLE bullet_weight
+        VARCHAR primer_manufacturer
+        VARCHAR primer_type
+        DOUBLE distance_from_lands
+        DOUBLE case_overall_length
+        DOUBLE neck_tension
+        BIGSERIAL rifle_id
+    }
+    GROUPS {
+        BIGSERIAL id PK
+        VARCHAR owner_id
+        BIGSERIAL load_id FK
+        DATE date
+        DOUBLE powder_charge
+        INTEGER target_range
+        DOUBLE group_size
+    }
+    SHOTS {
+        BIGSERIAL id PK
+        VARCHAR owner_id
+        BIGSERIAL group_id FK
+        INTEGER velocity
+    }
+    RIFLES {
+        BIGSERIAL id PK
+        VARCHAR owner_id
+        VARCHAR name
+        TEXT description
+        VARCHAR measurement_units
+        VARCHAR caliber
+        DOUBLE barrel_length
+        VARCHAR barrel_contour
+        VARCHAR twist_rate
+        VARCHAR rifling
+        DOUBLE free_bore
+    }
 
-=== License
+    LOADS ||--o{ GROUPS : "has"
+    GROUPS ||--o{ SHOTS : "has"
+    RIFLES ||--o{ LOADS : "has"
+....
+
+== License
 
 This project is licensed under the Apache License 2.0 - see the LICENSE file for details.

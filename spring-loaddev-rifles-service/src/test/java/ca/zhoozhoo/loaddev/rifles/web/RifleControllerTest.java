@@ -17,7 +17,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import ca.zhoozhoo.loaddev.rifles.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.rifles.dao.RifleRepository;
 import ca.zhoozhoo.loaddev.rifles.model.Rifle;
-import ca.zhoozhoo.loaddev.rifles.model.Unit;
+import static ca.zhoozhoo.loaddev.rifles.model.Rifle.IMPERIAL;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -51,17 +51,16 @@ public class RifleControllerTest {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedRifle = rifleRepository.save(new Rifle(null, userId, 
-                "Remington 700", 
-                "Custom Remington 700 in 6.5 Creedmoor with Krieger barrel", 
-                "6.5 Creedmoor", 
+        var savedRifle = rifleRepository.save(new Rifle(null, userId,
+                "Remington 700",
+                "Custom Remington 700 in 6.5 Creedmoor with Krieger barrel",
+                IMPERIAL,
+                "6.5 Creedmoor",
                 26.0,
-                Unit.INCHES, 
-                "Heavy Palma", 
-                "1:8", 
-                "5R", 
-                0.157, 
-                Unit.INCHES)).block();
+                "Heavy Palma",
+                "1:8",
+                "5R",
+                0.157)).block();
 
         webTestClient.mutateWith(jwt).get().uri("/rifles/{id}", savedRifle.id())
                 .accept(APPLICATION_JSON)
@@ -88,14 +87,13 @@ public class RifleControllerTest {
         var rifle = new Rifle(null, userId,
                 "Savage 110 Elite Precision",
                 "Long range precision rifle with MDT chassis",
+                IMPERIAL,
                 ".308 Winchester",
                 24.0,
-                Unit.INCHES,
                 "Medium Palma",
                 "1:10",
                 "6 Groove",
-                0.160,
-                Unit.INCHES);
+                0.160);
 
         webTestClient.mutateWith(jwt).post().uri("/rifles")
                 .contentType(APPLICATION_JSON)
@@ -106,15 +104,16 @@ public class RifleControllerTest {
                 .value(createdRifle -> {
                     assert createdRifle.id() != null;
                     assert createdRifle.name().equals("Savage 110 Elite Precision");
-                    assert createdRifle.barrelLengthUnit().equals(Unit.INCHES);
-                    assert createdRifle.freeBoreUnit().equals(Unit.INCHES);
+                    assert createdRifle.description().equals("Long range precision rifle with MDT chassis");
+                    assert createdRifle.measurementUnits().equals(IMPERIAL);
+                    assert createdRifle.caliber().equals(".308 Winchester");
                 });
     }
 
     @Test
     void createRifleInvalidInput() {
-        var invalidRifle = new Rifle(null, randomUUID().toString(), "", null, null, -1.0,
-                Unit.INCHES, "Contour", "", "Rifling", -0.5, Unit.INCHES);
+        var invalidRifle = new Rifle(null, randomUUID().toString(), "", null, null, null, -1.0,
+                "Contour", "", "Rifling", -0.5);
 
         webTestClient.post().uri("/rifles")
                 .contentType(APPLICATION_JSON)
@@ -127,6 +126,7 @@ public class RifleControllerTest {
                     assert errorMessage.contains("Caliber is required");
                     assert errorMessage.contains("Barrel length must be positive");
                     assert errorMessage.contains("Free bore must be positive");
+                    assert errorMessage.contains("Measurement Units is required");
                 });
     }
 
@@ -138,26 +138,24 @@ public class RifleControllerTest {
         var savedRifle = rifleRepository.save(new Rifle(null, userId,
                 "Tikka T3x",
                 "Factory Tikka T3x Tactical",
+                IMPERIAL,
                 ".308 Winchester",
                 20.0,
-                Unit.INCHES,
                 "MTU",
                 "1:11",
                 "4 Groove",
-                0.157,
-                Unit.INCHES)).block();
+                0.157)).block();
 
         var updatedRifle = new Rifle(null, userId,
                 "Tikka T3x Custom",
                 "Tikka T3x with Bartlein barrel and MDT chassis",
+                IMPERIAL,
                 "6mm Creedmoor",
                 26.0,
-                Unit.INCHES,
                 "M24",
                 "1:7.5",
                 "6 Groove",
-                0.153,
-                Unit.INCHES);
+                0.153);
 
         webTestClient.mutateWith(jwt).put().uri("/rifles/{id}", savedRifle.id())
                 .contentType(APPLICATION_JSON)
@@ -173,8 +171,8 @@ public class RifleControllerTest {
 
     @Test
     void updateRifleNotFound() {
-        var rifle = new Rifle(null, randomUUID().toString(), "Test Rifle", "Description", "Caliber", 20.0,
-                Unit.INCHES, "Contour", "1:10", "Rifling", 0.5, Unit.INCHES);
+        var rifle = new Rifle(null, randomUUID().toString(), "Test Rifle", "Description", IMPERIAL, "Caliber", 20.0,
+                "Contour", "1:10", "Rifling", 0.5);
 
         webTestClient.put().uri("/rifles/999")
                 .contentType(APPLICATION_JSON)
@@ -188,8 +186,10 @@ public class RifleControllerTest {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedRifle = rifleRepository.save(new Rifle(null, userId, "Rifle to be deleted", "Description", "Caliber",
-                20.0, Unit.INCHES, "Contour", "1:10", "Rifling", 0.5, Unit.INCHES)).block();
+        var savedRifle = rifleRepository
+                .save(new Rifle(null, userId, "Rifle to be deleted", "Description", IMPERIAL, "Caliber",
+                        20.0, "Contour", "1:10", "Rifling", 0.5))
+                .block();
 
         webTestClient.mutateWith(jwt)
                 .delete().uri("/rifles/{id}", savedRifle.id())

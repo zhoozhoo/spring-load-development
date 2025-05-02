@@ -1,9 +1,6 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
-import static ca.zhoozhoo.loaddev.loads.model.Unit.GRAINS;
-import static ca.zhoozhoo.loaddev.loads.model.Unit.INCHES;
-import static ca.zhoozhoo.loaddev.loads.model.Unit.METERS;
-import static ca.zhoozhoo.loaddev.loads.model.Unit.YARDS;
+import static ca.zhoozhoo.loaddev.loads.model.Load.IMPERIAL;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -23,8 +20,10 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
+import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
 import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
 import ca.zhoozhoo.loaddev.loads.model.Group;
+import ca.zhoozhoo.loaddev.loads.model.Load;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
 
 @SpringBootTest
@@ -35,6 +34,9 @@ public class ShotsControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;
+
+    @Autowired
+    private LoadRepository loadRepository;
 
     @Autowired
     private ShotRepository shotRepository;
@@ -48,21 +50,29 @@ public class ShotsControllerTest {
         groupRepository.deleteAll().block();
     }
 
+    private Load createAndSaveLoad(String ownerId) {
+        return loadRepository.save(new Load(null, ownerId, "Load", "Description", IMPERIAL,
+                "Manufacturer", "Type",
+                "BulletManufacturer", "BulletType", 100.0,
+                "PrimerManufacturer", "PrimerType",
+                0.020,
+                2.800,
+                0.002,
+                null)).block();
+    }
+
     private Group createAndSaveGroup(String ownerId) {
+        var load = createAndSaveLoad(ownerId);
+
         return groupRepository
-                .save(new Group(null, ownerId, 
-                    LocalDate.now(),
-                    26.5, GRAINS,
-                    100, YARDS,
-                    0.40, INCHES)).block();
+                .save(new Group(null, ownerId, load.id(), LocalDate.now(), 26.5, 100, 0.40)).block();
     }
 
     private Shot createAndSaveShot(Group group, int velocity) {
-        return shotRepository.save(new Shot(null, 
-            group.ownerId(), 
-            group.id(), 
-            velocity,
-            METERS)).block();
+        return shotRepository.save(new Shot(null,
+                group.ownerId(),
+                group.id(),
+                velocity)).block();
     }
 
     @Test
@@ -109,7 +119,7 @@ public class ShotsControllerTest {
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var group = createAndSaveGroup(userId);
-        var newShot = new Shot(null, userId, group.id(), 3200, METERS);
+        var newShot = new Shot(null, userId, group.id(), 3200);
 
         webTestClient.mutateWith(jwt).post().uri("/shots")
                 .contentType(APPLICATION_JSON)
@@ -121,7 +131,6 @@ public class ShotsControllerTest {
                     assertThat(shot.id()).isNotNull();
                     assertThat(shot.groupId()).isEqualTo(newShot.groupId());
                     assertThat(shot.velocity()).isEqualTo(newShot.velocity());
-                    assertThat(shot.velocityUnit()).isEqualTo(METERS);
                 });
     }
 
@@ -133,7 +142,7 @@ public class ShotsControllerTest {
         var group = createAndSaveGroup(userId);
         var shot1 = createAndSaveShot(group, 3000);
 
-        var updatedShot = new Shot(null, userId, group.id(), 3300, METERS);
+        var updatedShot = new Shot(null, userId, group.id(), 3300);
 
         webTestClient.mutateWith(jwt).put().uri("/shots/" + shot1.id())
                 .contentType(APPLICATION_JSON)
@@ -145,7 +154,6 @@ public class ShotsControllerTest {
                     assertThat(shot.id()).isEqualTo(shot1.id());
                     assertThat(shot.groupId()).isEqualTo(updatedShot.groupId());
                     assertThat(shot.velocity()).isEqualTo(updatedShot.velocity());
-                    assertThat(shot.velocityUnit()).isEqualTo(METERS);
                 });
     }
 
@@ -194,7 +202,7 @@ public class ShotsControllerTest {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidShot = new Shot(null, userId, null, -100, null);
+        var invalidShot = new Shot(null, userId, null, -100);
 
         webTestClient.mutateWith(jwt).post().uri("/shots")
                 .contentType(APPLICATION_JSON)
@@ -208,7 +216,7 @@ public class ShotsControllerTest {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidShot = new Shot(null, userId, null, null, null);
+        var invalidShot = new Shot(null, userId, null, null);
 
         webTestClient.mutateWith(jwt).post().uri("/shots")
                 .contentType(APPLICATION_JSON)
@@ -223,7 +231,7 @@ public class ShotsControllerTest {
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var group = createAndSaveGroup(userId);
-        var shot = new Shot(null, randomUUID().toString(), group.id(), 3000, METERS);
+        var shot = new Shot(null, randomUUID().toString(), group.id(), 3000);
 
         webTestClient.mutateWith(jwt).put().uri("/shots/999")
                 .contentType(APPLICATION_JSON)
@@ -239,7 +247,7 @@ public class ShotsControllerTest {
 
         var group = createAndSaveGroup(userId);
         var shot = createAndSaveShot(group, 3000);
-        var invalidShot = new Shot(shot.id(), userId, null, -100, null);
+        var invalidShot = new Shot(shot.id(), userId, null, -100);
 
         webTestClient.mutateWith(jwt).put().uri("/shots/{id}", shot.id())
                 .contentType(APPLICATION_JSON)
