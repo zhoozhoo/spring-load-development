@@ -14,12 +14,12 @@ grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&user
 
 ### Get list of all loads
 # @name GetLoads
-GET http://localhost:8080/api/loads/loads
+GET http://localhost:8080/api/loads
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Create a new load
 # @name CreateLoad
-POST http://localhost:8080/api/loads/loads
+POST http://localhost:8080/api/loads
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -43,17 +43,17 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get the created load by ID
 # @name GetLoadById
-GET http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}
+GET http://localhost:8080/api/loads/{{CreateLoad.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get load statistics
 # @name GetLoadStats
-GET http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}/statistics
+GET http://localhost:8080/api/loads/{{CreateLoad.response.body.id}}/statistics
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Update the created load
 # @name UpdateLoad
-PUT http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}
+PUT http://localhost:8080/api/loads/{{CreateLoad.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -77,5 +77,5 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Delete the created load
 # @name DeleteLoad
-DELETE http://localhost:8080/api/loads/loads/{{CreateLoad.response.body.id}}
+DELETE http://localhost:8080/api/loads/{{CreateLoad.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}

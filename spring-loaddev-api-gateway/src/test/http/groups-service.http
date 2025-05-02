@@ -14,12 +14,12 @@ grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&user
 
 ### Get list of all groups
 # @name GetGroups
-GET http://localhost:8080/api/loads/groups/load/{{load_id}}
+GET http://localhost:8080/api/groups/load/{{load_id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Create a new group
 # @name CreateGroup
-POST http://localhost:8080/api/loads/groups
+POST http://localhost:8080/api/groups
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -33,17 +33,17 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get group by ID
 # @name GetGroupById
-GET http://localhost:8080/api/loads/groups/{{CreateGroup.response.body.id}}
+GET http://localhost:8080/api/groups/{{CreateGroup.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get group statistics
 # @name GetGroupStats
-GET http://localhost:8080/api/loads/groups/{{CreateGroup.response.body.id}}/statistics
+GET http://localhost:8080/api/groups/{{CreateGroup.response.body.id}}/statistics
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Update group
 # @name UpdateGroup
-PUT http://localhost:8080/api/loads/groups/{{CreateGroup.response.body.id}}
+PUT http://localhost:8080/api/groups/{{CreateGroup.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -57,5 +57,5 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Delete group
 # @name DeleteGroup
-DELETE http://localhost:8080/api/loads/groups/{{CreateGroup.response.body.id}}
+DELETE http://localhost:8080/api/groups/{{CreateGroup.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
