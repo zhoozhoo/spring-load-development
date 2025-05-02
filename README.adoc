@@ -144,9 +144,9 @@ flowchart TD
     LoadsService -- Tracing --> Jaeger
     RiflesService -- Tracing --> Jaeger
 
-    APIGateway -- Config --> LoadsService
     LoadsService -- Config --> ConfigServer
     RiflesService -- Config --> ConfigServer
+    APIGateway -- Config --> ConfigServer
 ....
 
 == Database Schema
