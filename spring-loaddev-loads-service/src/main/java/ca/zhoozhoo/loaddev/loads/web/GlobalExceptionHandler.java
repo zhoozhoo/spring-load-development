@@ -6,6 +6,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.server.ResponseStatusException;
 
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
@@ -56,5 +57,12 @@ public class GlobalExceptionHandler {
     public Mono<ResponseEntity<String>> handleGenericException(Exception ex) {
         log.error("Unexpected error: ", ex);
         return Mono.just(ResponseEntity.status(INTERNAL_SERVER_ERROR).body("An unexpected error occurred"));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public Mono<ResponseEntity<String>> handleResponseStatusException(ResponseStatusException ex) {
+        log.error("ResponseStatusException: {}", ex.getMessage());
+        return Mono.just(ResponseEntity.status(ex.getStatusCode())
+                .body(ex.getReason() != null ? ex.getReason() : ex.getMessage()));
     }
 }
