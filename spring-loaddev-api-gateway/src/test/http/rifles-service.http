@@ -8,6 +8,17 @@ Content-Type: application/x-www-form-urlencoded
 
 grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&username={{username}}&password={{password}}&scope=openid
 
+### [TEST ONLY] Authenticate to Keycloak using UMA ticket grant (for advanced authorization testing)
+# This call is for testing purposes only. It requests a token from Keycloak using the UMA ticket grant type,
+# which is used for fine-grained authorization scenarios (RBAC).
+# Spring Cloud Gateway is configured to do this automatically. Only used this if you need to call services directly.
+# @name Authenticate
+POST {{authorization_host}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+grant_type=urn:ietf:params:oauth:grant-type:uma-ticket&client_id={{client_id}}&client_secret={{client_secret}}&audience={{client_id}}&scope=openid
+
 ### Get list of all rifles
 # @name GetRifles
 GET http://localhost:8080/api/rifles
