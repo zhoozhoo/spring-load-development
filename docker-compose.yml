@@ -86,7 +86,7 @@ services:
     command: ["start-dev", "--import-realm"]
 
   config-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-config-server:0.0.3-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-config-server:0.0.4-SNAPSHOT
     container_name: config-server
     ports:
       - "8888:8888"
@@ -100,7 +100,7 @@ services:
       retries: 5
 
   discovery-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-discovery-server:0.0.3-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-discovery-server:0.0.4-SNAPSHOT
     container_name: discovery-server
     ports:
       - "8761:8761"
@@ -119,7 +119,7 @@ services:
       retries: 5
 
   api-gateway:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:0.0.3-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:0.0.4-SNAPSHOT
     container_name: api-gateway
     ports:
       - "8080:8080"
@@ -127,7 +127,6 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - CONFIG_SERVER_URL=http://config-server:8888
       - SPRING_CLOUD_DISCOVERY_ENABLED=true
-      - SPRING_ZIPKIN_BASE_URL=http://tracing-server:9411
       - THC_PATH=/actuator/health/readiness
       - THC_PORT=8080
     depends_on:
@@ -144,7 +143,7 @@ services:
       retries: 5
 
   rifles-service:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:0.0.3-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:0.0.4-SNAPSHOT
     container_name: rifles-service
     ports:
       - "8081:8081"
@@ -171,7 +170,7 @@ services:
       retries: 5
       
   loads-service:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:0.0.3-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:0.0.4-SNAPSHOT
     container_name: loads-service
     ports:
       - "8082:8082"
@@ -198,7 +197,7 @@ services:
       retries: 5
 
   admin-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-admin-server:0.0.3-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-admin-server:0.0.4-SNAPSHOT
     container_name: admin-server
     ports:
       - "9090:9090"
