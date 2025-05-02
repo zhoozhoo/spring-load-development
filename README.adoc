@@ -8,7 +8,7 @@ Spring Load Development is a project that demonstrates the integration of variou
 
 [NOTE]
 ====
-*Load development* is the process of systematically testing and refining ammunition components (such as powder charge, bullet, primer, and case dimensions) to achieve optimal accuracy, consistency, and performance for a specific firearm. This process is widely used in competitive shooting to gain a precision edge. This project is an example implementation for managing and analyzing load development data, and reflects a personal hobby of mine.
+*Load development* is used here as an example business domain to demonstrate microservices architecture and modern cloud-native patterns. In the context of competitive shooting, load development refers to the process of systematically testing and refining ammunition components (such as powder charge, bullet, primer, and case dimensions) to achieve optimal accuracy and performance for a specific firearm. This project manages and analyzes load development data as a sample use case, but the architecture and patterns are applicable to many other domains.
 ====
 
 == Technologies and Frameworks Used
@@ -112,11 +112,11 @@ flowchart TD
     end
 
     subgraph Infra
+        Jaeger[Jaeger]
+        Postgres[PostgreSQL DB]
         ConfigServer[Config Server]
         DiscoveryServer[Discovery Server]
         Keycloak[Keycloak Auth]
-        Postgres[PostgreSQL DB]
-        Jaeger[Tracing Server Jaeger]
     end
 
     subgraph API Gateway
@@ -140,6 +140,11 @@ flowchart TD
     RiflesService -- Discovery --> DiscoveryServer
     APIGateway -- Discovery --> DiscoveryServer
 
+    APIGateway -- Tracing --> Jaeger
+    LoadsService -- Tracing --> Jaeger
+    RiflesService -- Tracing --> Jaeger
+
+    APIGateway -- Config --> LoadsService
     LoadsService -- Config --> ConfigServer
     RiflesService -- Config --> ConfigServer
 ....
