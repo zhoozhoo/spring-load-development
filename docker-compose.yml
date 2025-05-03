@@ -1,6 +1,6 @@
 services:
   jaeger:
-    image: jaegertracing/jaeger:2.5.0
+    image: jaegertracing/jaeger:${JAEGER_VERSION}
     container_name: jaeger
     ports:
       - "16686:16686"
@@ -15,7 +15,7 @@ services:
       retries: 5
 
   db:
-    image: postgres:17.4
+    image: postgres:${POSTGRES_VERSION}
     container_name: postgres
     environment:
       POSTGRES_USER: user
@@ -33,7 +33,7 @@ services:
       retries: 5
 
   keycloak-db:
-    image: postgres:17.4
+    image: postgres:${POSTGRES_VERSION}
     container_name: keycloak-db
     environment:
       POSTGRES_USER: user
@@ -51,7 +51,7 @@ services:
       retries: 5
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.2
+    image: quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}
     container_name: keycloak
     environment:
       KC_DB: postgres
@@ -86,7 +86,7 @@ services:
     command: ["start-dev", "--import-realm"]
 
   config-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-config-server:0.0.4-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-config-server:${PROJECT_VERSION}
     container_name: config-server
     ports:
       - "8888:8888"
@@ -100,7 +100,7 @@ services:
       retries: 5
 
   discovery-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-discovery-server:0.0.4-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-discovery-server:${PROJECT_VERSION}
     container_name: discovery-server
     ports:
       - "8761:8761"
@@ -119,7 +119,7 @@ services:
       retries: 5
 
   api-gateway:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:0.0.4-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:${PROJECT_VERSION}
     container_name: api-gateway
     ports:
       - "8080:8080"
@@ -143,7 +143,7 @@ services:
       retries: 5
 
   rifles-service:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:0.0.4-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:${PROJECT_VERSION}
     container_name: rifles-service
     ports:
       - "8081:8081"
@@ -170,7 +170,7 @@ services:
       retries: 5
       
   loads-service:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:0.0.4-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:${PROJECT_VERSION}
     container_name: loads-service
     ports:
       - "8082:8082"
@@ -197,7 +197,7 @@ services:
       retries: 5
 
   admin-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-admin-server:0.0.4-SNAPSHOT
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-admin-server:${PROJECT_VERSION}
     container_name: admin-server
     ports:
       - "9090:9090"
