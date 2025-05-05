@@ -72,6 +72,7 @@
         </plugins>
     </build>
 
+
     <profiles>
         <profile>
             <id>adoptium</id>
@@ -121,6 +122,11 @@
                         <configuration>
                             <image>
                                 <name>zhoozhoo.ca/spring-load-development/${project.artifactId}:${project.version}</name>
+                                <builder>paketobuildpacks/builder-jammy-buildpackless-tiny</builder>
+                                <buildpacks>
+                                    <buildpack>paketobuildpacks/oracle</buildpack>
+                                    <buildpack>paketobuildpacks/java-native-image</buildpack>
+                                </buildpacks>
                                 <env>
                                     <BP_JVM_VERSION>${java.version}</BP_JVM_VERSION>
                                     <BP_HEALTH_CHECKER_ENABLED>true</BP_HEALTH_CHECKER_ENABLED>
@@ -135,21 +141,30 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <plugin>
-                        <groupId>org.graalvm.buildtools</groupId>
-                        <artifactId>native-maven-plugin</artifactId>
-                        <extensions>true</extensions>
-                        <executions>
-                            <execution>
-                                <id>build-native</id>
-                                <goals>
-                                    <goal>compile-no-fork</goal>
-                                </goals>
-                                <phase>package</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
                 </plugins>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.graalvm.buildtools</groupId>
+                            <artifactId>native-maven-plugin</artifactId>
+                            <configuration>
+                                <mainClass>${exec.mainClass}</mainClass>
+                                <buildArgs>
+                                    <buildArg>--no-fallback</buildArg>
+                                </buildArgs>
+                            </configuration>
+                            <executions>
+                                <execution>
+                                    <id>build-native</id>
+                                    <goals>
+                                        <goal>compile-no-fork</goal>
+                                    </goals>
+                                    <phase>package</phase>
+                                </execution>
+                            </executions>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
             </build>
         </profile>
     </profiles>
