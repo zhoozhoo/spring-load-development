@@ -31,12 +31,6 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-config-server</artifactId>
-            <exclusions>
-                <exclusion>
-                    <artifactId>sshd-sftp</artifactId>
-                    <groupId>org.apache.sshd</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <!-- Test dependencies -->
@@ -63,19 +57,21 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.graalvm.buildtools</groupId>
-                        <artifactId>native-maven-plugin</artifactId>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
                         <configuration>
-                            <buildArgs>
-                                <buildArg>-H:-AddAllFileSystemProviders</buildArg>
-                                <buildArg>--strict-image-heap</buildArg>
-                                <buildArg>--initialize-at-build-time=org.bouncycastle</buildArg>
-                                <buildArg>--initialize-at-build-time=net.i2p.crypto.eddsa.EdDSASecurityProvider</buildArg>
-                                <buildArg>--initialize-at-run-time=org.bouncycastle.jcajce.provider.drbg.DRBG$Default</buildArg>
-                                <buildArg>--initialize-at-run-time=org.bouncycastle.jcajce.provider.drbg.DRBG$NonceAndIV</buildArg>
-                                <buildArg>--initialize-at-run-time=org.apache.sshd.sftp.client.fs.SftpFileSystemProvider</buildArg>
-                                <buildArg>--trace-class-initialization=ch.qos.logback.classic.Level,ch.qos.logback.core.util.Loader,org.slf4j.LoggerFactory,ch.qos.logback.core.util.StatusPrinter2,org.slf4j.helpers.Reporter,ch.qos.logback.classic.Logger,org.apache.commons.logging.LogFactory,ch.qos.logback.core.status.InfoStatus,ch.qos.logback.core.status.StatusBase,ch.qos.logback.core.util.StatusPrinter,org.apache.commons.logging.impl.SLF4JLogFactory</buildArg>
-                            </buildArgs>
+                            <image>
+                                <env>
+                                    <BP_NATIVE_IMAGE_BUILD_ARGUMENTS>
+                                        -H:-AddAllFileSystemProviders
+                                        --strict-image-heap
+                                        --initialize-at-build-time=org.bouncycastle
+                                        --initialize-at-build-time=net.i2p.crypto.eddsa.EdDSASecurityProvider
+                                        --initialize-at-run-time=org.bouncycastle.jcajce.provider.drbg.DRBG$Default
+                                        --initialize-at-run-time=org.bouncycastle.jcajce.provider.drbg.DRBG$NonceAndIV
+                                    </BP_NATIVE_IMAGE_BUILD_ARGUMENTS>
+                                </env>
+                            </image>
                         </configuration>
                     </plugin>
                 </plugins>
