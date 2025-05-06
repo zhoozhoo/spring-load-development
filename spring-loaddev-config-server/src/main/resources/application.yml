@@ -27,3 +27,11 @@ spring:
   cloud:
     refresh:
       enabled: false
+---
+spring:
+  config:
+    activate:
+      on-profile: native
+  cloud:
+    refresh:
+      enabled: false

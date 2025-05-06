@@ -3,3 +3,13 @@ spring:
     name: loads-service
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
+  profiles: 
+    active: @spring.profiles.active@
+---
+spring:
+  config:
+    activate:
+      on-profile: native
+  cloud:
+    refresh:
+      enabled: false
