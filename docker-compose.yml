@@ -153,7 +153,6 @@ services:
       - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/loadsdb
       - SPRING_R2DBC_USERNAME=user
       - SPRING_R2DBC_PASSWORD=password
-      - SPRING_ZIPKIN_BASE_URL=http://tracing-server:9411
       - THC_PATH=/actuator/health/readiness
       - THC_PORT=8081
     depends_on:
@@ -180,7 +179,6 @@ services:
       - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/loadsdb
       - SPRING_R2DBC_USERNAME=user
       - SPRING_R2DBC_PASSWORD=password
-      - SPRING_ZIPKIN_BASE_URL=http://tracing-server:9411
       - THC_PATH=/actuator/health/readiness
       - THC_PORT=8082
     depends_on:
