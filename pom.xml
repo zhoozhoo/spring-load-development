@@ -33,6 +33,7 @@
         <spring-boot-admin.version>3.4.5</spring-boot-admin.version>
         <springdoc.version>2.8.6</springdoc.version>
         <r2dbc-postgresql.version>1.0.7.RELEASE</r2dbc-postgresql.version>
+        <spring.profiles.active>default</spring.profiles.active>
     </properties>
 
     <scm>
@@ -75,7 +76,7 @@
 
     <profiles>
         <profile>
-            <id>adoptium</id>
+            <id>default</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
