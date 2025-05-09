@@ -55,10 +55,10 @@ public class GroupsController {
     @Autowired
     private LoadsService loadsService;
 
-    @Operation(summary = "Get all groups by load id", security = {
-            @SecurityRequirement(name = "groups", scopes = "view") })
+    @Operation(summary = "Get all groups by load id", description = "Retrieves all groups associated with a specific load for the authenticated user.", security = {
+        @SecurityRequirement(name = "groups", scopes = "view") })
     @ApiResponse(responseCode = "200", description = "Found groups", content = {
-            @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Group.class))) })
+        @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Group.class))) })
     @GetMapping("/load/{loadId}")
     @PreAuthorize("hasAuthority('groups:view')")
     public Flux<Group> getAllGroupsByLoadId(@CurrentUser String userId,
@@ -66,12 +66,12 @@ public class GroupsController {
         return groupRepository.findAllByLoadIdAndOwnerId(loadId, userId);
     }
 
-    @Operation(summary = "Get a group by its id", security = {
+    @Operation(summary = "Get a group by its id", description = "Retrieves detailed information about a specific group by its identifier.", security = {
             @SecurityRequirement(name = "groups", scopes = "view") })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Group retrieved", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = Group.class)) }),
-            @ApiResponse(responseCode = "404", description = "Group not found", content = @Content) })
+        @ApiResponse(responseCode = "200", description = "Group retrieved", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = Group.class)) }),
+        @ApiResponse(responseCode = "404", description = "Group not found", content = @Content) })
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('groups:view')")
     public Mono<ResponseEntity<Group>> getGroupById(@CurrentUser String userId,
@@ -81,13 +81,12 @@ public class GroupsController {
                 .defaultIfEmpty(notFound().build());
     }
 
-    @Operation(summary = "Get statistics for a group",
-            security = { @SecurityRequirement(name = "groups", scopes = "view") })
+    @Operation(summary = "Get statistics for a group", description = "Retrieves statistical information about a specific group's performance.", security = {
+        @SecurityRequirement(name = "groups", scopes = "view") })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Statistics retrieved", content = {
-                    @Content(mediaType = "application/json",
-                             schema = @Schema(implementation = GroupStatistics.class)) }),
-            @ApiResponse(responseCode = "404", description = "Group not found", content = @Content) })
+        @ApiResponse(responseCode = "200", description = "Statistics retrieved", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = GroupStatistics.class)) }),
+        @ApiResponse(responseCode = "404", description = "Group not found", content = @Content) })
     @GetMapping("/{id}/statistics")
     @PreAuthorize("hasAuthority('groups:view')")
     public Mono<ResponseEntity<GroupStatistics>> getGroupStatistics(@CurrentUser String userId,
@@ -97,13 +96,11 @@ public class GroupsController {
                 .defaultIfEmpty(notFound().build());
     }
 
-    @Operation(summary = "Create a new group",
-            security = { @SecurityRequirement(name = "groups", scopes = "edit") })
+    @Operation(summary = "Create a new group", description = "Creates a new group for the authenticated user.", security = {
+        @SecurityRequirement(name = "groups", scopes = "edit") })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Group created", content = {
-                    @Content(mediaType = "application/json",
-                             schema = @Schema(implementation = Group.class)) }),
-            @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
+        @ApiResponse(responseCode = "201", description = "Group created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Group.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
     })
     @PostMapping
     @PreAuthorize("hasAuthority('groups:edit')")
@@ -125,6 +122,13 @@ public class GroupsController {
                 .map(savedGroup -> status(CREATED).body(savedGroup));
     }
 
+    @Operation(summary = "Update an existing group", description = "Updates the details of a group by its id.", security = {
+        @SecurityRequirement(name = "groups", scopes = "edit") })
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Group updated successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Group.class))),
+        @ApiResponse(responseCode = "404", description = "Group not found", content = @Content),
+        @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
+    })
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('groups:edit')")
     public Mono<ResponseEntity<Group>> updateGroup(@CurrentUser String userId, @PathVariable Long id,
@@ -145,12 +149,18 @@ public class GroupsController {
                 .defaultIfEmpty(notFound().build());
     }
 
+    @Operation(summary = "Delete a group", description = "Deletes a group by its id.", security = {
+        @SecurityRequirement(name = "groups", scopes = "delete") })
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Group deleted successfully", content = @Content),
+        @ApiResponse(responseCode = "404", description = "Group not found", content = @Content)
+    })
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('groups:delete')")
     public Mono<ResponseEntity<Void>> deleteGroup(@CurrentUser String userId, @PathVariable Long id) {
         return groupRepository.findById(id)
-                .flatMap(existingGroup -> groupRepository.delete(existingGroup)
-                        .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT))))
+           .flatMap(existingGroup -> groupRepository.delete(existingGroup)
+                .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT))))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
     }
 }
