@@ -1,5 +1,6 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
+import static io.swagger.v3.oas.annotations.enums.ParameterIn.PATH;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
@@ -27,12 +28,14 @@ import ca.zhoozhoo.loaddev.loads.security.SecurityUtils;
 import ca.zhoozhoo.loaddev.loads.service.LoadsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
@@ -40,6 +43,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Tag(name = "Groups", description = "Operations on groups belonging to the authenticated user")
+@SecurityScheme(name = "myOauth2Security", type = SecuritySchemeType.OAUTH2)
+
 @RestController
 @RequestMapping("/groups")
 @Log4j2
@@ -55,58 +60,53 @@ public class GroupsController {
     @Autowired
     private LoadsService loadsService;
 
-    @Operation(summary = "Get all groups by load id", description = "Retrieves all groups associated with a specific load for the authenticated user.", security = {
-        @SecurityRequirement(name = "groups", scopes = "view") })
-    @ApiResponse(responseCode = "200", description = "Found groups", content = {
-        @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Group.class))) })
+    @Operation(summary = "Get all groups by load id", description = "Retrieves all groups associated with a specific load for the authenticated user.")
+    @SecurityRequirement(name = "myOauth2Security", scopes = "view")
+    @ApiResponse(responseCode = "200", description = "Found groups", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Group.class))))
     @GetMapping("/load/{loadId}")
     @PreAuthorize("hasAuthority('groups:view')")
-    public Flux<Group> getAllGroupsByLoadId(@CurrentUser String userId,
-            @Parameter(description = "Id of load") @PathVariable Long loadId) {
+    public Flux<Group> getAllGroupsByLoadId(
+            @Parameter(hidden = true) @CurrentUser String userId,
+            @Parameter(in = PATH, description = "Id of load", required = true) @PathVariable Long loadId) {
         return groupRepository.findAllByLoadIdAndOwnerId(loadId, userId);
     }
 
-    @Operation(summary = "Get a group by its id", description = "Retrieves detailed information about a specific group by its identifier.", security = {
-            @SecurityRequirement(name = "groups", scopes = "view") })
+    @Operation(summary = "Get a group by its id", description = "Retrieves detailed information about a specific group by its identifier.")
+    @SecurityRequirement(name = "myOauth2Security", scopes = "view")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Group retrieved", content = {
-            @Content(mediaType = "application/json", schema = @Schema(implementation = Group.class)) }),
-        @ApiResponse(responseCode = "404", description = "Group not found", content = @Content) })
+            @ApiResponse(responseCode = "200", description = "Group retrieved", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Group.class))),
+            @ApiResponse(responseCode = "404", description = "Group not found", content = @Content) })
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('groups:view')")
-    public Mono<ResponseEntity<Group>> getGroupById(@CurrentUser String userId,
-            @Parameter(description = "Id of group") @PathVariable Long id) {
-        return groupRepository.findById(id)
-                .map(group -> ok(group))
-                .defaultIfEmpty(notFound().build());
+    public Mono<ResponseEntity<Group>> getGroupById(
+            @Parameter(hidden = true) @CurrentUser String userId,
+            @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id) {
+        return groupRepository.findById(id).map(group -> ok(group)).defaultIfEmpty(notFound().build());
     }
 
-    @Operation(summary = "Get statistics for a group", description = "Retrieves statistical information about a specific group's performance.", security = {
-        @SecurityRequirement(name = "groups", scopes = "view") })
+    @Operation(summary = "Get statistics for a group", description = "Retrieves statistical information about a specific group's performance.")
+    @SecurityRequirement(name = "groups", scopes = "view")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Statistics retrieved", content = {
-            @Content(mediaType = "application/json", schema = @Schema(implementation = GroupStatistics.class)) }),
-        @ApiResponse(responseCode = "404", description = "Group not found", content = @Content) })
+            @ApiResponse(responseCode = "200", description = "Statistics retrieved", content = @Content(mediaType = "application/json", schema = @Schema(implementation = GroupStatistics.class))),
+            @ApiResponse(responseCode = "404", description = "Group not found", content = @Content) })
     @GetMapping("/{id}/statistics")
     @PreAuthorize("hasAuthority('groups:view')")
-    public Mono<ResponseEntity<GroupStatistics>> getGroupStatistics(@CurrentUser String userId,
-            @Parameter(description = "Id of group") @PathVariable Long id) {
-        return loadsService.getGroupStatistics(id, userId)
-                .map(stats -> ok(stats))
-                .defaultIfEmpty(notFound().build());
+    public Mono<ResponseEntity<GroupStatistics>> getGroupStatistics(
+            @Parameter(hidden = true) @CurrentUser String userId,
+            @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id) {
+        return loadsService.getGroupStatistics(id, userId).map(stats -> ok(stats)).defaultIfEmpty(notFound().build());
     }
 
-    @Operation(summary = "Create a new group", description = "Creates a new group for the authenticated user.", security = {
-        @SecurityRequirement(name = "groups", scopes = "edit") })
+    @Operation(summary = "Create a new group", description = "Creates a new group for the authenticated user.")
+    @SecurityRequirement(name = "groups", scopes = "edit")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Group created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Group.class))),
-        @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
+            @ApiResponse(responseCode = "201", description = "Group created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Group.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
     })
     @PostMapping
     @PreAuthorize("hasAuthority('groups:edit')")
-    public Mono<ResponseEntity<Group>> createGroup(@CurrentUser String userId,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Group to create")
-            @Valid @RequestBody Group group) {
+    public Mono<ResponseEntity<Group>> createGroup(@Parameter(hidden = true) @CurrentUser String userId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Group to create") @Valid @RequestBody Group group) {
         return securityUtils.getCurrentUserId()
                 .flatMap(ownerid -> {
                     var newGroup = new Group(
@@ -122,17 +122,18 @@ public class GroupsController {
                 .map(savedGroup -> status(CREATED).body(savedGroup));
     }
 
-    @Operation(summary = "Update an existing group", description = "Updates the details of a group by its id.", security = {
-        @SecurityRequirement(name = "groups", scopes = "edit") })
+    @Operation(summary = "Update an existing group", description = "Updates the details of a group by its id.")
+    @SecurityRequirement(name = "groups", scopes = "edit")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Group updated successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Group.class))),
-        @ApiResponse(responseCode = "404", description = "Group not found", content = @Content),
-        @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Group updated successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Group.class))),
+            @ApiResponse(responseCode = "404", description = "Group not found", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
     })
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('groups:edit')")
-    public Mono<ResponseEntity<Group>> updateGroup(@CurrentUser String userId, @PathVariable Long id,
-            @Valid @RequestBody Group group) {
+    public Mono<ResponseEntity<Group>> updateGroup(@Parameter(hidden = true) @CurrentUser String userId,
+            @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Group to create") @Valid @RequestBody Group group) {
         return groupRepository.findById(id)
                 .flatMap(existingGroup -> {
                     var updatedGroup = new Group(
@@ -149,18 +150,20 @@ public class GroupsController {
                 .defaultIfEmpty(notFound().build());
     }
 
-    @Operation(summary = "Delete a group", description = "Deletes a group by its id.", security = {
-        @SecurityRequirement(name = "groups", scopes = "delete") })
+    @Operation(summary = "Delete a group", description = "Deletes a group by its id.")
+    @SecurityRequirement(name = "groups", scopes = "delete")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Group deleted successfully", content = @Content),
-        @ApiResponse(responseCode = "404", description = "Group not found", content = @Content)
+            @ApiResponse(responseCode = "204", description = "Group deleted successfully", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Group not found", content = @Content)
     })
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('groups:delete')")
-    public Mono<ResponseEntity<Void>> deleteGroup(@CurrentUser String userId, @PathVariable Long id) {
+    public Mono<ResponseEntity<Void>> deleteGroup(
+            @Parameter(hidden = true) @CurrentUser String userId,
+            @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id) {
         return groupRepository.findById(id)
-           .flatMap(existingGroup -> groupRepository.delete(existingGroup)
-                .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT))))
+                .flatMap(existingGroup -> groupRepository.delete(existingGroup)
+                        .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT))))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
     }
 }
