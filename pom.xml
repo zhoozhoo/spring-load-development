@@ -22,7 +22,7 @@
         <module>spring-loaddev-discovery-server</module>
         <module>spring-loaddev-loads-service</module>
         <module>spring-loaddev-rifles-service</module>
-        <module>spring-loaddev-genai-service</module>
+        <module>spring-loaddev-mcp-server</module>
         <module>spring-loaddev-admin-server</module>
         <module>spring-loaddev-api-gateway</module>
     </modules>
