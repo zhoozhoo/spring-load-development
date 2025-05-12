@@ -33,6 +33,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.security.OAuthFlows;
+import io.swagger.v3.oas.annotations.security.OAuthFlow;
+import io.swagger.v3.oas.annotations.security.OAuthScope;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
@@ -40,6 +45,21 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Tag(name = "Loads", description = "Operations on loads belonging to the authenticated user")
+@SecurityScheme(
+    name = "Oauth2Security", 
+    type = SecuritySchemeType.OAUTH2,
+    flows = @OAuthFlows(
+        authorizationCode = @OAuthFlow(
+            authorizationUrl = "${springdoc.oauth2.authorization-url}",
+            tokenUrl = "${springdoc.oauth2.token-url}",
+            scopes = {
+                @OAuthScope(name = "loads:view", description = "View access"),
+                @OAuthScope(name = "loads:edit", description = "Edit access"),
+                @OAuthScope(name = "loads:delete", description = "Delete access")
+            }
+        )
+    )
+)
 @RestController
 @RequestMapping("/loads")
 @Log4j2
@@ -53,24 +73,25 @@ public class LoadsController {
     private LoadsService loadsService;
 
     @Operation(summary = "Get all loads", security = {
-            @SecurityRequirement(name = "loads", scopes = "view") })
+            @SecurityRequirement(name = "Oauth2Security", scopes = "loads:view") })
     @ApiResponse(responseCode = "200", description = "Found the load", content = {
             @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Load.class))) })
     @GetMapping
     @PreAuthorize("hasAuthority('loads:view')")
-    public Flux<Load> getAllLoads(@CurrentUser String userId) {
+    public Flux<Load> getAllLoads(@Parameter(hidden = true) @CurrentUser String userId) {
         return loadRepository.findAllByOwnerId(userId);
     }
 
     @Operation(summary = "Get a load by its id", security = {
-            @SecurityRequirement(name = "loads", scopes = "view") })
+            @SecurityRequirement(name = "Oauth2Security", scopes = "loads:view") })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Found retrieved", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = Load.class)) }),
             @ApiResponse(responseCode = "404", description = "Load not found", content = @Content) })
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('loads:view')")
-    public Mono<ResponseEntity<Load>> getLoadById(@CurrentUser String userId,
+    public Mono<ResponseEntity<Load>> getLoadById(
+            @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of load") @PathVariable Long id) {
         return loadRepository.findByIdAndOwnerId(id, userId)
                 .map(load -> {
@@ -81,7 +102,7 @@ public class LoadsController {
     }
 
     @Operation(summary = "Get group statistics for a load", security = {
-            @SecurityRequirement(name = "loads", scopes = "view") })
+            @SecurityRequirement(name = "Oauth2Security", scopes = "loads:view") })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Statistics retrieved", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = GroupStatistics.class)))),
             @ApiResponse(responseCode = "404", description = "Load not found", content = @Content)
@@ -89,19 +110,21 @@ public class LoadsController {
     @GetMapping("/{id}/statistics")
     @PreAuthorize("hasAuthority('loads:view')")
     public Flux<GroupStatistics> getLoadStatistics(
-            @CurrentUser String userId,
+            @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of load") @PathVariable Long id) {
         return loadsService.getGroupStatisticsForLoad(id, userId);
     }
 
-    @Operation(summary = "Create a new load", security = { @SecurityRequirement(name = "loads", scopes = "edit") })
+    @Operation(summary = "Create a new load", security = { @SecurityRequirement(name = "Oauth2Security", scopes = "loads:edit") })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Load created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Load.class)))
     })
     @PostMapping
     @ResponseStatus(CREATED)
     @PreAuthorize("hasAuthority('loads:edit')")
-    public Mono<ResponseEntity<Load>> createLoad(@CurrentUser String userId, @Valid @RequestBody Load load) {
+    public Mono<ResponseEntity<Load>> createLoad(
+            @Parameter(hidden = true) @CurrentUser String userId, 
+            @Valid @RequestBody Load load) {
         return Mono.just(new Load(
                 null,
                 userId,
@@ -127,7 +150,7 @@ public class LoadsController {
     }
 
     @Operation(summary = "Update an existing load", security = {
-            @SecurityRequirement(name = "loads", scopes = "edit") })
+            @SecurityRequirement(name = "Oauth2Security", scopes = "loads:edit") })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Load updated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Load.class))),
             @ApiResponse(responseCode = "404", description = "Load not found", content = @Content)
@@ -135,7 +158,7 @@ public class LoadsController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('loads:edit')")
     public Mono<ResponseEntity<Load>> updateLoad(
-            @CurrentUser String userId,
+            @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of load") @PathVariable Long id,
             @Valid @RequestBody Load load) {
         return loadRepository.findByIdAndOwnerId(id, userId)
@@ -166,7 +189,7 @@ public class LoadsController {
                 .defaultIfEmpty(notFound().build());
     }
 
-    @Operation(summary = "Delete a load", security = { @SecurityRequirement(name = "loads", scopes = "delete") })
+    @Operation(summary = "Delete a load", security = { @SecurityRequirement(name = "Oauth2Security", scopes = "loads:delete") })
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Load deleted", content = @Content),
             @ApiResponse(responseCode = "404", description = "Load not found", content = @Content)
@@ -174,7 +197,7 @@ public class LoadsController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('loads:delete')")
     public Mono<ResponseEntity<Void>> deleteLoad(
-            @CurrentUser String userId,
+            @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of load") @PathVariable Long id) {
         return loadRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingLoad -> loadRepository.delete(existingLoad)

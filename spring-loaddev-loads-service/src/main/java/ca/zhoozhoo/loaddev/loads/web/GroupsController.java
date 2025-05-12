@@ -34,6 +34,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.OAuthFlow;
+import io.swagger.v3.oas.annotations.security.OAuthFlows;
+import io.swagger.v3.oas.annotations.security.OAuthScope;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -43,8 +46,22 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Tag(name = "Groups", description = "Operations on groups belonging to the authenticated user")
-@SecurityScheme(name = "myOauth2Security", type = SecuritySchemeType.OAUTH2)
-
+@SecurityScheme(
+    name = "Oauth2Security", 
+    type = SecuritySchemeType.OAUTH2,
+    description = "OAuth2 authentication for Load Development API",
+    flows = @OAuthFlows(
+        authorizationCode = @OAuthFlow(
+            authorizationUrl = "${api.security.oauth2.authorization-url}",
+            tokenUrl = "${api.security.oauth2.token-url}",
+            scopes = {
+                @OAuthScope(name = "groups:view", description = "View groups"),
+                @OAuthScope(name = "groups:edit", description = "Edit groups"),
+                @OAuthScope(name = "groups:delete", description = "Delete groups")
+            }
+        )
+    )
+)
 @RestController
 @RequestMapping("/groups")
 @Log4j2
@@ -61,7 +78,7 @@ public class GroupsController {
     private LoadsService loadsService;
 
     @Operation(summary = "Get all groups by load id", description = "Retrieves all groups associated with a specific load for the authenticated user.")
-    @SecurityRequirement(name = "myOauth2Security", scopes = "view")
+    @SecurityRequirement(name = "Oauth2Security", scopes = "view")
     @ApiResponse(responseCode = "200", description = "Found groups", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Group.class))))
     @GetMapping("/load/{loadId}")
     @PreAuthorize("hasAuthority('groups:view')")
@@ -72,7 +89,7 @@ public class GroupsController {
     }
 
     @Operation(summary = "Get a group by its id", description = "Retrieves detailed information about a specific group by its identifier.")
-    @SecurityRequirement(name = "myOauth2Security", scopes = "view")
+    @SecurityRequirement(name = "Oauth2Security", scopes = "view")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Group retrieved", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Group.class))),
             @ApiResponse(responseCode = "404", description = "Group not found", content = @Content) })
@@ -85,7 +102,7 @@ public class GroupsController {
     }
 
     @Operation(summary = "Get statistics for a group", description = "Retrieves statistical information about a specific group's performance.")
-    @SecurityRequirement(name = "groups", scopes = "view")
+    @SecurityRequirement(name = "Oauth2Security", scopes = "view")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Statistics retrieved", content = @Content(mediaType = "application/json", schema = @Schema(implementation = GroupStatistics.class))),
             @ApiResponse(responseCode = "404", description = "Group not found", content = @Content) })
@@ -98,7 +115,7 @@ public class GroupsController {
     }
 
     @Operation(summary = "Create a new group", description = "Creates a new group for the authenticated user.")
-    @SecurityRequirement(name = "groups", scopes = "edit")
+    @SecurityRequirement(name = "Oauth2Security", scopes = "edit")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Group created successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Group.class))),
             @ApiResponse(responseCode = "400", description = "Invalid input", content = @Content)
@@ -123,7 +140,7 @@ public class GroupsController {
     }
 
     @Operation(summary = "Update an existing group", description = "Updates the details of a group by its id.")
-    @SecurityRequirement(name = "groups", scopes = "edit")
+    @SecurityRequirement(name = "Oauth2Security", scopes = "edit")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Group updated successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Group.class))),
             @ApiResponse(responseCode = "404", description = "Group not found", content = @Content),
@@ -151,7 +168,7 @@ public class GroupsController {
     }
 
     @Operation(summary = "Delete a group", description = "Deletes a group by its id.")
-    @SecurityRequirement(name = "groups", scopes = "delete")
+    @SecurityRequirement(name = "Oauth2Security", scopes = "delete")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Group deleted successfully", content = @Content),
             @ApiResponse(responseCode = "404", description = "Group not found", content = @Content)
