@@ -8,7 +8,7 @@ spring:
         sse-message-endpoint: /mcp/messages
         tool-change-notification: true
   application:
-    name: loads-service
+    name: mcp-server
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
   main:
