@@ -14,11 +14,3 @@ management:
     health:
       probes:
         enabled: true
----
-spring:
-  config:
-    activate:
-      on-profile: native
-  cloud:
-    refresh:
-      enabled: false
