@@ -3,15 +3,13 @@ server:
 
 spring:
   profiles: 
-    active: native
+    active: @spring.profiles.active@
   cloud:
     config:
       server:
         git:
           uri: https://github.com/zhoozhoo/spring-load-development-config
           default-label: main
-        native:
-          search-locations: file:///home/zhubin/oss/spring-load-development-config
 management:
   endpoints:
     web:
