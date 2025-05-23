@@ -9,9 +9,12 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
+import lombok.extern.log4j.Log4j2;
+
 @Configuration
 @EnableWebFluxSecurity
 @Profile("!test")
+@Log4j2
 public class SecurityConfig {
 
     /**
