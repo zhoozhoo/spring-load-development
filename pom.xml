@@ -101,7 +101,7 @@
                                 <buildpacks>
                                     <buildpack>docker.io/paketobuildpacks/adoptium</buildpack>
                                     <buildpack>docker.io/paketobuildpacks/java</buildpack>
-                                    <buildpack>gcr.io/paketo-buildpacks/health-checker</buildpack>
+                                    <buildpack>docker.io/paketobuildpacks/health-checker</buildpack>
                                 </buildpacks>
                                 <env>
                                     <BP_JVM_VERSION>${java.version}</BP_JVM_VERSION>
@@ -111,43 +111,6 @@
                         </configuration>
                         <executions>
                             <execution>
-                                <goals>
-                                    <goal>build-image-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>native</id>
-            <properties>
-                <spring.profiles.active>native</spring.profiles.active>
-                <java.version>21</java.version>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-maven-plugin</artifactId>
-                        <configuration>
-                            <image>
-                                <name>zhoozhoo.ca/spring-load-development/${project.artifactId}:${project.version}</name>
-                                <builder>paketobuildpacks/builder-jammy-buildpackless-tiny</builder>
-                                <buildpacks>
-                                    <buildpack>paketobuildpacks/graalvm</buildpack>
-                                    <buildpack>paketobuildpacks/java-native-image</buildpack>
-                                </buildpacks>
-                                <env>
-                                    <BP_JVM_VERSION>${java.version}</BP_JVM_VERSION>
-                                    <BP_HEALTH_CHECKER_ENABLED>true</BP_HEALTH_CHECKER_ENABLED>
-                                </env>
-                            </image>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>build-image</id>
                                 <goals>
                                     <goal>build-image-no-fork</goal>
                                 </goals>
