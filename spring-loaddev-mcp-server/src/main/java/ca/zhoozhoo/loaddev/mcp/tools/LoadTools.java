@@ -10,7 +10,7 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
 
-import ca.zhoozhoo.loaddev.mcp.config.ReactiveContextHolder;
+import ca.zhoozhoo.loaddev.mcp.config.McpToolRegistrationConfig.ReactiveContextHolder;
 import ca.zhoozhoo.loaddev.mcp.dto.LoadDto;
 import ca.zhoozhoo.loaddev.mcp.service.LoadsService;
 import lombok.RequiredArgsConstructor;
