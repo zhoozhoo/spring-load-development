@@ -15,6 +15,7 @@ import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.stereotype.Service;
 
 import ca.zhoozhoo.loaddev.mcp.config.McpToolRegistrationConfig.ReactiveContextHolder;
+import ca.zhoozhoo.loaddev.mcp.dto.GroupStatisticsDto;
 import ca.zhoozhoo.loaddev.mcp.dto.LoadDto;
 import ca.zhoozhoo.loaddev.mcp.service.LoadsService;
 import lombok.RequiredArgsConstructor;
@@ -85,6 +86,42 @@ public class LoadsTools {
                     .block();
         } catch (Exception e) {
             throw handleException("Failed to retrieve loads", e);
+        }
+    }
+
+    /**
+     * Retrieves statistics for a specific load.
+     * Ensures reactive context propagation and proper error handling.
+     *
+     * @param id ID of the load to retrieve statistics for
+     * @param context Tool execution context
+     * @return List of group statistics for the load
+     * @throws IllegalStateException if reactive context is missing or authentication fails
+     * @throws IllegalArgumentException if load is not found
+     */
+    @Tool(description = "Get statistics for a specific load", name = "getLoadStatistics")
+    public List<GroupStatisticsDto> getLoadStatistics(
+            @ToolParam(description = "Numeric ID of the load") Long id,
+            ToolContext context) {
+        log.debug("Retrieving statistics for load ID: {}", id);
+        ContextView reactiveContext = getReactiveContext();
+
+        try {
+            return just(id)
+                    .flatMapMany(loadId -> loadsService.getLoadStatistics(loadId))
+                    .contextWrite(ctx -> ctx.putAll(reactiveContext))
+                    .collectList()
+                    .doOnSuccess(stats -> log.debug("Retrieved {} statistics for load {}", stats.size(), id))
+                    .doOnError(IllegalArgumentException.class, 
+                        e -> log.debug("Load not found with ID {}: {}", id, e.getMessage()))
+                    .doOnError(SecurityException.class, 
+                        e -> log.error("Authentication error retrieving statistics for load {}: {}", id, e.getMessage()))
+                    .block();
+        } catch (Exception e) {
+            if (e.getCause() instanceof IllegalArgumentException) {
+                throw new IllegalStateException("Load not found: " + e.getCause().getMessage());
+            }
+            throw handleException("Failed to retrieve load statistics", e);
         }
     }
 
