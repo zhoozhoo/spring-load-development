@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import ca.zhoozhoo.loaddev.mcp.tools.LoadTools;
+import ca.zhoozhoo.loaddev.mcp.tools.LoadsTools;
 import io.micrometer.observation.ObservationRegistry;
 
 /**
@@ -25,7 +25,7 @@ public class McpServerConfig {
      * @return configured ToolCallbackProvider
      */
     @Bean
-    public ToolCallbackProvider loadToolsCallbackProvider(LoadTools loadTools) {
+    public ToolCallbackProvider loadToolsCallbackProvider(LoadsTools loadTools) {
         return MethodToolCallbackProvider.builder().toolObjects(loadTools).build();
     }
 
