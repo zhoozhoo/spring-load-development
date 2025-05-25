@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ca.zhoozhoo.loaddev.mcp.tools.LoadTools;
+import io.micrometer.observation.ObservationRegistry;
 
 @Configuration
 public class McpServerConfig {
@@ -17,7 +18,7 @@ public class McpServerConfig {
     }
 
     @Bean
-    public WebClient keycloakWebClient() {
-        return WebClient.builder().build();
+    public WebClient keycloakWebClient(ObservationRegistry observationRegistry) {
+        return WebClient.builder().observationRegistry(observationRegistry).build();
     }
 }
