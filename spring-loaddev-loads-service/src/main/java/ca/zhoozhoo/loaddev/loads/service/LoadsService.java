@@ -83,7 +83,6 @@ public class LoadsService {
 
         return new GroupStatistics(
                 group,
-                shots.size(),
                 avg,
                 stdDev,
                 extremeSpread,

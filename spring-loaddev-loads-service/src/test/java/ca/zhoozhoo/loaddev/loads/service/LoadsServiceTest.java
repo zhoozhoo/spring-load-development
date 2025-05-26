@@ -63,7 +63,6 @@ class LoadsServiceTest {
                 .assertNext(stats -> {
                     assertEquals(group, stats.group());
                     assertEquals(LOAD_ID, stats.group().loadId());
-                    assertEquals(3, stats.shotCount());
                     assertEquals(2810.0, stats.averageVelocity(), 0.0);
                     assertEquals(8.2, stats.standardDeviation(), 0.0);
                     assertEquals(20.0, stats.extremeSpread(), 0.0);
@@ -81,7 +80,6 @@ class LoadsServiceTest {
 
         StepVerifier.create(loadsService.getGroupStatistics(GROUP_ID, USER_ID))
                 .assertNext(stats -> {
-                    assertEquals(0, stats.shotCount());
                     assertEquals(0.0, stats.averageVelocity(), 0.0);
                     assertEquals(0.0, stats.standardDeviation(), 0.0);
                     assertEquals(0.0, stats.extremeSpread(), 0.0);
@@ -107,7 +105,6 @@ class LoadsServiceTest {
 
         StepVerifier.create(loadsService.getGroupStatistics(GROUP_ID, USER_ID))
                 .assertNext(stats -> {
-                    assertEquals(1, stats.shotCount());
                     assertEquals(2800.0, stats.averageVelocity(), 0.0);
                     assertEquals(0.0, stats.standardDeviation(), 0.0);
                     assertEquals(0.0, stats.extremeSpread(), 0.0);
