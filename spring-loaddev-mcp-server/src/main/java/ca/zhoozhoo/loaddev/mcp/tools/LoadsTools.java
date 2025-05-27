@@ -2,6 +2,15 @@
  * Tool implementation for load-related operations.
  * Provides AI-enabled tools for retrieving load information while maintaining
  * reactive context and security propagation.
+ * 
+ * <p>All tools in this class follow a consistent error handling pattern:
+ * <ul>
+ *   <li>Errors are wrapped in {@link McpError} with appropriate JSON-RPC error codes</li>
+ *   <li>Missing reactive context results in INTERNAL_ERROR code</li>
+ *   <li>Authentication failures result in INVALID_REQUEST code</li>
+ *   <li>Invalid load IDs result in INVALID_PARAMS code</li>
+ *   <li>Other errors result in INTERNAL_ERROR code</li>
+ * </ul>
  */
 package ca.zhoozhoo.loaddev.mcp.tools;
 
@@ -18,6 +27,8 @@ import ca.zhoozhoo.loaddev.mcp.config.McpToolRegistrationConfig.ReactiveContextH
 import ca.zhoozhoo.loaddev.mcp.dto.GroupStatisticsDto;
 import ca.zhoozhoo.loaddev.mcp.dto.LoadDto;
 import ca.zhoozhoo.loaddev.mcp.service.LoadsService;
+import io.modelcontextprotocol.spec.McpError;
+import io.modelcontextprotocol.spec.McpSchema;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import reactor.util.context.ContextView;
@@ -35,8 +46,9 @@ public class LoadsTools {
      * @param id ID of the load to retrieve
      * @param context Tool execution context
      * @return The requested load
-     * @throws IllegalStateException if reactive context is missing or authentication fails
-     * @throws IllegalArgumentException if load is not found
+     * @throws McpError with INTERNAL_ERROR code if reactive context is missing
+     * @throws McpError with INVALID_REQUEST code if authentication fails
+     * @throws McpError with INVALID_PARAMS code if load is not found
      */
     @Tool(description = "Find a specific load by its unique identifier", name = "getLoadById")
     public LoadDto getLoadById(
@@ -58,7 +70,10 @@ public class LoadsTools {
                     .block();
         } catch (Exception e) {
             if (e.getCause() instanceof IllegalArgumentException) {
-                throw new IllegalStateException("Load not found: " + e.getCause().getMessage());
+                throw new McpError(new McpSchema.JSONRPCResponse.JSONRPCError(
+                    McpSchema.ErrorCodes.INVALID_PARAMS, 
+                    "Load not found: " + e.getCause().getMessage(), 
+                    null));
             }
             throw handleException("Failed to retrieve load", e);
         }
@@ -70,7 +85,8 @@ public class LoadsTools {
      *
      * @param context Tool execution context
      * @return List of all accessible loads
-     * @throws IllegalStateException if reactive context is missing or authentication fails
+     * @throws McpError with INTERNAL_ERROR code if reactive context is missing
+     * @throws McpError with INVALID_REQUEST code if authentication fails
      */
     @Tool(description = "Retrieve all available loads in the system", name = "getLoads")
     public List<LoadDto> getLoads(ToolContext context) {
@@ -82,9 +98,17 @@ public class LoadsTools {
                     .contextWrite(ctx -> ctx.putAll(reactiveContext))
                     .collectList()
                     .doOnSuccess(list -> log.debug("Successfully retrieved {} loads", list.size()))
+                    .doOnError(SecurityException.class, 
+                        e -> log.error("Authentication error retrieving loads: {}", e.getMessage()))
                     .doOnError(e -> log.error("Error retrieving loads: {}", e.getMessage()))
                     .block();
         } catch (Exception e) {
+            if (e.getCause() instanceof SecurityException) {
+                throw new McpError(new McpSchema.JSONRPCResponse.JSONRPCError(
+                    McpSchema.ErrorCodes.INVALID_REQUEST,
+                    "Authentication failed while retrieving loads: " + e.getMessage(),
+                    null));
+            }
             throw handleException("Failed to retrieve loads", e);
         }
     }
@@ -96,8 +120,9 @@ public class LoadsTools {
      * @param id ID of the load to retrieve statistics for
      * @param context Tool execution context
      * @return List of group statistics for the load
-     * @throws IllegalStateException if reactive context is missing or authentication fails
-     * @throws IllegalArgumentException if load is not found
+     * @throws McpError with INTERNAL_ERROR code if reactive context is missing
+     * @throws McpError with INVALID_REQUEST code if authentication fails
+     * @throws McpError with INVALID_PARAMS code if load is not found
      */
     @Tool(description = "Get statistics for a specific load", name = "getLoadStatistics")
     public List<GroupStatisticsDto> getLoadStatistics(
@@ -119,7 +144,10 @@ public class LoadsTools {
                     .block();
         } catch (Exception e) {
             if (e.getCause() instanceof IllegalArgumentException) {
-                throw new IllegalStateException("Load not found: " + e.getCause().getMessage());
+                throw new McpError(new McpSchema.JSONRPCResponse.JSONRPCError(
+                    McpSchema.ErrorCodes.INVALID_PARAMS, 
+                    "Load not found: " + e.getCause().getMessage(), 
+                    null));
             }
             throw handleException("Failed to retrieve load statistics", e);
         }
@@ -129,32 +157,45 @@ public class LoadsTools {
      * Retrieves the reactive context from thread-local storage.
      *
      * @return The current reactive context
-     * @throws IllegalStateException if no reactive context is available
+     * @throws McpError with INTERNAL_ERROR code if no reactive context is available
      */
     private ContextView getReactiveContext() {
         var reactiveContext = ReactiveContextHolder.reactiveContext.get();
         if (reactiveContext == null) {
-            throw new IllegalStateException("No reactive context available");
+            throw new McpError(new McpSchema.JSONRPCResponse.JSONRPCError(
+                McpSchema.ErrorCodes.INTERNAL_ERROR, 
+                "No reactive context available", 
+                null));
         }
+
         return reactiveContext;
     }
 
     /**
-     * Handles exceptions by mapping them to appropriate runtime exceptions.
+     * Handles exceptions by mapping them to appropriate McpError with JSON-RPC error codes.
      * Special handling for authentication and state-related errors.
      *
      * @param message Base error message
      * @param e Original exception
-     * @return Appropriate runtime exception
+     * @return McpError with appropriate JSON-RPC error code
      */
-    private RuntimeException handleException(String message, Exception e) {
+    private McpError handleException(String message, Exception e) {
         if (e instanceof IllegalStateException) {
-            return (IllegalStateException) e;
+            return new McpError(new McpSchema.JSONRPCResponse.JSONRPCError(
+                McpSchema.ErrorCodes.INTERNAL_ERROR,
+                e.getMessage(),
+                null));
         }
         if (e.getCause() instanceof SecurityException) {
-            return new IllegalStateException("Authentication failed: " + e.getMessage(), e);
+            return new McpError(new McpSchema.JSONRPCResponse.JSONRPCError(
+                McpSchema.ErrorCodes.INVALID_REQUEST,
+                "Authentication failed: " + e.getMessage(),
+                null));
         }
         log.error(message, e);
-        return new IllegalStateException(message + ": " + e.getMessage(), e);
+        return new McpError(new McpSchema.JSONRPCResponse.JSONRPCError(
+            McpSchema.ErrorCodes.INTERNAL_ERROR,
+            message + ": " + e.getMessage(),
+            null));
     }
 }
