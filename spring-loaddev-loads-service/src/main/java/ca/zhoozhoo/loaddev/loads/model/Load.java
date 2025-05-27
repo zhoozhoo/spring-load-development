@@ -1,8 +1,12 @@
 package ca.zhoozhoo.loaddev.loads.model;
 
+import java.util.Objects;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ca.zhoozhoo.loaddev.loads.validation.LoadMeasurement;
 import jakarta.validation.constraints.NotBlank;
@@ -15,6 +19,7 @@ public record Load(
 
         @Id Long id,
 
+        @JsonIgnore
         @Column String ownerId,
 
         @NotBlank(message = "Name is required")
@@ -61,4 +66,34 @@ public record Load(
     public static final String METRIC = "Metric";
 
     public static final String IMPERIAL = "Imperial";
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Load load = (Load) o;
+        return Objects.equals(id, load.id) &&
+                Objects.equals(name, load.name) &&
+                Objects.equals(description, load.description) &&
+                Objects.equals(measurementUnits, load.measurementUnits) &&
+                Objects.equals(powderManufacturer, load.powderManufacturer) &&
+                Objects.equals(powderType, load.powderType) &&
+                Objects.equals(bulletManufacturer, load.bulletManufacturer) &&
+                Objects.equals(bulletType, load.bulletType) &&
+                Objects.equals(bulletWeight, load.bulletWeight) &&
+                Objects.equals(primerManufacturer, load.primerManufacturer) &&
+                Objects.equals(primerType, load.primerType) &&
+                Objects.equals(distanceFromLands, load.distanceFromLands) &&
+                Objects.equals(caseOverallLength, load.caseOverallLength) &&
+                Objects.equals(neckTension, load.neckTension) &&
+                Objects.equals(rifleId, load.rifleId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, description, measurementUnits, 
+                powderManufacturer, powderType, bulletManufacturer, bulletType,
+                bulletWeight, primerManufacturer, primerType, distanceFromLands,
+                caseOverallLength, neckTension, rifleId);
+    }
 }

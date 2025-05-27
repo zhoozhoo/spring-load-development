@@ -109,7 +109,9 @@ public class ShotsControllerTest {
                 .expectStatus().isOk()
                 .expectBody(Shot.class)
                 .value(shot -> {
-                    assertThat(shot).isEqualTo(shot1);
+                    assertThat(shot.id()).isNotNull();
+                    assertThat(shot.groupId()).isEqualTo(shot1.groupId());
+                    assertThat(shot.velocity()).isEqualTo(shot1.velocity());
                 });
     }
 

@@ -1,6 +1,9 @@
 package ca.zhoozhoo.loaddev.loads.model;
 
 import java.time.LocalDate;
+import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
@@ -13,6 +16,7 @@ import jakarta.validation.constraints.Positive;
 public record Group(
         @Id Long id,
 
+        @JsonIgnore
         @Column("owner_id") String ownerId,
 
         @NotNull(message = "Load ID is required")
@@ -32,4 +36,21 @@ public record Group(
         @Positive(message = "Group size must be positive")
         @Column("group_size") Double groupSize
 ) {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Group group = (Group) o;
+        return Objects.equals(id, group.id) &&
+                Objects.equals(loadId, group.loadId) &&
+                Objects.equals(date, group.date) &&
+                Objects.equals(powderCharge, group.powderCharge) &&
+                Objects.equals(targetRange, group.targetRange) &&
+                Objects.equals(groupSize, group.groupSize);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, loadId, date, powderCharge, targetRange, groupSize);
+    }
 }

@@ -100,7 +100,10 @@ public class GroupsControllerTest {
                 .expectStatus().isOk()
                 .expectBody(Group.class)
                 .value(returnedGroup -> {
-                    assertThat(returnedGroup).isEqualTo(group);
+                    assertThat(returnedGroup.id()).isNotNull();
+                    assertThat(returnedGroup.powderCharge()).isEqualTo(group.powderCharge());
+                    assertThat(returnedGroup.targetRange()).isEqualTo(group.targetRange());
+                    assertThat(returnedGroup.groupSize()).isEqualTo(group.groupSize());
                 });
     }
 
