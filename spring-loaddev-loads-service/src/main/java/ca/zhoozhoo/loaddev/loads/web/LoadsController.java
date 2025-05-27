@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
-import ca.zhoozhoo.loaddev.loads.model.GroupStatistics;
+import ca.zhoozhoo.loaddev.loads.dto.GroupStatisticsDto;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 import ca.zhoozhoo.loaddev.loads.security.CurrentUser;
 import ca.zhoozhoo.loaddev.loads.service.LoadsService;
@@ -104,12 +104,12 @@ public class LoadsController {
     @Operation(summary = "Get group statistics for a load", security = {
             @SecurityRequirement(name = "Oauth2Security", scopes = "loads:view") })
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Statistics retrieved", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = GroupStatistics.class)))),
+            @ApiResponse(responseCode = "200", description = "Statistics retrieved", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = GroupStatisticsDto.class)))),
             @ApiResponse(responseCode = "404", description = "Load not found", content = @Content)
     })
     @GetMapping("/{id}/statistics")
     @PreAuthorize("hasAuthority('loads:view')")
-    public Flux<GroupStatistics> getLoadStatistics(
+    public Flux<GroupStatisticsDto> getLoadStatistics(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of load") @PathVariable Long id) {
         return loadsService.getGroupStatisticsForLoad(id, userId);

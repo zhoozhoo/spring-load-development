@@ -21,8 +21,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
+import ca.zhoozhoo.loaddev.loads.dto.GroupStatisticsDto;
 import ca.zhoozhoo.loaddev.loads.model.Group;
-import ca.zhoozhoo.loaddev.loads.model.GroupStatistics;
 import ca.zhoozhoo.loaddev.loads.security.CurrentUser;
 import ca.zhoozhoo.loaddev.loads.security.SecurityUtils;
 import ca.zhoozhoo.loaddev.loads.service.LoadsService;
@@ -104,11 +104,11 @@ public class GroupsController {
     @Operation(summary = "Get statistics for a group", description = "Retrieves statistical information about a specific group's performance.")
     @SecurityRequirement(name = "Oauth2Security", scopes = "view")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Statistics retrieved", content = @Content(mediaType = "application/json", schema = @Schema(implementation = GroupStatistics.class))),
+            @ApiResponse(responseCode = "200", description = "Statistics retrieved", content = @Content(mediaType = "application/json", schema = @Schema(implementation = GroupStatisticsDto.class))),
             @ApiResponse(responseCode = "404", description = "Group not found", content = @Content) })
     @GetMapping("/{id}/statistics")
     @PreAuthorize("hasAuthority('groups:view')")
-    public Mono<ResponseEntity<GroupStatistics>> getGroupStatistics(
+    public Mono<ResponseEntity<GroupStatisticsDto>> getGroupStatistics(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id) {
         return loadsService.getGroupStatistics(id, userId).map(stats -> ok(stats)).defaultIfEmpty(notFound().build());
