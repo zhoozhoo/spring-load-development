@@ -20,7 +20,6 @@ import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static reactor.core.publisher.Mono.just;
-import static java.lang.String.format;
 
 import java.time.Duration;
 import java.util.List;
@@ -41,6 +40,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import ca.zhoozhoo.loaddev.mcp.config.McpToolRegistrationConfig.ReactiveContextHolder;
 import ca.zhoozhoo.loaddev.mcp.dto.GroupStatisticsDto;
 import ca.zhoozhoo.loaddev.mcp.dto.LoadDto;
+import ca.zhoozhoo.loaddev.mcp.service.LoadsService;
 import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema.JSONRPCResponse.JSONRPCError;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +60,9 @@ public class LoadsTools {
 
     @Autowired
     private DiscoveryClient discoveryClient;
+
+    @Autowired
+    private LoadsService loadsService;
 
     @Value("${service.loads.name:loads-service}")
     private String loadsServiceName;
@@ -225,50 +228,23 @@ public class LoadsTools {
             @ToolParam(description = "Numeric ID of the load", required = true) Long id, ToolContext context) {
         log.debug("Retrieving statistics for load ID: {}", id);
 
-        return Mono.just(id)
-                .filter(loadId -> loadId != null && loadId > 0)
-                .switchIfEmpty(Mono.error(new McpError(new JSONRPCError(
-                        INVALID_PARAMS,
-                        "Load ID must be a positive number",
-                        null))))
-                .flatMapMany(loadId -> ReactiveSecurityContextHolder.getContext()
-                        .map(SecurityContext::getAuthentication)
-                        .flatMapMany(auth -> {
-                            var instances = discoveryClient.getInstances(loadsServiceName);
-                            if (instances == null || instances.isEmpty()) {
-                                throw new McpError(new JSONRPCError(
-                                        INTERNAL_ERROR, format("Service %s not found in discovery", loadsServiceName),
-                                        null));
-                            }
+        if (id == null || id <= 0) {
+            throw new McpError(new JSONRPCError(
+                    INVALID_PARAMS,
+                    "Load ID must be a positive number",
+                    null));
+        }
 
-                            return webClient
-                                    .get()
-                                    .uri(instances.get(0).getUri().toString() + "/loads/" + loadId + "/statistics")
-                                    .headers(h -> h.setBearerAuth(((Jwt) auth.getCredentials()).getTokenValue()))
-                                    .retrieve()
-                                    .bodyToFlux(GroupStatisticsDto.class)
-                                    .onErrorMap(WebClientResponseException.class, e -> {
-                                        if (e.getStatusCode() == UNAUTHORIZED) {
-                                            throw new McpError(new JSONRPCError(
-                                                    INVALID_REQUEST,
-                                                    "Authentication failed",
-                                                    null));
-                                        }
-                                        if (e.getStatusCode() == NOT_FOUND) {
-                                            throw new McpError(new JSONRPCError(
-                                                    INVALID_PARAMS,
-                                                    "Load not found with ID: " + loadId,
-                                                    null));
-                                        }
-                                        return e;
-                                    });
-                        }))
-                .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
-                        .filter(throwable -> !(throwable instanceof McpError)))
-                .contextWrite(ctx -> ctx.putAll(getReactiveContext()))
-                .collectList()
-                .doOnSuccess(stats -> log.debug("Retrieved {} statistics for load {}", stats.size(), id))
-                .block();
+        Mono<List<GroupStatisticsDto>> statsMono = ReactiveSecurityContextHolder.getContext()
+            .map(SecurityContext::getAuthentication)
+            .flatMapMany(auth -> loadsService.fetchLoadStatistics(auth, id))
+            .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
+                    .filter(throwable -> !(throwable instanceof McpError)))
+            .contextWrite(ctx -> ctx.putAll(getReactiveContext()))
+            .collectList()
+            .doOnSuccess(stats -> log.debug("Retrieved {} statistics for load {}", stats.size(), id));
+
+        return statsMono.block();
     }
 
     /**
