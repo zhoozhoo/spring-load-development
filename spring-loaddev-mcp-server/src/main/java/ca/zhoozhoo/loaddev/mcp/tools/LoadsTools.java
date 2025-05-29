@@ -225,26 +225,24 @@ public class LoadsTools {
      */
     @Tool(description = "Get statistics for a specific load", name = "getLoadStatistics")
     public List<GroupStatisticsDto> getLoadStatistics(
-            @ToolParam(description = "Numeric ID of the load", required = true) Long id, ToolContext context) {
-        log.debug("Retrieving statistics for load ID: {}", id);
+        @ToolParam(description = "Numeric ID of the load", required = true) Long id,
+        ToolContext context) {
+            log.debug("Retrieving statistics for load ID: {}", id);
 
-        if (id == null || id <= 0) {
-            throw new McpError(new JSONRPCError(
-                    INVALID_PARAMS,
-                    "Load ID must be a positive number",
-                    null));
-        }
+            if (id == null || id <= 0) {
+                throw new McpError(new JSONRPCError(
+                        INVALID_PARAMS,
+                        "Load ID must be a positive number",
+                        null));
+            }
 
-        Mono<List<GroupStatisticsDto>> statsMono = ReactiveSecurityContextHolder.getContext()
-            .map(SecurityContext::getAuthentication)
-            .flatMapMany(auth -> loadsService.fetchLoadStatistics(auth, id))
-            .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
-                    .filter(throwable -> !(throwable instanceof McpError)))
-            .contextWrite(ctx -> ctx.putAll(getReactiveContext()))
-            .collectList()
-            .doOnSuccess(stats -> log.debug("Retrieved {} statistics for load {}", stats.size(), id));
+            Mono<List<GroupStatisticsDto>> statsMono = loadsService.fetchLoadStatistics(id)
+                .contextWrite(ctx -> ctx.putAll(getReactiveContext()))
+                .collectList()
+                .doOnSuccess(stats -> log.debug("Retrieved {} statistics for load {}", stats.size(), id))
+                .doOnError(e -> log.error("Error retrieving statistics for load {}: {}", id, e.getMessage()));
 
-        return statsMono.block();
+            return statsMono.block();
     }
 
     /**
