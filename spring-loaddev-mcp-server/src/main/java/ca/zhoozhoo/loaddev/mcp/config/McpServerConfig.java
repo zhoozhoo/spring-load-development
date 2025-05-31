@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ca.zhoozhoo.loaddev.mcp.tools.LoadsTools;
+import ca.zhoozhoo.loaddev.mcp.tools.RiflesTools;
 import io.micrometer.observation.ObservationRegistry;
 
 /**
@@ -17,16 +18,17 @@ import io.micrometer.observation.ObservationRegistry;
 public class McpServerConfig {
 
     /**
-     * Creates a ToolCallbackProvider for Load operations.
+     * Creates a ToolCallbackProvider for Load and Rifle operations.
      * This bean enables the MCP server to discover and execute tool methods
-     * defined in the LoadTools class.
+     * defined in the LoadsTools and RiflesTools classs.
      *
      * @param loadTools the LoadTools instance containing tool methods
+     * @param riflesTools the RiflesTools instance containing tool methods
      * @return configured ToolCallbackProvider
      */
     @Bean
-    public ToolCallbackProvider loadToolsCallbackProvider(LoadsTools loadTools) {
-        return MethodToolCallbackProvider.builder().toolObjects(loadTools).build();
+    public ToolCallbackProvider toolsCallbackProvider(LoadsTools loadTools, RiflesTools riflesTools) {
+        return MethodToolCallbackProvider.builder().toolObjects(loadTools, riflesTools).build();
     }
 
     /**

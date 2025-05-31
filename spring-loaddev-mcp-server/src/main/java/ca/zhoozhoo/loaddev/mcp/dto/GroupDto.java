@@ -3,7 +3,7 @@ package ca.zhoozhoo.loaddev.mcp.dto;
 import java.time.LocalDate;
 import java.util.List;
 
-public record GroupStatisticsDto(
+public record GroupDto(
 
         LocalDate date,
 

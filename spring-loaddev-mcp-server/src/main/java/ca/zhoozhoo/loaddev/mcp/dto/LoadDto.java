@@ -28,5 +28,7 @@ public record LoadDto(
 
         Double caseOverallLength,
 
-        Double neckTension) {
+        Double neckTension,
+
+        Long rifleId) {
 }
