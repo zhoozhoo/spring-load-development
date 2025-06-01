@@ -4,7 +4,7 @@
 :email: zhoozhoo@yahoo.com
 :doctype: book
 
-Spring Load Development is a project that demonstrates the integration of various modern technologies and frameworks to build a robust microservices architecture. This project showcases the use of Spring Boot for microservices, Spring WebFlux for reactive RESTful web services, Spring Data R2DBC for reactive database connectivity, Spring Cloud Config for externalized configuration management, Spring Cloud Gateway for API gateway, and Resilience4J for circuit breaker patterns.
+Spring Load Development is a project that demonstrates the integration of various modern technologies and frameworks to build a robust microservices architecture. This project showcases the use of Spring Boot for microservices, Spring WebFlux for reactive RESTful web services, Spring Data R2DBC for reactive database connectivity, Spring Cloud Config for externalized configuration management, Spring Cloud Gateway for API gateway, Resilience4J for circuit breaker patterns, and Spring AI for Model Context Protocol (MCP) server integration.
 
 [NOTE]
 ====
@@ -21,6 +21,7 @@ Spring Load Development is a project that demonstrates the integration of variou
 * Role-Based Access Control (RBAC) using link:https://spring.io/projects/spring-security[Spring Security] and link:https://www.keycloak.org/[Keycloak]
 * API Gateway using link:https://spring.io/projects/spring-cloud-gateway[Spring Cloud Gateway]
 * Circuit Breaker using link:https://spring.io/projects/spring-cloud-circuitbreaker[Spring Cloud Circuit Breaker] and link:https://resilience4j.readme.io/docs/getting-started[Resilience4J]
+* AI Integration using link:https://spring.io/projects/spring-ai[Spring AI] and Model Context Protocol (MCP)
 * Distributed Tracing using link:https://opentelemetry.io/[OpenTelemetry] and link:https://www.jaegertracing.io/[Jaeger]
 * Application Monitoring using link:https://github.com/codecentric/spring-boot-admin[Spring Boot Admin]
 
@@ -47,6 +48,13 @@ git clone https://github.com/zhoozhoo/spring-load-development.git
 cd spring-load-development
 ----
 
+=== Build the project:
+
+[source,bash]
+----
+mvn clean package
+----
+
 ==== Start the infrastructure services using Docker Compose:
 
 [source,bash]
@@ -56,11 +64,35 @@ docker-compose --env-file .env up -d
 
 === Accessing Services
 
-* Config Server: http://localhost:8888
-* Discovery Server: http://localhost:8761
+Once the services are up and running, you can access them at the following URLs:
+
 * API Gateway: http://localhost:8080
 * Keycloak Admin Console: http://localhost:7080
 * Jaeger UI: http://localhost:16686
+* Admin Server: http://localhost:9090
+
+=== AI Integration
+
+The project includes an MCP (Model Context Protocol) server that provides AI-assisted tools for managing loads and rifles:
+
+* Integration with GitHub Copilot through the Model Context Protocol
+* AI-assisted load development analysis
+* Intelligent rifle configuration recommendations
+* Natural language queries for load data
+
+To connect GitHub Copilot to the MCP server, configure the `.vscode/mcp.json` file in your project directory:
+
+[source,json]
+----
+{
+  "servers": {
+    "reloading-mcp-server": {
+      "type": "sse",
+      "url": "http://localhost:8080/sse"
+    }
+  }
+}
+----
 
 === API Documentation
 
@@ -76,9 +108,10 @@ The application is composed of the following services:
 
 * *Config Server*: Centralized configuration management for all services
 * *Discovery Server*: Service registry and discovery using Eureka
-* *API Gateway*: Routes and filters requests to appropriate services
+* *API Gateway*: Routes and filters requests to appropriate services (link:spring-loaddev-api-gateway/src/test/http/README.adoc[API Testing Guide])
 * *Rifles Service*: Manages rifle data and configurations
-* *Loads Service*: Handles load development data including groups and shots
+* *Loads Service*: Handles load development data including groups and shots 
+* *MCP Server*: Provides AI-assisted tools via Model Context Protocol for loads and rifles management (link:spring-loaddev-mcp-server/README.adoc[MCP Server Guide])
 * *Admin Server*: Monitoring and management of all services
 
 === Configuration Repository
@@ -115,6 +148,7 @@ The project includes Spring Boot Admin Server for monitoring and managing your S
 flowchart TD
     subgraph External
         User[User]
+        Copilot[GitHub Copilot]
     end
 
     subgraph Infra
@@ -132,26 +166,34 @@ flowchart TD
     subgraph Microservices
         LoadsService[Loads Service]
         RiflesService[Rifles Service]
+        MCPServer[MCP Server]
     end
 
     User -- REST --> APIGateway
+    Copilot -->|MCP| APIGateway
     User -- Auth --> Keycloak
     APIGateway -->|REST| LoadsService
     APIGateway -->|REST| RiflesService
+    APIGateway -->|MCP| MCPServer
+    MCPServer -->|REST| LoadsService
+    MCPServer -->|REST| RiflesService
 
     LoadsService -- DB --> Postgres
     RiflesService -- DB --> Postgres
 
     LoadsService -- Discovery --> DiscoveryServer
     RiflesService -- Discovery --> DiscoveryServer
+    MCPServer -- Discovery --> DiscoveryServer
     APIGateway -- Discovery --> DiscoveryServer
 
     APIGateway -- Tracing --> Jaeger
     LoadsService -- Tracing --> Jaeger
     RiflesService -- Tracing --> Jaeger
+    MCPServer -- Tracing --> Jaeger
 
     LoadsService -- Config --> ConfigServer
     RiflesService -- Config --> ConfigServer
+    MCPServer -- Config --> ConfigServer
     APIGateway -- Config --> ConfigServer
 ....
 

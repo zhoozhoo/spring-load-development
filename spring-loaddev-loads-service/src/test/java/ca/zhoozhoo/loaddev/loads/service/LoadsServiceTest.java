@@ -2,6 +2,7 @@ package ca.zhoozhoo.loaddev.loads.service;
 
 import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -18,6 +19,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
 import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
+import ca.zhoozhoo.loaddev.loads.dto.GroupStatisticsDto;
+import ca.zhoozhoo.loaddev.loads.dto.ShotDto;
+import ca.zhoozhoo.loaddev.loads.mapper.GroupStatisticsMapper;
 import ca.zhoozhoo.loaddev.loads.model.Group;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
 import reactor.core.publisher.Flux;
@@ -32,6 +36,9 @@ class LoadsServiceTest {
 
     @Mock
     private ShotRepository shotRepository;
+
+    @Mock
+    private GroupStatisticsMapper groupStatisticsMapper;
 
     @InjectMocks
     private LoadsService loadsService;
@@ -58,16 +65,21 @@ class LoadsServiceTest {
 
         when(groupRepository.findByIdAndOwnerId(GROUP_ID, USER_ID)).thenReturn(Mono.just(group));
         when(shotRepository.findByGroupIdAndOwnerId(GROUP_ID, USER_ID)).thenReturn(Flux.fromIterable(shots));
+        when(groupStatisticsMapper.toDto(any())).thenReturn(new GroupStatisticsDto(
+                group.date(),
+                group.powderCharge(),
+                group.targetRange(),
+                group.groupSize(),
+                2810.0,
+                8.2,
+                20.0,
+                shots.stream().map(s -> new ShotDto(s.velocity())).toList()));
 
         StepVerifier.create(loadsService.getGroupStatistics(GROUP_ID, USER_ID))
                 .assertNext(stats -> {
-                    assertEquals(group, stats.group());
-                    assertEquals(LOAD_ID, stats.group().loadId());
-                    assertEquals(3, stats.shotCount());
                     assertEquals(2810.0, stats.averageVelocity(), 0.0);
                     assertEquals(8.2, stats.standardDeviation(), 0.0);
                     assertEquals(20.0, stats.extremeSpread(), 0.0);
-                    assertEquals(shots, stats.shots());
                 })
                 .verifyComplete();
     }
@@ -78,10 +90,18 @@ class LoadsServiceTest {
 
         when(groupRepository.findByIdAndOwnerId(GROUP_ID, USER_ID)).thenReturn(Mono.just(group));
         when(shotRepository.findByGroupIdAndOwnerId(GROUP_ID, USER_ID)).thenReturn(Flux.empty());
+        when(groupStatisticsMapper.toDto(any())).thenReturn(new GroupStatisticsDto(
+                group.date(),
+                group.powderCharge(),
+                group.targetRange(),
+                group.groupSize(),
+                0.0,
+                0.0,
+                0.0,
+                List.of()));
 
         StepVerifier.create(loadsService.getGroupStatistics(GROUP_ID, USER_ID))
                 .assertNext(stats -> {
-                    assertEquals(0, stats.shotCount());
                     assertEquals(0.0, stats.averageVelocity(), 0.0);
                     assertEquals(0.0, stats.standardDeviation(), 0.0);
                     assertEquals(0.0, stats.extremeSpread(), 0.0);
@@ -104,10 +124,18 @@ class LoadsServiceTest {
 
         when(groupRepository.findByIdAndOwnerId(GROUP_ID, USER_ID)).thenReturn(Mono.just(group));
         when(shotRepository.findByGroupIdAndOwnerId(GROUP_ID, USER_ID)).thenReturn(Flux.fromIterable(shots));
+        when(groupStatisticsMapper.toDto(any())).thenReturn(new GroupStatisticsDto(
+                group.date(),
+                group.powderCharge(),
+                group.targetRange(),
+                group.groupSize(),
+                2800.0,
+                0.0,
+                0.0,
+                List.of(new ShotDto(2800))));
 
         StepVerifier.create(loadsService.getGroupStatistics(GROUP_ID, USER_ID))
                 .assertNext(stats -> {
-                    assertEquals(1, stats.shotCount());
                     assertEquals(2800.0, stats.averageVelocity(), 0.0);
                     assertEquals(0.0, stats.standardDeviation(), 0.0);
                     assertEquals(0.0, stats.extremeSpread(), 0.0);

@@ -1,4 +1,4 @@
-package ca.zhoozhoo.loaddev.genai;
+package ca.zhoozhoo.loaddev.mcp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -6,9 +6,9 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @EnableDiscoveryClient
 @SpringBootApplication
-public class GenAIServiceApplication {
+public class McpServerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(GenAIServiceApplication.class, args);
+        SpringApplication.run(McpServerApplication.class, args);
     }
 }

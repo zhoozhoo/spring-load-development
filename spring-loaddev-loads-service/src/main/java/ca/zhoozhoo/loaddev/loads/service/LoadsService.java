@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
 import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
+import ca.zhoozhoo.loaddev.loads.dto.GroupStatisticsDto;
+import ca.zhoozhoo.loaddev.loads.mapper.GroupStatisticsMapper;
 import ca.zhoozhoo.loaddev.loads.model.Group;
 import ca.zhoozhoo.loaddev.loads.model.GroupStatistics;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
@@ -25,18 +27,22 @@ public class LoadsService {
     @Autowired
     private ShotRepository shotRepository;
 
+    @Autowired
+    private GroupStatisticsMapper groupStatisticsMapper;
+
     /**
      * Retrieves statistics for a specific group belonging to a user.
      *
      * @param groupId the ID of the group
-     * @param userId the ID of the user (owner)
+     * @param userId  the ID of the user (owner)
      * @return a Mono emitting the GroupStatistics, or empty if not found
      */
-    public Mono<GroupStatistics> getGroupStatistics(Long groupId, String userId) {
+    public Mono<GroupStatisticsDto> getGroupStatistics(Long groupId, String userId) {
         return groupRepository.findByIdAndOwnerId(groupId, userId)
                 .flatMap(group -> shotRepository.findByGroupIdAndOwnerId(groupId, userId)
                         .collectList()
-                        .map(shots -> buildGroupStatistics(group, shots)));
+                        .map(shots -> buildGroupStatistics(group, shots)))
+                .map(groupStatisticsMapper::toDto);
     }
 
     /**
@@ -46,11 +52,12 @@ public class LoadsService {
      * @param userId the ID of the user (owner)
      * @return a Flux emitting GroupStatistics for each group
      */
-    public Flux<GroupStatistics> getGroupStatisticsForLoad(Long loadId, String userId) {
+    public Flux<GroupStatisticsDto> getGroupStatisticsForLoad(Long loadId, String userId) {
         return groupRepository.findAllByLoadIdAndOwnerId(loadId, userId)
                 .flatMap(group -> shotRepository.findByGroupIdAndOwnerId(group.id(), userId)
                         .collectList()
-                        .map(shots -> buildGroupStatistics(group, shots)));
+                        .map(shots -> buildGroupStatistics(group, shots)))
+                .map(groupStatisticsMapper::toDto);
     }
 
     /**
@@ -83,7 +90,6 @@ public class LoadsService {
 
         return new GroupStatistics(
                 group,
-                shots.size(),
                 avg,
                 stdDev,
                 extremeSpread,

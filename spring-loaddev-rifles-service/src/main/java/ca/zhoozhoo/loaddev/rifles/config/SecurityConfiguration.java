@@ -37,8 +37,6 @@ import reactor.core.publisher.Mono;
 @Profile("!test")
 public class SecurityConfiguration {
 
-    public static final String PERMISSION_TOKEN_ATTR = "permission_token";
-
     /**
      * Configures the security filter chain for the application.
      * Permits access to actuator endpoints and requires authentication for all
