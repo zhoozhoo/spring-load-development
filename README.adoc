@@ -108,10 +108,10 @@ The application is composed of the following services:
 
 * *Config Server*: Centralized configuration management for all services
 * *Discovery Server*: Service registry and discovery using Eureka
-* *API Gateway*: Routes and filters requests to appropriate services
+* *API Gateway*: Routes and filters requests to appropriate services (link:spring-loaddev-api-gateway/src/test/http/README.adoc[API Testing Guide])
 * *Rifles Service*: Manages rifle data and configurations
-* *Loads Service*: Handles load development data including groups and shots
-* *MCP Server*: Provides AI-assisted tools via Model Context Protocol for loads and rifles management
+* *Loads Service*: Handles load development data including groups and shots 
+* *MCP Server*: Provides AI-assisted tools via Model Context Protocol for loads and rifles management (link:spring-loaddev-mcp-server/README.adoc[MCP Server Guide])
 * *Admin Server*: Monitoring and management of all services
 
 === Configuration Repository
@@ -146,6 +146,7 @@ The project includes Spring Boot Admin Server for monitoring and managing your S
 [source,mermaid]
 ....
 flowchart TD
+flowchart TD
     subgraph External
         User[User]
         Copilot[GitHub Copilot]
@@ -170,10 +171,11 @@ flowchart TD
     end
 
     User -- REST --> APIGateway
-    Copilot -- MCP --> MCPServer
+    Copilot -->|MCP| APIGateway
     User -- Auth --> Keycloak
     APIGateway -->|REST| LoadsService
     APIGateway -->|REST| RiflesService
+    APIGateway -->|MCP| MCPServer
     MCPServer -->|REST| LoadsService
     MCPServer -->|REST| RiflesService
 

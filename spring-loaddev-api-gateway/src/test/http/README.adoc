@@ -58,6 +58,7 @@ Contains requests for testing the Shots API endpoints:
 
 * Authentication with Keycloak
 * CRUD operations for shots
+* Shot statistics and analysis
 
 == How to Use
 

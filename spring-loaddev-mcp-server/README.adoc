@@ -1,0 +1,40 @@
+= Spring Load Development MCP Server
+:toc: left
+:icons: font
+:source-highlighter: highlightjs
+
+== Overview
+
+An MCP server for Spring Load Development project.
+
+== Configuring Copilot Connection
+
+To connect GitHub Copilot to this server, you need to configure the `.vscode/mcp.json` file in your project directory.
+
+=== Configuration Steps
+
+1. Create an `mcp.json` file inside the `.vscode` folder
+2. Add the following configuration:
+
+[source,json]
+----
+{
+    "servers": {
+        "reloading-mcp-server": {
+            "type": "sse",
+            "url": "http://localhost:8080/sse",
+            "headers": {
+                "Authorization": "Bearer <token>"
+            }
+        }
+    }
+}
+----
+
+TIP: Make sure the port number matches your local MCP server configuration.
+
+== Authentication
+
+The MCP server requires bearer token authentication for secure access. For detailed instructions on authentication and obtaining tokens, please refer to the link:../spring-loaddev-api-gateway/src/test/http/README.adoc[API Gateway Testing Guide].
+
+TIP: The authentication process uses Keycloak and is the same as described in the API Gateway documentation.
