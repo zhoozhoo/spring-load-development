@@ -13,6 +13,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   db:
     image: postgres:${POSTGRES_VERSION}
@@ -25,12 +26,12 @@ services:
       - "5432:5432"
     volumes:
       - reloading_data:/var/lib/postgresql/data
-    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d loadsdb"]
       interval: 30s
       timeout: 10s
       retries: 5
+    restart: unless-stopped
 
   keycloak-db:
     image: postgres:${POSTGRES_VERSION}
@@ -43,12 +44,12 @@ services:
       - "5433:5433"
     volumes:
       - keycloak_data:/var/lib/postgresql/data
-    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d keycloak"]
       interval: 30s
       timeout: 10s
       retries: 5
+    restart: unless-stopped
 
   keycloak:
     image: quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}
@@ -84,6 +85,7 @@ services:
     volumes:
       - ./docker/keycloak/realm/realm.json:/opt/keycloak/data/import/realm.json
     command: ["start-dev", "--import-realm"]
+    restart: unless-stopped
 
   config-server:
     image: zhoozhoo.ca/spring-load-development/spring-loaddev-config-server:${PROJECT_VERSION}
@@ -98,7 +100,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: on-failure
+    restart: unless-stopped
 
   discovery-server:
     image: zhoozhoo.ca/spring-load-development/spring-loaddev-discovery-server:${PROJECT_VERSION}
@@ -118,7 +120,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: on-failure
+    restart: unless-stopped
 
   api-gateway:
     image: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:${PROJECT_VERSION}
@@ -146,7 +148,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: on-failure
+    restart: unless-stopped
 
   rifles-service:
     image: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:${PROJECT_VERSION}
@@ -169,6 +171,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
+      keycloak:
+        condition: service_healthy
       jaeger:
         condition: service_healthy
     healthcheck:
@@ -176,7 +180,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: on-failure
+    restart: unless-stopped
       
   loads-service:
     image: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:${PROJECT_VERSION}
@@ -199,6 +203,8 @@ services:
         condition: service_healthy
       discovery-server:
         condition: service_healthy
+      keycloak:
+        condition: service_healthy
       jaeger:
         condition: service_healthy
     healthcheck:
@@ -206,7 +212,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: on-failure
+    restart: unless-stopped
 
   mcp-server:
     image: zhoozhoo.ca/spring-load-development/spring-loaddev-mcp-server:${PROJECT_VERSION}
@@ -233,7 +239,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: on-failure
+    restart: unless-stopped
 
   admin-server:
     image: zhoozhoo.ca/spring-load-development/spring-loaddev-admin-server:${PROJECT_VERSION}
@@ -256,7 +262,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: on-failure
+    restart: unless-stopped
 
 volumes:
   reloading_data:
