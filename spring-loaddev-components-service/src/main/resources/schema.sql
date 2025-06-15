@@ -26,10 +26,10 @@ CREATE TABLE primers (
     owner_id VARCHAR(255) NOT NULL,
     manufacturer VARCHAR(255) NOT NULL,
     type VARCHAR(255) NOT NULL,
-    size VARCHAR(50),
-    cost DECIMAL(10,2),
-    currency VARCHAR(3),
-    quantity_per_box INTEGER
+    size VARCHAR(20) NOT NULL,
+    cost DECIMAL(10,2) NOT NULL,
+    currency VARCHAR(3) NOT NULL,
+    quantity_per_box INTEGER NOT NULL
 );
 
 CREATE TABLE cases (
