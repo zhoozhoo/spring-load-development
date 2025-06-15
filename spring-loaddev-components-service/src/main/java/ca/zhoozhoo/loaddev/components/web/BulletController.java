@@ -1,21 +1,18 @@
 package ca.zhoozhoo.loaddev.components.web;
 
 import static io.swagger.v3.oas.annotations.enums.SecuritySchemeType.OAUTH2;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.ResponseEntity.notFound;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
+import static reactor.core.publisher.Mono.just;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.support.WebExchangeBindException;
 
 import ca.zhoozhoo.loaddev.components.dao.BulletRepository;
 import ca.zhoozhoo.loaddev.components.model.Bullet;
@@ -48,23 +44,13 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Tag(name = "Bullets", description = "Operations on bullets belonging to the authenticated user")
-@SecurityScheme(
-    name = "Oauth2Security", 
-    type = OAUTH2,
-    flows = @OAuthFlows(
-        authorizationCode = @OAuthFlow(
-            authorizationUrl = "${springdoc.oauth2.authorization-url}",
-            tokenUrl = "${springdoc.oauth2.token-url}",
-            scopes = {
-                @OAuthScope(name = "components:view", description = "View access"),
-                @OAuthScope(name = "components:edit", description = "Edit access"),
-                @OAuthScope(name = "components:delete", description = "Delete access")
-            }
-        )
-    )
-)
+@SecurityScheme(name = "Oauth2Security", type = OAUTH2, flows = @OAuthFlows(authorizationCode = @OAuthFlow(authorizationUrl = "${springdoc.oauth2.authorization-url}", tokenUrl = "${springdoc.oauth2.token-url}", scopes = {
+        @OAuthScope(name = "components:view", description = "View access"),
+        @OAuthScope(name = "components:edit", description = "Edit access"),
+        @OAuthScope(name = "components:delete", description = "Delete access")
+})))
 @RestController
-@RequestMapping("/bullets")  // Updated to match other services' URL pattern
+@RequestMapping("/bullets")
 @Log4j2
 @PreAuthorize("hasRole('RELOADER')")
 public class BulletController {
@@ -112,17 +98,17 @@ public class BulletController {
     public Mono<ResponseEntity<Bullet>> createBullet(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Valid @RequestBody Bullet bullet) {
-        return Mono.just(bullet)
+        return just(bullet)
                 .map(b -> new Bullet(
-                    null,
-                    userId,
-                    b.manufacturer(),
-                    b.weight(),
-                    b.type(),
-                    b.measurementUnits(),
-                    b.cost(),
-                    b.currency(),
-                    b.quantityPerBox()))
+                        null,
+                        userId,
+                        b.manufacturer(),
+                        b.weight(),
+                        b.type(),
+                        b.measurementUnits(),
+                        b.cost(),
+                        b.currency(),
+                        b.quantityPerBox()))
                 .flatMap(bulletRepository::save)
                 .map(savedBullet -> {
                     log.info("Created new bullet with id: {}", savedBullet.id());
@@ -145,15 +131,15 @@ public class BulletController {
         return bulletRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingBullet -> {
                     Bullet updatedBullet = new Bullet(
-                        existingBullet.id(),
-                        existingBullet.ownerId(),
-                        bullet.manufacturer(),
-                        bullet.weight(),
-                        bullet.type(),
-                        bullet.measurementUnits(),
-                        bullet.cost(),
-                        bullet.currency(),
-                        bullet.quantityPerBox());
+                            existingBullet.id(),
+                            existingBullet.ownerId(),
+                            bullet.manufacturer(),
+                            bullet.weight(),
+                            bullet.type(),
+                            bullet.measurementUnits(),
+                            bullet.cost(),
+                            bullet.currency(),
+                            bullet.quantityPerBox());
                     return bulletRepository.save(updatedBullet);
                 })
                 .map(updatedBullet -> {
@@ -175,27 +161,8 @@ public class BulletController {
             @Parameter(description = "Id of bullet") @PathVariable Long id) {
         return bulletRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingBullet -> bulletRepository.delete(existingBullet)
-                        .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT)))
+                        .then(just(new ResponseEntity<Void>(NO_CONTENT)))
                         .doOnSuccess(result -> log.info("Deleted bullet with id: {}", id)))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
-    }
-
-    @ExceptionHandler(WebExchangeBindException.class)
-    @ResponseStatus(BAD_REQUEST)
-    public Mono<String> handleValidationException(WebExchangeBindException ex) {
-        log.error("Validation error: {}", ex.getMessage());
-        return Mono.just(ex.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .reduce((a, b) -> a + "; " + b)
-                .orElse("Validation failed"));
-    }
-
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    @ResponseStatus(CONFLICT)
-    public Mono<String> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
-        log.error("Data integrity violation: {}", ex.getMessage());
-        return Mono.just("Database error: " + ex.getMessage());
     }
 }
