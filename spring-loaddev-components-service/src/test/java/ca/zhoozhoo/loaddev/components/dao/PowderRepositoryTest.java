@@ -40,7 +40,7 @@ public class PowderRepositoryTest {
                 "H4350",
                 IMPERIAL,
                 new BigDecimal("45.99"),
-                "USD",
+                "CAD",
                 1.0);
     }
 
@@ -57,7 +57,7 @@ public class PowderRepositoryTest {
                     assertThat(p.type()).isEqualTo("H4350");
                     assertThat(p.measurementUnits()).isEqualTo(IMPERIAL);
                     assertThat(p.cost()).isEqualTo(new BigDecimal("45.99"));
-                    assertThat(p.currency()).isEqualTo("USD");
+                    assertThat(p.currency()).isEqualTo("CAD");
                     assertThat(p.weightPerContainer()).isEqualTo(1.0);
                 })
                 .verifyComplete();
@@ -77,7 +77,7 @@ public class PowderRepositoryTest {
                     assertThat(p.type()).isEqualTo("H4350");
                     assertThat(p.measurementUnits()).isEqualTo(IMPERIAL);
                     assertThat(p.cost()).isEqualTo(new BigDecimal("45.99"));
-                    assertThat(p.currency()).isEqualTo("USD");
+                    assertThat(p.currency()).isEqualTo("CAD");
                     assertThat(p.weightPerContainer()).isEqualTo(1.0);
                 })
                 .verifyComplete();
@@ -95,7 +95,7 @@ public class PowderRepositoryTest {
                 "H4350",
                 IMPERIAL,
                 new BigDecimal("299.99"),
-                "USD",
+                "CAD",
                 8.0);
 
         var result = powderRepository.save(updatedPowder);
@@ -108,7 +108,7 @@ public class PowderRepositoryTest {
                     assertThat(p.type()).isEqualTo("H4350");
                     assertThat(p.measurementUnits()).isEqualTo(IMPERIAL);
                     assertThat(p.cost()).isEqualTo(new BigDecimal("299.99"));
-                    assertThat(p.currency()).isEqualTo("USD");
+                    assertThat(p.currency()).isEqualTo("CAD");
                     assertThat(p.weightPerContainer()).isEqualTo(8.0);
                 })
                 .verifyComplete();
@@ -144,7 +144,7 @@ public class PowderRepositoryTest {
                 "N550",
                 METRIC,
                 new BigDecimal("54.99"),
-                "USD",
+                "CAD",
                 1.0);
 
         powderRepository.saveAll(Flux.just(powder1, powder2)).blockLast();

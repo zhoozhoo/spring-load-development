@@ -1,7 +1,5 @@
 package ca.zhoozhoo.loaddev.components.web;
 
-import static ca.zhoozhoo.loaddev.components.model.Powder.IMPERIAL;
-import static ca.zhoozhoo.loaddev.components.model.Powder.METRIC;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -20,199 +18,200 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
-import ca.zhoozhoo.loaddev.components.dao.PowderRepository;
-import ca.zhoozhoo.loaddev.components.model.Powder;
+import ca.zhoozhoo.loaddev.components.dao.CaseRepository;
+import ca.zhoozhoo.loaddev.components.model.Case;
+import ca.zhoozhoo.loaddev.components.model.PrimerSize;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
 @Import(TestSecurityConfig.class)
-public class PowderControllerTest {
+public class CaseControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;
 
     @Autowired
-    private PowderRepository powderRepository;
+    private CaseRepository caseRepository;
 
     @BeforeEach
     void setUp() {
-        powderRepository.deleteAll().block();
+        caseRepository.deleteAll().block();
     }
 
     @Test
-    void getAllPowders() {
+    void getAllCases() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/powders")
+        webTestClient.mutateWith(jwt).get().uri("/cases")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(APPLICATION_JSON)
-                .expectBodyList(Powder.class);
+                .expectBodyList(Case.class);
     }
 
     @Test
-    void getPowderById() {
+    void getCaseById() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedPowder = powderRepository.save(createTestPowder(userId)).block();
+        var savedCase = caseRepository.save(createTestCase(userId)).block();
 
-        webTestClient.mutateWith(jwt).get().uri("/powders/{id}", savedPowder.id())
+        webTestClient.mutateWith(jwt).get().uri("/cases/{id}", savedCase.id())
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(APPLICATION_JSON)
-                .expectBody(Powder.class)
-                .isEqualTo(savedPowder);
+                .expectBody(Case.class)
+                .isEqualTo(savedCase);
     }
 
     @Test
-    void getPowderByIdNotFound() {
+    void getCaseByIdNotFound() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/powders/999")
+        webTestClient.mutateWith(jwt).get().uri("/cases/999")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    void createPowder() {
+    void createCase() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var powder = createTestPowder(userId);
+        var casing = createTestCase(userId);
 
-        webTestClient.mutateWith(jwt).post().uri("/powders")
+        webTestClient.mutateWith(jwt).post().uri("/cases")
                 .contentType(APPLICATION_JSON)
-                .body(just(powder), Powder.class)
+                .body(just(casing), Case.class)
                 .exchange()
                 .expectStatus().isCreated()
-                .expectBody(Powder.class)
-                .value(p -> {
-                    assertThat(p.id()).isNotNull();
-                    assertThat(p.manufacturer()).isEqualTo("Hodgdon");
-                    assertThat(p.type()).isEqualTo("H4350");
-                    assertThat(p.measurementUnits()).isEqualTo(IMPERIAL);
-                    assertThat(p.cost()).isEqualTo(new BigDecimal("45.99"));
-                    assertThat(p.currency()).isEqualTo("CAD");
-                    assertThat(p.weightPerContainer()).isEqualTo(1.0);
+                .expectBody(Case.class)
+                .value(c -> {
+                    assertThat(c.id()).isNotNull();
+                    assertThat(c.manufacturer()).isEqualTo("Lapua");
+                    assertThat(c.caliber()).isEqualTo("6.5 Creedmoor");
+                    assertThat(c.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
+                    assertThat(c.cost()).isEqualTo(new BigDecimal("89.99"));
+                    assertThat(c.currency()).isEqualTo("CAD");
+                    assertThat(c.quantityPerBox()).isEqualTo(100);
                 });
     }
 
     @Test
-    void createPowderInvalidInput() {
+    void createCaseInvalidInput() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidPowder = new Powder(null, userId, "", "", "", 
-                new BigDecimal("-1"), "", -1.0);
+        var invalidCase = new Case(null, userId, "", "", null, 
+                new BigDecimal("-1"), "", -1);
 
-        webTestClient.mutateWith(jwt).post().uri("/powders")
+        webTestClient.mutateWith(jwt).post().uri("/cases")
                 .contentType(APPLICATION_JSON)
-                .body(just(invalidPowder), Powder.class)
+                .body(just(invalidCase), Case.class)
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody(String.class)
                 .value(errorMessage -> {
                     assertThat(errorMessage).contains("Manufacturer is required");
-                    assertThat(errorMessage).contains("Type is required");
-                    assertThat(errorMessage).contains("Measurement Units is required");
-                    assertThat(errorMessage).contains("Cost must be positive");
+                    assertThat(errorMessage).contains("Caliber is required");
+                    assertThat(errorMessage).contains("Primer size is required");
+                    assertThat(errorMessage).contains("Cost must be greater than or equal to 0");
                     assertThat(errorMessage).contains("Currency is required");
-                    assertThat(errorMessage).contains("Weight per container must be positive");
+                    assertThat(errorMessage).contains("Quantity per box must be greater than 0");
                 });
     }
 
     @Test
-    void updatePowder() {
+    void updateCase() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedPowder = powderRepository.save(createTestPowder(userId)).block();
+        var savedCase = caseRepository.save(createTestCase(userId)).block();
 
-        var updatedPowder = new Powder(
-                savedPowder.id(),
+        var updatedCase = new Case(
+                savedCase.id(),
                 userId,
-                "IMR",
-                "4895",
-                METRIC,
-                new BigDecimal("49.99"),
+                "Peterson",
+                "308 Winchester",
+                PrimerSize.LARGE_RIFLE,
+                new BigDecimal("99.99"),
                 "CAD",
-                0.5);
+                50);
 
-        webTestClient.mutateWith(jwt).put().uri("/powders/{id}", savedPowder.id())
+        webTestClient.mutateWith(jwt).put().uri("/cases/{id}", savedCase.id())
                 .contentType(APPLICATION_JSON)
-                .body(just(updatedPowder), Powder.class)
+                .body(just(updatedCase), Case.class)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Powder.class)
-                .value(p -> {
-                    assertThat(p.id()).isEqualTo(savedPowder.id());
-                    assertThat(p.manufacturer()).isEqualTo("IMR");
-                    assertThat(p.type()).isEqualTo("4895");
-                    assertThat(p.measurementUnits()).isEqualTo(METRIC);
-                    assertThat(p.cost()).isEqualTo(new BigDecimal("49.99"));
-                    assertThat(p.currency()).isEqualTo("CAD");
-                    assertThat(p.weightPerContainer()).isEqualTo(0.5);
+                .expectBody(Case.class)
+                .value(c -> {
+                    assertThat(c.id()).isEqualTo(savedCase.id());
+                    assertThat(c.manufacturer()).isEqualTo("Peterson");
+                    assertThat(c.caliber()).isEqualTo("308 Winchester");
+                    assertThat(c.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
+                    assertThat(c.cost()).isEqualTo(new BigDecimal("99.99"));
+                    assertThat(c.currency()).isEqualTo("CAD");
+                    assertThat(c.quantityPerBox()).isEqualTo(50);
                 });
     }
 
     @Test
-    void updatePowderNotFound() {
+    void updateCaseNotFound() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var powder = createTestPowder(userId);
+        var casing = createTestCase(userId);
 
-        webTestClient.mutateWith(jwt).put().uri("/powders/999")
+        webTestClient.mutateWith(jwt).put().uri("/cases/999")
                 .contentType(APPLICATION_JSON)
-                .body(just(powder), Powder.class)
+                .body(just(casing), Case.class)
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    void deletePowder() {
+    void deleteCase() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedPowder = powderRepository.save(createTestPowder(userId)).block();
+        var savedCase = caseRepository.save(createTestCase(userId)).block();
 
         webTestClient.mutateWith(jwt)
-                .delete().uri("/powders/{id}", savedPowder.id())
+                .delete().uri("/cases/{id}", savedCase.id())
                 .exchange()
                 .expectStatus().isNoContent();
 
         webTestClient.mutateWith(jwt)
-                .get().uri("/powders/{id}", savedPowder.id())
+                .get().uri("/cases/{id}", savedCase.id())
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    void deletePowderNotFound() {
+    void deleteCaseNotFound() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).delete().uri("/powders/999")
+        webTestClient.mutateWith(jwt).delete().uri("/cases/999")
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
-    private Powder createTestPowder(String ownerId) {
-        return new Powder(
+    private Case createTestCase(String ownerId) {
+        return new Case(
                 null,
                 ownerId,
-                "Hodgdon",
-                "H4350",
-                IMPERIAL,
-                new BigDecimal("45.99"),
+                "Lapua",
+                "6.5 Creedmoor",
+                PrimerSize.LARGE_RIFLE,
+                new BigDecimal("89.99"),
                 "CAD",
-                1.0);
+                100);
     }
 }

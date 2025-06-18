@@ -41,7 +41,7 @@ class BulletRepositoryTest {
                 "ELD-Match",
                 IMPERIAL,
                 new BigDecimal("45.99"),
-                "USD",
+                "CAD",
                 100);
     }
 
@@ -59,7 +59,7 @@ class BulletRepositoryTest {
                     assertThat(b.type()).isEqualTo("ELD-Match");
                     assertThat(b.measurementUnits()).isEqualTo(IMPERIAL);
                     assertThat(b.cost()).isEqualTo(new BigDecimal("45.99"));
-                    assertThat(b.currency()).isEqualTo("USD");
+                    assertThat(b.currency()).isEqualTo("CAD");
                     assertThat(b.quantityPerBox()).isEqualTo(100);
                 })
                 .verifyComplete();
@@ -80,7 +80,7 @@ class BulletRepositoryTest {
                     assertThat(b.type()).isEqualTo("ELD-Match");
                     assertThat(b.measurementUnits()).isEqualTo(IMPERIAL);
                     assertThat(b.cost()).isEqualTo(new BigDecimal("45.99"));
-                    assertThat(b.currency()).isEqualTo("USD");
+                    assertThat(b.currency()).isEqualTo("CAD");
                     assertThat(b.quantityPerBox()).isEqualTo(100);
                 })
                 .verifyComplete();
@@ -99,7 +99,7 @@ class BulletRepositoryTest {
                 "MatchKing",
                 METRIC,
                 new BigDecimal("49.99"),
-                "USD",
+                "CAD",
                 50);
 
         var result = bulletRepository.save(updatedBullet);
@@ -113,7 +113,7 @@ class BulletRepositoryTest {
                     assertThat(b.type()).isEqualTo("MatchKing");
                     assertThat(b.measurementUnits()).isEqualTo(METRIC);
                     assertThat(b.cost()).isEqualTo(new BigDecimal("49.99"));
-                    assertThat(b.currency()).isEqualTo("USD");
+                    assertThat(b.currency()).isEqualTo("CAD");
                     assertThat(b.quantityPerBox()).isEqualTo(50);
                 })
                 .verifyComplete();
@@ -161,7 +161,7 @@ class BulletRepositoryTest {
                 "Hybrid Target",
                 METRIC,
                 new BigDecimal("54.99"),
-                "USD",
+                "CAD",
                 100);
 
         bulletRepository.saveAll(Flux.just(bullet1, bullet2)).blockLast();

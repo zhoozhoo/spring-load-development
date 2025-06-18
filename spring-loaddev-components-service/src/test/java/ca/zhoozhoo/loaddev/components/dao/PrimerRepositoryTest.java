@@ -39,7 +39,7 @@ class PrimerRepositoryTest {
                 "BR-4",
                 PrimerSize.LARGE_RIFLE,
                 new BigDecimal("89.99"),
-                "USD",
+                "CAD",
                 1000);
     }
 
@@ -56,7 +56,7 @@ class PrimerRepositoryTest {
                     assertThat(p.type()).isEqualTo("BR-4");
                     assertThat(p.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
                     assertThat(p.cost()).isEqualTo(new BigDecimal("89.99"));
-                    assertThat(p.currency()).isEqualTo("USD");
+                    assertThat(p.currency()).isEqualTo("CAD");
                     assertThat(p.quantityPerBox()).isEqualTo(1000);
                 })
                 .verifyComplete();
@@ -76,7 +76,7 @@ class PrimerRepositoryTest {
                     assertThat(p.type()).isEqualTo("BR-4");
                     assertThat(p.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
                     assertThat(p.cost()).isEqualTo(new BigDecimal("89.99"));
-                    assertThat(p.currency()).isEqualTo("USD");
+                    assertThat(p.currency()).isEqualTo("CAD");
                     assertThat(p.quantityPerBox()).isEqualTo(1000);
                 })
                 .verifyComplete();
@@ -94,7 +94,7 @@ class PrimerRepositoryTest {
                 "205M",
                 PrimerSize.LARGE_RIFLE_MAGNUM,
                 new BigDecimal("99.99"),
-                "USD",
+                "CAD",
                 500);
 
         var result = primerRepository.save(updatedPrimer);
@@ -107,7 +107,7 @@ class PrimerRepositoryTest {
                     assertThat(p.type()).isEqualTo("205M");
                     assertThat(p.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE_MAGNUM);
                     assertThat(p.cost()).isEqualTo(new BigDecimal("99.99"));
-                    assertThat(p.currency()).isEqualTo("USD");
+                    assertThat(p.currency()).isEqualTo("CAD");
                     assertThat(p.quantityPerBox()).isEqualTo(500);
                 })
                 .verifyComplete();
@@ -141,7 +141,7 @@ class PrimerRepositoryTest {
                 "WLR",
                 PrimerSize.LARGE_RIFLE,
                 new BigDecimal("79.99"),
-                "USD",
+                "CAD",
                 1000);
 
         primerRepository.saveAll(Flux.just(primer1, primer2)).blockLast();

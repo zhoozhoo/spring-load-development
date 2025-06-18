@@ -1,7 +1,5 @@
 package ca.zhoozhoo.loaddev.components.web;
 
-import static ca.zhoozhoo.loaddev.components.model.Powder.IMPERIAL;
-import static ca.zhoozhoo.loaddev.components.model.Powder.METRIC;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -20,199 +18,200 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
-import ca.zhoozhoo.loaddev.components.dao.PowderRepository;
-import ca.zhoozhoo.loaddev.components.model.Powder;
+import ca.zhoozhoo.loaddev.components.dao.PrimerRepository;
+import ca.zhoozhoo.loaddev.components.model.Primer;
+import ca.zhoozhoo.loaddev.components.model.PrimerSize;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
 @Import(TestSecurityConfig.class)
-public class PowderControllerTest {
+public class PrimerControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;
 
     @Autowired
-    private PowderRepository powderRepository;
+    private PrimerRepository primerRepository;
 
     @BeforeEach
     void setUp() {
-        powderRepository.deleteAll().block();
+        primerRepository.deleteAll().block();
     }
 
     @Test
-    void getAllPowders() {
+    void getAllPrimers() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/powders")
+        webTestClient.mutateWith(jwt).get().uri("/primers")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(APPLICATION_JSON)
-                .expectBodyList(Powder.class);
+                .expectBodyList(Primer.class);
     }
 
     @Test
-    void getPowderById() {
+    void getPrimerById() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedPowder = powderRepository.save(createTestPowder(userId)).block();
+        var savedPrimer = primerRepository.save(createTestPrimer(userId)).block();
 
-        webTestClient.mutateWith(jwt).get().uri("/powders/{id}", savedPowder.id())
+        webTestClient.mutateWith(jwt).get().uri("/primers/{id}", savedPrimer.id())
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(APPLICATION_JSON)
-                .expectBody(Powder.class)
-                .isEqualTo(savedPowder);
+                .expectBody(Primer.class)
+                .isEqualTo(savedPrimer);
     }
 
     @Test
-    void getPowderByIdNotFound() {
+    void getPrimerByIdNotFound() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/powders/999")
+        webTestClient.mutateWith(jwt).get().uri("/primers/999")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    void createPowder() {
+    void createPrimer() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var powder = createTestPowder(userId);
+        var primer = createTestPrimer(userId);
 
-        webTestClient.mutateWith(jwt).post().uri("/powders")
+        webTestClient.mutateWith(jwt).post().uri("/primers")
                 .contentType(APPLICATION_JSON)
-                .body(just(powder), Powder.class)
+                .body(just(primer), Primer.class)
                 .exchange()
                 .expectStatus().isCreated()
-                .expectBody(Powder.class)
+                .expectBody(Primer.class)
                 .value(p -> {
                     assertThat(p.id()).isNotNull();
-                    assertThat(p.manufacturer()).isEqualTo("Hodgdon");
-                    assertThat(p.type()).isEqualTo("H4350");
-                    assertThat(p.measurementUnits()).isEqualTo(IMPERIAL);
-                    assertThat(p.cost()).isEqualTo(new BigDecimal("45.99"));
+                    assertThat(p.manufacturer()).isEqualTo("CCI");
+                    assertThat(p.type()).isEqualTo("BR-4");
+                    assertThat(p.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
+                    assertThat(p.cost()).isEqualTo(new BigDecimal("89.99"));
                     assertThat(p.currency()).isEqualTo("CAD");
-                    assertThat(p.weightPerContainer()).isEqualTo(1.0);
+                    assertThat(p.quantityPerBox()).isEqualTo(1000);
                 });
     }
 
     @Test
-    void createPowderInvalidInput() {
+    void createPrimerInvalidInput() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidPowder = new Powder(null, userId, "", "", "", 
-                new BigDecimal("-1"), "", -1.0);
+        var invalidPrimer = new Primer(null, userId, "", "", null,
+                new BigDecimal("-1"), "", -1);
 
-        webTestClient.mutateWith(jwt).post().uri("/powders")
+        webTestClient.mutateWith(jwt).post().uri("/primers")
                 .contentType(APPLICATION_JSON)
-                .body(just(invalidPowder), Powder.class)
+                .body(just(invalidPrimer), Primer.class)
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody(String.class)
                 .value(errorMessage -> {
                     assertThat(errorMessage).contains("Manufacturer is required");
                     assertThat(errorMessage).contains("Type is required");
-                    assertThat(errorMessage).contains("Measurement Units is required");
-                    assertThat(errorMessage).contains("Cost must be positive");
+                    assertThat(errorMessage).contains("Primer size is required");
+                    assertThat(errorMessage).contains("Cost must be greater than or equal to 0");
                     assertThat(errorMessage).contains("Currency is required");
-                    assertThat(errorMessage).contains("Weight per container must be positive");
+                    assertThat(errorMessage).contains("Quantity per box must be greater than 0");
                 });
     }
 
     @Test
-    void updatePowder() {
+    void updatePrimer() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedPowder = powderRepository.save(createTestPowder(userId)).block();
+        var savedPrimer = primerRepository.save(createTestPrimer(userId)).block();
 
-        var updatedPowder = new Powder(
-                savedPowder.id(),
+        var updatedPrimer = new Primer(
+                savedPrimer.id(),
                 userId,
-                "IMR",
-                "4895",
-                METRIC,
-                new BigDecimal("49.99"),
+                "Federal",
+                "205M",
+                PrimerSize.LARGE_RIFLE_MAGNUM,
+                new BigDecimal("99.99"),
                 "CAD",
-                0.5);
+                500);
 
-        webTestClient.mutateWith(jwt).put().uri("/powders/{id}", savedPowder.id())
+        webTestClient.mutateWith(jwt).put().uri("/primers/{id}", savedPrimer.id())
                 .contentType(APPLICATION_JSON)
-                .body(just(updatedPowder), Powder.class)
+                .body(just(updatedPrimer), Primer.class)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Powder.class)
+                .expectBody(Primer.class)
                 .value(p -> {
-                    assertThat(p.id()).isEqualTo(savedPowder.id());
-                    assertThat(p.manufacturer()).isEqualTo("IMR");
-                    assertThat(p.type()).isEqualTo("4895");
-                    assertThat(p.measurementUnits()).isEqualTo(METRIC);
-                    assertThat(p.cost()).isEqualTo(new BigDecimal("49.99"));
+                    assertThat(p.id()).isEqualTo(savedPrimer.id());
+                    assertThat(p.manufacturer()).isEqualTo("Federal");
+                    assertThat(p.type()).isEqualTo("205M");
+                    assertThat(p.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE_MAGNUM);
+                    assertThat(p.cost()).isEqualTo(new BigDecimal("99.99"));
                     assertThat(p.currency()).isEqualTo("CAD");
-                    assertThat(p.weightPerContainer()).isEqualTo(0.5);
+                    assertThat(p.quantityPerBox()).isEqualTo(500);
                 });
     }
 
     @Test
-    void updatePowderNotFound() {
+    void updatePrimerNotFound() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var powder = createTestPowder(userId);
+        var primer = createTestPrimer(userId);
 
-        webTestClient.mutateWith(jwt).put().uri("/powders/999")
+        webTestClient.mutateWith(jwt).put().uri("/primers/999")
                 .contentType(APPLICATION_JSON)
-                .body(just(powder), Powder.class)
+                .body(just(primer), Primer.class)
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    void deletePowder() {
+    void deletePrimer() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedPowder = powderRepository.save(createTestPowder(userId)).block();
+        var savedPrimer = primerRepository.save(createTestPrimer(userId)).block();
 
         webTestClient.mutateWith(jwt)
-                .delete().uri("/powders/{id}", savedPowder.id())
+                .delete().uri("/primers/{id}", savedPrimer.id())
                 .exchange()
                 .expectStatus().isNoContent();
 
         webTestClient.mutateWith(jwt)
-                .get().uri("/powders/{id}", savedPowder.id())
+                .get().uri("/primers/{id}", savedPrimer.id())
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    void deletePowderNotFound() {
+    void deletePrimerNotFound() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).delete().uri("/powders/999")
+        webTestClient.mutateWith(jwt).delete().uri("/primers/999")
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
-    private Powder createTestPowder(String ownerId) {
-        return new Powder(
+    private Primer createTestPrimer(String ownerId) {
+        return new Primer(
                 null,
                 ownerId,
-                "Hodgdon",
-                "H4350",
-                IMPERIAL,
-                new BigDecimal("45.99"),
+                "CCI",
+                "BR-4",
+                PrimerSize.LARGE_RIFLE,
+                new BigDecimal("89.99"),
                 "CAD",
-                1.0);
+                1000);
     }
 }

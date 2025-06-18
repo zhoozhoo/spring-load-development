@@ -39,7 +39,7 @@ class CaseRepositoryTest {
                 "6.5 Creedmoor",
                 PrimerSize.LARGE_RIFLE,
                 new BigDecimal("89.99"),
-                "USD",
+                "CAD",
                 100);
     }
 
@@ -56,7 +56,7 @@ class CaseRepositoryTest {
                     assertThat(c.caliber()).isEqualTo("6.5 Creedmoor");
                     assertThat(c.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
                     assertThat(c.cost()).isEqualTo(new BigDecimal("89.99"));
-                    assertThat(c.currency()).isEqualTo("USD");
+                    assertThat(c.currency()).isEqualTo("CAD");
                     assertThat(c.quantityPerBox()).isEqualTo(100);
                 })
                 .verifyComplete();
@@ -76,7 +76,7 @@ class CaseRepositoryTest {
                     assertThat(c.caliber()).isEqualTo("6.5 Creedmoor");
                     assertThat(c.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
                     assertThat(c.cost()).isEqualTo(new BigDecimal("89.99"));
-                    assertThat(c.currency()).isEqualTo("USD");
+                    assertThat(c.currency()).isEqualTo("CAD");
                     assertThat(c.quantityPerBox()).isEqualTo(100);
                 })
                 .verifyComplete();
@@ -94,7 +94,7 @@ class CaseRepositoryTest {
                 "308 Winchester",
                 PrimerSize.LARGE_RIFLE,
                 new BigDecimal("99.99"),
-                "USD",
+                "CAD",
                 50);
 
         var result = caseRepository.save(updatedCase);
@@ -107,7 +107,7 @@ class CaseRepositoryTest {
                     assertThat(c.caliber()).isEqualTo("308 Winchester");
                     assertThat(c.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
                     assertThat(c.cost()).isEqualTo(new BigDecimal("99.99"));
-                    assertThat(c.currency()).isEqualTo("USD");
+                    assertThat(c.currency()).isEqualTo("CAD");
                     assertThat(c.quantityPerBox()).isEqualTo(50);
                 })
                 .verifyComplete();
@@ -141,7 +141,7 @@ class CaseRepositoryTest {
                 "300 PRC",
                 PrimerSize.LARGE_RIFLE_MAGNUM,
                 new BigDecimal("129.99"),
-                "USD",
+                "CAD",
                 50);
 
         caseRepository.saveAll(Flux.just(case1, case2)).blockLast();

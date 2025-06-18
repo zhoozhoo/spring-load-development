@@ -100,7 +100,7 @@ public class BulletControllerTest {
                     assertThat(b.type()).isEqualTo("ELD-Match");
                     assertThat(b.measurementUnits()).isEqualTo(IMPERIAL);
                     assertThat(b.cost()).isEqualTo(new BigDecimal("45.99"));
-                    assertThat(b.currency()).isEqualTo("USD");
+                    assertThat(b.currency()).isEqualTo("CAD");
                     assertThat(b.quantityPerBox()).isEqualTo(100);
                 });
     }
@@ -145,7 +145,7 @@ public class BulletControllerTest {
                 "MatchKing",
                 METRIC,
                 new BigDecimal("49.99"),
-                "USD",
+                "CAD",
                 50);
 
         webTestClient.mutateWith(jwt).put().uri("/bullets/{id}", savedBullet.id())
@@ -161,7 +161,7 @@ public class BulletControllerTest {
                     assertThat(b.type()).isEqualTo("MatchKing");
                     assertThat(b.measurementUnits()).isEqualTo(METRIC);
                     assertThat(b.cost()).isEqualTo(new BigDecimal("49.99"));
-                    assertThat(b.currency()).isEqualTo("USD");
+                    assertThat(b.currency()).isEqualTo("CAD");
                     assertThat(b.quantityPerBox()).isEqualTo(50);
                 });
     }
@@ -217,7 +217,7 @@ public class BulletControllerTest {
                 "ELD-Match",
                 IMPERIAL,
                 new BigDecimal("45.99"),
-                "USD",
+                "CAD",
                 100);
     }
 }
