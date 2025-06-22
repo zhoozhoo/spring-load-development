@@ -60,6 +60,18 @@ Contains requests for testing the Shots API endpoints:
 * CRUD operations for shots
 * Shot statistics and analysis
 
+=== components-service.http
+
+Contains requests for testing the Components API endpoints:
+
+* Authentication with Keycloak
+* CRUD operations for cases, powders, primers, and bullets
+
+  - Cases: create, get, update, delete
+  - Powders: create, get, update, delete
+  - Primers: create, get, update, delete
+  - Bullets: create, get, update, delete
+
 == How to Use
 
 1. Open any `.http` file in VS Code
