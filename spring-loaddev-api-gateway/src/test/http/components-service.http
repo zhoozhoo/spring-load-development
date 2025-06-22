@@ -1,0 +1,214 @@
+### Get OpenID configuration from Keycloak
+GET {{authorization_host}}/realms/{{realm}}/.well-known/openid-configuration
+
+### Authenticate to Keycloak and get a token
+# @name Authenticate
+POST {{authorization_host}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&username={{username}}&password={{password}}&scope=openid
+
+### [TEST ONLY] Authenticate to Keycloak using UMA ticket grant (for advanced authorization testing)
+# This call is for testing purposes only. It requests a token from Keycloak using the UMA ticket grant type,
+# which is used for fine-grained authorization scenarios (RBAC).
+# Spring Cloud Gateway is configured to do this automatically. Only used this if you need to call services directly.
+# @name Authenticate
+POST {{authorization_host}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+grant_type=urn:ietf:params:oauth:grant-type:uma-ticket&client_id={{client_id}}&client_secret={{client_secret}}&audience={{client_id}}&scope=openid
+
+// ==================== CASES ====================
+
+### Get list of all cases
+# @name GetCases
+GET http://localhost:8080/api/cases
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new case
+# @name CreateCase
+POST http://localhost:8080/api/cases
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "manufacturer": "Lapua",
+  "caliber": "6.5 Creedmoor",
+  "type": "Small Rifle",
+  "measurementUnits": "Imperial",
+  "cost": 89.99,
+  "currency": "CAD",
+  "quantityPerBox": 100,
+  "primerSize": "SMALL_RIFLE"
+}
+
+### Get the created case by ID
+# @name GetCaseById
+GET http://localhost:8080/api/cases/{{CreateCase.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Update the created case
+# @name UpdateCase
+PUT http://localhost:8080/api/cases/{{CreateCase.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "manufacturer": "Hornady",
+  "caliber": "308 Winchester",
+  "type": "Large Rifle",
+  "measurementUnits": "Imperial",
+  "cost": 69.99,
+  "currency": "CAD",
+  "quantityPerBox": 50,
+  "primerSize": "LARGE_RIFLE"
+}
+
+### Delete the created case
+# @name DeleteCase
+DELETE http://localhost:8080/api/cases/{{CreateCase.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+// ==================== POWDERS ====================
+
+### Get list of all powders
+# @name GetPowders
+GET http://localhost:8080/api/powders
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new powder
+# @name CreatePowder
+POST http://localhost:8080/api/powders
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "manufacturer": "Hodgdon",
+  "type": "H4350",
+  "measurementUnits": "Imperial",
+  "cost": 45.99,
+  "currency": "CAD",
+  "weightPerContainer": 1.0
+}
+
+### Get the created powder by ID
+# @name GetPowderById
+GET http://localhost:8080/api/powders/{{CreatePowder.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Update the created powder
+# @name UpdatePowder
+PUT http://localhost:8080/api/powders/{{CreatePowder.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "manufacturer": "IMR",
+  "type": "4895",
+  "measurementUnits": "Metric",
+  "cost": 49.99,
+  "currency": "CAD",
+  "weightPerContainer": 0.5
+}
+
+### Delete the created powder
+# @name DeletePowder
+DELETE http://localhost:8080/api/powders/{{CreatePowder.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+// ==================== PRIMERS ====================
+
+### Get list of all primers
+# @name GetPrimers
+GET http://localhost:8080/api/primers
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new primer
+# @name CreatePrimer
+POST http://localhost:8080/api/primers
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "manufacturer": "CCI",
+  "type": "BR-4",
+  "primerSize": "SMALL_RIFLE",
+  "cost": 89.99,
+  "currency": "CAD",
+  "quantityPerBox": 1000
+}
+
+### Get the created primer by ID
+# @name GetPrimerById
+GET http://localhost:8080/api/primers/{{CreatePrimer.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Update the created primer
+# @name UpdatePrimer
+PUT http://localhost:8080/api/primers/{{CreatePrimer.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "manufacturer": "Federal",
+  "type": "205M",
+  "primerSize": "SMALL_RIFLE",
+  "cost": 99.99,
+  "currency": "CAD",
+  "quantityPerBox": 1000
+}
+
+### Delete the created primer
+# @name DeletePrimer
+DELETE http://localhost:8080/api/primers/{{CreatePrimer.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+// ==================== BULLETS ====================
+
+### Get list of all bullets
+# @name GetBullets
+GET http://localhost:8080/api/bullets
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new bullet
+# @name CreateBullet
+POST http://localhost:8080/api/bullets
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "manufacturer": "Hornady",
+  "weight": 140.0,
+  "type": "ELD-Match",
+  "measurementUnits": "Imperial",
+  "cost": 45.99,
+  "currency": "CAD",
+  "quantityPerBox": 100
+}
+
+### Get the created bullet by ID
+# @name GetBulletById
+GET http://localhost:8080/api/bullets/{{CreateBullet.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Update the created bullet
+# @name UpdateBullet
+PUT http://localhost:8080/api/bullets/{{CreateBullet.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "manufacturer": "Sierra",
+  "weight": 150.0,
+  "type": "MatchKing",
+  "measurementUnits": "Imperial",
+  "cost": 49.99,
+  "currency": "CAD",
+  "quantityPerBox": 50
+}
+
+### Delete the created bullet
+# @name DeleteBullet
+DELETE http://localhost:8080/api/bullets/{{CreateBullet.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
