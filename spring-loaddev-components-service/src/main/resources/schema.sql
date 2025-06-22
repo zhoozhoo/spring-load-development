@@ -1,4 +1,4 @@
-CREATE TABLE bullets (
+CREATE TABLE IF NOT EXISTS bullets (
     id BIGSERIAL PRIMARY KEY,
     owner_id VARCHAR(255) NOT NULL,
     manufacturer VARCHAR(255) NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE bullets (
     quantity_per_box INTEGER NOT NULL
 );
 
-CREATE TABLE powders (
+CREATE TABLE IF NOT EXISTS powders (
     id BIGSERIAL PRIMARY KEY,
     owner_id VARCHAR(255) NOT NULL,
     manufacturer VARCHAR(255) NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE powders (
     weight_per_container DOUBLE PRECISION
 );
 
-CREATE TABLE primers (
+CREATE TABLE IF NOT EXISTS primers (
     id BIGSERIAL PRIMARY KEY,
     owner_id VARCHAR(255) NOT NULL,
     manufacturer VARCHAR(255) NOT NULL,
@@ -32,7 +32,7 @@ CREATE TABLE primers (
     quantity_per_box INTEGER NOT NULL
 );
 
-CREATE TABLE cases (
+CREATE TABLE IF NOT EXISTS cases (
     id BIGSERIAL PRIMARY KEY,
     owner_id VARCHAR(255) NOT NULL,
     manufacturer VARCHAR(255) NOT NULL,
