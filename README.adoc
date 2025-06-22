@@ -111,6 +111,7 @@ The application is composed of the following services:
 * *API Gateway*: Routes and filters requests to appropriate services (link:spring-loaddev-api-gateway/src/test/http/README.adoc[API Testing Guide])
 * *Rifles Service*: Manages rifle data and configurations
 * *Loads Service*: Handles load development data including groups and shots 
+* *Components Service*: Manages reloading components (cases, powders, primers, bullets) for load development
 * *MCP Server*: Provides AI-assisted tools via Model Context Protocol for loads and rifles management (link:spring-loaddev-mcp-server/README.adoc[MCP Server Guide])
 * *Admin Server*: Monitoring and management of all services
 
@@ -166,6 +167,7 @@ flowchart TD
     subgraph Microservices
         LoadsService[Loads Service]
         RiflesService[Rifles Service]
+        ComponentsService[Components Service]
         MCPServer[MCP Server]
     end
 
@@ -174,25 +176,31 @@ flowchart TD
     User -- Auth --> Keycloak
     APIGateway -->|REST| LoadsService
     APIGateway -->|REST| RiflesService
+    APIGateway -->|REST| ComponentsService
     APIGateway -->|MCP| MCPServer
     MCPServer -->|REST| LoadsService
     MCPServer -->|REST| RiflesService
+    MCPServer -->|REST| ComponentsService
 
     LoadsService -- DB --> Postgres
     RiflesService -- DB --> Postgres
+    ComponentsService -- DB --> Postgres
 
     LoadsService -- Discovery --> DiscoveryServer
     RiflesService -- Discovery --> DiscoveryServer
+    ComponentsService -- Discovery --> DiscoveryServer
     MCPServer -- Discovery --> DiscoveryServer
     APIGateway -- Discovery --> DiscoveryServer
 
     APIGateway -- Tracing --> Jaeger
     LoadsService -- Tracing --> Jaeger
     RiflesService -- Tracing --> Jaeger
+    ComponentsService -- Tracing --> Jaeger
     MCPServer -- Tracing --> Jaeger
 
     LoadsService -- Config --> ConfigServer
     RiflesService -- Config --> ConfigServer
+    ComponentsService -- Config --> ConfigServer
     MCPServer -- Config --> ConfigServer
     APIGateway -- Config --> ConfigServer
 ....
@@ -204,17 +212,17 @@ flowchart TD
 erDiagram
     LOADS {
         BIGSERIAL id PK
-        VARCHAR owner_id
-        VARCHAR name
+        VARCHAR(255) owner_id NOT NULL
+        VARCHAR(255) name NOT NULL
         TEXT description
-        VARCHAR measurement_units
-        VARCHAR powder_manufacturer
-        VARCHAR powder_type
-        VARCHAR bullet_manufacturer
-        VARCHAR bullet_type
-        DOUBLE bullet_weight
-        VARCHAR primer_manufacturer
-        VARCHAR primer_type
+        VARCHAR(32) measurement_units NOT NULL "CHECK (Imperial, Metric)"
+        VARCHAR(255) powder_manufacturer NOT NULL
+        VARCHAR(255) powder_type NOT NULL
+        VARCHAR(255) bullet_manufacturer NOT NULL
+        VARCHAR(255) bullet_type NOT NULL
+        DOUBLE bullet_weight NOT NULL
+        VARCHAR(255) primer_manufacturer NOT NULL
+        VARCHAR(255) primer_type NOT NULL
         DOUBLE distance_from_lands
         DOUBLE case_overall_length
         DOUBLE neck_tension
@@ -222,33 +230,74 @@ erDiagram
     }
     GROUPS {
         BIGSERIAL id PK
-        VARCHAR owner_id
-        BIGSERIAL load_id FK
-        DATE date
-        DOUBLE powder_charge
-        INTEGER target_range
+        VARCHAR(255) owner_id NOT NULL
+        BIGSERIAL load_id FK NOT NULL
+        DATE date NOT NULL
+        DOUBLE powder_charge NOT NULL
+        INTEGER target_range NOT NULL
         DOUBLE group_size
     }
     SHOTS {
         BIGSERIAL id PK
-        VARCHAR owner_id
-        BIGSERIAL group_id FK
+        VARCHAR(255) owner_id NOT NULL
+        BIGSERIAL group_id FK NOT NULL
         INTEGER velocity
     }
     RIFLES {
         BIGSERIAL id PK
-        VARCHAR owner_id
-        VARCHAR name
+        VARCHAR(255) owner_id NOT NULL
+        VARCHAR(255) name NOT NULL
         TEXT description
-        VARCHAR measurement_units
-        VARCHAR caliber
+        VARCHAR(32) measurement_units NOT NULL "CHECK (Imperial, Metric)"
+        VARCHAR(32) caliber NOT NULL
         DOUBLE barrel_length
-        VARCHAR barrel_contour
-        VARCHAR twist_rate
-        VARCHAR rifling
+        VARCHAR(32) barrel_contour
+        VARCHAR(32) twist_rate
+        VARCHAR(32) rifling
         DOUBLE free_bore
     }
-
+    BULLETS {
+        BIGSERIAL id PK
+        VARCHAR(255) owner_id NOT NULL
+        VARCHAR(255) manufacturer NOT NULL
+        DOUBLE weight NOT NULL
+        VARCHAR(255) type NOT NULL
+        VARCHAR(255) measurement_units NOT NULL
+        DECIMAL(10) cost NOT NULL
+        VARCHAR(3) currency NOT NULL
+        INTEGER quantity_per_box NOT NULL
+    }
+    POWDERS {
+        BIGSERIAL id PK
+        VARCHAR(255) owner_id NOT NULL
+        VARCHAR(255) manufacturer NOT NULL
+        VARCHAR(255) type NOT NULL
+        VARCHAR(255) measurement_units NOT NULL
+        DECIMAL(10) cost
+        VARCHAR(3) currency
+        DOUBLE weight_per_container
+    }
+    PRIMERS {
+        BIGSERIAL id PK
+        VARCHAR(255) owner_id NOT NULL
+        VARCHAR(255) manufacturer NOT NULL
+        VARCHAR(255) type NOT NULL
+        VARCHAR(20) size NOT NULL
+        DECIMAL(10) cost NOT NULL
+        VARCHAR(3) currency NOT NULL
+        INTEGER quantity_per_box NOT NULL
+    }
+    CASES {
+        BIGSERIAL id PK
+        VARCHAR(255) owner_id NOT NULL
+        VARCHAR(255) manufacturer NOT NULL
+        VARCHAR(50) caliber NOT NULL
+        VARCHAR(20) primer_size NOT NULL
+        DECIMAL(10) cost NOT NULL
+        VARCHAR(3) currency NOT NULL
+        INTEGER quantity_per_box NOT NULL
+    }
+    %% Relationships
     LOADS ||--o{ GROUPS : "has"
     GROUPS ||--o{ SHOTS : "has"
     RIFLES ||--o{ LOADS : "has"
