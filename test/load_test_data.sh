@@ -101,12 +101,7 @@ create_rifle() {
         "name": "Tikka T3x CTR",
         "description": "6.5mm Creedmoor Tikka T3x CTR",
         "measurementUnits": "Imperial",
-        "caliber": "6.5 Creedmoor",
-        "barrelLength": 20.0,
-        "barrelContour": "Standard",
-        "twistRate": "1:8",
-        "freeBore": 0.160,
-        "rifling": "6 Groove"
+        "caliber": "6.5 Creedmoor"
     }'
     
     local response=$(curl -s -X POST \
@@ -141,15 +136,12 @@ create_load() {
         "measurementUnits": "Imperial",
         "powderManufacturer": "Hodgdon",
         "powderType": "H4350",
-        "powderCharge": 38.5,
         "bulletManufacturer": "Berger",
         "bulletType": "Hybrid Target",
         "bulletWeight": 140,
         "primerManufacturer": "CCI",
         "primerType": "BR2",
-        "distanceFromLands": 0.02,
         "caseOverallLength": 2.303,
-        "neckTension": 0.002,
         "rifleId": "'$RIFLE_ID'"
     }'
     
