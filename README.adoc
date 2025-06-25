@@ -142,45 +142,41 @@ The project includes Spring Boot Admin Server for monitoring and managing your S
 * Access actuator endpoints through a user-friendly interface
 * Track service status and configurations
 
-== Architecture Diagram
-
-=== High-Level Overview
+== High-Level Architecture
 
 [source,mermaid]
 ....
 flowchart TB
-    subgraph Client["🌐 Client"]
-        User[👤 User]
-        Copilot[🤖 GitHub Copilot]
+    subgraph Client[Clients]
+        User[User]
+        Copilot[GitHub Copilot]
     end
 
-    subgraph Gateway["🚪 API Gateway"]
+    subgraph Gateway[API Gateway]
         APIGateway[API Gateway<br/>Port: 8080]
     end
 
-    subgraph Services["🔧 Microservices"]
+    subgraph Services["Microservices"]
         LoadsService[Loads Service]
         RiflesService[Rifles Service]
         ComponentsService[Components Service]
         MCPServer[MCP Server<br/>AI Integration]
     end
 
-    subgraph Data["💾 Data Layer"]
-        Postgres[(PostgreSQL<br/>Database)]
-    end
+    Postgres[(PostgreSQL<br/>Database)]
 
-    subgraph Infrastructure["⚙️ Infrastructure"]
+    subgraph Infrastructure["Infrastructure"]
+        Keycloak[Keycloak<br/>Authentication]
+        Jaeger[Jaeger<br/>Tracing]
         ConfigServer[Config Server<br/>Centralized Config]
         DiscoveryServer[Discovery Server<br/>Service Registry]
-        Keycloak[🔐 Keycloak<br/>Authentication]
-        Jaeger[📊 Jaeger<br/>Tracing]
-        AdminServer[📋 Admin Server<br/>Monitoring]
+        AdminServer[Admin Server<br/>Monitoring]
     end
 
     %% Client connections
     User -->|REST API| APIGateway
-    Copilot -->|MCP Protocol| APIGateway
     User -->|Login| Keycloak
+    Copilot -->|MCP Protocol| APIGateway
 
     %% Gateway to services
     APIGateway --> LoadsService
@@ -193,16 +189,14 @@ flowchart TB
     MCPServer -.-> RiflesService
     MCPServer -.-> ComponentsService
 
-    %% Data connections
-    LoadsService --> Postgres
-    RiflesService --> Postgres
-    ComponentsService --> Postgres
 
     %% Infrastructure connections (simplified)
     Services -.->|Register| DiscoveryServer
     Services -.->|Configuration| ConfigServer
     Services -.->|Monitoring| AdminServer
     Services -.->|Tracing| Jaeger
+    Services -.->|Auth| Keycloak
+    Services -.->Postgres
 
     classDef clientStyle fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000000
     classDef gatewayStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000000
@@ -217,55 +211,9 @@ flowchart TB
     class ConfigServer,DiscoveryServer,Keycloak,Jaeger,AdminServer infraStyle
 ....
 
-=== Detailed Service Interactions
-
-[source,mermaid]
-....
-flowchart LR
-    subgraph "Core Business Services"
-        LS[📦 Loads Service<br/>Load Development Data]
-        RS[🔫 Rifles Service<br/>Rifle Configurations]
-        CS[🎯 Components Service<br/>Reloading Components]
-    end
-
-    subgraph "AI & Integration"
-        MCP[🤖 MCP Server<br/>AI Assistant]
-        AI[Spring AI<br/>Integration]
-    end
-
-    subgraph "Data Models"
-        LoadData[Loads, Groups, Shots]
-        RifleData[Rifles & Specifications]
-        ComponentData[Bullets, Powders,<br/>Primers, Cases]
-    end
-
-    %% Service to data relationships
-    LS --> LoadData
-    RS --> RifleData
-    CS --> ComponentData
-
-    %% AI integration
-    MCP --> AI
-    MCP -.->|Analyzes| LoadData
-    MCP -.->|Recommends| RifleData
-    MCP -.->|Suggests| ComponentData
-
-    %% Cross-service relationships
-    LS -.->|References| RifleData
-    LoadData -.->|Uses| ComponentData
-
-    classDef serviceStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
-    classDef aiStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000000
-    classDef dataStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
-
-    class LS,RS,CS serviceStyle
-    class MCP,AI aiStyle
-    class LoadData,RifleData,ComponentData dataStyle
-....
-
 == Database Schema
 
-[mermaid]
+[source,mermaid]
 ....
 erDiagram
     LOADS {
