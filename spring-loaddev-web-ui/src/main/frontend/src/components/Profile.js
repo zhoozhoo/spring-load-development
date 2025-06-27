@@ -1,15 +1,16 @@
 import React from 'react';
 import { Container, Row, Col, Card, Button, Alert } from 'react-bootstrap';
 import { FaUser, FaSignOutAlt, FaCog } from 'react-icons/fa';
+import { useAuth } from '../contexts/AuthContext';
 
 const Profile = () => {
-  const userInfo = window.userInfo || { authenticated: false, username: null };
+  const { user, authenticated, logout } = useAuth();
 
   const handleLogout = () => {
-    window.location.href = '/logout';
+    logout();
   };
 
-  if (!userInfo.authenticated) {
+  if (!authenticated) {
     return (
       <Container>
         <Alert variant="warning">
@@ -41,7 +42,7 @@ const Profile = () => {
                 <Col md={6}>
                   <div className="mb-3">
                     <label className="form-label fw-bold">Username</label>
-                    <p className="form-control-plaintext">{userInfo.username}</p>
+                    <p className="form-control-plaintext">{user?.username || 'N/A'}</p>
                   </div>
                 </Col>
                 <Col md={6}>

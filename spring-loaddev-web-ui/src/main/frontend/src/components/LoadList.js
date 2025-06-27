@@ -4,8 +4,11 @@ import { Link } from 'react-router-dom';
 import { FaPlus, FaSearch, FaEdit, FaTrash, FaEye } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { loadService } from '../services/loadService';
+import { useAuth } from '../contexts/AuthContext';
+import LoadCard from './LoadCard';
 
 const LoadList = () => {
+  const { authenticated } = useAuth();
   const [loads, setLoads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,10 +19,20 @@ const LoadList = () => {
   const [pageSize] = useState(10);
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortDir, setSortDir] = useState('desc');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
     fetchLoads();
   }, [currentPage, sortBy, sortDir, searchTerm]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const fetchLoads = async () => {
     try {
@@ -113,7 +126,7 @@ const LoadList = () => {
     return <Pagination className="justify-content-center">{items}</Pagination>;
   };
 
-  if (!window.userInfo?.authenticated) {
+  if (!authenticated) {
     return (
       <Container>
         <Alert variant="warning">
@@ -190,80 +203,127 @@ const LoadList = () => {
                 </div>
               ) : (
                 <>
-                  <div className="table-responsive">
-                    <Table hover>
-                      <thead>
-                        <tr>
-                          <th 
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleSort('cartridge')}
-                          >
-                            Cartridge{getSortIcon('cartridge')}
-                          </th>
-                          <th 
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleSort('bullet')}
-                          >
-                            Bullet{getSortIcon('bullet')}
-                          </th>
-                          <th 
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleSort('powder')}
-                          >
-                            Powder{getSortIcon('powder')}
-                          </th>
-                          <th 
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleSort('powderCharge')}
-                          >
-                            Charge{getSortIcon('powderCharge')}
-                          </th>
-                          <th 
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleSort('velocity')}
-                          >
-                            Velocity{getSortIcon('velocity')}
-                          </th>
-                          <th 
-                            style={{ cursor: 'pointer' }}
-                            onClick={() => handleSort('createdAt')}
-                          >
-                            Created{getSortIcon('createdAt')}
-                          </th>
-                          <th width="150">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {loads.map((load) => (
-                          <tr key={load.id}>
-                            <td>{load.cartridge}</td>
-                            <td>{load.bullet}</td>
-                            <td>{load.powder}</td>
-                            <td>{load.powderCharge ? `${load.powderCharge} gr` : 'N/A'}</td>
-                            <td>{load.velocity ? `${load.velocity} fps` : 'N/A'}</td>
-                            <td>{formatDate(load.createdAt)}</td>
-                            <td>
-                              <div className="d-flex gap-1">
-                                <Button variant="outline-primary" size="sm" as={Link} to={`/loads/${load.id}`}>
-                                  <FaEye />
-                                </Button>
-                                <Button variant="outline-warning" size="sm" as={Link} to={`/loads/${load.id}/edit`}>
-                                  <FaEdit />
-                                </Button>
-                                <Button
-                                  variant="outline-danger"
-                                  size="sm"
-                                  onClick={() => handleDelete(load.id)}
-                                >
-                                  <FaTrash />
-                                </Button>
-                              </div>
-                            </td>
+                  {isMobile ? (
+                    // Mobile card view
+                    <div>
+                      {loads.map((load) => (
+                        <LoadCard key={load.id} load={load} onDelete={handleDelete} />
+                      ))}
+                    </div>
+                  ) : (
+                    // Desktop table view
+                    <div className="table-responsive">
+                      <Table hover>
+                        <thead>
+                          <tr>
+                            <th 
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => handleSort('cartridge')}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => e.key === 'Enter' && handleSort('cartridge')}
+                              aria-label="Sort by cartridge"
+                            >
+                              Cartridge{getSortIcon('cartridge')}
+                            </th>
+                            <th 
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => handleSort('bullet')}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => e.key === 'Enter' && handleSort('bullet')}
+                              aria-label="Sort by bullet"
+                            >
+                              Bullet{getSortIcon('bullet')}
+                            </th>
+                            <th 
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => handleSort('powder')}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => e.key === 'Enter' && handleSort('powder')}
+                              aria-label="Sort by powder"
+                            >
+                              Powder{getSortIcon('powder')}
+                            </th>
+                            <th 
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => handleSort('powderCharge')}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => e.key === 'Enter' && handleSort('powderCharge')}
+                              aria-label="Sort by powder charge"
+                            >
+                              Charge{getSortIcon('powderCharge')}
+                            </th>
+                            <th 
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => handleSort('velocity')}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => e.key === 'Enter' && handleSort('velocity')}
+                              aria-label="Sort by velocity"
+                            >
+                              Velocity{getSortIcon('velocity')}
+                            </th>
+                            <th 
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => handleSort('createdAt')}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => e.key === 'Enter' && handleSort('createdAt')}
+                              aria-label="Sort by creation date"
+                            >
+                              Created{getSortIcon('createdAt')}
+                            </th>
+                            <th width="150">Actions</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </Table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {loads.map((load) => (
+                            <tr key={load.id}>
+                              <td>{load.cartridge}</td>
+                              <td>{load.bullet}</td>
+                              <td>{load.powder}</td>
+                              <td>{load.powderCharge ? `${load.powderCharge} gr` : 'N/A'}</td>
+                              <td>{load.velocity ? `${load.velocity} fps` : 'N/A'}</td>
+                              <td>{formatDate(load.createdAt)}</td>
+                              <td>
+                                <div className="d-flex gap-1">
+                                  <Button 
+                                    variant="outline-primary" 
+                                    size="sm" 
+                                    as={Link} 
+                                    to={`/loads/${load.id}`}
+                                    aria-label={`View load ${load.id}`}
+                                  >
+                                    <FaEye />
+                                  </Button>
+                                  <Button 
+                                    variant="outline-warning" 
+                                    size="sm" 
+                                    as={Link} 
+                                    to={`/loads/${load.id}/edit`}
+                                    aria-label={`Edit load ${load.id}`}
+                                  >
+                                    <FaEdit />
+                                  </Button>
+                                  <Button
+                                    variant="outline-danger"
+                                    size="sm"
+                                    onClick={() => handleDelete(load.id)}
+                                    aria-label={`Delete load ${load.id}`}
+                                  >
+                                    <FaTrash />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+                  )}
                   
                   {renderPagination()}
                 </>

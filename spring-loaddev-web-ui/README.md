@@ -41,13 +41,93 @@ This Web UI module follows microservices best practices:
 
 ## Getting Started
 
-### Prerequisites
+### Quick Setup
 
-- Java 21 or later
-- Node.js 18+ and npm (for frontend development)
-- Maven 3.8+
+Run the development setup script for automated configuration:
+
+```bash
+./setup-dev.sh
+```
+
+### Manual Setup
+
+#### Prerequisites
+
+- **Java 21 or later** - for backend Spring Boot application
+- **Node.js 18+ and npm** - for frontend React application  
+- **Maven 3.8+** - for building the project
 - **Dependencies**: 
   - `spring-loaddev-config-server` running on port 8888
+  - `spring-loaddev-api-gateway` running on port 8080 (or configured URL)
+
+#### Installation Steps
+
+1. **Clone and navigate to the project**:
+   ```bash
+   cd spring-loaddev-web-ui
+   ```
+
+2. **Install frontend dependencies**:
+   ```bash
+   cd src/main/frontend
+   npm install
+   ```
+
+3. **Configure environment variables**:
+   ```bash
+   cp .env .env.local
+   # Edit .env.local with your settings
+   ```
+
+4. **Run tests**:
+   ```bash
+   npm test
+   ```
+
+5. **Start development server**:
+   ```bash
+   npm start
+   ```
+   Frontend will be available at http://localhost:3000
+
+6. **Build and run backend** (in separate terminal):
+   ```bash
+   cd ../../..  # Back to project root
+   mvn spring-boot:run
+   ```
+   Backend will be available at http://localhost:8081
+
+### Development Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm start` | Start development server with hot reload |
+| `npm test` | Run tests in watch mode |
+| `npm run test:coverage` | Run tests with coverage report |
+| `npm run build` | Build production bundle |
+| `npm run lint` | Run ESLint |
+| `npm run lint:fix` | Fix ESLint issues automatically |
+
+### Project Structure
+
+```
+spring-loaddev-web-ui/
+├── src/main/
+│   ├── frontend/               # React frontend
+│   │   ├── src/
+│   │   │   ├── components/     # React components
+│   │   │   ├── contexts/       # React contexts (Auth, etc.)
+│   │   │   ├── services/       # API services
+│   │   │   ├── utils/          # Utility functions
+│   │   │   └── __tests__/      # Test files
+│   │   ├── public/             # Static assets
+│   │   ├── .env                # Environment variables
+│   │   └── package.json        # Frontend dependencies
+│   └── java/                   # Spring Boot backend
+│       └── ca/zhoozhoo/load_development/webui/
+├── setup-dev.sh               # Development setup script
+└── README.md
+```
   - `spring-loaddev-api-gateway` running on port 8080
   - `spring-loaddev-discovery-server` running on port 8761
   - **Keycloak server** running on port 7080 with `reloading` realm configured
@@ -189,62 +269,149 @@ Once the application is running, you can access:
 
 ## Configuration
 
-### Database
-The application uses H2 in-memory database by default for development. For production, configure a persistent database in `application.yml`.
+### Environment Variables
 
-### Security
-OAuth2 providers can be configured in `application.yml`. Additional providers can be added by extending the security configuration.
+The application uses environment variables for configuration:
 
-### Frontend Build
-The Maven build process automatically:
-1. Installs Node.js and npm
-2. Runs `npm install`
-3. Builds the React application
-4. Copies the build output to Spring Boot's static resources
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `REACT_APP_API_GATEWAY_URL` | API Gateway endpoint | `http://localhost:8080` |
+| `REACT_APP_NAME` | Application name | `Load Development` |
+| `REACT_APP_ENABLE_ANALYTICS` | Enable analytics features | `false` |
 
-## Development
+### Security Configuration
 
-### Adding New Features
-1. **Backend**: Add new entities, repositories, services, and controllers as needed
-2. **Frontend**: Create new React components and integrate with the backend APIs
-3. **API Documentation**: Use OpenAPI annotations to document new endpoints
+The application implements several security measures:
+
+- **CSRF Protection**: Automatic CSRF token handling
+- **XSS Prevention**: Input sanitization and validation
+- **Authentication**: OAuth2 integration with Keycloak
+- **Authorization**: Role-based access control
+
+### API Gateway Integration
+
+All API calls go through the API Gateway. Ensure your gateway is configured with:
+
+- **CORS enabled** for frontend origin
+- **OAuth2 token relay** for authentication
+- **Load balancing** to backend services
+- **Circuit breaker** for resilience
 
 ### Testing
-- Backend tests: Use Spring Boot test framework
-- Frontend tests: Use Jest and React Testing Library
-- Integration tests: Test the full application stack
 
-## Security Considerations
+#### Running Tests
 
-- Always use HTTPS in production
-- Regularly update dependencies
-- Store OAuth2 secrets securely
-- Implement proper session timeout
-- Use Content Security Policy headers
-- Validate all user inputs
-
-## Troubleshooting
-
-### Common Issues
-
-1. **OAuth2 authentication fails**: Check client IDs and secrets, ensure callback URLs are correct
-2. **Frontend not loading**: Verify the React build completed successfully during Maven build
-3. **API calls failing**: Check CORS configuration and ensure backend is running
-4. **Database connection issues**: Verify H2 console access or database configuration
-
-### Logs
-Check application logs for detailed error information:
 ```bash
-tail -f logs/spring-loaddev-web-ui.log
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests in CI mode (single run)
+npm test -- --watchAll=false
 ```
 
-## Contributing
+#### Test Structure
 
-1. Follow existing code style and conventions
-2. Add tests for new functionality
-3. Update documentation as needed
-4. Use meaningful commit messages
+- **Unit Tests**: Component and utility function tests
+- **Integration Tests**: API service tests
+- **Accessibility Tests**: ARIA and keyboard navigation tests
 
-## License
+### Production Deployment
 
-This project is licensed under the same license as the parent Spring Load Development project.
+#### Building for Production
+
+```bash
+# Build optimized production bundle
+npm run build
+
+# Build Docker image
+docker build -t spring-loaddev-web-ui .
+```
+
+#### Docker Deployment
+
+```bash
+# Run with Docker
+docker run -p 8081:8081 \
+  -e REACT_APP_API_GATEWAY_URL=https://api.your-domain.com \
+  spring-loaddev-web-ui
+```
+
+### Troubleshooting
+
+#### Common Issues
+
+**Frontend not connecting to backend:**
+- Check API Gateway URL in `.env.local`
+- Verify CORS configuration on API Gateway
+- Ensure authentication tokens are valid
+
+**Build failures:**
+- Clear node_modules: `rm -rf node_modules package-lock.json && npm install`
+- Check Node.js version: `node -v` (requires 18+)
+- Verify all dependencies are installed
+
+**Authentication issues:**
+- Check Keycloak configuration
+- Verify OAuth2 client settings
+- Clear browser cookies and local storage
+
+**Test failures:**
+- Update test snapshots: `npm test -- --updateSnapshot`
+- Check Jest configuration in `jest.config.js`
+- Verify test environment setup in `setupTests.js`
+
+#### Development Tips
+
+- **Hot Reload**: Changes to React components reload automatically
+- **API Proxy**: Development server proxies `/api` calls to backend
+- **Source Maps**: Available in development for debugging
+- **ESLint**: Run `npm run lint:fix` to auto-fix formatting issues
+
+#### Performance Optimization
+
+- **Code Splitting**: Implement lazy loading for routes
+- **Bundle Analysis**: Use `npm run build` and analyze bundle size
+- **Caching**: Configure proper cache headers for static assets
+- **CDN**: Consider serving static assets from CDN
+
+### Security Considerations
+
+#### Development Security
+
+- **Never commit** sensitive data to version control
+- **Use environment variables** for all configuration
+- **Keep dependencies updated** with `npm audit`
+- **Follow OWASP guidelines** for web security
+
+#### Production Security
+
+- **HTTPS only** - never serve over HTTP in production
+- **Secure headers** - implement CSP, HSTS, etc.
+- **Regular updates** - keep all dependencies current
+- **Security scanning** - use tools like Snyk or OWASP ZAP
+
+### Contributing
+
+#### Code Standards
+
+- **ES6+** JavaScript with modern React patterns
+- **TypeScript** support for type safety
+- **ESLint** for code quality
+- **Prettier** for consistent formatting
+- **React Testing Library** for component testing
+
+#### Pull Request Process
+
+1. Fork the repository
+2. Create a feature branch
+3. Write tests for new functionality
+4. Ensure all tests pass
+5. Update documentation
+6. Submit pull request with clear description
+
+### License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

@@ -2,16 +2,17 @@ import React from 'react';
 import { Navbar, Nav, Container, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaHome, FaList, FaPlus, FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { useAuth } from '../contexts/AuthContext';
 
 const Navigation = () => {
-  const userInfo = window.userInfo || { authenticated: false, username: null };
+  const { user, authenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    window.location.href = '/logout';
+    logout();
   };
 
-  if (!userInfo.authenticated) {
+  if (!authenticated) {
     return (
       <Navbar bg="primary" variant="dark" expand="lg">
         <Container>
@@ -51,12 +52,12 @@ const Navigation = () => {
           <Nav>
             <Nav.Link as={Link} to="/profile">
               <FaUser className="me-1" />
-              {userInfo.username}
+              {user?.username || 'User'}
             </Nav.Link>
-            <Nav.Link as={Button} variant="outline-light" onClick={handleLogout} className="ms-2">
+            <Button variant="outline-light" onClick={handleLogout} className="ms-2">
               <FaSignOutAlt className="me-1" />
               Logout
-            </Nav.Link>
+            </Button>
           </Nav>
         </Navbar.Collapse>
       </Container>

@@ -4,10 +4,12 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaArrowLeft, FaEdit, FaTrash, FaCopy } from 'react-icons/fa';
 import { loadService } from '../services/loadService';
+import { useAuth } from '../contexts/AuthContext';
 
 const LoadDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { authenticated } = useAuth();
   const [load, setLoad] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -71,7 +73,7 @@ const LoadDetail = () => {
     return `${value}${unit ? ' ' + unit : ''}`;
   };
 
-  if (!window.userInfo?.authenticated) {
+  if (!authenticated) {
     return (
       <Container>
         <Alert variant="warning">

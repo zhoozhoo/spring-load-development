@@ -4,10 +4,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaSave, FaArrowLeft } from 'react-icons/fa';
 import { loadService } from '../services/loadService';
+import { useAuth } from '../contexts/AuthContext';
 
 const LoadForm = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { authenticated } = useAuth();
   const isEditing = !!id;
 
   const [loading, setLoading] = useState(false);
@@ -107,7 +109,7 @@ const LoadForm = () => {
     navigate('/loads');
   };
 
-  if (!window.userInfo?.authenticated) {
+  if (!authenticated) {
     return (
       <Container>
         <Alert variant="warning">

@@ -1,12 +1,13 @@
 import React from 'react';
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { FaList, FaPlus, FaChartLine, FaTarget } from 'react-icons/fa';
+import { FaList, FaPlus, FaChartLine, FaCrosshairs } from 'react-icons/fa';
+import { useAuth } from '../contexts/AuthContext';
 
 const Home = () => {
-  const userInfo = window.userInfo || { authenticated: false, username: null };
+  const { user, authenticated } = useAuth();
 
-  if (!userInfo.authenticated) {
+  if (!authenticated) {
     return (
       <Container className="mt-5">
         <Row className="justify-content-center">
@@ -30,7 +31,7 @@ const Home = () => {
     <Container className="fade-in">
       <Row className="mb-4">
         <Col>
-          <h1 className="display-5">Welcome back, {userInfo.username}!</h1>
+          <h1 className="display-5">Welcome back, {user?.username || 'User'}!</h1>
           <p className="lead text-muted">
             Manage your ammunition load development data and track your precision shooting progress.
           </p>
@@ -89,7 +90,7 @@ const Home = () => {
           <Card className="h-100 text-center">
             <Card.Body className="d-flex flex-column">
               <div className="mb-3">
-                <FaTarget size={40} className="text-warning" />
+                <FaCrosshairs size={40} className="text-warning" />
               </div>
               <Card.Title>Precision Tracking</Card.Title>
               <Card.Text className="flex-grow-1">
