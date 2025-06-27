@@ -1,0 +1,54 @@
+---
+spring:
+  application:
+    name: spring-loaddev-web-ui
+  config:
+    import: configserver:${CONFIG_SERVER_URL:http://config-server:8888}/
+  cloud:
+    discovery:
+      enabled: true
+    config:
+      discovery:
+        enabled: true
+        service-id: config-server
+      fail-fast: true
+      retry:
+        initial-interval: 1000
+        max-attempts: 6
+        max-interval: 2000
+        multiplier: 1.1
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${DISCOVERY_SERVER:http://discovery-server:8761}/eureka
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    hostname: web-ui
+
+server:
+  port: 8087
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  health:
+    readinessstate:
+      enabled: true
+    livenessstate:
+      enabled: true
+
+logging:
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    "[ca.zhoozhoo.load_development]": DEBUG
+    "[org.springframework.security]": DEBUG
+    "[org.springframework.web]": DEBUG
