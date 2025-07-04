@@ -24,7 +24,6 @@
         <module>spring-loaddev-admin-server</module>
         <module>spring-loaddev-api-gateway</module>
         <module>spring-loaddev-components-service</module>
-        <module>spring-loaddev-web-ui</module>
     </modules>
 
     <properties>
