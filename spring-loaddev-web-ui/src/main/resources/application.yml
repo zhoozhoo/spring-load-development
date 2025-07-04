@@ -1,7 +1,7 @@
 spring:
   application:
-    name: spring-loaddev-web-ui
+    name: web-ui
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
   profiles: 
-    active: ${SPRING_PROFILES_ACTIVE:default}
+    active: @spring.profiles.active@
