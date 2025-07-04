@@ -152,7 +152,7 @@ services:
 
   components-service:
     image: zhoozhoo.ca/spring-load-development/spring-loaddev-components-service:${PROJECT_VERSION}
-    container_name: rifles-service
+    container_name: components-service
     ports:
       - "8081:8081"
     environment:
