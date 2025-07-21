@@ -100,7 +100,7 @@ API endpoints are documented using OpenAPI (Swagger). Once services are running,
 
 http://localhost:8080/swagger-ui.html
 
-Alternatively, use the `.http` files in `spring-loaddev-api-gateway/src/test/http/` with the VS Code REST Client extension for manual testing.
+Alternatively, use the `.http` files in the top-level `test/` directory with the VS Code REST Client extension for manual testing.  (link:test/README.adoc[API Testing Guide])
 
 === Services Architecture
 
@@ -108,7 +108,7 @@ The application is composed of the following services:
 
 * *Config Server*: Centralized configuration management for all services
 * *Discovery Server*: Service registry and discovery using Eureka
-* *API Gateway*: Routes and filters requests to appropriate services (link:spring-loaddev-api-gateway/src/test/http/README.adoc[API Testing Guide])
+* *API Gateway*: Routes and filters requests to appropriate services
 * *Rifles Service*: Manages rifle data and configurations
 * *Loads Service*: Handles load development data including groups and shots 
 * *Components Service*: Manages reloading components (cases, powders, primers, bullets) for load development
