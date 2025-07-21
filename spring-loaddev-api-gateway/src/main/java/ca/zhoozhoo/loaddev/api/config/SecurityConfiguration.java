@@ -55,7 +55,8 @@ public class SecurityConfiguration {
                                 "/v3/api-docs",
                                 "/v3/api-docs/**",
                                 "/rifles-service/v3/api-docs",
-                                "/loads-service/v3/api-docs")
+                                "/loads-service/v3/api-docs",
+                                "/components-service/v3/api-docs")
                         .permitAll()
                         // Require authentication for all other endpoints
                         .anyExchange().authenticated())

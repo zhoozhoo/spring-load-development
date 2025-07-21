@@ -799,8 +799,8 @@
             "fullScopeAllowed": true,
             "nodeReRegistrationTimeout": -1,
             "defaultClientScopes": [
-                "web-origins",
                 "service_account",
+                "web-origins",
                 "acr",
                 "roles",
                 "profile",
@@ -897,6 +897,37 @@
                         "attributes": {},
                         "uris": [
                             "/shots/*"
+                        ],
+                        "scopes": [
+                            {
+                                "name": "view"
+                            },
+                            {
+                                "name": "edit"
+                            },
+                            {
+                                "name": "delete"
+                            }
+                        ],
+                        "icon_uri": ""
+                    },
+                    {
+                        "name": "sse",
+                        "ownerManagedAccess": false,
+                        "displayName": "sse",
+                        "attributes": {},
+                        "uris": [
+                            "/sse/*"
+                        ],
+                        "icon_uri": ""
+                    },
+                    {
+                        "name": "components",
+                        "ownerManagedAccess": false,
+                        "displayName": "components",
+                        "attributes": {},
+                        "uris": [
+                            "/components/*"
                         ],
                         "scopes": [
                             {
@@ -1064,6 +1095,42 @@
                         "decisionStrategy": "UNANIMOUS",
                         "config": {
                             "resources": "[\"shots\"]",
+                            "scopes": "[\"delete\"]",
+                            "applyPolicies": "[\"policy:reloader\"]"
+                        }
+                    },
+                    {
+                        "name": "components:view",
+                        "description": "",
+                        "type": "scope",
+                        "logic": "POSITIVE",
+                        "decisionStrategy": "UNANIMOUS",
+                        "config": {
+                            "resources": "[\"components\"]",
+                            "scopes": "[\"view\"]",
+                            "applyPolicies": "[\"policy:reloader\"]"
+                        }
+                    },
+                    {
+                        "name": "components:edit",
+                        "description": "",
+                        "type": "scope",
+                        "logic": "POSITIVE",
+                        "decisionStrategy": "UNANIMOUS",
+                        "config": {
+                            "resources": "[\"components\"]",
+                            "scopes": "[\"edit\"]",
+                            "applyPolicies": "[\"policy:reloader\"]"
+                        }
+                    },
+                    {
+                        "name": "components:delete",
+                        "description": "",
+                        "type": "scope",
+                        "logic": "POSITIVE",
+                        "decisionStrategy": "UNANIMOUS",
+                        "config": {
+                            "resources": "[\"components\"]",
                             "scopes": "[\"delete\"]",
                             "applyPolicies": "[\"policy:reloader\"]"
                         }
@@ -1913,14 +1980,14 @@
                 "subComponents": {},
                 "config": {
                     "allowed-protocol-mapper-types": [
-                        "oidc-address-mapper",
-                        "saml-role-list-mapper",
                         "oidc-sha256-pairwise-sub-mapper",
-                        "oidc-usermodel-attribute-mapper",
+                        "oidc-address-mapper",
                         "oidc-usermodel-property-mapper",
+                        "oidc-usermodel-attribute-mapper",
+                        "saml-user-attribute-mapper",
                         "saml-user-property-mapper",
                         "oidc-full-name-mapper",
-                        "saml-user-attribute-mapper"
+                        "saml-role-list-mapper"
                     ]
                 }
             },
@@ -1940,14 +2007,14 @@
                 "subComponents": {},
                 "config": {
                     "allowed-protocol-mapper-types": [
-                        "saml-role-list-mapper",
-                        "oidc-sha256-pairwise-sub-mapper",
+                        "oidc-full-name-mapper",
                         "saml-user-attribute-mapper",
                         "saml-user-property-mapper",
                         "oidc-usermodel-attribute-mapper",
-                        "oidc-full-name-mapper",
-                        "oidc-usermodel-property-mapper",
-                        "oidc-address-mapper"
+                        "oidc-sha256-pairwise-sub-mapper",
+                        "oidc-address-mapper",
+                        "saml-role-list-mapper",
+                        "oidc-usermodel-property-mapper"
                     ]
                 }
             },
@@ -2778,17 +2845,22 @@
     "firstBrokerLoginFlow": "first broker login",
     "attributes": {
         "cibaBackchannelTokenDeliveryMode": "poll",
-        "cibaExpiresIn": "120",
         "cibaAuthRequestedUserHint": "login_hint",
-        "oauth2DeviceCodeLifespan": "600",
         "clientOfflineSessionMaxLifespan": "0",
         "oauth2DevicePollingInterval": "5",
         "clientSessionIdleTimeout": "0",
+        "actionTokenGeneratedByUserLifespan.verify-email": "",
+        "actionTokenGeneratedByUserLifespan.idp-verify-account-via-email": "",
+        "clientOfflineSessionIdleTimeout": "0",
+        "actionTokenGeneratedByUserLifespan.execute-actions": "",
+        "cibaInterval": "5",
+        "realmReusableOtpCode": "false",
+        "cibaExpiresIn": "120",
+        "oauth2DeviceCodeLifespan": "600",
         "parRequestUriLifespan": "60",
         "clientSessionMaxLifespan": "0",
-        "clientOfflineSessionIdleTimeout": "0",
-        "cibaInterval": "5",
-        "realmReusableOtpCode": "false"
+        "shortVerificationUri": "",
+        "actionTokenGeneratedByUserLifespan.reset-credentials": ""
     },
     "keycloakVersion": "26.2.0",
     "userManagedAccessAllowed": false,

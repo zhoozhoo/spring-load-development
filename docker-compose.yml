@@ -150,6 +150,38 @@ services:
       retries: 5
     restart: unless-stopped
 
+  components-service:
+    image: zhoozhoo.ca/spring-load-development/spring-loaddev-components-service:${PROJECT_VERSION}
+    container_name: components-service
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - DISCOVERY_SERVER=http://discovery-server:8761
+      - KEYCLOAK_BASE_URL=http://keycloak:7080
+      - TRACING_SERVER=http://jaeger:4317
+      - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/loadsdb
+      - SPRING_R2DBC_USERNAME=user
+      - SPRING_R2DBC_PASSWORD=password
+      - THC_PATH=/actuator/health/readiness
+      - THC_PORT=8084
+    depends_on:
+      db:
+        condition: service_healthy
+      discovery-server:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/workspace/health-check"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   rifles-service:
     image: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:${PROJECT_VERSION}
     container_name: rifles-service

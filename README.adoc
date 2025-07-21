@@ -100,7 +100,7 @@ API endpoints are documented using OpenAPI (Swagger). Once services are running,
 
 http://localhost:8080/swagger-ui.html
 
-Alternatively, use the `.http` files in `spring-loaddev-api-gateway/src/test/http/` with the VS Code REST Client extension for manual testing.
+Alternatively, use the `.http` files in the top-level `test/` directory with the VS Code REST Client extension for manual testing.  (link:test/README.adoc[API Testing Guide])
 
 === Services Architecture
 
@@ -108,9 +108,10 @@ The application is composed of the following services:
 
 * *Config Server*: Centralized configuration management for all services
 * *Discovery Server*: Service registry and discovery using Eureka
-* *API Gateway*: Routes and filters requests to appropriate services (link:spring-loaddev-api-gateway/src/test/http/README.adoc[API Testing Guide])
+* *API Gateway*: Routes and filters requests to appropriate services
 * *Rifles Service*: Manages rifle data and configurations
 * *Loads Service*: Handles load development data including groups and shots 
+* *Components Service*: Manages reloading components (cases, powders, primers, bullets) for load development
 * *MCP Server*: Provides AI-assisted tools via Model Context Protocol for loads and rifles management (link:spring-loaddev-mcp-server/README.adoc[MCP Server Guide])
 * *Admin Server*: Monitoring and management of all services
 
@@ -141,60 +142,73 @@ The project includes Spring Boot Admin Server for monitoring and managing your S
 * Access actuator endpoints through a user-friendly interface
 * Track service status and configurations
 
-== Architecture Diagram
+== High-Level Architecture
 
 [source,mermaid]
 ....
-flowchart TD
-    subgraph External
+flowchart TB
+    subgraph Client[Clients]
         User[User]
         Copilot[GitHub Copilot]
     end
 
-    subgraph Infra
-        Jaeger[Jaeger]
-        Postgres[PostgreSQL DB]
-        ConfigServer[Config Server]
-        DiscoveryServer[Discovery Server]
-        Keycloak[Keycloak Auth]
+    subgraph Gateway[API Gateway]
+        APIGateway[API Gateway<br/>Port: 8080]
     end
 
-    subgraph API Gateway
-        APIGateway[API Gateway]
-    end
-
-    subgraph Microservices
+    subgraph Services["Microservices"]
         LoadsService[Loads Service]
         RiflesService[Rifles Service]
-        MCPServer[MCP Server]
+        ComponentsService[Components Service]
+        MCPServer[MCP Server<br/>AI Integration]
     end
 
-    User -- REST --> APIGateway
-    Copilot -->|MCP| APIGateway
-    User -- Auth --> Keycloak
-    APIGateway -->|REST| LoadsService
-    APIGateway -->|REST| RiflesService
-    APIGateway -->|MCP| MCPServer
-    MCPServer -->|REST| LoadsService
-    MCPServer -->|REST| RiflesService
+    Postgres[(PostgreSQL<br/>Database)]
 
-    LoadsService -- DB --> Postgres
-    RiflesService -- DB --> Postgres
+    subgraph Infrastructure["Infrastructure"]
+        Keycloak[Keycloak<br/>Authentication]
+        Jaeger[Jaeger<br/>Tracing]
+        ConfigServer[Config Server<br/>Centralized Config]
+        DiscoveryServer[Discovery Server<br/>Service Registry]
+        AdminServer[Admin Server<br/>Monitoring]
+    end
 
-    LoadsService -- Discovery --> DiscoveryServer
-    RiflesService -- Discovery --> DiscoveryServer
-    MCPServer -- Discovery --> DiscoveryServer
-    APIGateway -- Discovery --> DiscoveryServer
+    %% Client connections
+    User -->|REST API| APIGateway
+    User -->|Login| Keycloak
+    Copilot -->|MCP Protocol| APIGateway
 
-    APIGateway -- Tracing --> Jaeger
-    LoadsService -- Tracing --> Jaeger
-    RiflesService -- Tracing --> Jaeger
-    MCPServer -- Tracing --> Jaeger
+    %% Gateway to services
+    APIGateway --> LoadsService
+    APIGateway --> RiflesService
+    APIGateway --> ComponentsService
+    APIGateway --> MCPServer
 
-    LoadsService -- Config --> ConfigServer
-    RiflesService -- Config --> ConfigServer
-    MCPServer -- Config --> ConfigServer
-    APIGateway -- Config --> ConfigServer
+    %% AI service integration
+    MCPServer -.-> LoadsService
+    MCPServer -.-> RiflesService
+    MCPServer -.-> ComponentsService
+
+
+    %% Infrastructure connections (simplified)
+    Services -.->|Register| DiscoveryServer
+    Services -.->|Configuration| ConfigServer
+    Services -.->|Monitoring| AdminServer
+    Services -.->|Tracing| Jaeger
+    Services -.->|Auth| Keycloak
+    Services -.->Postgres
+
+    classDef clientStyle fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000000
+    classDef gatewayStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000000
+    classDef serviceStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
+    classDef dataStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
+    classDef infraStyle fill:#fafafa,stroke:#616161,stroke-width:2px,color:#000000
+
+    class User,Copilot clientStyle
+    class APIGateway gatewayStyle
+    class LoadsService,RiflesService,ComponentsService,MCPServer serviceStyle
+    class Postgres dataStyle
+    class ConfigServer,DiscoveryServer,Keycloak,Jaeger,AdminServer infraStyle
 ....
 
 == Database Schema
@@ -204,17 +218,17 @@ flowchart TD
 erDiagram
     LOADS {
         BIGSERIAL id PK
-        VARCHAR owner_id
-        VARCHAR name
+        VARCHAR(255) owner_id NOT NULL
+        VARCHAR(255) name NOT NULL
         TEXT description
-        VARCHAR measurement_units
-        VARCHAR powder_manufacturer
-        VARCHAR powder_type
-        VARCHAR bullet_manufacturer
-        VARCHAR bullet_type
-        DOUBLE bullet_weight
-        VARCHAR primer_manufacturer
-        VARCHAR primer_type
+        VARCHAR(32) measurement_units NOT NULL "CHECK (Imperial, Metric)"
+        VARCHAR(255) powder_manufacturer NOT NULL
+        VARCHAR(255) powder_type NOT NULL
+        VARCHAR(255) bullet_manufacturer NOT NULL
+        VARCHAR(255) bullet_type NOT NULL
+        DOUBLE bullet_weight NOT NULL
+        VARCHAR(255) primer_manufacturer NOT NULL
+        VARCHAR(255) primer_type NOT NULL
         DOUBLE distance_from_lands
         DOUBLE case_overall_length
         DOUBLE neck_tension
@@ -222,33 +236,74 @@ erDiagram
     }
     GROUPS {
         BIGSERIAL id PK
-        VARCHAR owner_id
-        BIGSERIAL load_id FK
-        DATE date
-        DOUBLE powder_charge
-        INTEGER target_range
+        VARCHAR(255) owner_id NOT NULL
+        BIGSERIAL load_id FK NOT NULL
+        DATE date NOT NULL
+        DOUBLE powder_charge NOT NULL
+        INTEGER target_range NOT NULL
         DOUBLE group_size
     }
     SHOTS {
         BIGSERIAL id PK
-        VARCHAR owner_id
-        BIGSERIAL group_id FK
+        VARCHAR(255) owner_id NOT NULL
+        BIGSERIAL group_id FK NOT NULL
         INTEGER velocity
     }
     RIFLES {
         BIGSERIAL id PK
-        VARCHAR owner_id
-        VARCHAR name
+        VARCHAR(255) owner_id NOT NULL
+        VARCHAR(255) name NOT NULL
         TEXT description
-        VARCHAR measurement_units
-        VARCHAR caliber
+        VARCHAR(32) measurement_units NOT NULL "CHECK (Imperial, Metric)"
+        VARCHAR(32) caliber NOT NULL
         DOUBLE barrel_length
-        VARCHAR barrel_contour
-        VARCHAR twist_rate
-        VARCHAR rifling
+        VARCHAR(32) barrel_contour
+        VARCHAR(32) twist_rate
+        VARCHAR(32) rifling
         DOUBLE free_bore
     }
-
+    BULLETS {
+        BIGSERIAL id PK
+        VARCHAR(255) owner_id NOT NULL
+        VARCHAR(255) manufacturer NOT NULL
+        DOUBLE weight NOT NULL
+        VARCHAR(255) type NOT NULL
+        VARCHAR(255) measurement_units NOT NULL
+        DECIMAL(10) cost NOT NULL
+        VARCHAR(3) currency NOT NULL
+        INTEGER quantity_per_box NOT NULL
+    }
+    POWDERS {
+        BIGSERIAL id PK
+        VARCHAR(255) owner_id NOT NULL
+        VARCHAR(255) manufacturer NOT NULL
+        VARCHAR(255) type NOT NULL
+        VARCHAR(255) measurement_units NOT NULL
+        DECIMAL(10) cost
+        VARCHAR(3) currency
+        DOUBLE weight_per_container
+    }
+    PRIMERS {
+        BIGSERIAL id PK
+        VARCHAR(255) owner_id NOT NULL
+        VARCHAR(255) manufacturer NOT NULL
+        VARCHAR(255) type NOT NULL
+        VARCHAR(20) size NOT NULL
+        DECIMAL(10) cost NOT NULL
+        VARCHAR(3) currency NOT NULL
+        INTEGER quantity_per_box NOT NULL
+    }
+    CASES {
+        BIGSERIAL id PK
+        VARCHAR(255) owner_id NOT NULL
+        VARCHAR(255) manufacturer NOT NULL
+        VARCHAR(50) caliber NOT NULL
+        VARCHAR(20) primer_size NOT NULL
+        DECIMAL(10) cost NOT NULL
+        VARCHAR(3) currency NOT NULL
+        INTEGER quantity_per_box NOT NULL
+    }
+    %% Relationships
     LOADS ||--o{ GROUPS : "has"
     GROUPS ||--o{ SHOTS : "has"
     RIFLES ||--o{ LOADS : "has"

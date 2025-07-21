@@ -1,0 +1,211 @@
+= REST API Testing Guide
+:toc: left
+:icons: font
+:source-highlighter: highlightjs
+
+== Overview
+
+This directory contains comprehensive testing resources for the Spring Load Development API services. It includes:
+
+* HTTP request files for testing API endpoints using VS Code's REST Client extension
+* A shell script for automated test data loading
+* Configuration files for environment variables
+
+The test files cover authentication and full CRUD operations for all API services including rifles, loads, groups, shots, and components (cases, powders, primers, bullets).
+
+== Prerequisites
+
+=== For HTTP Request Testing
+
+* Visual Studio Code installed
+* REST Client extension installed (`humao.rest-client`)
+
+=== For Automated Data Loading
+
+* Bash shell (Linux/macOS/WSL)
+* `curl` command-line tool
+* `jq` JSON command-line processor
+
+=== Required Running Services
+
+* PostgreSQL database (default: localhost:5432)
+* Keycloak server (default: localhost:7080)
+* Config server (default: localhost:8888)
+* Discovery server (default: localhost:8761)
+* API Gateway service (default: localhost:8080)
+* Rifles service (default: localhost:8081)
+* Loads service (default: localhost:8082)
+* Components service
+
+== Configuration
+
+The environment configuration is stored in `http-client.env.json`. It includes:
+
+* Keycloak authorization server settings
+* Client credentials
+* Test user credentials
+
+== Available Test Files
+
+=== HTTP Request Files
+
+==== rifles-service.http
+
+Contains requests for testing the Rifles API endpoints:
+
+* Authentication with Keycloak
+* CRUD operations for rifles
+
+==== loads-service.http
+
+Contains requests for testing the Loads API endpoints:
+
+* Authentication with Keycloak
+* CRUD operations for loads
+* Load statistics
+
+==== groups-service.http
+
+Contains requests for testing the Groups API endpoints:
+
+* Authentication with Keycloak
+* CRUD operations for groups
+* Group statistics
+
+==== shots-service.http
+
+Contains requests for testing the Shots API endpoints:
+
+* Authentication with Keycloak
+* CRUD operations for shots
+
+==== components-service.http
+
+Contains requests for testing the Components API endpoints:
+
+* Authentication with Keycloak
+* CRUD operations for cases, powders, primers, and bullets
+  - Cases: create, get, update, delete
+  - Powders: create, get, update, delete
+  - Primers: create, get, update, delete
+  - Bullets: create, get, update, delete
+
+=== Configuration Files
+
+==== http-client.env.json
+
+Environment configuration file containing:
+
+* Keycloak authorization server settings
+* Client credentials
+* Test user credentials
+
+=== Automated Data Loading
+
+==== load_test_data.sh
+
+A bash script that automatically loads test data into the system via REST API calls. This script:
+
+* Authenticates with Keycloak to obtain access tokens
+* Creates a test rifle (Tikka T3x CTR)
+* Creates a load development dataset with multiple powder charges
+* Creates shooting groups with various group sizes and velocities
+* Provides comprehensive error handling and colored output
+* Validates that all required services are running before execution
+
+To run the script:
+
+[source,bash]
+----
+cd spring-load-development/test
+chmod +x load_test_data.sh
+./load_test_data.sh
+----
+
+The script requires the same configuration as the HTTP files and will use the `http-client.env.json` file for authentication settings.
+
+== How to Use
+
+=== Using HTTP Request Files
+
+1. Open any `.http` file in VS Code
+2. You'll see clickable `Send Request` links above each request
+3. Select the environment from the bottom status bar (default: "local")
+4. Click `Send Request` to execute
+
+TIP: Requests that require authentication will automatically use the token from the "Authenticate" request.
+
+=== Using the Automated Data Loader
+
+1. Ensure all required services are running
+2. Navigate to the test directory: `cd spring-load-development/test`
+3. Make the script executable: `chmod +x load_test_data.sh`
+4. Run the script: `./load_test_data.sh`
+
+The script will:
+
+* Verify all dependencies are available
+* Load configuration from `http-client.env.json`
+* Check that services are accessible
+* Authenticate with Keycloak
+* Create test data including rifles, loads, groups, and shots
+* Provide a summary of created entities
+
+== Request Flow
+
+1. First, run the "Authenticate" request to get an access token
+2. The token is automatically used in subsequent requests
+3. Test individual endpoints as needed
+
+== VS Code Settings Configuration
+
+To make the environment variables available globally in VS Code:
+
+1. Open VS Code Settings (File > Preferences > Settings or `Ctrl+,`)
+2. Click on the "Open Settings (JSON)" icon in the top-right corner
+3. Add the following configuration:
+
+[source,json]
+----
+{
+    "rest-client.environmentVariables": {
+        "$shared": {
+            // Shared variables across all environments
+        },
+        "local": {
+            "authorization_host": "http://localhost:7080",
+            "realm": "reloading",
+            "client_id": "reloading-client",
+            "client_secret": "2EvQuluZfxaaRms8V4NhzBDWzVCSXtty",
+            "username": "reloader1",
+            "password": "reloader1"
+        }
+    }
+}
+----
+
+TIP: This allows you to use these variables in any `.http` file across your workspace.
+
+== Tips
+
+=== HTTP Request Testing
+
+* Use the response of one request in another with the syntax `{{RequestName.response.body.field}}`
+* Headers can be modified directly in the `.http` files
+* Add new environments by creating new objects in `http-client.env.json`
+* You can chain requests using dynamic variables (e.g., use IDs from previous responses in subsequent requests)
+* The `.http` files are updated as new endpoints or changes are introduced in the API
+
+=== Automated Testing
+
+* Run `load_test_data.sh` to quickly populate the system with test data
+* The script validates services are running before attempting to load data
+* Check the script output for any errors or issues during data loading
+* Use the created test data IDs in your HTTP request files for further testing
+
+=== Troubleshooting
+
+* Ensure all services are running before testing
+* Verify Keycloak is properly configured with the reloading realm
+* Check that the client credentials in `http-client.env.json` are correct
+* If authentication fails, verify the user `reloader1` exists in Keycloak

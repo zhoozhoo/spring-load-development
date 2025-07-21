@@ -55,3 +55,41 @@ buildNumber.properties
 
 # Built Visual Studio Code Extensions
 *.vsix
+
+# Node.js (Web UI frontend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# React build artifacts
+/spring-loaddev-web-ui/src/main/frontend/build/
+/spring-loaddev-web-ui/src/main/resources/static/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE specific
+*.iws
+*.iml
+*.ipr
+.idea/
+.settings/

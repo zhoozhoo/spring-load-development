@@ -1,4 +1,4 @@
-package ca.zhoozhoo.loaddev.loads.web;
+package ca.zhoozhoo.loaddev.components.web;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
