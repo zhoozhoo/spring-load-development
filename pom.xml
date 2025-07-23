@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 http://maven.apache.org/xsd/maven-4.1.0.xsd">
+    <modelVersion>4.1.0</modelVersion>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -15,16 +17,16 @@
     <description>Parent Project for Spring Load Development</description>
     <packaging>pom</packaging>
 
-    <modules>
-        <module>spring-loaddev-config-server</module>
-        <module>spring-loaddev-discovery-server</module>
-        <module>spring-loaddev-loads-service</module>
-        <module>spring-loaddev-rifles-service</module>
-        <module>spring-loaddev-mcp-server</module>
-        <module>spring-loaddev-admin-server</module>
-        <module>spring-loaddev-api-gateway</module>
-        <module>spring-loaddev-components-service</module>
-    </modules>
+    <subprojects>
+        <subproject>spring-loaddev-config-server</subproject>
+        <subproject>spring-loaddev-discovery-server</subproject>
+        <subproject>spring-loaddev-loads-service</subproject>
+        <subproject>spring-loaddev-rifles-service</subproject>
+        <subproject>spring-loaddev-mcp-server</subproject>
+        <subproject>spring-loaddev-admin-server</subproject>
+        <subproject>spring-loaddev-api-gateway</subproject>
+        <subproject>spring-loaddev-components-service</subproject>
+    </subprojects>
 
     <properties>
         <java.version>21</java.version>
