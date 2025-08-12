@@ -1,18 +1,101 @@
 services:
-  jaeger:
-    image: jaegertracing/jaeger:${JAEGER_VERSION}
-    container_name: jaeger
+  loki:
+    image: grafana/loki:${LOKI_VERSION}
+    container_name: loki
+    user: "0:0"
     ports:
-      - "16686:16686"
-      - "4317:4317"
-      - "4318:4318"
-    environment:
-      - LOG_LEVEL=debug
+      - "3100:3100"
+      - "9096:9096"
+    volumes:
+      - ./docker/loki/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/loki.yaml
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/ready"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+
+  tempo:
+    image: grafana/tempo:${TEMPO_VERSION}
+    container_name: tempo
+    user: "0:0"
+    volumes:
+      - ./docker/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo_data:/tmp/tempo
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    ports:
+      - "3200:3200"
+      - "4319:4317"
+      - "4320:4318"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3200/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_VERSION}
+    container_name: prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=24h'
+      - '--web.enable-lifecycle'
+      - '--web.enable-remote-write-receiver'
+      - '--enable-feature=native-histograms'
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:${OTEL_COLLECTOR_VERSION}
+    container_name: otel-collector
+    volumes:
+      - ./docker/otel-collector/otel-collector.yaml:/etc/otelcol-contrib/config.yaml
+      - otel_logs:/tmp 
+    ports:
+      - 8889:8889  
+      - 13133:13133
+      - 4317:4317
+      - 4318:4318
+    depends_on:
+      loki:
+        condition: service_healthy
+      tempo:
+        condition: service_healthy
+      prometheus:
+        condition: service_healthy
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION}
+    container_name: grafana
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_FEATURE_TOGGLES_ENABLE=alertingSimplifiedRouting,alertingQueryAndExpressionsStepMode
+    volumes:
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+      - ./docker/grafana/dashboards:/etc/grafana/dashboards
+    ports:
+      - "3000:3000"
+    depends_on:
+      otel-collector:
+        condition: service_started
     restart: unless-stopped
 
   db:
@@ -41,7 +124,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: keycloak
     ports:
-      - "5433:5433"
+      - "5433:5432"
     volumes:
       - keycloak_data:/var/lib/postgresql/data
     healthcheck:
@@ -65,7 +148,7 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_HEALTH_ENABLED: true
       KC_TRACING_ENABLED: true
-      KC_TRACING_ENDPOINT: http://jaeger:4317
+      KC_TRACING_ENDPOINT: http://otel-collector:4317
       KC_TRACING_SAMPLER_TYPE: parentbased_traceidratio
       KC_TRACING_JDBC_ENABLED: false
       QUARKUS_OTEL_TRACES_SUPPRESS_NON_APPLICATION_URIS: true
@@ -73,9 +156,9 @@ services:
       - "7080:7080"
       - "9000:9000"
     depends_on:
+      otel-collector:
+        condition: service_started
       keycloak-db:
-        condition: service_healthy
-      jaeger:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000; echo -e 'GET /health/ready HTTP/1.1\r\nHost: localhost:9000\r\nConnection: close\r\n\r\n' >&3;cat <&3 | grep -q '\"status\": \"UP\"' && exit 0 || exit 1"]
@@ -132,7 +215,8 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - DISCOVERY_SERVER=http://discovery-server:8761
       - KEYCLOAK_BASE_URL=http://keycloak:7080
-      - TRACING_SERVER=http://jaeger:4317
+      - OTEL_COLLECTOR_ENDPOINT=http://otel-collector:4317
+      - OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED=true
       - SPRING_CLOUD_DISCOVERY_ENABLED=true
       - THC_PATH=/actuator/health/readiness
       - THC_PORT=8080
@@ -141,8 +225,8 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
-      jaeger:
-        condition: service_healthy
+      otel-collector:
+        condition: service_started
     healthcheck:
       test: ["CMD", "/workspace/health-check"]
       interval: 10s
@@ -160,7 +244,8 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - DISCOVERY_SERVER=http://discovery-server:8761
       - KEYCLOAK_BASE_URL=http://keycloak:7080
-      - TRACING_SERVER=http://jaeger:4317
+      - OTEL_COLLECTOR_ENDPOINT=http://otel-collector:4317
+      - OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED=true
       - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/loadsdb
       - SPRING_R2DBC_USERNAME=user
       - SPRING_R2DBC_PASSWORD=password
@@ -173,8 +258,8 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
-      jaeger:
-        condition: service_healthy
+      otel-collector:
+        condition: service_started
     healthcheck:
       test: ["CMD", "/workspace/health-check"]
       interval: 10s
@@ -192,7 +277,8 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - DISCOVERY_SERVER=http://discovery-server:8761
       - KEYCLOAK_BASE_URL=http://keycloak:7080
-      - TRACING_SERVER=http://jaeger:4317
+      - OTEL_COLLECTOR_ENDPOINT=http://otel-collector:4317
+      - OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED=true
       - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/loadsdb
       - SPRING_R2DBC_USERNAME=user
       - SPRING_R2DBC_PASSWORD=password
@@ -205,8 +291,8 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
-      jaeger:
-        condition: service_healthy
+      otel-collector:
+        condition: service_started
     healthcheck:
       test: ["CMD", "/workspace/health-check"]
       interval: 10s
@@ -224,7 +310,8 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - DISCOVERY_SERVER=http://discovery-server:8761
       - KEYCLOAK_BASE_URL=http://keycloak:7080
-      - TRACING_SERVER=http://jaeger:4317
+      - OTEL_COLLECTOR_ENDPOINT=http://otel-collector:4317
+      - OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED=true
       - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/loadsdb
       - SPRING_R2DBC_USERNAME=user
       - SPRING_R2DBC_PASSWORD=password
@@ -237,8 +324,8 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
-      jaeger:
-        condition: service_healthy
+      otel-collector:
+        condition: service_started
     healthcheck:
       test: ["CMD", "/workspace/health-check"]
       interval: 10s
@@ -256,7 +343,8 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - DISCOVERY_SERVER=http://discovery-server:8761
       - KEYCLOAK_BASE_URL=http://keycloak:7080
-      - TRACING_SERVER=http://jaeger:4317
+      - OTEL_COLLECTOR_ENDPOINT=http://otel-collector:4317
+      - OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED=true
       - THC_PATH=/actuator/health/readiness
       - THC_PORT=8083
     depends_on:
@@ -264,8 +352,8 @@ services:
         condition: service_healthy
       keycloak:
         condition: service_healthy
-      jaeger:
-        condition: service_healthy
+      otel-collector:
+        condition: service_started
     healthcheck:
       test: ["CMD", "/workspace/health-check"]
       interval: 10s
@@ -283,7 +371,6 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - DISCOVERY_SERVER=http://discovery-server:8761
       - KEYCLOAK_BASE_URL=http://keycloak:7080
-      - TRACING_SERVER=http://jaeger:4317
       - THC_PATH=/actuator/health/readiness
       - THC_PORT=9090
     depends_on:
@@ -299,3 +386,7 @@ services:
 volumes:
   reloading_data:
   keycloak_data:
+  tempo_data:
+  loki_data:
+  prometheus_data:
+  otel_logs:
