@@ -2,6 +2,7 @@ package ca.zhoozhoo.loaddev.components.dao;
 
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static reactor.core.publisher.Flux.just;
 import static reactor.test.StepVerifier.create;
 
 import java.math.BigDecimal;
@@ -16,7 +17,6 @@ import org.springframework.test.context.ActiveProfiles;
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.components.model.Primer;
 import ca.zhoozhoo.loaddev.components.model.PrimerSize;
-import reactor.core.publisher.Flux;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -144,13 +144,39 @@ class PrimerRepositoryTest {
                 "CAD",
                 1000);
 
-        primerRepository.saveAll(Flux.just(primer1, primer2)).blockLast();
+        primerRepository.saveAll(just(primer1, primer2)).blockLast();
 
         var result = primerRepository.findAllByOwnerId(userId);
 
         create(result)
                 .expectNextMatches(p -> p.manufacturer().equals("CCI"))
                 .expectNextMatches(p -> p.manufacturer().equals("Winchester"))
+                .verifyComplete();
+    }
+
+    @Test
+    void searchByOwnerIdAndQuery() {
+        var ownerId = randomUUID().toString();
+        var primer = createTestPrimer(ownerId);
+
+        primerRepository.saveAll(just(primer)).blockLast();
+
+        var positive = primerRepository.searchByOwnerIdAndQuery(ownerId, "CCI BR-4");
+        create(positive)
+                .expectNextMatches(pp -> pp.manufacturer().equals("CCI"))
+                .verifyComplete();
+    }
+
+    @Test
+    void searchByOwnerIdAndQueryNegative() {
+        var ownerId = randomUUID().toString();
+        var primer = createTestPrimer(ownerId);
+
+        primerRepository.saveAll(just(primer)).blockLast();
+
+        var negative = primerRepository.searchByOwnerIdAndQuery(ownerId, "CCI 45o");
+        create(negative)
+                .expectNextCount(0)
                 .verifyComplete();
     }
 }

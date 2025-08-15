@@ -4,6 +4,7 @@ import static ca.zhoozhoo.loaddev.components.model.Powder.IMPERIAL;
 import static ca.zhoozhoo.loaddev.components.model.Powder.METRIC;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static reactor.core.publisher.Flux.just;
 import static reactor.test.StepVerifier.create;
 
 import java.math.BigDecimal;
@@ -17,7 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.components.model.Powder;
-import reactor.core.publisher.Flux;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -147,13 +147,39 @@ public class PowderRepositoryTest {
                 "CAD",
                 1.0);
 
-        powderRepository.saveAll(Flux.just(powder1, powder2)).blockLast();
+        powderRepository.saveAll(just(powder1, powder2)).blockLast();
 
         var result = powderRepository.findAllByOwnerId(userId);
 
         create(result)
                 .expectNextMatches(p -> p.manufacturer().equals("Hodgdon"))
                 .expectNextMatches(p -> p.manufacturer().equals("Vihtavuori"))
+                .verifyComplete();
+    }
+
+    @Test
+    void searchByOwnerIdAndQuery() {
+        var ownerId = randomUUID().toString();
+        var powder = createTestPowder(ownerId);
+
+        powderRepository.saveAll(just(powder)).blockLast();
+
+        var result = powderRepository.searchByOwnerIdAndQuery(ownerId, "Hodgdon H4350");
+        create(result)
+                .expectNextMatches(pp -> pp.manufacturer().equals("Hodgdon"))
+                .verifyComplete();
+    }
+
+    @Test
+    void searchByOwnerIdAndQueryNegative() {
+        var ownerId = randomUUID().toString();
+        var powder = createTestPowder(ownerId);
+
+        powderRepository.saveAll(just(powder)).blockLast();
+
+        var result = powderRepository.searchByOwnerIdAndQuery(ownerId, "H4350 Varget");
+        create(result)
+                .expectNextCount(0)
                 .verifyComplete();
     }
 }
