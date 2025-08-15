@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS powders (
 
 CREATE OR REPLACE FUNCTION powders_update_search_vector() RETURNS trigger AS '
 BEGIN
-  NEW.search_vector := to_tsvector(''simple'', coalesce(NEW.manufacturer,'''') || '' '' || coalesce(NEW.type,''''));
+  NEW.search_vector := to_tsvector(''english'', coalesce(NEW.manufacturer,'''') || '' '' || coalesce(NEW.type,''''));
   RETURN NEW;
 END
 ' LANGUAGE plpgsql;
@@ -70,12 +70,9 @@ CREATE TABLE IF NOT EXISTS primers (
     search_vector tsvector
 );
 
-ALTER TABLE primers DROP COLUMN IF EXISTS search_vector;
-ALTER TABLE primers ADD COLUMN IF NOT EXISTS search_vector tsvector;
-
 CREATE OR REPLACE FUNCTION primers_update_search_vector() RETURNS trigger AS '
 BEGIN
-  NEW.search_vector := to_tsvector(''simple'', coalesce(NEW.manufacturer,'''') || '' '' || coalesce(NEW.type,''''));
+  NEW.search_vector := to_tsvector(''english'', coalesce(NEW.manufacturer,'''') || '' '' || coalesce(NEW.type,''''));
   RETURN NEW;
 END
 ' LANGUAGE plpgsql;
@@ -100,13 +97,9 @@ CREATE TABLE IF NOT EXISTS cases (
     search_vector tsvector
 );
 
--- cases
-ALTER TABLE cases DROP COLUMN IF EXISTS search_vector;
-ALTER TABLE cases ADD COLUMN IF NOT EXISTS search_vector tsvector;
-
 CREATE OR REPLACE FUNCTION cases_update_search_vector() RETURNS trigger AS '
 BEGIN
-  NEW.search_vector := to_tsvector(''simple'', coalesce(NEW.manufacturer,'''') || '' '' || coalesce(NEW.caliber,''''));
+  NEW.search_vector := to_tsvector(''english'', coalesce(NEW.manufacturer,'''') || '' '' || coalesce(NEW.caliber,''''));
   RETURN NEW;
 END
 ' LANGUAGE plpgsql;
