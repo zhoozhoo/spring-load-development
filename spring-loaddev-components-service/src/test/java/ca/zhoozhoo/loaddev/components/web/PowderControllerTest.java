@@ -54,6 +54,25 @@ public class PowderControllerTest {
     }
 
     @Test
+    void searchPowders() {
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        var savedPowder = powderRepository.save(createTestPowder(userId)).block();
+
+        webTestClient.mutateWith(jwt).get().uri(uriBuilder -> uriBuilder.path("/powders/search").queryParam("query", "Hodgdon H4350").build())
+                .accept(APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(APPLICATION_JSON)
+                .expectBodyList(Powder.class)
+                .value(list -> {
+                    assertThat(list).isNotEmpty();
+                    assertThat(list).contains(savedPowder);
+                });
+    }
+
+    @Test
     void getPowderById() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));

@@ -2,6 +2,7 @@ package ca.zhoozhoo.loaddev.components.dao;
 
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static reactor.core.publisher.Flux.just;
 import static reactor.test.StepVerifier.create;
 
 import java.math.BigDecimal;
@@ -16,7 +17,6 @@ import org.springframework.test.context.ActiveProfiles;
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.components.model.Case;
 import ca.zhoozhoo.loaddev.components.model.PrimerSize;
-import reactor.core.publisher.Flux;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -144,13 +144,39 @@ class CaseRepositoryTest {
                 "CAD",
                 50);
 
-        caseRepository.saveAll(Flux.just(case1, case2)).blockLast();
+        caseRepository.saveAll(just(case1, case2)).blockLast();
 
         var result = caseRepository.findAllByOwnerId(userId);
 
         create(result)
                 .expectNextMatches(c -> c.manufacturer().equals("Lapua"))
                 .expectNextMatches(c -> c.manufacturer().equals("Starline"))
+                .verifyComplete();
+    }
+
+    @Test
+    void searchByOwnerIdAndQuery() {
+        var userId = randomUUID().toString();
+        var case1 = createTestCase(userId);
+
+        caseRepository.saveAll(just(case1)).blockLast();
+
+        var result = caseRepository.searchByOwnerIdAndQuery(userId, "Lapua 6.5 Creedmoor");
+        create(result)
+                .expectNextMatches(cc -> cc.manufacturer().equals("Lapua"))
+                .verifyComplete();
+    }
+
+    @Test
+    void searchByOwnerIdAndQueryNegative() {
+        var ownerId = randomUUID().toString();
+        var case1 = createTestCase(ownerId);
+
+        caseRepository.saveAll(just(case1)).blockLast();
+
+        var result = caseRepository.searchByOwnerIdAndQuery(ownerId, "Lapua 6mm BR");
+        create(result)
+                .expectNextCount(0)
                 .verifyComplete();
     }
 }

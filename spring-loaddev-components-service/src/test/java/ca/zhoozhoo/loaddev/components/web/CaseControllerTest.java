@@ -53,6 +53,25 @@ public class CaseControllerTest {
     }
 
     @Test
+    void searchCases() {
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        var savedCase = caseRepository.save(createTestCase(userId)).block();
+
+        webTestClient.mutateWith(jwt).get().uri(uriBuilder -> uriBuilder.path("/cases/search").queryParam("query", "Lapua 6.5 Creedmoor").build())
+                .accept(APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(APPLICATION_JSON)
+                .expectBodyList(Case.class)
+                .value(list -> {
+                    assertThat(list).isNotEmpty();
+                    assertThat(list).contains(savedCase);
+                });
+    }
+
+    @Test
     void getCaseById() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));

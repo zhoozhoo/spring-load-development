@@ -54,6 +54,25 @@ public class BulletControllerTest {
     }
 
     @Test
+    void searchBullets() {
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        var savedBullet = bulletRepository.save(createTestBullet(userId)).block();
+
+        webTestClient.mutateWith(jwt).get().uri(uriBuilder -> uriBuilder.path("/bullets/search").queryParam("query", "Hornady ELD-Match 140").build())
+                .accept(APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(APPLICATION_JSON)
+                .expectBodyList(Bullet.class)
+                .value(list -> {
+                    assertThat(list).isNotEmpty();
+                    assertThat(list).contains(savedBullet);
+                });
+    }
+
+    @Test
     void getBulletById() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));

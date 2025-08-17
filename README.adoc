@@ -22,7 +22,7 @@ Spring Load Development is a project that demonstrates the integration of variou
 * API Gateway using link:https://spring.io/projects/spring-cloud-gateway[Spring Cloud Gateway]
 * Circuit Breaker using link:https://spring.io/projects/spring-cloud-circuitbreaker[Spring Cloud Circuit Breaker] and link:https://resilience4j.readme.io/docs/getting-started[Resilience4J]
 * AI Integration using link:https://spring.io/projects/spring-ai[Spring AI] and Model Context Protocol (MCP)
-* Distributed Tracing using link:https://opentelemetry.io/[OpenTelemetry] and link:https://www.jaegertracing.io/[Jaeger]
+* Observability and Monitoring using link:https://opentelemetry.io/[OpenTelemetry], link:https://grafana.com/oss/tempo/[Tempo], link:https://grafana.com/oss/loki/[Loki], link:https://prometheus.io/[Prometheus], and link:https://grafana.com/[Grafana]
 * Application Monitoring using link:https://github.com/codecentric/spring-boot-admin[Spring Boot Admin]
 
 [NOTE]
@@ -68,7 +68,7 @@ Once the services are up and running, you can access them at the following URLs:
 
 * API Gateway: http://localhost:8080
 * Keycloak Admin Console: http://localhost:7080
-* Jaeger UI: http://localhost:16686
+* Grafana Dashboard: http://localhost:3000
 * Admin Server: http://localhost:9090
 
 === AI Integration
@@ -134,13 +134,70 @@ The application uses Keycloak for identity and access management with the follow
 
 === Monitoring and Observability
 
-The project includes Spring Boot Admin Server for monitoring and managing your Spring Boot applications:
+The project includes a comprehensive observability stack with multiple components working together:
 
+==== Spring Boot Admin Server
 * Access the Admin Server dashboard at http://localhost:9090
 * Monitor application health, metrics, and environment
 * View detailed information about each service
 * Access actuator endpoints through a user-friendly interface
 * Track service status and configurations
+
+==== Observability Stack
+The project uses a modern observability stack with:
+
+* **OpenTelemetry Collector**: Centralized collection of telemetry data (traces, logs, metrics)
+* **Tempo**: Distributed tracing backend for storing and querying traces
+* **Loki**: Log aggregation system for centralized log storage and querying  
+* **Prometheus**: Metrics collection and alerting
+* **Grafana**: Unified dashboards for visualizing metrics, traces, and logs
+
+Access the observability components at:
+* Grafana (unified dashboards): http://localhost:3000
+* Prometheus (metrics): http://localhost:9091
+
+==== Monitoring architecture
+
+The diagram below shows the monitoring data flow used by this project. Services export metrics via the Actuator Prometheus endpoint and send telemetry (traces and logs) over OTLP to an OpenTelemetry Collector. The Collector routes traces to Tempo, logs to Loki and can optionally forward metrics or expose them for Prometheus. Prometheus scrapes the Actuator metrics endpoint; Grafana visualizes metrics, traces and logs; Alertmanager handles alerts from Prometheus; Spring Boot Admin provides a quick actuator UI for all services.
+
+[source,mermaid]
+....
+flowchart LR
+    subgraph Services[Services / Applications]
+        S1["Microservice"]
+    end
+
+    subgraph OTEL[Observability Plane]
+        OC["OpenTelemetry Collector"]
+        Tempo["Tempo\n(Trace Store)"]
+        Loki["Loki\n(Log Store)"]
+        Prom["Prometheus"]
+        Graf["Grafana"]
+    end
+
+    %% Service -> telemetry
+    S1 -->|"OTLP (traces)"| OC
+    S1 -->|"OTLP (logs)"| OC
+    S1 -->|"OTLP (metrics)"| OC
+
+    %% Collector -> backends
+    OC -->|"traces"| Tempo
+    OC -->|"logs"| Loki
+    OC -->|"metrics"| Prom
+
+    %% Visualisation / alerting
+    Tempo -->|traces| Graf
+    Loki -->|logs| Graf
+    Prom -->|metrics| Graf
+
+    classDef serviceStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
+    classDef infraStyle fill:#fafafa,stroke:#616161,stroke-width:2px,color:#000000
+    
+    class S1 serviceStyle
+    class OC,Tempo,Loki,Prom,Graf infraStyle
+....
+
+This observability architecture shows how all telemetry data (traces, logs, and metrics) is centrally collected by the OpenTelemetry Collector and distributed to specialized backends: Tempo for traces, Loki for logs, and Prometheus for metrics. Grafana provides unified dashboards combining all three data types for comprehensive observability. Spring Boot Admin remains available for quick actuator inspection and service management.
 
 == High-Level Architecture
 
@@ -167,10 +224,8 @@ flowchart TB
 
     subgraph Infrastructure["Infrastructure"]
         Keycloak[Keycloak<br/>Authentication]
-        Jaeger[Jaeger<br/>Tracing]
         ConfigServer[Config Server<br/>Centralized Config]
         DiscoveryServer[Discovery Server<br/>Service Registry]
-        AdminServer[Admin Server<br/>Monitoring]
     end
 
     %% Client connections
@@ -193,8 +248,6 @@ flowchart TB
     %% Infrastructure connections (simplified)
     Services -.->|Register| DiscoveryServer
     Services -.->|Configuration| ConfigServer
-    Services -.->|Monitoring| AdminServer
-    Services -.->|Tracing| Jaeger
     Services -.->|Auth| Keycloak
     Services -.->Postgres
 
@@ -208,7 +261,7 @@ flowchart TB
     class APIGateway gatewayStyle
     class LoadsService,RiflesService,ComponentsService,MCPServer serviceStyle
     class Postgres dataStyle
-    class ConfigServer,DiscoveryServer,Keycloak,Jaeger,AdminServer infraStyle
+    class ConfigServer,DiscoveryServer,Keycloak infraStyle
 ....
 
 == Database Schema
@@ -226,22 +279,22 @@ erDiagram
         VARCHAR(255) powder_type NOT NULL
         VARCHAR(255) bullet_manufacturer NOT NULL
         VARCHAR(255) bullet_type NOT NULL
-        DOUBLE bullet_weight NOT NULL
+        DOUBLE_PRECISION bullet_weight NOT NULL
         VARCHAR(255) primer_manufacturer NOT NULL
         VARCHAR(255) primer_type NOT NULL
-        DOUBLE distance_from_lands
-        DOUBLE case_overall_length
-        DOUBLE neck_tension
-        BIGSERIAL rifle_id
+        DOUBLE_PRECISION distance_from_lands
+        DOUBLE_PRECISION case_overall_length
+        DOUBLE_PRECISION neck_tension
+        BIGSERIAL rifle_id FK
     }
     GROUPS {
         BIGSERIAL id PK
         VARCHAR(255) owner_id NOT NULL
         BIGSERIAL load_id FK NOT NULL
         DATE date NOT NULL
-        DOUBLE powder_charge NOT NULL
+        DOUBLE_PRECISION powder_charge NOT NULL
         INTEGER target_range NOT NULL
-        DOUBLE group_size
+        DOUBLE_PRECISION group_size
     }
     SHOTS {
         BIGSERIAL id PK
@@ -256,22 +309,23 @@ erDiagram
         TEXT description
         VARCHAR(32) measurement_units NOT NULL "CHECK (Imperial, Metric)"
         VARCHAR(32) caliber NOT NULL
-        DOUBLE barrel_length
+        DOUBLE_PRECISION barrel_length
         VARCHAR(32) barrel_contour
         VARCHAR(32) twist_rate
         VARCHAR(32) rifling
-        DOUBLE free_bore
+        DOUBLE_PRECISION free_bore
     }
     BULLETS {
         BIGSERIAL id PK
         VARCHAR(255) owner_id NOT NULL
         VARCHAR(255) manufacturer NOT NULL
-        DOUBLE weight NOT NULL
+        DOUBLE_PRECISION weight NOT NULL
         VARCHAR(255) type NOT NULL
         VARCHAR(255) measurement_units NOT NULL
         DECIMAL(10) cost NOT NULL
         VARCHAR(3) currency NOT NULL
         INTEGER quantity_per_box NOT NULL
+        TSVECTOR search_vector
     }
     POWDERS {
         BIGSERIAL id PK
@@ -281,7 +335,8 @@ erDiagram
         VARCHAR(255) measurement_units NOT NULL
         DECIMAL(10) cost
         VARCHAR(3) currency
-        DOUBLE weight_per_container
+        DOUBLE_PRECISION weight_per_container
+        TSVECTOR search_vector
     }
     PRIMERS {
         BIGSERIAL id PK
@@ -292,6 +347,7 @@ erDiagram
         DECIMAL(10) cost NOT NULL
         VARCHAR(3) currency NOT NULL
         INTEGER quantity_per_box NOT NULL
+        TSVECTOR search_vector
     }
     CASES {
         BIGSERIAL id PK
@@ -302,11 +358,12 @@ erDiagram
         DECIMAL(10) cost NOT NULL
         VARCHAR(3) currency NOT NULL
         INTEGER quantity_per_box NOT NULL
+        TSVECTOR search_vector
     }
     %% Relationships
     LOADS ||--o{ GROUPS : "has"
     GROUPS ||--o{ SHOTS : "has"
-    RIFLES ||--o{ LOADS : "has"
+    RIFLES ||--o{ LOADS : "uses"
 ....
 
 == License

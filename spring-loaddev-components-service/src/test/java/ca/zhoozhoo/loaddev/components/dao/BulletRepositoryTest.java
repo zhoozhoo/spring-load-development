@@ -1,10 +1,11 @@
 package ca.zhoozhoo.loaddev.components.dao;
 
+import static ca.zhoozhoo.loaddev.components.model.Bullet.IMPERIAL;
+import static ca.zhoozhoo.loaddev.components.model.Bullet.METRIC;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static reactor.core.publisher.Flux.just;
 import static reactor.test.StepVerifier.create;
-import static ca.zhoozhoo.loaddev.components.model.Bullet.METRIC;
-import static ca.zhoozhoo.loaddev.components.model.Bullet.IMPERIAL;
 
 import java.math.BigDecimal;
 
@@ -17,7 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.components.model.Bullet;
-import reactor.core.publisher.Flux;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -48,8 +48,8 @@ class BulletRepositoryTest {
     @Test
     void saveBullet() {
         var userId = randomUUID().toString();
-        var savedBullet = bulletRepository.save(createTestBullet(userId));
 
+        var savedBullet = bulletRepository.save(createTestBullet(userId));
         create(savedBullet)
                 .assertNext(b -> {
                     assertThat(b.id()).isNotNull();
@@ -69,8 +69,8 @@ class BulletRepositoryTest {
     void findBulletById() {
         var userId = randomUUID().toString();
         var savedBullet = bulletRepository.save(createTestBullet(userId)).block();
-        var foundBullet = bulletRepository.findByIdAndOwnerId(savedBullet.id(), userId);
 
+        var foundBullet = bulletRepository.findByIdAndOwnerId(savedBullet.id(), userId);
         create(foundBullet)
                 .assertNext(b -> {
                     assertThat(b.id()).isEqualTo(savedBullet.id());
@@ -103,7 +103,6 @@ class BulletRepositoryTest {
                 50);
 
         var result = bulletRepository.save(updatedBullet);
-
         create(result)
                 .assertNext(b -> {
                     assertThat(b.id()).isEqualTo(savedBullet.id());
@@ -127,12 +126,10 @@ class BulletRepositoryTest {
                 .block();
 
         var deletedBullet = bulletRepository.delete(savedBullet);
-
         create(deletedBullet)
                 .verifyComplete();
 
         var foundBullet = bulletRepository.findByIdAndOwnerId(savedBullet.id(), userId);
-
         create(foundBullet)
                 .expectNextCount(0)
                 .verifyComplete();
@@ -142,8 +139,8 @@ class BulletRepositoryTest {
     void findByIdAndOwnerId() {
         var userId = randomUUID().toString();
         var savedBullet = bulletRepository.save(createTestBullet(userId)).block();
-        var result = bulletRepository.findByIdAndOwnerId(savedBullet.id(), savedBullet.ownerId());
 
+        var result = bulletRepository.findByIdAndOwnerId(savedBullet.id(), savedBullet.ownerId());
         create(result)
                 .expectNextMatches(b -> b.id().equals(savedBullet.id()))
                 .verifyComplete();
@@ -164,13 +161,38 @@ class BulletRepositoryTest {
                 "CAD",
                 100);
 
-        bulletRepository.saveAll(Flux.just(bullet1, bullet2)).blockLast();
+        bulletRepository.saveAll(just(bullet1, bullet2)).blockLast();
 
         var result = bulletRepository.findAllByOwnerId(userId);
-
         create(result)
                 .expectNextMatches(b -> b.manufacturer().equals("Hornady"))
                 .expectNextMatches(b -> b.manufacturer().equals("Berger"))
+                .verifyComplete();
+    }
+
+    @Test
+    void searchByOwnerIdAndQuery() {
+        var userId = randomUUID().toString();
+        var bullet1 = createTestBullet(userId); // Hornady 140 ELD-Match
+
+        bulletRepository.saveAll(just(bullet1)).blockLast();
+
+        var result = bulletRepository.searchByOwnerIdAndQuery(userId, "Hornady ELD 140");
+        create(result)
+                .expectNextMatches(b -> b.manufacturer().equals("Hornady"))
+                .verifyComplete();
+    }
+
+    @Test
+    void searchByOwnerIdAndQueryNegative() {
+        var userId = randomUUID().toString();
+        var bullet1 = createTestBullet(userId); // Hornady 140 ELD-Match
+
+        bulletRepository.saveAll(just(bullet1)).blockLast();
+
+        var result = bulletRepository.searchByOwnerIdAndQuery(userId, "Hornady ELD 168");
+        create(result)
+                .expectNextCount(0)
                 .verifyComplete();
     }
 }

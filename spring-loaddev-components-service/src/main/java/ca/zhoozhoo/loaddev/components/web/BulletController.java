@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -67,6 +68,17 @@ public class BulletController {
     public Flux<Bullet> getAllBullets(@Parameter(hidden = true) @CurrentUser String userId) {
         return bulletRepository.findAllByOwnerId(userId);
     }
+
+    @Operation(summary = "Full-text search bullets", security = {
+            @SecurityRequirement(name = "Oauth2Security", scopes = "components:view") })
+    @ApiResponse(responseCode = "200", description = "Search results", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Bullet.class))) })
+    @GetMapping("/search")
+    @PreAuthorize("hasAuthority('components:view')")
+        public Flux<Bullet> searchBullets(@Parameter(hidden = true) @CurrentUser String userId,
+                                                                          @Parameter(description = "Full text search query") @RequestParam("query") String query) {
+                return bulletRepository.searchByOwnerIdAndQuery(userId, query);
+        }
 
     @Operation(summary = "Get a bullet by its id", security = {
             @SecurityRequirement(name = "Oauth2Security", scopes = "components:view") })
