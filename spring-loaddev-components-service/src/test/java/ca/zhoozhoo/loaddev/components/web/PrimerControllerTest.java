@@ -53,6 +53,25 @@ public class PrimerControllerTest {
     }
 
     @Test
+    void searchPrimers() {
+        var userId = randomUUID().toString();
+        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+
+        var savedPrimer = primerRepository.save(createTestPrimer(userId)).block();
+
+        webTestClient.mutateWith(jwt).get().uri(uriBuilder -> uriBuilder.path("/primers/search").queryParam("query", "CCI BR-4").build())
+                .accept(APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType(APPLICATION_JSON)
+                .expectBodyList(Primer.class)
+                .value(list -> {
+                    assertThat(list).isNotEmpty();
+                    assertThat(list).contains(savedPrimer);
+                });
+    }
+
+    @Test
     void getPrimerById() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));

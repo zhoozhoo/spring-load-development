@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -67,6 +68,17 @@ public class PrimerController {
     public Flux<Primer> getAllPrimers(@Parameter(hidden = true) @CurrentUser String userId) {
         return primerRepository.findAllByOwnerId(userId);
     }
+
+    @Operation(summary = "Full-text search primers", security = {
+            @SecurityRequirement(name = "Oauth2Security", scopes = "components:view") })
+    @ApiResponse(responseCode = "200", description = "Search results", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Primer.class))) })
+    @GetMapping("/search")
+    @PreAuthorize("hasAuthority('components:view')")
+        public Flux<Primer> searchPrimers(@Parameter(hidden = true) @CurrentUser String userId,
+                                                                          @Parameter(description = "Full text search query") @RequestParam("query") String query) {
+                return primerRepository.searchByOwnerIdAndQuery(userId, query);
+        }
 
     @Operation(summary = "Get a primer by its id", security = {
             @SecurityRequirement(name = "Oauth2Security", scopes = "components:view") })
