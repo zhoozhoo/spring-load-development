@@ -43,3 +43,15 @@ datasources:
       exemplarTraceIdDestinations:
         - name: trace_id
           datasourceUid: tempo
+      tracesToMetrics:
+        datasourceUid: prometheus
+        spanStartTimeShift: '2m'
+        spanEndTimeShift: '-2m'
+        tags: [{ key: 'service.name', value: 'service_name' }, { key: 'peer.service', value: 'server' }, { key: 'job' }]
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: true
+        filterBySpanID: true
+        tags: [{ key: 'service.name', value: 'service_name' }, { key: 'peer.service', value: 'server' }, { key: 'job' }]

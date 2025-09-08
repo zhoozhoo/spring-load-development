@@ -24,6 +24,9 @@ processors:
       - key: service.version
         from_attribute: service_version
         action: insert
+      - key: service.name
+        from_attribute: service.name
+        action: upsert
 
 extensions:
   health_check:
@@ -40,6 +43,9 @@ exporters:
     endpoint: http://loki:3100/otlp
   prometheus:
     endpoint: "0.0.0.0:8889"
+    resource_to_telemetry_conversion:
+      enabled: true
+    enable_open_metrics: true
   debug:
     verbosity: detailed
 
