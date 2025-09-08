@@ -1,4 +1,4 @@
-package ca.zhoozhoo.loaddev.mcp.tools;
+package ca.zhoozhoo.loaddev.mcp.provider;
 
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INTERNAL_ERROR;
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_REQUEST;
@@ -21,7 +21,7 @@ import reactor.util.context.ContextView;
 
 @Service
 @Log4j2
-public class RiflesTools {
+public class RiflesToolProvider {
 
     @Autowired
     private RiflesService riflesService;
