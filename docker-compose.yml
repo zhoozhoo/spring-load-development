@@ -28,7 +28,6 @@ services:
     ports:
       - "3200:3200"
       - "4319:4317"
-      - "4320:4318"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3200/ready"]
       interval: 10s
@@ -70,7 +69,7 @@ services:
       - 8889:8889  
       - 13133:13133
       - 4317:4317
-      - 4318:4318
+      - 55679:55679
     depends_on:
       loki:
         condition: service_healthy
@@ -90,7 +89,6 @@ services:
       - GF_FEATURE_TOGGLES_ENABLE=alertingSimplifiedRouting,alertingQueryAndExpressionsStepMode
     volumes:
       - ./docker/grafana/provisioning:/etc/grafana/provisioning
-      - ./docker/grafana/dashboards:/etc/grafana/dashboards
     ports:
       - "3000:3000"
     depends_on:
