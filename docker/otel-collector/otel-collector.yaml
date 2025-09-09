@@ -3,20 +3,19 @@ receivers:
     protocols:
       grpc:
         endpoint: 0.0.0.0:4317
-      http:
-        endpoint: 0.0.0.0:4318
 
 processors:
   batch:
-    timeout: 1s
-    send_batch_size: 1024
-    send_batch_max_size: 2048
+    send_batch_max_size: 1000
+    send_batch_size: 100
+    timeout: 15s
   filter/ottl:
     error_mode: ignore
     traces:
       span:
         - IsMatch(span.attributes["http.url"], ".*actuator.*")
         - IsMatch(span.attributes["http.route"], ".*actuator.*")
+        - kind.string == "Internal"
   resource:
     attributes:
       - key: service.environment
@@ -25,10 +24,15 @@ processors:
       - key: service.version
         from_attribute: service_version
         action: insert
+      - key: service.name
+        from_attribute: service.name
+        action: upsert
 
 extensions:
   health_check:
     endpoint: 0.0.0.0:13133
+  zpages:
+    endpoint: :55679
 
 exporters:
   otlp/tempo:
@@ -39,11 +43,14 @@ exporters:
     endpoint: http://loki:3100/otlp
   prometheus:
     endpoint: "0.0.0.0:8889"
+    resource_to_telemetry_conversion:
+      enabled: true
+    enable_open_metrics: true
   debug:
     verbosity: detailed
 
 service:
-  extensions: [health_check]
+  extensions: [zpages,health_check]
   pipelines:
     logs:
       receivers: [otlp]

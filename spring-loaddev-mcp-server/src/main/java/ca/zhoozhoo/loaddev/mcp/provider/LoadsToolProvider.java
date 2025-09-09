@@ -1,4 +1,4 @@
-package ca.zhoozhoo.loaddev.mcp.tools;
+package ca.zhoozhoo.loaddev.mcp.provider;
 
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INTERNAL_ERROR;
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_PARAMS;
@@ -27,7 +27,7 @@ import reactor.util.context.ContextView;
 
 @Service
 @Log4j2
-public class LoadsTools {
+public class LoadsToolProvider {
 
     @Autowired
     private LoadsService loadsService;
