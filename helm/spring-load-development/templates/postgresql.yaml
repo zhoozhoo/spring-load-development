@@ -22,16 +22,6 @@ data:
   POSTGRES_PASSWORD: {{ .Values.postgresql.auth.password | b64enc }}
 ---
 apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: postgres-init-scripts
-  namespace: {{ .Values.postgresql.namespace }}
-  labels:
-    {{- include "spring-load-development.labels" . | nindent 4 }}
-data:
-  init.sql: {{ index .Values.postgresql.initdbScripts "init.sql" | quote }}
----
-apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
@@ -86,8 +76,6 @@ spec:
           volumeMounts:
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
-            - name: postgres-init-scripts
-              mountPath: /docker-entrypoint-initdb.d
           readinessProbe:
             exec:
               command:
@@ -112,9 +100,6 @@ spec:
         - name: postgres-storage
           persistentVolumeClaim:
             claimName: postgres-pvc
-        - name: postgres-init-scripts
-          configMap:
-            name: postgres-init-scripts
 ---
 apiVersion: v1
 kind: Service
@@ -133,4 +118,127 @@ spec:
       name: postgres
   selector:
     app: postgres
+{{- end }}
+
+{{- if and .Values.keycloakPostgresql.enabled (not .Values.keycloakPostgresql.external) }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-postgres-config
+  namespace: {{ .Values.keycloakPostgresql.namespace }}
+  labels:
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+data:
+  POSTGRES_DB: {{ .Values.keycloakPostgresql.auth.database }}
+  POSTGRES_USER: {{ .Values.keycloakPostgresql.auth.username }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keycloak-postgres-secret
+  namespace: {{ .Values.keycloakPostgresql.namespace }}
+  labels:
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+type: Opaque
+data:
+  POSTGRES_PASSWORD: {{ .Values.keycloakPostgresql.auth.password | b64enc }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: keycloak-postgres-pvc
+  namespace: {{ .Values.keycloakPostgresql.namespace }}
+  labels:
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.keycloakPostgresql.persistence.size }}
+  {{- if .Values.keycloakPostgresql.persistence.storageClass }}
+  {{- if (eq "-" .Values.keycloakPostgresql.persistence.storageClass) }}
+  storageClassName: ""
+  {{- else }}
+  storageClassName: {{ .Values.keycloakPostgresql.persistence.storageClass }}
+  {{- end }}
+  {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak-postgres
+  namespace: {{ .Values.keycloakPostgresql.namespace }}
+  labels:
+    app: keycloak-postgres
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak-postgres
+  template:
+    metadata:
+      labels:
+        app: keycloak-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: "postgres:{{ .Values.keycloakPostgresql.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: keycloak-postgres-config
+            - secretRef:
+                name: keycloak-postgres-secret
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "pg_isready -U {{ .Values.keycloakPostgresql.auth.username }} -d {{ .Values.keycloakPostgresql.auth.database }}"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "pg_isready -U {{ .Values.keycloakPostgresql.auth.username }} -d {{ .Values.keycloakPostgresql.auth.database }}"
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: keycloak-postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak-postgres-service
+  namespace: {{ .Values.keycloakPostgresql.namespace }}
+  labels:
+    app: keycloak-postgres
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.keycloakPostgresql.service.type }}
+  ports:
+    - port: {{ .Values.keycloakPostgresql.service.ports.postgresql }}
+      targetPort: postgres
+      protocol: TCP
+      name: postgres
+  selector:
+    app: keycloak-postgres
 {{- end }}
