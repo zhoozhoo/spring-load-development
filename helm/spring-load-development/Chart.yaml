@@ -5,9 +5,5 @@ type: application
 version: 0.0.7-SNAPSHOT
 appVersion: "0.0.7-SNAPSHOT"
 maintainers:
-  - name: Spring Load Development Team
-keywords:
-  - spring
-  - microservices
-  - observability
-  - authentication
+  - name: Zhubin Salehi
+    email: zhoozhoo@yahoo.com
