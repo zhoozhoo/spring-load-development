@@ -1,0 +1,96 @@
+1. Get the application URL by running these commands:
+{{- if .Values.observability.enabled }}
+
+  Observability Stack - NodePort Access:
+  export NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="ExternalIP")].address}')
+  
+  {{- if .Values.observability.loki.nodePort.enabled }}
+  - Loki: http://$NODE_IP:{{ .Values.observability.loki.nodePort.port }}
+  {{- end }}
+  {{- if .Values.observability.prometheus.nodePort.enabled }}
+  - Prometheus: http://$NODE_IP:{{ .Values.observability.prometheus.nodePort.port }}
+  {{- end }}
+  {{- if .Values.observability.grafana.nodePort.enabled }}
+  - Grafana: http://$NODE_IP:{{ .Values.observability.grafana.nodePort.port }}
+    Username: {{ .Values.observability.grafana.auth.adminUser }}
+    Password: {{ .Values.observability.grafana.auth.adminPassword }}
+  {{- end }}
+  {{- if .Values.observability.tempo.nodePort.enabled }}
+  - Tempo: http://$NODE_IP:{{ .Values.observability.tempo.nodePort.port }}
+  {{- end }}
+  {{- if .Values.observability.otelCollector.nodePort.enabled }}
+  - OTEL Collector GRPC: $NODE_IP:{{ .Values.observability.otelCollector.nodePort.grpcPort }}
+  - OTEL Collector Prometheus: http://$NODE_IP:{{ .Values.observability.otelCollector.nodePort.prometheusPort }}
+  {{- end }}
+{{- end }}
+
+{{- if and .Values.keycloak.enabled .Values.keycloak.ingress.enabled }}
+
+  Keycloak Admin Console:
+  http://{{ .Values.keycloak.ingress.hostname }}
+  Username: {{ .Values.keycloak.auth.adminUser }}
+  Password: {{ .Values.keycloak.auth.adminPassword }}
+{{- else if .Values.keycloak.enabled }}
+
+  Keycloak Admin Console (port-forward required):
+  export POD_NAME=$(kubectl get pods --namespace {{ .Values.keycloak.namespace }} -l "app=keycloak" -o jsonpath="{.items[0].metadata.name}")
+  kubectl --namespace {{ .Values.keycloak.namespace }} port-forward $POD_NAME 8080:8080
+  echo "Visit http://localhost:8080 to access Keycloak"
+  Username: {{ .Values.keycloak.auth.adminUser }}
+  Password: {{ .Values.keycloak.auth.adminPassword }}
+{{- end }}
+
+2. Port-Forward Access (if NodePorts are not available):
+
+{{- if and .Values.observability.enabled .Values.observability.grafana.enabled }}
+  Grafana Dashboard:
+  export POD_NAME=$(kubectl get pods --namespace {{ .Values.observability.namespace }} -l "app=grafana" -o jsonpath="{.items[0].metadata.name}")
+  kubectl --namespace {{ .Values.observability.namespace }} port-forward $POD_NAME 3000:3000
+  echo "Visit http://localhost:3000 to access Grafana"
+  Username: {{ .Values.observability.grafana.auth.adminUser }}
+  Password: {{ .Values.observability.grafana.auth.adminPassword }}
+{{- end }}
+
+3. Component Status:
+   Check the status of all components:
+   kubectl get pods --all-namespaces -l "app.kubernetes.io/instance={{ .Release.Name }}"
+
+4. Logs:
+   View logs for any component:
+   kubectl logs -n <namespace> -l app=<component-name>
+
+5. Configuration:
+   {{- if .Values.postgresql.enabled }}
+   - PostgreSQL is configured with database: {{ .Values.postgresql.auth.database }}
+   {{- end }}
+   {{- if .Values.keycloak.enabled }}
+   - Keycloak is configured with realm import enabled
+   {{- end }}
+   {{- if .Values.observability.enabled }}
+   - Observability stack includes: Loki, Tempo, Prometheus, Grafana, and OpenTelemetry Collector
+   {{- end }}
+
+6. Troubleshooting:
+   If pods are not starting, check events:
+   kubectl get events --sort-by=.metadata.creationTimestamp -n <namespace>
+
+   For detailed pod information:
+   kubectl describe pod <pod-name> -n <namespace>
+
+7. NodePort Service Access:
+   {{- if .Values.observability.loki.nodePort.enabled }}
+   - Loki NodePort: {{ .Values.observability.loki.nodePort.port }}
+   {{- end }}
+   {{- if .Values.observability.prometheus.nodePort.enabled }}
+   - Prometheus NodePort: {{ .Values.observability.prometheus.nodePort.port }}
+   {{- end }}
+   {{- if .Values.observability.grafana.nodePort.enabled }}
+   - Grafana NodePort: {{ .Values.observability.grafana.nodePort.port }}
+   {{- end }}
+   {{- if .Values.observability.tempo.nodePort.enabled }}
+   - Tempo NodePort: {{ .Values.observability.tempo.nodePort.port }}
+   {{- end }}
+   {{- if .Values.observability.otelCollector.nodePort.enabled }}
+   - OTEL Collector GRPC NodePort: {{ .Values.observability.otelCollector.nodePort.grpcPort }}
+   - OTEL Collector Prometheus NodePort: {{ .Values.observability.otelCollector.nodePort.prometheusPort }}
+   {{- end }}

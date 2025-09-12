@@ -1,0 +1,888 @@
+{{- if .Values.observability.enabled }}
+# ==============================================
+# LOKI CONFIGURATION AND RESOURCES
+# ==============================================
+{{- if .Values.observability.loki.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loki-config
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: loki
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+data:
+  loki.yaml: |
+    auth_enabled: {{ .Values.observability.loki.config.auth_enabled }}
+    
+    server:
+      http_listen_port: {{ .Values.observability.loki.config.server.http_listen_port }}
+      grpc_listen_port: {{ .Values.observability.loki.config.server.grpc_listen_port }}
+      log_level: {{ .Values.observability.loki.config.server.log_level }}
+    
+    common:
+      path_prefix: {{ .Values.observability.loki.config.common.path_prefix }}
+      storage:
+        filesystem:
+          chunks_directory: {{ .Values.observability.loki.config.common.storage.filesystem.chunks_directory }}
+          rules_directory: {{ .Values.observability.loki.config.common.storage.filesystem.rules_directory }}
+      replication_factor: {{ .Values.observability.loki.config.common.replication_factor }}
+      ring:
+        kvstore:
+          store: {{ .Values.observability.loki.config.common.ring.kvstore.store }}
+    
+    query_range:
+      results_cache:
+        cache:
+          embedded_cache:
+            enabled: {{ .Values.observability.loki.config.query_range.results_cache.cache.embedded_cache.enabled }}
+            max_size_mb: {{ .Values.observability.loki.config.query_range.results_cache.cache.embedded_cache.max_size_mb }}
+    
+    schema_config:
+      configs:
+        - from: {{ (index .Values.observability.loki.config.schema_config.configs 0).from }}
+          store: {{ (index .Values.observability.loki.config.schema_config.configs 0).store }}
+          object_store: {{ (index .Values.observability.loki.config.schema_config.configs 0).object_store }}
+          schema: {{ (index .Values.observability.loki.config.schema_config.configs 0).schema }}
+          index:
+            prefix: {{ (index .Values.observability.loki.config.schema_config.configs 0).index.prefix }}
+            period: {{ (index .Values.observability.loki.config.schema_config.configs 0).index.period }}
+    
+    limits_config:
+      metric_aggregation_enabled: {{ .Values.observability.loki.config.limits_config.metric_aggregation_enabled }}
+      allow_structured_metadata: {{ .Values.observability.loki.config.limits_config.allow_structured_metadata }}
+      volume_enabled: {{ .Values.observability.loki.config.limits_config.volume_enabled }}
+      retention_period: {{ .Values.observability.loki.config.limits_config.retention_period }}
+    
+    ruler:
+      enable_alertmanager_discovery: {{ .Values.observability.loki.config.ruler.enable_alertmanager_discovery }}
+      enable_api: {{ .Values.observability.loki.config.ruler.enable_api }}
+    
+    frontend:
+      encoding: {{ .Values.observability.loki.config.frontend.encoding }}
+    
+    compactor:
+      working_directory: {{ .Values.observability.loki.config.compactor.working_directory }}
+      compaction_interval: {{ .Values.observability.loki.config.compactor.compaction_interval }}
+      retention_enabled: {{ .Values.observability.loki.config.compactor.retention_enabled }}
+      retention_delete_delay: {{ .Values.observability.loki.config.compactor.retention_delete_delay }}
+      retention_delete_worker_count: {{ .Values.observability.loki.config.compactor.retention_delete_worker_count }}
+      delete_request_store: {{ .Values.observability.loki.config.compactor.delete_request_store }}
+
+---
+{{- if .Values.observability.loki.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: loki-pvc
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: loki
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.observability.loki.persistence.size }}
+{{- end }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: loki
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      containers:
+        - name: loki
+          image: "{{ .Values.observability.loki.image.repository }}:{{ .Values.observability.loki.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "-config.file=/etc/loki/local-config.yaml"
+          ports:
+            - name: http
+              containerPort: {{ .Values.observability.loki.config.server.http_listen_port }}
+              protocol: TCP
+            - name: grpc
+              containerPort: {{ .Values.observability.loki.config.server.grpc_listen_port }}
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/loki
+            {{- if .Values.observability.loki.persistence.enabled }}
+            - name: storage
+              mountPath: /loki
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.observability.loki.config.server.http_listen_port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.observability.loki.config.server.http_listen_port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          {{- if .Values.observability.loki.resources }}
+          resources:
+            {{- toYaml .Values.observability.loki.resources | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: loki-config
+            items:
+              - key: loki.yaml
+                path: local-config.yaml
+        {{- if .Values.observability.loki.persistence.enabled }}
+        - name: storage
+          persistentVolumeClaim:
+            claimName: loki-pvc
+        {{- else }}
+        - name: storage
+          emptyDir: {}
+        {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-service
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: loki
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.observability.loki.service.type }}
+  ports:
+    - port: {{ .Values.observability.loki.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: loki
+
+---
+{{- if .Values.observability.loki.nodePort.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-nodeport
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: loki
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: {{ .Values.observability.loki.service.port }}
+      targetPort: http
+      nodePort: {{ .Values.observability.loki.nodePort.port }}
+  selector:
+    app: loki
+{{- end }}
+{{- end }}
+
+# ==============================================
+# TEMPO CONFIGURATION AND RESOURCES
+# ==============================================
+{{- if .Values.observability.tempo.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tempo-config
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: tempo
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+data:
+  tempo.yaml: |
+    stream_over_http_enabled: {{ .Values.observability.tempo.config.stream_over_http_enabled }}
+    
+    server:
+      http_listen_port: {{ .Values.observability.tempo.config.server.http_listen_port }}
+      grpc_listen_port: {{ .Values.observability.tempo.config.server.grpc_listen_port }}
+      log_level: {{ .Values.observability.tempo.config.server.log_level }}
+    
+    query_frontend:
+      search:
+        duration_slo: {{ .Values.observability.tempo.config.query_frontend.search.duration_slo }}
+        throughput_bytes_slo: {{ .Values.observability.tempo.config.query_frontend.search.throughput_bytes_slo }}
+      trace_by_id:
+        duration_slo: {{ .Values.observability.tempo.config.query_frontend.trace_by_id.duration_slo }}
+        throughput_bytes_slo: {{ .Values.observability.tempo.config.query_frontend.trace_by_id.throughput_bytes_slo }}
+    
+    distributor:
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4317
+            http:
+              endpoint: 0.0.0.0:4318
+    
+    ingester:
+      max_block_duration: {{ .Values.observability.tempo.config.ingester.max_block_duration }}
+    
+    compactor:
+      compaction:
+        block_retention: {{ .Values.observability.tempo.config.compactor.compaction.block_retention }}
+    
+    metrics_generator:
+      registry:
+        external_labels:
+          source: {{ .Values.observability.tempo.config.metrics_generator.registry.external_labels.source }}
+          cluster: {{ .Values.observability.tempo.config.metrics_generator.registry.external_labels.cluster }}
+      storage:
+        path: {{ .Values.observability.tempo.config.metrics_generator.storage.path }}
+        remote_write:
+          - url: {{ (index .Values.observability.tempo.config.metrics_generator.storage.remote_write 0).url }}
+            send_exemplars: {{ (index .Values.observability.tempo.config.metrics_generator.storage.remote_write 0).send_exemplars }}
+    
+    storage:
+      trace:
+        backend: {{ .Values.observability.tempo.config.storage.trace.backend }}
+        wal:
+          path: {{ .Values.observability.tempo.config.storage.trace.wal.path }}
+        local:
+          path: {{ .Values.observability.tempo.config.storage.trace.local.path }}
+
+---
+{{- if .Values.observability.tempo.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tempo-pvc
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: tempo
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.observability.tempo.persistence.size }}
+{{- end }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: tempo
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tempo
+  template:
+    metadata:
+      labels:
+        app: tempo
+    spec:
+      containers:
+        - name: tempo
+          image: "{{ .Values.observability.tempo.image.repository }}:{{ .Values.observability.tempo.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "-config.file=/etc/tempo/tempo.yaml"
+          ports:
+            - name: http
+              containerPort: {{ .Values.observability.tempo.config.server.http_listen_port }}
+              protocol: TCP
+            - name: grpc
+              containerPort: {{ .Values.observability.tempo.config.server.grpc_listen_port }}
+              protocol: TCP
+            - name: otlp-grpc
+              containerPort: 4317
+              protocol: TCP
+            - name: otlp-http
+              containerPort: 4318
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/tempo
+            {{- if .Values.observability.tempo.persistence.enabled }}
+            - name: storage
+              mountPath: /tmp/tempo
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.observability.tempo.config.server.http_listen_port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.observability.tempo.config.server.http_listen_port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: tempo-config
+        {{- if .Values.observability.tempo.persistence.enabled }}
+        - name: storage
+          persistentVolumeClaim:
+            claimName: tempo-pvc
+        {{- else }}
+        - name: storage
+          emptyDir: {}
+        {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tempo-service
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: tempo
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.observability.tempo.service.type }}
+  ports:
+    - port: {{ .Values.observability.tempo.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: 4317
+      targetPort: otlp-grpc
+      protocol: TCP
+      name: otlp-grpc
+    - port: 4318
+      targetPort: otlp-http
+      protocol: TCP
+      name: otlp-http
+  selector:
+    app: tempo
+
+---
+{{- if .Values.observability.tempo.nodePort.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: tempo-nodeport
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: tempo
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: {{ .Values.observability.tempo.service.port }}
+      targetPort: http
+      nodePort: {{ .Values.observability.tempo.nodePort.port }}
+  selector:
+    app: tempo
+{{- end }}
+{{- end }}
+
+# ==============================================
+# PROMETHEUS CONFIGURATION AND RESOURCES
+# ==============================================
+{{- if .Values.observability.prometheus.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: prometheus
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+data:
+  prometheus.yml: |
+    global:
+      {{- toYaml .Values.observability.prometheus.config.global | nindent 6 }}
+    
+    rule_files:
+      {{- toYaml .Values.observability.prometheus.config.rule_files | nindent 6 }}
+    
+    scrape_configs:
+      {{- toYaml .Values.observability.prometheus.config.scrape_configs | nindent 6 }}
+
+---
+{{- if .Values.observability.prometheus.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-pvc
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: prometheus
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.observability.prometheus.persistence.size }}
+{{- end }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: prometheus
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: "{{ .Values.observability.prometheus.image.repository }}:{{ .Values.observability.prometheus.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          args:
+            - '--config.file=/etc/prometheus/prometheus.yml'
+            - '--storage.tsdb.path=/prometheus/'
+            - '--web.console.libraries=/etc/prometheus/console_libraries'
+            - '--web.console.templates=/etc/prometheus/consoles'
+            - '--storage.tsdb.retention.time=200h'
+            - '--web.enable-lifecycle'
+          ports:
+            - name: http
+              containerPort: {{ .Values.observability.prometheus.service.port }}
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/prometheus
+            {{- if .Values.observability.prometheus.persistence.enabled }}
+            - name: storage
+              mountPath: /prometheus
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: {{ .Values.observability.prometheus.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: {{ .Values.observability.prometheus.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: prometheus-config
+        {{- if .Values.observability.prometheus.persistence.enabled }}
+        - name: storage
+          persistentVolumeClaim:
+            claimName: prometheus-pvc
+        {{- else }}
+        - name: storage
+          emptyDir: {}
+        {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: prometheus
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.observability.prometheus.service.type }}
+  ports:
+    - port: {{ .Values.observability.prometheus.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: prometheus
+
+---
+{{- if .Values.observability.prometheus.nodePort.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-nodeport
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: prometheus
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: {{ .Values.observability.prometheus.service.port }}
+      targetPort: http
+      nodePort: {{ .Values.observability.prometheus.nodePort.port }}
+  selector:
+    app: prometheus
+{{- end }}
+{{- end }}
+
+# ==============================================
+# GRAFANA CONFIGURATION AND RESOURCES
+# ==============================================
+{{- if .Values.observability.grafana.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-config
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: grafana
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+data:
+  grafana.ini: |
+    [server]
+    http_port = {{ .Values.observability.grafana.service.port }}
+    
+    [auth]
+    disable_login_form = {{ .Values.observability.grafana.auth.disable_login_form }}
+    disable_signout_menu = {{ .Values.observability.grafana.auth.disable_signout_menu }}
+    
+    [auth.anonymous]
+    enabled = {{ .Values.observability.grafana.auth.anonymous.enabled }}
+    org_name = {{ .Values.observability.grafana.auth.anonymous.org_name }}
+    org_role = {{ .Values.observability.grafana.auth.anonymous.org_role }}
+    
+    [users]
+    allow_sign_up = false
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: grafana
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      {{- toYaml .Values.observability.grafana.datasources | nindent 6 }}
+
+---
+{{- if .Values.observability.grafana.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pvc
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: grafana
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.observability.grafana.persistence.size }}
+{{- end }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: grafana
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: "{{ .Values.observability.grafana.image.repository }}:{{ .Values.observability.grafana.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: {{ .Values.observability.grafana.service.port }}
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/grafana
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            {{- if .Values.observability.grafana.persistence.enabled }}
+            - name: storage
+              mountPath: /var/lib/grafana
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.observability.grafana.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.observability.grafana.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: grafana-config
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        {{- if .Values.observability.grafana.persistence.enabled }}
+        - name: storage
+          persistentVolumeClaim:
+            claimName: grafana-pvc
+        {{- else }}
+        - name: storage
+          emptyDir: {}
+        {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: grafana
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.observability.grafana.service.type }}
+  ports:
+    - port: {{ .Values.observability.grafana.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: grafana
+
+---
+{{- if .Values.observability.grafana.nodePort.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-nodeport
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: grafana
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: {{ .Values.observability.grafana.service.port }}
+      targetPort: http
+      nodePort: {{ .Values.observability.grafana.nodePort.port }}
+  selector:
+    app: grafana
+{{- end }}
+
+---
+{{- if .Values.observability.grafana.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-ingress
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: grafana
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  rules:
+    - host: {{ .Values.observability.grafana.ingress.hostname }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana-service
+                port:
+                  number: {{ .Values.observability.grafana.service.port }}
+{{- end }}
+{{- end }}
+
+# ==============================================
+# OPENTELEMETRY COLLECTOR CONFIGURATION AND RESOURCES
+# ==============================================
+{{- if .Values.observability.otelCollector.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: otel-collector
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+data:
+  otel-collector.yaml: |
+    extensions:
+      {{- toYaml .Values.observability.otelCollector.config.extensions | nindent 6 }}
+    
+    receivers:
+      {{- toYaml .Values.observability.otelCollector.config.receivers | nindent 6 }}
+    
+    processors:
+      {{- toYaml .Values.observability.otelCollector.config.processors | nindent 6 }}
+    
+    exporters:
+      {{- toYaml .Values.observability.otelCollector.config.exporters | nindent 6 }}
+    
+    service:
+      {{- toYaml .Values.observability.otelCollector.config.service | nindent 6 }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: otel-collector
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      containers:
+        - name: otel-collector
+          image: "{{ .Values.observability.otelCollector.image.repository }}:{{ .Values.observability.otelCollector.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--config=/etc/otel-collector/otel-collector.yaml"
+          ports:
+            - name: otlp-grpc
+              containerPort: {{ .Values.observability.otelCollector.service.ports.grpc }}
+              protocol: TCP
+            - name: otlp-http
+              containerPort: {{ .Values.observability.otelCollector.service.ports.http }}
+              protocol: TCP
+            - name: prometheus
+              containerPort: {{ .Values.observability.otelCollector.service.ports.prometheus }}
+              protocol: TCP
+            - name: zpages
+              containerPort: 55679
+              protocol: TCP
+            - name: health
+              containerPort: 13133
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otel-collector
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: otel-collector-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector-service
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: otel-collector
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.observability.otelCollector.service.type }}
+  ports:
+    - port: {{ .Values.observability.otelCollector.service.ports.grpc }}
+      targetPort: otlp-grpc
+      protocol: TCP
+      name: otlp-grpc
+    - port: {{ .Values.observability.otelCollector.service.ports.http }}
+      targetPort: otlp-http
+      protocol: TCP
+      name: otlp-http
+    - port: {{ .Values.observability.otelCollector.service.ports.prometheus }}
+      targetPort: prometheus
+      protocol: TCP
+      name: prometheus
+  selector:
+    app: otel-collector
+
+---
+{{- if .Values.observability.otelCollector.nodePort.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector-nodeport
+  namespace: {{ .Values.observability.namespace }}
+  labels:
+    app: otel-collector
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+spec:
+  type: NodePort
+  ports:
+    - name: otlp-grpc
+      port: {{ .Values.observability.otelCollector.service.ports.grpc }}
+      targetPort: otlp-grpc
+      nodePort: {{ .Values.observability.otelCollector.nodePort.grpcPort }}
+    - name: prometheus
+      port: {{ .Values.observability.otelCollector.service.ports.prometheus }}
+      targetPort: prometheus
+      nodePort: {{ .Values.observability.otelCollector.nodePort.prometheusPort }}
+  selector:
+    app: otel-collector
+{{- end }}
+{{- end }}
+{{- end }}

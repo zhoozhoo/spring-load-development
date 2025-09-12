@@ -1,0 +1,848 @@
+# Default values for spring-load-development
+# This is a YAML-formatted file.
+
+# Global settings
+global:
+  imageRegistry: "zhoozhoo.ca"
+  imagePullSecrets: []
+  storageClass: ""
+  imageTag: "0.0.7-SNAPSHOT"
+
+# Application configuration
+app:
+  name: spring-load-development
+  namespace: spring-load-development
+  
+# PostgreSQL configuration
+postgresql:
+  enabled: true
+  namespace: postgres
+  image:
+    tag: "17.6"
+  
+  auth:
+    database: loadsdb
+    username: user
+    password: password
+    postgresPassword: password
+  
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: ""
+  
+  service:
+    type: ClusterIP
+    ports:
+      postgresql: 5432
+  
+  initdbScripts:
+    "init.sql": |
+      -- Create additional database for keycloak if it doesn't exist
+      SELECT 'CREATE DATABASE keycloak' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'keycloak')\gexec
+
+# Keycloak configuration
+keycloak:
+  enabled: true
+  namespace: keycloak
+  
+  image:
+    registry: quay.io
+    repository: keycloak/keycloak
+    tag: "26.3"
+  
+  auth:
+    adminUser: admin
+    adminPassword: admin
+  
+  postgresql:
+    enabled: false
+    host: postgres-service.postgres.svc.cluster.local
+    port: 5432
+    database: keycloak
+    username: user
+    password: password
+  
+  extraEnvVars:
+    - name: KC_DB
+      value: postgres
+    - name: KC_DB_URL
+      value: jdbc:postgresql://postgres-service.postgres.svc.cluster.local:5432/keycloak
+    - name: KC_DB_USERNAME
+      value: user
+    - name: KC_HOSTNAME_STRICT
+      value: "false"
+    - name: KC_HOSTNAME_STRICT_HTTPS
+      value: "false"
+    - name: KC_PROXY_HEADERS
+      value: "xforwarded"
+    - name: KC_HEALTH_ENABLED
+      value: "true"
+    - name: KC_TRACING_ENABLED
+      value: "true"
+    - name: KC_TRACING_ENDPOINT
+      value: http://otel-collector-service.observability.svc.cluster.local:4317
+    - name: KC_TRACING_SAMPLER_TYPE
+      value: parentbased_traceidratio
+    - name: KC_TRACING_JDBC_ENABLED
+      value: "false"
+    - name: QUARKUS_OTEL_TRACES_SUPPRESS_NON_APPLICATION_URIS
+      value: "true"
+  
+  service:
+    type: ClusterIP
+    http:
+      port: 8080
+  
+  nodePort:
+    enabled: true
+    port: 30080
+  
+  ingress:
+    enabled: true
+    hostname: keycloak.local
+    path: /
+    pathType: Prefix
+  
+  realm:
+    enabled: true
+    configMapName: keycloak-realm-config
+
+# Observability stack configuration
+observability:
+  enabled: true
+  namespace: observability
+  
+  # Loki configuration
+  loki:
+    enabled: true
+    image:
+      repository: grafana/loki
+      tag: "3.5.3"
+    
+    config:
+      auth_enabled: false
+      server:
+        http_listen_port: 3100
+        grpc_listen_port: 9096
+        log_level: info
+      
+      common:
+        path_prefix: /loki
+        storage:
+          filesystem:
+            chunks_directory: /loki/chunks
+            rules_directory: /loki/rules
+        replication_factor: 1
+        ring:
+          kvstore:
+            store: inmemory
+      
+      query_range:
+        results_cache:
+          cache:
+            embedded_cache:
+              enabled: true
+              max_size_mb: 100
+      
+      schema_config:
+        configs:
+          - from: 2020-10-24
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index:
+              prefix: index_
+              period: 24h
+      
+      table_manager:
+        retention_deletes_enabled: true
+        retention_period: 6h
+      
+      limits_config:
+        metric_aggregation_enabled: true
+        allow_structured_metadata: true
+        volume_enabled: true
+        retention_period: 6h
+      
+      ruler:
+        enable_alertmanager_discovery: true
+        enable_api: true
+      
+      frontend:
+        encoding: protobuf
+      
+      compactor:
+        working_directory: /tmp/loki/retention
+        delete_request_store: filesystem
+        compaction_interval: 10m
+        retention_enabled: true
+        retention_delete_delay: 2h
+        retention_delete_worker_count: 150
+      
+      analytics:
+        reporting_enabled: false
+    
+    persistence:
+      enabled: true
+      size: 10Gi
+    
+    service:
+      type: ClusterIP
+      port: 3100
+    
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+    
+    nodePort:
+      enabled: true
+      port: 30100
+  
+  # Tempo configuration
+  tempo:
+    enabled: true
+    image:
+      repository: grafana/tempo
+      tag: "2.8.2"
+    
+    config:
+      stream_over_http_enabled: true
+      server:
+        http_listen_port: 3200
+        grpc_listen_port: 9095
+        log_level: info
+      
+      query_frontend:
+        search:
+          duration_slo: 5s
+          throughput_bytes_slo: 1.073741824e+09
+          metadata_slo:
+            duration_slo: 5s
+            throughput_bytes_slo: 1.073741824e+09
+        trace_by_id:
+          duration_slo: 100ms
+        metrics:
+          max_duration: 200h
+          query_backend_after: 5m
+          duration_slo: 5s
+          throughput_bytes_slo: 1.073741824e+09
+      
+      distributor:
+        usage:
+          cost_attribution:
+            enabled: false
+        receivers:
+          otlp:
+            protocols:
+              grpc:
+                endpoint: "0.0.0.0:4317"
+              http:
+                endpoint: "0.0.0.0:4318"
+      
+      compactor:
+        compaction:
+          block_retention: 1h
+      
+      ingester:
+        max_block_duration: 1m
+      
+      metrics_generator:
+        registry:
+          external_labels:
+            source: tempo
+            cluster: kubernetes
+        storage:
+          path: /var/tempo/generator/wal
+          remote_write:
+            - url: http://prometheus-service.observability.svc.cluster.local:9090/api/v1/write
+              send_exemplars: true
+        traces_storage:
+          path: /var/tempo/generator/traces
+      
+      storage:
+        trace:
+          backend: local
+          wal:
+            path: /var/tempo/wal
+          local:
+            path: /var/tempo/blocks
+      
+      overrides:
+        defaults:
+          cost_attribution:
+            dimensions: {}
+          metrics_generator:
+            processors: [service-graphs, span-metrics, local-blocks]
+            generate_native_histograms: both
+    
+    persistence:
+      enabled: true
+      size: 10Gi
+    
+    service:
+      type: ClusterIP
+      port: 3200
+    
+    nodePort:
+      enabled: true
+      port: 30200
+  
+  # Prometheus configuration
+  prometheus:
+    enabled: true
+    image:
+      repository: prom/prometheus
+      tag: "v3.5.0"
+    
+    config:
+      global:
+        scrape_interval: 15s
+        scrape_timeout: 15s
+        evaluation_interval: 15s
+      
+      scrape_configs:
+        - job_name: otel_collector
+          honor_timestamps: true
+          scrape_interval: 15s
+          scrape_timeout: 15s
+          metrics_path: /metrics
+          scheme: http
+          static_configs:
+            - targets: ["otel-collector-service.observability.svc.cluster.local:8889"]
+    
+    persistence:
+      enabled: true
+      size: 10Gi
+    
+    service:
+      type: ClusterIP
+      port: 9090
+    
+    nodePort:
+      enabled: true
+      port: 30091
+  
+  # Grafana configuration
+  grafana:
+    enabled: true
+    image:
+      repository: grafana/grafana
+      tag: "12.1.1"
+    
+    auth:
+      disable_login_form: true
+      disable_signout_menu: true
+      anonymous:
+        enabled: true
+        org_name: "Main Org."
+        org_role: "Admin"
+    
+    datasources:
+      - name: Loki
+        type: loki
+        uid: loki
+        access: proxy
+        orgId: 1
+        url: http://loki-service.observability.svc.cluster.local:3100
+        basicAuth: false
+        isDefault: false
+        version: 1
+        editable: true
+      
+      - name: Tempo
+        type: tempo
+        uid: tempo
+        access: proxy
+        orgId: 1
+        url: http://tempo-service.observability.svc.cluster.local:3200
+        basicAuth: false
+        isDefault: false
+        version: 1
+        editable: true
+        apiVersion: 1
+        jsonData:
+          httpMethod: GET
+          serviceMap:
+            datasourceUid: prometheus
+          streamingEnabled:
+            search: true
+      
+      - name: Prometheus
+        type: prometheus
+        uid: prometheus
+        access: proxy
+        url: http://prometheus-service.observability.svc.cluster.local:9090
+        basicAuth: false
+        isDefault: false
+        version: 1
+        editable: true
+        jsonData:
+          exemplarTraceIdDestinations:
+            - name: trace_id
+              datasourceUid: tempo
+          tracesToMetrics:
+            datasourceUid: prometheus
+            spanStartTimeShift: '2m'
+            spanEndTimeShift: '-2m'
+            tags: 
+              - key: 'service.name'
+                value: 'service_name'
+              - key: 'peer.service'
+                value: 'server'
+              - key: 'job'
+          tracesToLogsV2:
+            datasourceUid: loki
+            spanStartTimeShift: '-1h'
+            spanEndTimeShift: '1h'
+            filterByTraceID: true
+            filterBySpanID: true
+            tags:
+              - key: 'service.name'
+                value: 'service_name'
+              - key: 'peer.service'
+                value: 'server'
+              - key: 'job'
+    
+    persistence:
+      enabled: true
+      size: 5Gi
+    
+    service:
+      type: ClusterIP
+      port: 3000
+    
+    nodePort:
+      enabled: true
+      port: 30000
+    
+    ingress:
+      enabled: true
+      hostname: grafana.local
+  
+  # OpenTelemetry Collector configuration
+  otelCollector:
+    enabled: true
+    image:
+      repository: otel/opentelemetry-collector-contrib
+      tag: "0.132.0"
+    
+    config:
+      extensions:
+        health_check:
+          endpoint: 0.0.0.0:13133
+        zpages:
+          endpoint: :55679
+      
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4317
+            http:
+              endpoint: 0.0.0.0:4318
+      
+      processors:
+        batch:
+          send_batch_max_size: 1000
+          send_batch_size: 100
+          timeout: 15s
+        filter/ottl:
+          error_mode: ignore
+          traces:
+            span:
+              - IsMatch(span.attributes["http.url"], ".*actuator.*")
+              - IsMatch(span.attributes["http.route"], ".*actuator.*")
+              - kind.string == "Internal"
+        resource:
+          attributes:
+            - key: service.environment
+              value: kubernetes
+              action: insert
+            - key: service.version
+              from_attribute: service_version
+              action: insert
+            - key: service.name
+              from_attribute: service.name
+              action: upsert
+      
+      exporters:
+        debug:
+          verbosity: detailed
+        otlp/tempo:
+          endpoint: http://tempo-service.observability.svc.cluster.local:4317
+          tls:
+            insecure: true
+        otlphttp:
+          endpoint: http://loki-service.observability.svc.cluster.local:3100/loki/api/v1/push
+          headers:
+            "Content-Type": "application/json"
+        prometheus:
+          endpoint: "0.0.0.0:8889"
+          resource_to_telemetry_conversion:
+            enabled: true
+          enable_open_metrics: true
+      
+      service:
+        extensions: [zpages, health_check]
+        pipelines:
+          logs:
+            receivers: [otlp]
+            processors: [resource, batch]
+            exporters: [otlphttp]
+          traces:
+            receivers: [otlp]
+            processors: [filter/ottl, resource, batch]
+            exporters: [otlp/tempo]
+          metrics:
+            receivers: [otlp]
+            processors: [resource, batch]
+            exporters: [prometheus]
+    
+    service:
+      type: ClusterIP
+      ports:
+        grpc: 4317
+        http: 4318
+        prometheus: 8889
+    
+    nodePort:
+      enabled: true
+      grpcPort: 30317
+      prometheusPort: 30889
+
+# Application configuration (equivalent to Spring Cloud Config)
+config:
+  # Shared application configuration (equivalent to application.yml)
+  application:
+    server:
+      port: 8080
+      shutdown: graceful
+    spring:
+      cloud:
+        config:
+          label: main
+          allow-override: true
+          override-none: true
+    management:
+      endpoint:
+        health:
+          show-details: always
+          probes:
+            enabled: true
+      endpoints:
+        web:
+          exposure:
+            include: "*"
+      metrics:
+        enable:
+          all: true
+        tags:
+          environment: "kubernetes"
+        distribution:
+          percentiles-histogram:
+            http:
+              server:
+                requests: 'true'
+      tracing:
+        sampling:
+          probability: 1
+      info:
+        build:
+          enabled: true
+        defaults:
+          enabled: true
+        env:
+          enabled: true
+        java:
+          enabled: true
+        os:
+          enabled: true
+        process:
+          enabled: true
+
+  # Service-specific configurations
+  services:
+    loads-service:
+      spring:
+        application:
+          name: loads-service
+        r2dbc:
+          url: "r2dbc:postgresql://postgres-service.postgres.svc.cluster.local:5432/loadsdb"
+          pool:
+            enabled: true   
+            max-size: 20
+            initial-size: 10
+        sql:
+          init:
+            mode: always
+        security:
+          oauth2:
+            resourceserver:
+              jwt:
+                issuer-uri: "http://keycloak-service.keycloak.svc.cluster.local:8080/realms/reloading"
+                jwk-set-uri: "http://keycloak-service.keycloak.svc.cluster.local:8080/realms/reloading/protocol/openid-connect/certs"
+      eureka:
+        client:
+          serviceUrl:
+            defaultZone: "http://discovery-server-service.spring-load-development.svc.cluster.local:8761/eureka/"
+        instance:
+          instance-id: "${spring.application.name}:${random.uuid}"
+
+    components-service:
+      spring:
+        application:
+          name: components-service
+        r2dbc:
+          url: "r2dbc:postgresql://postgres-service.postgres.svc.cluster.local:5432/componentsdb"
+          pool:
+            enabled: true   
+            max-size: 20
+            initial-size: 10
+      eureka:
+        client:
+          serviceUrl:
+            defaultZone: "http://discovery-server-service.spring-load-development.svc.cluster.local:8761/eureka/"
+        instance:
+          instance-id: "${spring.application.name}:${random.uuid}"
+
+    rifles-service:
+      spring:
+        application:
+          name: rifles-service
+        r2dbc:
+          url: "r2dbc:postgresql://postgres-service.postgres.svc.cluster.local:5432/riflesdb"
+          pool:
+            enabled: true   
+            max-size: 20
+            initial-size: 10
+      eureka:
+        client:
+          serviceUrl:
+            defaultZone: "http://discovery-server-service.spring-load-development.svc.cluster.local:8761/eureka/"
+        instance:
+          instance-id: "${spring.application.name}:${random.uuid}"
+
+    api-gateway:
+      spring:
+        application:
+          name: api-gateway
+        cloud:
+          gateway:
+            discovery:
+              locator:
+                enabled: true
+                lower-case-service-id: true
+            routes:
+              - id: loads-service
+                uri: "lb://loads-service"
+                predicates:
+                  - Path=/api/loads/**
+              - id: components-service
+                uri: "lb://components-service"
+                predicates:
+                  - Path=/api/components/**
+              - id: rifles-service
+                uri: "lb://rifles-service"
+                predicates:
+                  - Path=/api/rifles/**
+      eureka:
+        client:
+          serviceUrl:
+            defaultZone: "http://discovery-server-service.spring-load-development.svc.cluster.local:8761/eureka/"
+        instance:
+          instance-id: "${spring.application.name}:${random.uuid}"
+
+    discovery-server:
+      spring:
+        application:
+          name: discovery-server
+      eureka:
+        instance:
+          hostname: discovery-server-service.spring-load-development.svc.cluster.local
+        client:
+          register-with-eureka: false
+          fetch-registry: false
+          service-url:
+            defaultZone: "http://discovery-server-service.spring-load-development.svc.cluster.local:8761/eureka/"
+
+    admin-server:
+      spring:
+        application:
+          name: admin-server
+        boot:
+          admin:
+            discovery:
+              enabled: true
+      eureka:
+        client:
+          serviceUrl:
+            defaultZone: "http://discovery-server-service.spring-load-development.svc.cluster.local:8761/eureka/"
+        instance:
+          instance-id: "${spring.application.name}:${random.uuid}"
+
+    mcp-server:
+      spring:
+        application:
+          name: mcp-server
+      eureka:
+        client:
+          serviceUrl:
+            defaultZone: "http://discovery-server-service.spring-load-development.svc.cluster.local:8761/eureka/"
+        instance:
+          instance-id: "${spring.application.name}:${random.uuid}"
+
+# Secrets configuration
+secrets:
+  database:
+    username: "user"
+    password: "password"
+  keycloak:
+    clientSecret: "secret"
+
+# Microservices configuration
+microservices:
+  loads-service:
+    enabled: false
+    replicaCount: 2
+    image:
+      repository: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service
+      tag: 0.0.7-SNAPSHOT
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+
+  components-service:
+    enabled: false
+    replicaCount: 2
+    image:
+      repository: zhoozhoo.ca/spring-load-development/spring-loaddev-components-service
+      tag: 0.0.7-SNAPSHOT
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+
+  rifles-service:
+    enabled: false
+    replicaCount: 2
+    image:
+      repository: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service
+      tag: 0.0.7-SNAPSHOT
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+
+  api-gateway:
+    enabled: false
+    replicaCount: 2
+    image:
+      repository: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway
+      tag: 0.0.7-SNAPSHOT
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+
+  discovery-server:
+    enabled: false
+    replicaCount: 1
+    image:
+      repository: zhoozhoo.ca/spring-load-development/spring-loaddev-discovery-server
+      tag: 0.0.7-SNAPSHOT
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+
+  admin-server:
+    enabled: false
+    replicaCount: 1
+    image:
+      repository: zhoozhoo.ca/spring-load-development/spring-loaddev-admin-server
+      tag: 0.0.7-SNAPSHOT
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+
+  mcp-server:
+    enabled: false
+    replicaCount: 2
+    image:
+      repository: zhoozhoo.ca/spring-load-development/spring-loaddev-mcp-server
+      tag: 0.0.7-SNAPSHOT
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        memory: "512Mi"
+        cpu: "250m"
+      limits:
+        memory: "1Gi"
+        cpu: "500m"
+
+# RBAC configuration
+rbac:
+  create: true
+  
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
+
+# Node selector, tolerations and affinity
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+# Autoscaling
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
