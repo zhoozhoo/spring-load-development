@@ -1,18 +1,26 @@
-# Spring Load Development - Infrastructure Helm Chart
+= Spring Load Development - Infrastructure Helm Chart
+:toc: left
+:toclevels: 3
+:sectlinks:
+:sectanchors:
+:source-highlighter: highlight.js
+:icons: font
 
 This Helm chart deploys the core infrastructure components for the Spring Load Development project on Kubernetes, providing a production-ready foundation for microservices deployment.
 
-## Overview
+== Overview
 
 The Helm chart deploys and manages:
-- **Two PostgreSQL Instances** - Separate databases for microservices and Keycloak
-- **Keycloak** - Authentication and authorization server with realm configuration
-- **Complete Observability Stack** - Loki, Tempo, Prometheus, Grafana, and OpenTelemetry Collector
-- **All networking and storage** - Services, persistent volumes, and NodePort access
 
-## Architecture
+* *Two PostgreSQL Instances* - Separate databases for microservices and Keycloak
+* *Keycloak* - Authentication and authorization server with realm configuration
+* *Complete Observability Stack* - Loki, Tempo, Prometheus, Grafana, and OpenTelemetry Collector
+* *All networking and storage* - Services, persistent volumes, and NodePort access
 
-```mermaid
+== Architecture
+
+[source,mermaid]
+....
 graph TB
     subgraph "Database Layer"
         PG1[PostgreSQL<br/>loadsdb<br/>postgres namespace]
@@ -69,18 +77,20 @@ graph TB
     class OTEL,LOKI,TEMPO,PROM,GRAF observability
     class MS microservice
     class USER external
-```
+....
 
-## Quick Start
+== Quick Start
 
-### Prerequisites
-- Kubernetes cluster (Docker Desktop, minikube, or cloud provider)
-- Helm 3.x installed
-- kubectl configured
+=== Prerequisites
 
-### 1. Deploy Infrastructure
+* Kubernetes cluster (Docker Desktop, minikube, or cloud provider)
+* Helm 3.x installed
+* kubectl configured
 
-```bash
+=== Deploy Infrastructure
+
+[source,bash]
+----
 # Clone the repository
 git clone <your-repo-url>
 cd spring-load-development/helm/spring-load-development
@@ -95,105 +105,117 @@ helm install spring-load-development . \
 helm upgrade spring-load-development . \
   --values values.yaml \
   --timeout 300s
-```
+----
 
-### 2. Access Services
+=== Access Services
 
-#### NodePort Access (Docker Desktop/Local)
-- **Grafana**: http://localhost:30000 (anonymous access enabled)
-- **Keycloak**: http://localhost:30080 (admin/admin)
-- **Prometheus**: http://localhost:30091
-- **Loki**: http://localhost:30100
-- **Tempo**: http://localhost:30200
+==== NodePort Access (Docker Desktop/Local)
 
-#### Port Forward Access
-```bash
+* *Grafana*: http://localhost:30000 (anonymous access enabled)
+* *Keycloak*: http://localhost:30080 (admin/admin)
+* *Prometheus*: http://localhost:30091
+* *Loki*: http://localhost:30100
+* *Tempo*: http://localhost:30200
+
+==== Port Forward Access
+
+[source,bash]
+----
 # Grafana
 kubectl port-forward svc/grafana-service 3000:3000 -n observability
 
 # Keycloak  
 kubectl port-forward svc/keycloak-service 8080:8080 -n keycloak
-```
+----
 
-## Components
+== Components
 
-### PostgreSQL Databases
+=== PostgreSQL Databases
 
-#### Microservices Database
-- **Namespace**: `postgres`
-- **Service**: `postgres-service.postgres.svc.cluster.local:5432`
-- **Database**: `loadsdb`
-- **Credentials**: `user` / `password`
-- **Purpose**: For Spring Boot microservices data storage
+==== Microservices Database
 
-#### Keycloak Database  
-- **Namespace**: `keycloak`
-- **Service**: `keycloak-postgres-service.keycloak.svc.cluster.local:5432`
-- **Database**: `keycloak`
-- **Credentials**: `user` / `password`
-- **Purpose**: Dedicated for Keycloak authentication data
+* *Namespace*: `postgres`
+* *Service*: `postgres-service.postgres.svc.cluster.local:5432`
+* *Database*: `loadsdb`
+* *Credentials*: `user` / `password`
+* *Purpose*: For Spring Boot microservices data storage
 
-### Keycloak Authentication Server
-- **Version**: 26.3
-- **Admin Console**: http://localhost:30080
-- **Admin Credentials**: `admin` / `admin`
-- **Features**:
-  - PostgreSQL backend with dedicated database
-  - Realm import enabled with custom realm configuration
-  - OpenTelemetry tracing to Tempo
-  - Health checks enabled
-  - Development mode for local testing
+==== Keycloak Database
 
-### Observability Stack
+* *Namespace*: `keycloak`
+* *Service*: `keycloak-postgres-service.keycloak.svc.cluster.local:5432`
+* *Database*: `keycloak`
+* *Credentials*: `user` / `password`
+* *Purpose*: Dedicated for Keycloak authentication data
 
-#### Loki (Log Aggregation)
-- **Version**: 3.5.3
-- **Port**: 30100
-- **Storage**: Filesystem with 10Gi persistent volume
-- **Retention**: 6 hours
-- **Purpose**: Centralized log collection and querying
+=== Keycloak Authentication Server
 
-#### Tempo (Distributed Tracing)
-- **Version**: 2.8.2  
-- **Port**: 30200
-- **Storage**: Local filesystem with 10Gi persistent volume
-- **Features**: OTLP receivers, metrics generation, trace querying
+* *Version*: 26.3
+* *Admin Console*: http://localhost:30080
+* *Admin Credentials*: `admin` / `admin`
+* *Features*:
+** PostgreSQL backend with dedicated database
+** Realm import enabled with custom realm configuration
+** OpenTelemetry tracing to Tempo
+** Health checks enabled
+** Development mode for local testing
 
-#### Prometheus (Metrics)
-- **Version**: v3.5.0
-- **Port**: 30091
-- **Storage**: 10Gi persistent volume
-- **Retention**: 24 hours
-- **Scrape Targets**: OpenTelemetry Collector metrics
+=== Observability Stack
 
-#### Grafana (Visualization)
-- **Version**: 12.1.1
-- **Port**: 30000
-- **Authentication**: Anonymous access enabled (Admin role)
-- **Datasources**: Pre-configured Loki, Tempo, and Prometheus
-- **Features**: 
-  - Cross-datasource correlation (traces ↔ metrics ↔ logs)
-  - Exemplar support for trace sampling
-  - 5Gi persistent storage
+==== Loki (Log Aggregation)
 
-#### OpenTelemetry Collector
-- **Version**: 0.132.0
-- **GRPC Port**: 30317
-- **Metrics Port**: 30889
-- **Purpose**: 
-  - Collect telemetry from applications
-  - Export logs to Loki
-  - Export traces to Tempo  
-  - Export metrics to Prometheus
-  - Health checks and monitoring
+* *Version*: 3.5.3
+* *Port*: 30100
+* *Storage*: Filesystem with 10Gi persistent volume
+* *Retention*: 6 hours
+* *Purpose*: Centralized log collection and querying
 
-## Configuration
+==== Tempo (Distributed Tracing)
 
-### Main Configuration File
+* *Version*: 2.8.2
+* *Port*: 30200
+* *Storage*: Local filesystem with 10Gi persistent volume
+* *Features*: OTLP receivers, metrics generation, trace querying
+
+==== Prometheus (Metrics)
+
+* *Version*: v3.5.0
+* *Port*: 30091
+* *Storage*: 10Gi persistent volume
+* *Retention*: 24 hours
+* *Scrape Targets*: OpenTelemetry Collector metrics
+
+==== Grafana (Visualization)
+
+* *Version*: 12.1.1
+* *Port*: 30000
+* *Authentication*: Anonymous access enabled (Admin role)
+* *Datasources*: Pre-configured Loki, Tempo, and Prometheus
+* *Features*:
+** Cross-datasource correlation (traces ↔ metrics ↔ logs)
+** Exemplar support for trace sampling
+** 5Gi persistent storage
+
+==== OpenTelemetry Collector
+
+* *Version*: 0.132.0
+* *GRPC Port*: 30317
+* *Metrics Port*: 30889
+* *Purpose*:
+** Collect telemetry from applications
+** Export logs to Loki
+** Export traces to Tempo
+** Export metrics to Prometheus
+** Health checks and monitoring
+
+== Configuration
+
+=== Main Configuration File
 
 All infrastructure configuration is managed through a single `values.yaml` file with the following main sections:
 
-```yaml
+[source,yaml]
+----
 # PostgreSQL for microservices
 postgresql:
   enabled: true
@@ -245,12 +267,14 @@ grafana:
 otelCollector:
   enabled: true
   namespace: observability
-```
+----
 
-### Customizing Configuration
+=== Customizing Configuration
 
-#### Storage Volumes
-```yaml
+==== Storage Volumes
+
+[source,yaml]
+----
 # Increase PostgreSQL storage
 postgresql:
   storage: 20Gi
@@ -260,10 +284,12 @@ loki:
   storage: 50Gi
 tempo:
   storage: 100Gi
-```
+----
 
-#### External Access
-```yaml
+==== External Access
+
+[source,yaml]
+----
 # Change NodePort ranges
 nodePort:
   grafana: 30000      # Default
@@ -273,29 +299,35 @@ nodePort:
   tempo: 30200        # Default
   otelGrpc: 30317     # Default
   otelMetrics: 30889  # Default
-```
+----
 
-#### Keycloak Configuration
-```yaml
+==== Keycloak Configuration
+
+[source,yaml]
+----
 keycloak:
   adminUsername: myadmin    # Change admin username
   adminPassword: mysecret   # Change admin password
   importRealm: false        # Disable realm import
-```
+----
 
-## Deployment
+== Deployment
 
-### Standard Deployment
-```bash
+=== Standard Deployment
+
+[source,bash]
+----
 # Deploy infrastructure
 helm install spring-load-development . \
   --values values.yaml \
   --create-namespace \
   --timeout 300s
-```
+----
 
-### Custom Configuration
-```bash
+=== Custom Configuration
+
+[source,bash]
+----
 # Create custom values
 cp values.yaml values-custom.yaml
 # Edit values-custom.yaml as needed
@@ -305,85 +337,102 @@ helm install spring-load-development . \
   --values values-custom.yaml \
   --create-namespace \
   --timeout 300s
-```
+----
 
-### Upgrade Existing Installation
-```bash
+=== Upgrade Existing Installation
+
+[source,bash]
+----
 # Upgrade infrastructure
 helm upgrade spring-load-development . \
   --values values.yaml \
   --timeout 300s
-```
+----
 
-## Database Access
+== Database Access
 
-### Microservices PostgreSQL
-```bash
+=== Microservices PostgreSQL
+
+[source,bash]
+----
 # Connect to database
 kubectl exec -it postgres-0 -n postgres -- psql -U user -d loadsdb
 
 # Port forward for external access
 kubectl port-forward postgres-0 5432:5432 -n postgres
-```
+----
 
-### Keycloak PostgreSQL
-```bash
+=== Keycloak PostgreSQL
+
+[source,bash]
+----
 # Connect to Keycloak database
 kubectl exec -it keycloak-postgres-0 -n keycloak -- psql -U user -d keycloak
 
 # Port forward for external access
 kubectl port-forward keycloak-postgres-0 5433:5432 -n keycloak
-```
+----
 
-## Monitoring and Observability
+== Monitoring and Observability
 
-### Grafana Dashboards
-- **Access**: http://localhost:30000
-- **Authentication**: Anonymous (Admin role)
-- **Pre-configured datasources**: Loki, Tempo, Prometheus
-- **Cross-datasource correlation**: Click trace IDs in logs to view in Tempo
+=== Grafana Dashboards
 
-### Log Aggregation (Loki)
-```bash
+* *Access*: http://localhost:30000
+* *Authentication*: Anonymous (Admin role)
+* *Pre-configured datasources*: Loki, Tempo, Prometheus
+* *Cross-datasource correlation*: Click trace IDs in logs to view in Tempo
+
+=== Log Aggregation (Loki)
+
+[source,bash]
+----
 # Access Loki directly
 curl http://localhost:30100/ready
 
 # Query logs via API
 curl 'http://localhost:30100/loki/api/v1/query?query={container="keycloak"}'
-```
+----
 
-### Distributed Tracing (Tempo)
-```bash
+=== Distributed Tracing (Tempo)
+
+[source,bash]
+----
 # Access Tempo directly
 curl http://localhost:30200/status
 
 # Send traces to OpenTelemetry Collector
 # Applications should export to: http://otel-collector:4317
-```
+----
 
-### Metrics (Prometheus)
-```bash
+=== Metrics (Prometheus)
+
+[source,bash]
+----
 # Access Prometheus UI
 open http://localhost:30091
 
 # Query metrics
 curl 'http://localhost:30091/api/v1/query?query=up'
-```
+----
 
-## Application Integration
+== Application Integration
 
-### PostgreSQL Connection (Microservices)
-```yaml
+=== PostgreSQL Connection (Microservices)
+
+[source,yaml]
+----
 # Spring Boot application.yml
 spring:
   r2dbc:
     url: r2dbc:postgresql://postgres-service.postgres.svc.cluster.local:5432/loadsdb
     username: user
     password: password
-```
+----
 
-### OpenTelemetry Configuration
-```yaml
+=== OpenTelemetry Configuration
+
+[source,yaml]
+----
 # Send telemetry to collector
 otel:
   exporter:
@@ -392,10 +441,12 @@ otel:
   resource:
     attributes:
       service.name: my-microservice
-```
+----
 
-### Keycloak Integration
-```yaml
+=== Keycloak Integration
+
+[source,yaml]
+----
 # Spring Security OAuth2 configuration
 spring:
   security:
@@ -403,24 +454,28 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: http://keycloak-service.keycloak.svc.cluster.local:8080/auth/realms/spring-loads
-```
+----
 
-## Troubleshooting
+== Troubleshooting
 
-### Common Issues
+=== Common Issues
 
-#### PostgreSQL Connection Issues
-```bash
+==== PostgreSQL Connection Issues
+
+[source,bash]
+----
 # Check PostgreSQL status
 kubectl get pods -n postgres
 kubectl logs postgres-0 -n postgres
 
 # Check service DNS resolution
 kubectl run test-pod --image=busybox --rm -it -- nslookup postgres-service.postgres.svc.cluster.local
-```
+----
 
-#### Keycloak Admin Login Issues
-```bash
+==== Keycloak Admin Login Issues
+
+[source,bash]
+----
 # Check Keycloak logs
 kubectl logs deployment/keycloak -n keycloak
 
@@ -430,10 +485,12 @@ kubectl exec -it deployment/keycloak -n keycloak -- cat /opt/keycloak/conf/keycl
 # Reset Keycloak database if needed
 kubectl delete pvc keycloak-postgres-pvc -n keycloak
 helm upgrade spring-load-development . --values values.yaml
-```
+----
 
-#### Observability Stack Issues
-```bash
+==== Observability Stack Issues
+
+[source,bash]
+----
 # Check all observability components
 kubectl get all -n observability
 
@@ -443,10 +500,12 @@ kubectl port-forward svc/otel-collector 4317:4317 -n observability
 
 # Check Grafana datasources
 curl http://localhost:30000/api/datasources
-```
+----
 
-### Health Checks
-```bash
+=== Health Checks
+
+[source,bash]
+----
 # Check all component health
 kubectl get pods --all-namespaces | grep -E "(postgres|keycloak|grafana|loki|tempo|prometheus|otel)"
 
@@ -455,10 +514,12 @@ kubectl describe pod <pod-name> -n <namespace>
 
 # Component logs
 kubectl logs <pod-name> -n <namespace> -f
-```
+----
 
-### Port Forward Everything
-```bash
+=== Port Forward Everything
+
+[source,bash]
+----
 # Forward all services for testing
 kubectl port-forward svc/grafana-service 3000:3000 -n observability &
 kubectl port-forward svc/keycloak-service 8080:8080 -n keycloak &
@@ -467,10 +528,12 @@ kubectl port-forward svc/loki-service 3100:3100 -n observability &
 kubectl port-forward svc/tempo-service 3200:3200 -n observability &
 kubectl port-forward postgres-0 5432:5432 -n postgres &
 kubectl port-forward keycloak-postgres-0 5433:5432 -n keycloak &
-```
+----
 
-### Reset Infrastructure
-```bash
+=== Reset Infrastructure
+
+[source,bash]
+----
 # Complete reset (deletes all data)
 helm uninstall spring-load-development
 kubectl delete namespace postgres keycloak observability
@@ -478,12 +541,14 @@ kubectl delete pvc --all --all-namespaces
 
 # Redeploy
 helm install spring-load-development . --values values.yaml --create-namespace --timeout 300s
-```
+----
 
-## Scaling and Production
+== Scaling and Production
 
-### Resource Adjustments
-```yaml
+=== Resource Adjustments
+
+[source,yaml]
+----
 # Increase replicas for high availability
 postgresql:
   replicas: 3
@@ -497,27 +562,31 @@ prometheus:
     limits:
       cpu: 2000m
       memory: 4Gi
-```
+----
 
-### Backup Strategy
-```bash
+=== Backup Strategy
+
+[source,bash]
+----
 # PostgreSQL backup
 kubectl exec postgres-0 -n postgres -- pg_dump -U user loadsdb > backup-microservices.sql
 kubectl exec keycloak-postgres-0 -n keycloak -- pg_dump -U user keycloak > backup-keycloak.sql
 
 # Persistent volume snapshots (cloud providers)
 kubectl get pvc --all-namespaces
-```
+----
 
-### Security Hardening
-- Change default passwords in production
-- Enable TLS for all services
-- Configure network policies
-- Use proper RBAC
-- Enable audit logging
+=== Security Hardening
 
-## Chart Information
-- **Chart Version**: 0.0.7-SNAPSHOT
-- **Kubernetes Version**: 1.24+
-- **Helm Version**: 3.x
-- **Dependencies**: None (all components included)
+* Change default passwords in production
+* Enable TLS for all services
+* Configure network policies
+* Use proper RBAC
+* Enable audit logging
+
+== Chart Information
+
+* *Chart Version*: 0.0.7-SNAPSHOT
+* *Kubernetes Version*: 1.24+
+* *Helm Version*: 3.x
+* *Dependencies*: None (all components included)
