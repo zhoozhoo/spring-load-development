@@ -145,7 +145,7 @@ observability:
     enabled: true
     image:
       repository: grafana/loki
-      tag: "3.5.3"
+      tag: "3.5.5"
     
     config:
       auth_enabled: false
@@ -321,7 +321,7 @@ observability:
     enabled: true
     image:
       repository: prom/prometheus
-      tag: "v3.5.0"
+      tag: "v3.6.0"
     
     config:
       global:
@@ -453,7 +453,7 @@ observability:
     enabled: true
     image:
       repository: otel/opentelemetry-collector-contrib
-      tag: "0.132.0"
+      tag: "0.135.0"
     
     config:
       extensions:
