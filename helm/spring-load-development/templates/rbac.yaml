@@ -26,5 +26,5 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: {{ include "spring-load-development.serviceAccountName" . }}
-  namespace: {{ .Values.app.namespace }}
+  namespace: {{ .Values.apiGateway.namespace | default "default" }}
 {{- end }}
