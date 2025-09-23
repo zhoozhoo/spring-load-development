@@ -37,3 +37,13 @@ metadata:
     name: {{ .Values.observability.namespace }}
     {{- include "spring-load-development.labels" . | nindent 4 }}
 {{- end }}
+---
+{{- if .Values.apiGateway.enabled }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.apiGateway.namespace }}
+  labels:
+    name: {{ .Values.apiGateway.namespace }}
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+{{- end }}

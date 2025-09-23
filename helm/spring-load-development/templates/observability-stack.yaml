@@ -64,10 +64,10 @@ data:
     compactor:
       working_directory: {{ .Values.observability.loki.config.compactor.working_directory }}
       compaction_interval: {{ .Values.observability.loki.config.compactor.compaction_interval }}
-      retention_enabled: {{ .Values.observability.loki.config.compactor.retention_enabled }}
-      retention_delete_delay: {{ .Values.observability.loki.config.compactor.retention_delete_delay }}
-      retention_delete_worker_count: {{ .Values.observability.loki.config.compactor.retention_delete_worker_count }}
       delete_request_store: {{ .Values.observability.loki.config.compactor.delete_request_store }}
+    
+    analytics:
+      reporting_enabled: {{ .Values.observability.loki.config.analytics.reporting_enabled }}
 
 ---
 {{- if .Values.observability.loki.persistence.enabled }}
@@ -218,25 +218,35 @@ data:
     
     server:
       http_listen_port: {{ .Values.observability.tempo.config.server.http_listen_port }}
-      grpc_listen_port: {{ .Values.observability.tempo.config.server.grpc_listen_port }}
       log_level: {{ .Values.observability.tempo.config.server.log_level }}
     
     query_frontend:
       search:
         duration_slo: {{ .Values.observability.tempo.config.query_frontend.search.duration_slo }}
         throughput_bytes_slo: {{ .Values.observability.tempo.config.query_frontend.search.throughput_bytes_slo }}
+        metadata_slo:
+          duration_slo: {{ .Values.observability.tempo.config.query_frontend.search.metadata_slo.duration_slo }}
+          throughput_bytes_slo: {{ .Values.observability.tempo.config.query_frontend.search.metadata_slo.throughput_bytes_slo }}
       trace_by_id:
         duration_slo: {{ .Values.observability.tempo.config.query_frontend.trace_by_id.duration_slo }}
         throughput_bytes_slo: {{ .Values.observability.tempo.config.query_frontend.trace_by_id.throughput_bytes_slo }}
+      metrics:
+        max_duration: {{ .Values.observability.tempo.config.query_frontend.metrics.max_duration }}
+        query_backend_after: {{ .Values.observability.tempo.config.query_frontend.metrics.query_backend_after }}
+        duration_slo: {{ .Values.observability.tempo.config.query_frontend.metrics.duration_slo }}
+        throughput_bytes_slo: {{ .Values.observability.tempo.config.query_frontend.metrics.throughput_bytes_slo }}
     
     distributor:
+      usage:
+        cost_attribution:
+          enabled: {{ .Values.observability.tempo.config.distributor.usage.cost_attribution.enabled }}
       receivers:
         otlp:
           protocols:
             grpc:
-              endpoint: 0.0.0.0:4317
+              endpoint: {{ (index .Values.observability.tempo.config.distributor.receivers.otlp.protocols.grpc).endpoint }}
             http:
-              endpoint: 0.0.0.0:4318
+              endpoint: {{ (index .Values.observability.tempo.config.distributor.receivers.otlp.protocols.http).endpoint }}
     
     ingester:
       max_block_duration: {{ .Values.observability.tempo.config.ingester.max_block_duration }}
@@ -255,6 +265,8 @@ data:
         remote_write:
           - url: {{ (index .Values.observability.tempo.config.metrics_generator.storage.remote_write 0).url }}
             send_exemplars: {{ (index .Values.observability.tempo.config.metrics_generator.storage.remote_write 0).send_exemplars }}
+      traces_storage:
+        path: {{ .Values.observability.tempo.config.metrics_generator.traces_storage.path }}
     
     storage:
       trace:
@@ -263,6 +275,14 @@ data:
           path: {{ .Values.observability.tempo.config.storage.trace.wal.path }}
         local:
           path: {{ .Values.observability.tempo.config.storage.trace.local.path }}
+    
+    overrides:
+      defaults:
+        cost_attribution:
+          dimensions: {{ toYaml .Values.observability.tempo.config.overrides.defaults.cost_attribution.dimensions | nindent 12 }}
+        metrics_generator:
+          processors: {{ toYaml .Values.observability.tempo.config.overrides.defaults.metrics_generator.processors | nindent 12 }}
+          generate_native_histograms: {{ .Values.observability.tempo.config.overrides.defaults.metrics_generator.generate_native_histograms }}
 
 ---
 {{- if .Values.observability.tempo.persistence.enabled }}
@@ -310,9 +330,6 @@ spec:
           ports:
             - name: http
               containerPort: {{ .Values.observability.tempo.config.server.http_listen_port }}
-              protocol: TCP
-            - name: grpc
-              containerPort: {{ .Values.observability.tempo.config.server.grpc_listen_port }}
               protocol: TCP
             - name: otlp-grpc
               containerPort: 4317
@@ -418,10 +435,7 @@ data:
   prometheus.yml: |
     global:
       {{- toYaml .Values.observability.prometheus.config.global | nindent 6 }}
-    
-    rule_files:
-      {{- toYaml .Values.observability.prometheus.config.rule_files | nindent 6 }}
-    
+        
     scrape_configs:
       {{- toYaml .Values.observability.prometheus.config.scrape_configs | nindent 6 }}
 
@@ -801,9 +815,6 @@ spec:
             - name: otlp-grpc
               containerPort: {{ .Values.observability.otelCollector.service.ports.grpc }}
               protocol: TCP
-            - name: otlp-http
-              containerPort: {{ .Values.observability.otelCollector.service.ports.http }}
-              protocol: TCP
             - name: prometheus
               containerPort: {{ .Values.observability.otelCollector.service.ports.prometheus }}
               protocol: TCP
@@ -849,10 +860,6 @@ spec:
       targetPort: otlp-grpc
       protocol: TCP
       name: otlp-grpc
-    - port: {{ .Values.observability.otelCollector.service.ports.http }}
-      targetPort: otlp-http
-      protocol: TCP
-      name: otlp-http
     - port: {{ .Values.observability.otelCollector.service.ports.prometheus }}
       targetPort: prometheus
       protocol: TCP
