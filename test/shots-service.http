@@ -26,12 +26,12 @@ grant_type=urn:ietf:params:oauth:grant-type:uma-ticket&client_id={{client_id}}&c
 ### Get all shots for a group
 # @name GetShots
 # Set {{group_id}} to the group ID you want to use
-GET http://localhost:8080/api/shots/group/{{group_id}}
+GET {{api_gateway_host}}/api/shots/group/{{group_id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Create a new shot
 # @name CreateShot
-POST http://localhost:8080/api/shots
+POST {{api_gateway_host}}/api/shots
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -42,12 +42,12 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get shot by ID
 # @name GetShotById
-GET http://localhost:8080/api/shots/{{CreateShot.response.body.id}}
+GET {{api_gateway_host}}/api/shots/{{CreateShot.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Update shot
 # @name UpdateShot
-PUT http://localhost:8080/api/shots/{{CreateShot.response.body.id}}
+PUT {{api_gateway_host}}/api/shots/{{CreateShot.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -58,5 +58,5 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Delete shot
 # @name DeleteShot  
-DELETE http://localhost:8080/api/shots/{{CreateShot.response.body.id}}
+DELETE {{api_gateway_host}}/api/shots/{{CreateShot.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
