@@ -90,9 +90,11 @@ keycloak:
       value: user
     - name: KC_HTTP_PORT
       value: "8080"
+    - name: KC_HOSTNAME
+      value: keycloak-service.keycloak.svc.cluster.local
+    - name: KC_HOSTNAME_PORT
+      value: "8080"
     - name: KC_HOSTNAME_STRICT
-      value: "false"
-    - name: KC_HOSTNAME_STRICT_HTTPS
       value: "false"
     - name: KC_PROXY_HEADERS
       value: "xforwarded"
@@ -493,8 +495,6 @@ observability:
               action: upsert
       
       exporters:
-        debug:
-          verbosity: detailed
         otlp/tempo:
           endpoint: "tempo-service.observability.svc.cluster.local:4317"
           tls:
@@ -513,15 +513,15 @@ observability:
           logs:
             receivers: [otlp]
             processors: [resource, batch]
-            exporters: [debug, otlphttp]
+            exporters: [otlphttp]
           traces:
             receivers: [otlp]
             processors: [filter/ottl, resource, batch]
-            exporters: [debug, otlp/tempo]
+            exporters: [otlp/tempo]
           metrics:
             receivers: [otlp]
             processors: [resource, batch]
-            exporters: [debug, prometheus]
+            exporters: [prometheus]
     
     service:
       type: ClusterIP
@@ -621,3 +621,32 @@ apiGateway:
 # OpenTelemetry Collector endpoint for microservices
 otelCollector:
   grpcEndpoint: "http://otel-collector-service.observability.svc.cluster.local:4317"
+
+# Loads Service configuration
+loadsService:
+  enabled: true
+  namespace: reloading
+  replicas: 1
+  
+  image:
+    repository: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service
+    tag: "0.0.7-SNAPSHOT"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 8080
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  env: []
+  
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}

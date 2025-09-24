@@ -11,8 +11,11 @@ metadata:
 data:
   application.yml: |
     server:
-      port: 0
       shutdown: graceful
+
+    eureka:
+      client:
+        enabled: false
 
     management:
       endpoint:
@@ -199,12 +202,7 @@ data:
                   filters:
                     - SetPath=/${path}
                     - RewritePath=/(?<segment>.*), /${segment}
-    
-    # Disable Eureka for Kubernetes
-    eureka:
-      client:
-        enabled: false
-        
+            
     springdoc:
       enable-native-support: true
       api-docs:
@@ -268,4 +266,36 @@ data:
             </Root>
         </Loggers>
     </Configuration>
+{{- end }}
+
+{{- if .Values.loadsService.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loads-service-config
+  namespace: {{ .Values.loadsService.namespace | default "default" }}
+  labels:
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+    app.kubernetes.io/component: loads-service-config
+data:
+  application.yml: |
+    spring:
+      r2dbc:
+        url: ${SPRING_R2DBC_URL:r2dbc:postgresql://postgres-service.default.svc.cluster.local:5432/loadsdb}
+        username: ${SPRING_R2DBC_USERNAME:user}
+        password: ${SPRING_R2DBC_PASSWORD:password}
+        pool:
+            enabled: true   
+            max-size: 20
+            initial-size: 10
+      sql:
+        init:
+          mode: always  
+      security:
+        oauth2:
+          resourceserver:
+            jwt:
+              issuer-uri: ${KEYCLOAK_BASE_URL:http://localhost:7080}/realms/reloading
+              jwk-set-uri: ${KEYCLOAK_BASE_URL:http://localhost:7080}/realms/reloading/protocol/openid-connect/certs
 {{- end }}

@@ -67,5 +67,5 @@ Create service DNS name for a microservice
 {{- define "spring-load-development.serviceDNS" -}}
 {{- $serviceName := .serviceName }}
 {{- $context := .context }}
-{{- printf "%s-%s.%s.svc.cluster.local" (include "spring-load-development.fullname" $context) $serviceName $context.Values.app.namespace }}
+{{- printf "%s.%s.svc.cluster.local" $serviceName $context.Values.app.namespace }}
 {{- end }}

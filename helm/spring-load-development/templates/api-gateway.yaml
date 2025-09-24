@@ -60,13 +60,13 @@ spec:
           timeoutSeconds: 5
           failureThreshold: 3
         volumeMounts:
-        - name: config-volume
+        - name: log4j2-volume
           mountPath: /etc/config
           readOnly: true
         resources:
           {{- toYaml .Values.apiGateway.resources | nindent 10 }}
       volumes:
-      - name: config-volume
+      - name: log4j2-volume
         configMap:
           name: log4j2-config
       {{- with .Values.apiGateway.nodeSelector }}
@@ -86,7 +86,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "spring-load-development.fullname" . }}-api-gateway
+  name: api-gateway
   namespace: {{ .Values.apiGateway.namespace | default "default" }}
   labels:
     {{- include "spring-load-development.labels" . | nindent 4 }}

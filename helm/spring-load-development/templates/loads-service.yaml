@@ -1,0 +1,110 @@
+{{- if .Values.loadsService.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "spring-load-development.fullname" . }}-loads-service
+  namespace: {{ .Values.loadsService.namespace | default "default" }}
+  labels:
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+    app.kubernetes.io/component: loads-service
+spec:
+  replicas: {{ .Values.loadsService.replicas | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "spring-load-development.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: loads-service
+  template:
+    metadata:
+      labels:
+        {{- include "spring-load-development.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: loads-service
+    spec:
+      serviceAccountName: {{ include "spring-load-development.serviceAccountName" . }}
+      containers:
+      - name: loads-service
+        image: {{ .Values.loadsService.image.repository }}:{{ .Values.loadsService.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.loadsService.image.pullPolicy | default "IfNotPresent" }}
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kubernetes"
+        - name: SPRING_APPLICATION_NAME
+          value: "loads-service"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: {{ .Values.otelCollector.grpcEndpoint | default "http://otel-collector-service.observability.svc.cluster.local:4317" }}
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: "grpc"
+        - name: KEYCLOAK_BASE_URL
+          value: {{ .Values.keycloak.integration.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:8080" }}
+        - name: SPRING_R2DBC_URL
+          value: "r2dbc:postgresql://postgres-service.{{ .Values.postgresql.namespace | default "default" }}.svc.cluster.local:5432/loadsdb"
+        - name: SPRING_R2DBC_USERNAME
+          value: {{ .Values.postgresql.auth.username | default "user" }}
+        - name: SPRING_R2DBC_PASSWORD
+          value: {{ .Values.postgresql.auth.password | default "password" }}
+        {{- if .Values.loadsService.env }}
+        {{- toYaml .Values.loadsService.env | nindent 8 }}
+        {{- end }}
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: log4j2-volume
+          mountPath: /etc/config
+          readOnly: true
+        resources:
+          {{- toYaml .Values.loadsService.resources | nindent 10 }}
+      volumes:
+      - name: log4j2-volume
+        configMap:
+          name: log4j2-config
+      {{- with .Values.loadsService.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.loadsService.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.loadsService.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loads-service
+  namespace: {{ .Values.loadsService.namespace | default "default" }}
+  labels:
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+    app.kubernetes.io/component: loads-service
+spec:
+  type: {{ .Values.loadsService.service.type | default "ClusterIP" }}
+  ports:
+  - port: {{ .Values.loadsService.service.port | default 8080 }}
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    {{- include "spring-load-development.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: loads-service
+{{- end }}
