@@ -18,3 +18,5 @@ spring:
         sources:
           - name: common-config
           - name: api-gateway
+      discovery:
+        all-namespaces: true
