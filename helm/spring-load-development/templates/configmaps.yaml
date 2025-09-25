@@ -102,15 +102,15 @@ data:
         oauth2:
           resourceserver:
             jwt:
-              jwk-set-uri: {{ .Values.keycloak.integration.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:8080" }}/realms/{{ .Values.keycloak.integration.realm | default "reloading" }}/protocol/openid-connect/certs
+              jwk-set-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm | default "reloading" }}/protocol/openid-connect/certs
           client:
             provider:
               keycloak:
-                token-uri: {{ .Values.keycloak.integration.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:8080" }}/realms/{{ .Values.keycloak.integration.realm | default "reloading" }}/protocol/openid-connect/token
-                authorization-uri: {{ .Values.keycloak.integration.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:8080" }}/realms/{{ .Values.keycloak.integration.realm | default "reloading" }}/protocol/openid-connect/auth
-                issuer-uri: {{ .Values.keycloak.integration.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:8080" }}/realms/{{ .Values.keycloak.integration.realm | default "reloading" }}
-                user-info-uri: {{ .Values.keycloak.integration.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:8080" }}/realms/{{ .Values.keycloak.integration.realm | default "reloading" }}/protocol/openid-connect/userinfo
-                jwk-set-uri: {{ .Values.keycloak.integration.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:8080" }}/realms/{{ .Values.keycloak.integration.realm | default "reloading" }}/protocol/openid-connect/certs
+                token-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/token
+                authorization-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/auth
+                issuer-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}
+                user-info-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/userinfo
+                jwk-set-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/certs
             registration:
               api-gateway:
                 provider: keycloak
@@ -125,7 +125,7 @@ data:
                   - roles
       webclient:
         keycloak:
-          base-url: {{ .Values.keycloak.integration.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:8080" }}
+          base-url: {{ .Values.keycloak.integration.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:{{ .Values.keycloak.nodePort.port | default 8080 }}" }}
       reactor:
         context-propagation: AUTO
       cloud:
@@ -296,6 +296,6 @@ data:
         oauth2:
           resourceserver:
             jwt:
-              issuer-uri: ${KEYCLOAK_BASE_URL:http://localhost:7080}/realms/reloading
-              jwk-set-uri: ${KEYCLOAK_BASE_URL:http://localhost:7080}/realms/reloading/protocol/openid-connect/certs
+              issuer-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}
+              jwk-set-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/certs
 {{- end }}
