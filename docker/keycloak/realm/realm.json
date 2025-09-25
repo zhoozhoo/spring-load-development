@@ -478,6 +478,35 @@
     "webAuthnPolicyPasswordlessExtraOrigins": [],
     "users": [
         {
+            "id": "0b7c3d98-3d7b-4566-a1a0-85802007fd2d",
+            "username": "reloader1",
+            "firstName": "First1",
+            "lastName": "Last1",
+            "email": "reloader1@re.loading",
+            "emailVerified": true,
+            "enabled": true,
+            "createdTimestamp": 1758811816197,
+            "totp": false,
+            "credentials": [
+                {
+                    "id": "79528274-4a35-4458-92ef-338a50e94c0d",
+                    "type": "password",
+                    "userLabel": "My password",
+                    "createdDate": 1758811885254,
+                    "secretData": "{\"value\":\"kw8fll84QSG3smpjsjJGG0mjpAUSjMrdDaq+CxWYZR8=\",\"salt\":\"phdiKw4yhqZMtc4Kncr1pA==\",\"additionalParameters\":{}}",
+                    "credentialData": "{\"hashIterations\":5,\"algorithm\":\"argon2\",\"additionalParameters\":{\"hashLength\":[\"32\"],\"memory\":[\"7168\"],\"type\":[\"id\"],\"version\":[\"1.3\"],\"parallelism\":[\"1\"]}}"
+                }
+            ],
+            "disableableCredentialTypes": [],
+            "requiredActions": [],
+            "realmRoles": [
+                "reloader",
+                "default-roles-reloading"
+            ],
+            "notBefore": 0,
+            "groups": []
+        },
+        {
             "id": "18b1a958-281f-48ec-b21a-c7107e11102d",
             "username": "service-account-reloading-client",
             "emailVerified": false,
@@ -2112,7 +2141,6 @@
         ]
     },
     "internationalizationEnabled": false,
-    "supportedLocales": [],
     "authenticationFlows": [
         {
             "id": "6f5bb80c-5c51-48e7-9935-4ccf5073402c",
@@ -2862,7 +2890,7 @@
         "shortVerificationUri": "",
         "actionTokenGeneratedByUserLifespan.reset-credentials": ""
     },
-    "keycloakVersion": "26.2.0",
+    "keycloakVersion": "26.3.1",
     "userManagedAccessAllowed": false,
     "organizationsEnabled": false,
     "verifiableCredentialsEnabled": false,
