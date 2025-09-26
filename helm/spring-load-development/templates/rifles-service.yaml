@@ -1,0 +1,110 @@
+{{- if .Values.riflesService.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "spring-load-development.fullname" . }}-rifles-service
+  namespace: {{ .Values.microservices.namespace | default "reloading" }}
+  labels:
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rifles-service
+spec:
+  replicas: {{ .Values.riflesService.replicas | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "spring-load-development.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: rifles-service
+  template:
+    metadata:
+      labels:
+        {{- include "spring-load-development.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: rifles-service
+    spec:
+      serviceAccountName: {{ include "spring-load-development.serviceAccountName" . }}
+      containers:
+      - name: rifles-service
+        image: {{ .Values.riflesService.image.repository }}:{{ .Values.riflesService.image.tag | default .Chart.AppVersion }}
+        imagePullPolicy: {{ .Values.riflesService.image.pullPolicy | default "IfNotPresent" }}
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kubernetes"
+        - name: SPRING_APPLICATION_NAME
+          value: "rifles-service"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: {{ .Values.otelCollector.grpcEndpoint | default "http://otel-collector-service.observability.svc.cluster.local:4317" }}
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: "grpc"
+        - name: KEYCLOAK_BASE_URL
+          value: {{ .Values.keycloak.integration.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:8080" }}
+        - name: SPRING_R2DBC_URL
+          value: "r2dbc:postgresql://postgres-service.{{ .Values.postgresql.namespace | default "postgres" }}.svc.cluster.local:5432/loadsdb"
+        - name: SPRING_R2DBC_USERNAME
+          value: {{ .Values.postgresql.auth.username | default "user" }}
+        - name: SPRING_R2DBC_PASSWORD
+          value: {{ .Values.postgresql.auth.password | default "password" }}
+        {{- if .Values.riflesService.env }}
+        {{- toYaml .Values.riflesService.env | nindent 8 }}
+        {{- end }}
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: http
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: log4j2-volume
+          mountPath: /etc/config
+          readOnly: true
+        resources:
+          {{- toYaml .Values.riflesService.resources | nindent 10 }}
+      volumes:
+      - name: log4j2-volume
+        configMap:
+          name: log4j2-config
+      {{- with .Values.riflesService.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.riflesService.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.riflesService.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rifles-service
+  namespace: {{ .Values.microservices.namespace | default "reloading" }}
+  labels:
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rifles-service
+spec:
+  type: {{ .Values.riflesService.service.type | default "ClusterIP" }}
+  ports:
+  - port: {{ .Values.riflesService.service.port | default 8082 }}
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    {{- include "spring-load-development.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: rifles-service
+{{- end }}

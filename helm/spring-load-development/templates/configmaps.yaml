@@ -4,7 +4,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: common-config
-  namespace: {{ .Values.apiGateway.namespace | default "default" }}
+  namespace: {{ .Values.microservices.namespace | default "reloading" }}
   labels:
     {{- include "spring-load-development.labels" . | nindent 4 }}
     app.kubernetes.io/component: common-config
@@ -88,7 +88,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: api-gateway
-  namespace: {{ .Values.apiGateway.namespace | default "default" }}
+  namespace: {{ .Values.microservices.namespace | default "reloading" }}
   labels:
     {{- include "spring-load-development.labels" . | nindent 4 }}
     app.kubernetes.io/component: api-gateway
@@ -170,7 +170,7 @@ data:
                         name: componentsCircuitBreaker
                     - Retry=1
                 - id: mcp-server
-                  uri: http://mcp-server.{{ .Values.apiGateway.namespace | default "default" }}.svc.cluster.local:8080
+                  uri: http://mcp-server-service.{{ .Values.apiGateway.namespace | default "default" }}.svc.cluster.local:8080
                   predicates:
                     - Path=/mcp/**
                   filters:
@@ -181,7 +181,7 @@ data:
                         name: mcpCircuitBreaker
                     - Retry=1
                 - id: mcp-server-sse
-                  uri: http://mcp-server.{{ .Values.apiGateway.namespace | default "default" }}.svc.cluster.local:8080
+                  uri: http://mcp-server-service.{{ .Values.apiGateway.namespace | default "default" }}.svc.cluster.local:8080
                   predicates:
                     - Path=/sse/**
                   filters:
@@ -227,7 +227,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: log4j2-config
-  namespace: {{ .Values.apiGateway.namespace | default "default" }}
+  namespace: {{ .Values.microservices.namespace | default "reloading" }}
   labels:
     {{- include "spring-load-development.labels" . | nindent 4 }}
     app.kubernetes.io/component: log4j2-config
@@ -274,7 +274,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: loads-service-config
-  namespace: {{ .Values.loadsService.namespace | default "default" }}
+  namespace: {{ .Values.microservices.namespace | default "reloading" }}
   labels:
     {{- include "spring-load-development.labels" . | nindent 4 }}
     app.kubernetes.io/component: loads-service-config
@@ -298,4 +298,114 @@ data:
             jwt:
               issuer-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}
               jwk-set-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/certs
+{{- end }}
+
+{{- if .Values.componentsService.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: components-service-config
+  namespace: {{ .Values.componentsService.namespace | default "reloading" }}
+  labels:
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+    app.kubernetes.io/component: components-service-config
+data:
+  application.yml: |
+    spring:
+      r2dbc:
+        url: ${SPRING_R2DBC_URL:r2dbc:postgresql://postgres-service.postgres.svc.cluster.local:5432/loadsdb}
+        username: ${SPRING_R2DBC_USERNAME:user}
+        password: ${SPRING_R2DBC_PASSWORD:password}
+        pool:
+            enabled: true   
+            max-size: 20
+            initial-size: 10
+      sql:
+        init:
+          mode: always  
+      security:
+        oauth2:
+          resourceserver:
+            jwt:
+              issuer-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}
+              jwk-set-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/certs
+
+    eureka:
+      client:
+        enabled: false
+{{- end }}
+
+{{- if .Values.riflesService.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rifles-service-config
+  namespace: {{ .Values.riflesService.namespace | default "reloading" }}
+  labels:
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rifles-service-config
+data:
+  application.yml: |
+    spring:
+      r2dbc:
+        url: ${SPRING_R2DBC_URL:r2dbc:postgresql://postgres-service.postgres.svc.cluster.local:5432/loadsdb}
+        username: ${SPRING_R2DBC_USERNAME:user}
+        password: ${SPRING_R2DBC_PASSWORD:password}
+        pool:
+            enabled: true   
+            max-size: 20
+            initial-size: 10
+      sql:
+        init:
+          mode: always  
+      security:
+        oauth2:
+          resourceserver:
+            jwt:
+              issuer-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}
+              jwk-set-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/certs
+
+    eureka:
+      client:
+        enabled: false
+{{- end }}
+
+{{- if .Values.mcpServer.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-server-config
+  namespace: {{ .Values.mcpServer.namespace | default "reloading" }}
+  labels:
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mcp-server-config
+data:
+  application.yml: |
+    spring:
+      ai:
+        mcp:
+          server:
+            name: reloading-mcp-server
+            version: 0.0.7-SNAPSHOT
+            type: ASYNC
+            sse-message-endpoint: /mcp/messages
+            tool-change-notification: true
+            capabilities:
+              tool: true
+              resource: false
+              prompt: false
+              completion: false
+      security:
+        oauth2:
+          resourceserver:
+            jwt:
+              issuer-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}
+              jwk-set-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/certs
+    
+    eureka:
+      client:
+        enabled: false
 {{- end }}
