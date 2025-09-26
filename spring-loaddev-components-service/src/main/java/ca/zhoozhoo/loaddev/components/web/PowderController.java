@@ -172,7 +172,7 @@ public class PowderController {
         return powderRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingPowder -> powderRepository.delete(existingPowder)
                         .then(just(new ResponseEntity<Void>(NO_CONTENT)))
-                        .doOnSuccess(result -> log.info("Deleted powder with id: {}", id)))
+                        .doOnSuccess(_ -> log.info("Deleted powder with id: {}", id)))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
     }
 }

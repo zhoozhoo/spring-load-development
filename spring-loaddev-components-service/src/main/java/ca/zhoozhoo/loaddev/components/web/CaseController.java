@@ -172,7 +172,7 @@ public class CaseController {
         return caseRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingCase -> caseRepository.delete(existingCase)
                         .then(just(new ResponseEntity<Void>(NO_CONTENT)))
-                        .doOnSuccess(result -> log.info("Deleted case with id: {}", id)))
+                        .doOnSuccess(_ -> log.info("Deleted case with id: {}", id)))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
     }
 }

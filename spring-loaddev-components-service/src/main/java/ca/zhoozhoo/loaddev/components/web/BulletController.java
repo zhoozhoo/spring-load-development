@@ -174,7 +174,7 @@ public class BulletController {
         return bulletRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingBullet -> bulletRepository.delete(existingBullet)
                         .then(just(new ResponseEntity<Void>(NO_CONTENT)))
-                        .doOnSuccess(result -> log.info("Deleted bullet with id: {}", id)))
+                        .doOnSuccess(_ -> log.info("Deleted bullet with id: {}", id)))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
     }
 }
