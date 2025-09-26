@@ -62,10 +62,10 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
-Create service DNS name for a microservice
+Create service DNS name for a microservices
 */}}
 {{- define "spring-load-development.serviceDNS" -}}
 {{- $serviceName := .serviceName }}
 {{- $context := .context }}
-{{- printf "%s.%s.svc.cluster.local" $serviceName $context.Values.app.namespace }}
+{{- printf "%s.%s.svc.cluster.local" $serviceName $context.Values.microservices.namespace }}
 {{- end }}
