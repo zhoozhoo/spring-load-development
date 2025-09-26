@@ -29,7 +29,7 @@
     </subprojects>
 
     <properties>
-        <java.version>24</java.version>
+        <java.version>25</java.version>
         <spring-boot.version>3.5.6</spring-boot.version>
         <spring-boot-admin.version>3.5.0</spring-boot-admin.version>
         <spring-cloud.version>2025.0.0</spring-cloud.version>
