@@ -1,4 +1,4 @@
-= Spring Load Development - Infrastructure Helm Chart
+= Spring Load Development - Helm Chart
 :toc: left
 :toclevels: 3
 :sectlinks:
@@ -6,20 +6,31 @@
 :source-highlighter: highlight.js
 :icons: font
 
-This Helm chart deploys the core infrastructure components for the Spring Load Development project on Kubernetes, providing a production-ready foundation for microservices deployment.
+This Helm chart deploys the complete Spring Load Development application stack on Kubernetes, including infrastructure components and microservices, providing a production-ready foundation for the reloading management system.
 
 == Overview
 
 The Helm chart deploys and manages:
 
 * *Two PostgreSQL Instances* - Separate databases for microservices and Keycloak
-* *Keycloak* - Authentication and authorization server with realm configuration
+* *Keycloak* - Authentication and authorization server with realm configuration  
 * *Complete Observability Stack* - Loki, Tempo, Prometheus, Grafana, and OpenTelemetry Collector
+* *Spring Boot Microservices* - API Gateway, Loads Service, Components Service, Rifles Service, and MCP Server
 * *All networking and storage* - Services, persistent volumes, and NodePort access
+
+=== Application Services
+
+The chart includes the following Spring Boot microservices:
+
+* *API Gateway* (`spring-loaddev-api-gateway`) - Main entry point and routing service
+* *Loads Service* (`spring-loaddev-loads-service`) - Load data management service  
+* *Components Service* (`spring-loaddev-components-service`) - Component management service
+* *Rifles Service* (`spring-loaddev-rifles-service`) - Rifle data management service
+* *MCP Server* (`spring-loaddev-mcp-server`) - Model Context Protocol server
 
 == Architecture
 
-[source,mermaid]
+[mermaid]
 ....
 graph TB
     subgraph "Database Layer"
@@ -31,6 +42,14 @@ graph TB
         KC[Keycloak<br/>Auth Server<br/>keycloak namespace]
     end
     
+    subgraph "Microservices - reloading namespace"
+        GW[API Gateway<br/>Port 30090<br/>spring-loaddev-api-gateway]
+        LS[Loads Service<br/>spring-loaddev-loads-service]
+        CS[Components Service<br/>spring-loaddev-components-service]
+        RS[Rifles Service<br/>spring-loaddev-rifles-service]
+        MCP[MCP Server<br/>spring-loaddev-mcp-server]
+    end
+    
     subgraph "Observability Stack"
         OTEL[OpenTelemetry Collector<br/>metrics/traces/logs<br/>observability namespace]
         LOKI[Loki<br/>Log Aggregation<br/>observability namespace]
@@ -39,16 +58,25 @@ graph TB
         GRAF[Grafana<br/>Visualization<br/>observability namespace]
     end
     
-    subgraph "Future Microservices"
-        MS[Spring Boot<br/>Microservices<br/>default namespace]
-    end
-    
     %% Database connections
-    PG1 -.-> MS
+    PG1 --> LS
+    PG1 --> CS  
+    PG1 --> RS
+    PG1 --> MCP
     PG2 --> KC
     
+    %% Service routing
+    GW --> LS
+    GW --> CS
+    GW --> RS
+    GW --> MCP
+    
     %% Telemetry flow
-    MS -.-> OTEL
+    GW --> OTEL
+    LS --> OTEL
+    CS --> OTEL
+    RS --> OTEL
+    MCP --> OTEL
     KC --> OTEL
     OTEL --> LOKI
     OTEL --> TEMPO
@@ -60,11 +88,16 @@ graph TB
     PROM --> GRAF
     
     %% Authentication flow
-    MS -.-> KC
+    GW --> KC
+    LS --> KC
+    CS --> KC
+    RS --> KC
+    MCP --> KC
     
     %% External access
     GRAF -.-> |NodePort 30000| USER[User Browser]
     KC -.-> |NodePort 30080| USER
+    GW -.-> |NodePort 30090| USER
     
     classDef database fill:#e1f5fe,stroke:#388e3c,stroke-width:2px,color:#000000
     classDef auth fill:#fff3e0,stroke:#388e3c,stroke-width:2px,color:#000000
@@ -75,7 +108,7 @@ graph TB
     class PG1,PG2 database
     class KC auth
     class OTEL,LOKI,TEMPO,PROM,GRAF observability
-    class MS microservice
+    class GW,LS,CS,RS,MCP microservice
     class USER external
 ....
 
@@ -113,9 +146,12 @@ helm upgrade spring-load-development . \
 
 * *Grafana*: http://localhost:30000 (anonymous access enabled)
 * *Keycloak*: http://localhost:30080 (admin/admin)
+* *API Gateway*: http://localhost:30090 (main application entry point)
 * *Prometheus*: http://localhost:30091
 * *Loki*: http://localhost:30100
 * *Tempo*: http://localhost:30200
+* *OpenTelemetry Collector GRPC*: localhost:30317
+* *OpenTelemetry Collector Metrics*: http://localhost:30889
 
 ==== Port Forward Access
 
@@ -126,6 +162,15 @@ kubectl port-forward svc/grafana-service 3000:3000 -n observability
 
 # Keycloak  
 kubectl port-forward svc/keycloak-service 8080:8080 -n keycloak
+
+# API Gateway
+kubectl port-forward svc/api-gateway-service 8080:8080 -n reloading
+
+# Individual microservices
+kubectl port-forward svc/loads-service 8081:8080 -n reloading
+kubectl port-forward svc/components-service 8082:8080 -n reloading
+kubectl port-forward svc/rifles-service 8083:8080 -n reloading
+kubectl port-forward svc/mcp-server-service 8084:8080 -n reloading
 ----
 
 == Components
@@ -138,6 +183,8 @@ kubectl port-forward svc/keycloak-service 8080:8080 -n keycloak
 * *Service*: `postgres-service.postgres.svc.cluster.local:5432`
 * *Database*: `loadsdb`
 * *Credentials*: `user` / `password`
+* *Storage*: 8Gi persistent volume
+* *Version*: PostgreSQL 17.6
 * *Purpose*: For Spring Boot microservices data storage
 
 ==== Keycloak Database
@@ -146,25 +193,75 @@ kubectl port-forward svc/keycloak-service 8080:8080 -n keycloak
 * *Service*: `keycloak-postgres-service.keycloak.svc.cluster.local:5432`
 * *Database*: `keycloak`
 * *Credentials*: `user` / `password`
+* *Storage*: 8Gi persistent volume
+* *Version*: PostgreSQL 17.6
 * *Purpose*: Dedicated for Keycloak authentication data
 
 === Keycloak Authentication Server
 
 * *Version*: 26.3
+* *Namespace*: `keycloak`
 * *Admin Console*: http://localhost:30080
 * *Admin Credentials*: `admin` / `admin`
+* *Realm*: `reloading`
+* *Client ID*: `reloading-client`
 * *Features*:
 ** PostgreSQL backend with dedicated database
 ** Realm import enabled with custom realm configuration
 ** OpenTelemetry tracing to Tempo
 ** Health checks enabled
 ** Development mode for local testing
+** Integration with API Gateway and microservices
+
+=== Spring Boot Microservices
+
+==== API Gateway
+
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:0.0.7-SNAPSHOT`
+* *Namespace*: `reloading`
+* *Service*: `api-gateway-service.reloading.svc.cluster.local:8080`
+* *NodePort*: 30090
+* *Purpose*: Main entry point, routing, and load balancing for all microservices
+* *Resources*: CPU 500m-1000m, Memory 512Mi-1Gi
+
+==== Loads Service
+
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:0.0.7-SNAPSHOT`
+* *Namespace*: `reloading`
+* *Service*: `loads-service.reloading.svc.cluster.local:8080`
+* *Purpose*: Manages load data and calculations
+* *Resources*: CPU 250m-500m, Memory 256Mi-512Mi
+
+==== Components Service
+
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-components-service:0.0.7-SNAPSHOT`
+* *Namespace*: `reloading`
+* *Service*: `components-service.reloading.svc.cluster.local:8080`
+* *Purpose*: Manages reloading components (bullets, powder, primers, cases)
+* *Resources*: CPU 250m-500m, Memory 256Mi-512Mi
+
+==== Rifles Service
+
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:0.0.7-SNAPSHOT`
+* *Namespace*: `reloading`
+* *Service*: `rifles-service.reloading.svc.cluster.local:8080`
+* *Purpose*: Manages rifle and firearm data
+* *Resources*: CPU 250m-500m, Memory 256Mi-512Mi
+
+==== MCP Server
+
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-mcp-server:0.0.7-SNAPSHOT`
+* *Namespace*: `reloading`
+* *Service*: `mcp-server-service.reloading.svc.cluster.local:8080`
+* *Purpose*: Model Context Protocol server for AI integrations
+* *Resources*: CPU 250m-500m, Memory 256Mi-512Mi
 
 === Observability Stack
 
 ==== Loki (Log Aggregation)
 
-* *Version*: 3.5.3
+* *Version*: 3.5.5
+* *Namespace*: `observability`
 * *Port*: 30100
 * *Storage*: Filesystem with 10Gi persistent volume
 * *Retention*: 6 hours
@@ -179,7 +276,8 @@ kubectl port-forward svc/keycloak-service 8080:8080 -n keycloak
 
 ==== Prometheus (Metrics)
 
-* *Version*: v3.5.0
+* *Version*: v3.6.0
+* *Namespace*: `observability`
 * *Port*: 30091
 * *Storage*: 10Gi persistent volume
 * *Retention*: 24 hours
@@ -198,75 +296,136 @@ kubectl port-forward svc/keycloak-service 8080:8080 -n keycloak
 
 ==== OpenTelemetry Collector
 
-* *Version*: 0.132.0
+* *Version*: 0.135.0
+* *Namespace*: `observability`
 * *GRPC Port*: 30317
 * *Metrics Port*: 30889
 * *Purpose*:
 ** Collect telemetry from applications
-** Export logs to Loki
-** Export traces to Tempo
+** Export logs to Loki via OTLP HTTP
+** Export traces to Tempo via OTLP
 ** Export metrics to Prometheus
 ** Health checks and monitoring
+** Filter out actuator endpoints and internal spans
 
 == Configuration
 
 === Main Configuration File
 
-All infrastructure configuration is managed through a single `values.yaml` file with the following main sections:
+All application and infrastructure configuration is managed through a single `values.yaml` file with the following main sections:
 
 [source,yaml]
 ----
+# Global settings
+global:
+  imageRegistry: "zhoozhoo.ca"
+  imageTag: "0.0.7-SNAPSHOT"
+
+# Microservices configuration  
+microservices:
+  name: spring-load-development
+  namespace: reloading
+
+# API Gateway
+apiGateway:
+  enabled: true
+  namespace: reloading
+  replicas: 1
+  service:
+    type: NodePort
+    port: 8080
+    nodePort: 30090
+
+# Individual microservices
+loadsService:
+  enabled: true
+  namespace: reloading
+  replicas: 1
+
+componentsService:
+  enabled: true
+  namespace: reloading
+  replicas: 1
+
+riflesService:
+  enabled: true
+  namespace: reloading
+  replicas: 1
+
+mcpServer:
+  enabled: true
+  namespace: reloading
+  replicas: 1
+
 # PostgreSQL for microservices
 postgresql:
   enabled: true
   namespace: postgres
-  database: loadsdb
-  username: user
-  password: password
-  storage: 10Gi
+  auth:
+    database: loadsdb
+    username: user
+    password: password
+  persistence:
+    enabled: true
+    size: 8Gi
 
 # PostgreSQL for Keycloak
 keycloakPostgresql:
   enabled: true
   namespace: keycloak
-  database: keycloak
-  username: user
-  password: password
-  storage: 5Gi
+  auth:
+    database: keycloak
+    username: user
+    password: password
+  persistence:
+    enabled: true
+    size: 8Gi
 
 # Authentication server
 keycloak:
   enabled: true
   namespace: keycloak
-  adminUsername: admin
-  adminPassword: admin
-  importRealm: true
+  auth:
+    adminUser: admin
+    adminPassword: admin
+  realm:
+    enabled: true
+    configMapName: keycloak-realm-config
+  integration:
+    baseUrl: "http://keycloak-service.keycloak.svc.cluster.local:8080"
+    realm: "reloading"
+    clientId: "reloading-client"
 
 # Observability components
-loki:
+observability:
   enabled: true
   namespace: observability
-  storage: 10Gi
-
-tempo:
-  enabled: true
-  namespace: observability
-  storage: 10Gi
-
-prometheus:
-  enabled: true
-  namespace: observability
-  storage: 10Gi
-
-grafana:
-  enabled: true
-  namespace: observability
-  storage: 5Gi
-  anonymousAccess: true
-
-otelCollector:
-  enabled: true
-  namespace: observability
+  
+  loki:
+    enabled: true
+    persistence:
+      size: 10Gi
+  
+  tempo:
+    enabled: true
+    persistence:
+      size: 10Gi
+  
+  prometheus:
+    enabled: true
+    persistence:
+      size: 10Gi
+  
+  grafana:
+    enabled: true
+    persistence:
+      size: 5Gi
+    auth:
+      anonymous:
+        enabled: true
+  
+  otelCollector:
+    enabled: true
 ----
 
 === Customizing Configuration
@@ -277,28 +436,76 @@ otelCollector:
 ----
 # Increase PostgreSQL storage
 postgresql:
-  storage: 20Gi
+  persistence:
+    size: 20Gi
+
+keycloakPostgresql:
+  persistence:
+    size: 15Gi
 
 # Increase observability storage
-loki:
-  storage: 50Gi
-tempo:
-  storage: 100Gi
+observability:
+  loki:
+    persistence:
+      size: 50Gi
+  tempo:
+    persistence:
+      size: 100Gi
+  prometheus:
+    persistence:
+      size: 25Gi
 ----
 
-==== External Access
+==== Microservice Scaling
+
+[source,yaml]
+----
+# Scale microservices
+apiGateway:
+  replicas: 2
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+
+loadsService:
+  replicas: 3
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+----
+
+==== External Access Ports
 
 [source,yaml]
 ----
 # Change NodePort ranges
-nodePort:
-  grafana: 30000      # Default
-  keycloak: 30080     # Default
-  prometheus: 30091   # Default
-  loki: 30100         # Default
-  tempo: 30200        # Default
-  otelGrpc: 30317     # Default
-  otelMetrics: 30889  # Default
+apiGateway:
+  service:
+    nodePort: 30090      # API Gateway entry point
+
+keycloak:
+  nodePort:
+    port: 30080         # Keycloak admin console
+
+observability:
+  grafana:
+    nodePort:
+      port: 30000       # Grafana dashboard
+  prometheus:
+    nodePort:
+      port: 30091       # Prometheus UI
+  loki:
+    nodePort:
+      port: 30100       # Loki API
+  tempo:
+    nodePort:
+      port: 30200       # Tempo API
+  otelCollector:
+    nodePort:
+      grpcPort: 30317   # OTEL GRPC
+      prometheusPort: 30889  # OTEL Metrics
 ----
 
 ==== Keycloak Configuration
@@ -306,9 +513,15 @@ nodePort:
 [source,yaml]
 ----
 keycloak:
-  adminUsername: myadmin    # Change admin username
-  adminPassword: mysecret   # Change admin password
-  importRealm: false        # Disable realm import
+  auth:
+    adminUser: myadmin        # Change admin username
+    adminPassword: mysecret   # Change admin password
+  realm:
+    enabled: false           # Disable realm import
+  integration:
+    realm: "mycustomrealm"   # Custom realm name
+    clientId: "myclient"     # Custom client ID
+    clientSecret: "newsecret" # Custom client secret
 ----
 
 == Deployment
@@ -427,6 +640,12 @@ spring:
     url: r2dbc:postgresql://postgres-service.postgres.svc.cluster.local:5432/loadsdb
     username: user
     password: password
+  
+  # Or for traditional JDBC
+  datasource:
+    url: jdbc:postgresql://postgres-service.postgres.svc.cluster.local:5432/loadsdb
+    username: user
+    password: password
 ----
 
 === OpenTelemetry Configuration
@@ -437,10 +656,18 @@ spring:
 otel:
   exporter:
     otlp:
-      endpoint: http://otel-collector.observability.svc.cluster.local:4317
+      endpoint: http://otel-collector-service.observability.svc.cluster.local:4317
   resource:
     attributes:
-      service.name: my-microservice
+      service.name: loads-service
+      service.version: 0.0.7-SNAPSHOT
+      service.environment: kubernetes
+
+# Spring Boot specific configuration
+management:
+  otlp:
+    tracing:
+      endpoint: http://otel-collector-service.observability.svc.cluster.local:4317
 ----
 
 === Keycloak Integration
@@ -453,7 +680,45 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak-service.keycloak.svc.cluster.local:8080/auth/realms/spring-loads
+          issuer-uri: http://keycloak-service.keycloak.svc.cluster.local:8080/realms/reloading
+      client:
+        registration:
+          reloading-client:
+            client-id: reloading-client
+            client-secret: 2EvQuluZfxaaRms8V4NhzBDWzVCSXtty
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: openid,profile,email
+        provider:
+          keycloak:
+            issuer-uri: http://keycloak-service.keycloak.svc.cluster.local:8080/realms/reloading
+----
+
+=== Service-to-Service Communication
+
+[source,yaml]
+----
+# API Gateway routes configuration
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: loads-service
+          uri: http://loads-service.reloading.svc.cluster.local:8080
+          predicates:
+            - Path=/api/loads/**
+        - id: components-service
+          uri: http://components-service.reloading.svc.cluster.local:8080
+          predicates:
+            - Path=/api/components/**
+        - id: rifles-service
+          uri: http://rifles-service.reloading.svc.cluster.local:8080
+          predicates:
+            - Path=/api/rifles/**
+        - id: mcp-server
+          uri: http://mcp-server-service.reloading.svc.cluster.local:8080
+          predicates:
+            - Path=/api/mcp/**
 ----
 
 == Troubleshooting
@@ -536,11 +801,52 @@ kubectl port-forward keycloak-postgres-0 5433:5432 -n keycloak &
 ----
 # Complete reset (deletes all data)
 helm uninstall spring-load-development
-kubectl delete namespace postgres keycloak observability
+kubectl delete namespace postgres keycloak observability reloading
 kubectl delete pvc --all --all-namespaces
 
 # Redeploy
 helm install spring-load-development . --values values.yaml --create-namespace --timeout 300s
+----
+
+== Development and Testing
+
+=== Local Development Setup
+
+[source,bash]
+----
+# Deploy only infrastructure (no microservices)
+helm install spring-load-development . \
+  --values values.yaml \
+  --set apiGateway.enabled=false \
+  --set loadsService.enabled=false \
+  --set componentsService.enabled=false \
+  --set riflesService.enabled=false \
+  --set mcpServer.enabled=false \
+  --create-namespace
+
+# Run microservices locally pointing to cluster infrastructure
+export POSTGRES_URL=jdbc:postgresql://localhost:5432/loadsdb
+export KEYCLOAK_URL=http://localhost:30080/realms/reloading
+export OTEL_ENDPOINT=http://localhost:30317
+kubectl port-forward postgres-0 5432:5432 -n postgres &
+----
+
+=== Testing Individual Services
+
+[source,bash]
+----
+# Test API Gateway
+curl http://localhost:30090/actuator/health
+
+# Test individual services through API Gateway
+curl http://localhost:30090/api/loads/health
+curl http://localhost:30090/api/components/health
+curl http://localhost:30090/api/rifles/health
+curl http://localhost:30090/api/mcp/health
+
+# Direct service testing (port forward required)
+kubectl port-forward svc/loads-service 8081:8080 -n reloading
+curl http://localhost:8081/actuator/health
 ----
 
 == Scaling and Production
@@ -552,16 +858,37 @@ helm install spring-load-development . --values values.yaml --create-namespace -
 # Increase replicas for high availability
 postgresql:
   replicas: 3
-  
+
 keycloak:
   replicas: 2
-  
-# Increase resource limits
-prometheus:
+
+# Scale microservices  
+apiGateway:
+  replicas: 2
   resources:
     limits:
       cpu: 2000m
-      memory: 4Gi
+      memory: 2Gi
+
+loadsService:
+  replicas: 3
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+# Increase observability resources
+observability:
+  prometheus:
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+  grafana:
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
 ----
 
 === Backup Strategy
@@ -572,21 +899,35 @@ prometheus:
 kubectl exec postgres-0 -n postgres -- pg_dump -U user loadsdb > backup-microservices.sql
 kubectl exec keycloak-postgres-0 -n keycloak -- pg_dump -U user keycloak > backup-keycloak.sql
 
+# Application-specific data backup
+kubectl exec postgres-0 -n postgres -- pg_dump -U user -t loads loadsdb > backup-loads.sql
+kubectl exec postgres-0 -n postgres -- pg_dump -U user -t components loadsdb > backup-components.sql
+kubectl exec postgres-0 -n postgres -- pg_dump -U user -t rifles loadsdb > backup-rifles.sql
+
 # Persistent volume snapshots (cloud providers)
 kubectl get pvc --all-namespaces
+
+# Configuration backup
+kubectl get configmap keycloak-realm-config -n keycloak -o yaml > keycloak-realm-backup.yaml
 ----
 
 === Security Hardening
 
 * Change default passwords in production
-* Enable TLS for all services
-* Configure network policies
-* Use proper RBAC
+* Enable TLS for all services  
+* Configure network policies for namespace isolation
+* Use proper RBAC with least privilege access
 * Enable audit logging
+* Use image scanning and signed images
+* Configure pod security policies
+* Use secrets management for sensitive data
 
 == Chart Information
 
 * *Chart Version*: 0.0.7-SNAPSHOT
+* *App Version*: 0.0.7-SNAPSHOT
+* *Maintainer*: Zhubin Salehi (zhoozhoo@yahoo.com)
 * *Kubernetes Version*: 1.24+
 * *Helm Version*: 3.x
 * *Dependencies*: None (all components included)
+* *Namespaces*: `postgres`, `keycloak`, `observability`, `reloading`
