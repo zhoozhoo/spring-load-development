@@ -24,6 +24,7 @@ Spring Load Development is a project that demonstrates the integration of variou
 * AI Integration using link:https://spring.io/projects/spring-ai[Spring AI] and Model Context Protocol (MCP)
 * Observability and Monitoring using link:https://opentelemetry.io/[OpenTelemetry], link:https://grafana.com/oss/tempo/[Tempo], link:https://grafana.com/oss/loki/[Loki], link:https://prometheus.io/[Prometheus], and link:https://grafana.com/[Grafana]
 * Application Monitoring using link:https://github.com/codecentric/spring-boot-admin[Spring Boot Admin]
+* Container Orchestration using link:https://kubernetes.io/[Kubernetes] and link:https://helm.sh/[Helm]
 
 [NOTE]
 ====
@@ -34,13 +35,23 @@ All technologies are open source and widely adopted in cloud-native Java ecosyst
 
 === Prerequisites
 
-* Java 21 or later
+* Java 25 or later
 * Docker and Docker Compose
-* Maven 3.8+
+* Maven 4.0+ (4.0.0-rc-4 or later)
+* Kubernetes cluster and kubectl (for Kubernetes deployment)
+* Helm 3.0+ (for Helm deployment)
 
-=== Running Locally
+=== Deployment Options
 
-==== Clone the repository:
+The Spring Load Development application can be deployed in multiple ways:
+
+1. **Docker Compose** - For local development and testing
+2. **Kubernetes with Helm** - For production deployment
+3. **Manual Spring Boot** - For development debugging
+
+==== Option 1: Docker Compose Deployment (Recommended for Development)
+
+===== Clone the repository:
 
 [source,bash]
 ----
@@ -48,21 +59,85 @@ git clone https://github.com/zhoozhoo/spring-load-development.git
 cd spring-load-development
 ----
 
-=== Build the project:
+===== Build the project:
 
 [source,bash]
 ----
 mvn clean package
 ----
 
-==== Start the infrastructure services using Docker Compose:
+===== Start all services using Docker Compose:
 
 [source,bash]
 ----
 docker-compose --env-file .env up -d
 ----
 
+This will start all infrastructure services (PostgreSQL, Keycloak, Grafana, etc.) and the Spring Boot applications.
+
+==== Option 2: Kubernetes Deployment with Helm (Recommended for Production)
+
+===== Install using Helm:
+
+[source,bash]
+----
+# Add and update helm repo (if using a helm repository)
+helm repo update
+
+# Install the application
+helm install spring-load-development ./helm/spring-load-development \
+  --create-namespace \
+  --namespace spring-load-development
+----
+
+===== Access services:
+
+[source,bash]
+----
+# Get service URLs
+kubectl get services -n spring-load-development
+
+# For local development, port-forward to access services
+kubectl port-forward -n spring-load-development service/spring-loaddev-api-gateway 8080:8080
+----
+
+For detailed Helm chart configuration, see link:helm/spring-load-development/README.adoc[Helm Chart Documentation].
+
+==== Option 3: Manual Spring Boot Services (Development/Debugging)
+
+===== Start infrastructure services:
+
+[source,bash]
+----
+docker-compose --env-file .env up -d postgres keycloak grafana loki tempo prometheus otel-collector
+----
+
+===== Start Spring Boot services in order:
+
+[source,bash]
+----
+# 1. Start Config Server (required by other services)
+java -jar spring-loaddev-config-server/target/spring-loaddev-config-server-*.jar
+
+# 2. Start Discovery Server (in a new terminal)
+java -jar spring-loaddev-discovery-server/target/spring-loaddev-discovery-server-*.jar
+
+# 3. Start API Gateway (in a new terminal)
+java -jar spring-loaddev-api-gateway/target/spring-loaddev-api-gateway-*.jar
+
+# 4. Start microservices (each in a new terminal)
+java -jar spring-loaddev-loads-service/target/spring-loaddev-loads-service-*.jar
+java -jar spring-loaddev-rifles-service/target/spring-loaddev-rifles-service-*.jar
+java -jar spring-loaddev-components-service/target/spring-loaddev-components-service-*.jar
+java -jar spring-loaddev-mcp-server/target/spring-loaddev-mcp-server-*.jar
+
+# 5. Start Admin Server (optional, for monitoring)
+java -jar spring-loaddev-admin-server/target/spring-loaddev-admin-server-*.jar
+----
+
 === Accessing Services
+
+==== Docker Compose Deployment
 
 Once the services are up and running, you can access them at the following URLs:
 
@@ -70,6 +145,29 @@ Once the services are up and running, you can access them at the following URLs:
 * Keycloak Admin Console: http://localhost:7080
 * Grafana Dashboard: http://localhost:3000
 * Admin Server: http://localhost:9090
+
+==== Kubernetes Deployment
+
+For Kubernetes deployment, services are accessible via NodePort or port-forwarding:
+
+[source,bash]
+----
+# Port-forward API Gateway
+kubectl port-forward -n spring-load-development service/spring-loaddev-api-gateway 8080:8080
+
+# Port-forward Grafana
+kubectl port-forward -n observability service/grafana 3000:3000
+
+# Port-forward Keycloak
+kubectl port-forward -n keycloak service/keycloak 7080:8080
+----
+
+Alternatively, if using NodePort services, check the assigned ports:
+
+[source,bash]
+----
+kubectl get services -A | grep NodePort
+----
 
 === AI Integration
 
@@ -160,7 +258,7 @@ Access the observability components at:
 
 The diagram below shows the monitoring data flow used by this project. Services export metrics via the Actuator Prometheus endpoint and send telemetry (traces and logs) over OTLP to an OpenTelemetry Collector. The Collector routes traces to Tempo, logs to Loki and can optionally forward metrics or expose them for Prometheus. Prometheus scrapes the Actuator metrics endpoint; Grafana visualizes metrics, traces and logs; Alertmanager handles alerts from Prometheus; Spring Boot Admin provides a quick actuator UI for all services.
 
-[source,mermaid]
+[mermaid]
 ....
 flowchart LR
     subgraph Services[Services / Applications]
@@ -201,7 +299,7 @@ This observability architecture shows how all telemetry data (traces, logs, and 
 
 == High-Level Architecture
 
-[source,mermaid]
+[mermaid]
 ....
 flowchart TB
     subgraph Client[Clients]
@@ -266,7 +364,7 @@ flowchart TB
 
 == Database Schema
 
-[source,mermaid]
+[mermaid]
 ....
 erDiagram
     LOADS {
