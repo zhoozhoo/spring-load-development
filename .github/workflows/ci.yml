@@ -10,16 +10,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
+    - name: Set up JDK 25
+      uses: actions/setup-java@v5
       with:
-        java-version: '21'
+        java-version: '25'
         distribution: 'temurin'
         cache: 'maven'
 
-    - name: Set up Maven
+    - name: Set up Maven 4.0.0
       uses: stCarolas/setup-maven@v5
       with:
         maven-version: 4.0.0-rc-4

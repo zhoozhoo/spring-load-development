@@ -113,7 +113,7 @@ public class RifleController {
         return rifleRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingRifle -> rifleRepository.delete(existingRifle)
                         .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT)))
-                        .doOnSuccess(result -> log.info("Deleted rifle with id: {}", id)))
+                        .doOnSuccess(_ -> log.info("Deleted rifle with id: {}", id)))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
     }
 

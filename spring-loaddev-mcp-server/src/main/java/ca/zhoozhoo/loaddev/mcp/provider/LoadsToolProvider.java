@@ -6,11 +6,13 @@ import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_REQUEST;
 
 import java.util.List;
 
+import org.springaicommunity.mcp.annotation.McpTool;
+import org.springaicommunity.mcp.annotation.McpToolParam;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ca.zhoozhoo.loaddev.mcp.config.McpToolRegistrationConfig.ReactiveContextHolder;
 import ca.zhoozhoo.loaddev.mcp.dto.GroupDto;
@@ -25,7 +27,7 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 import reactor.util.context.ContextView;
 
-@Service
+@Component
 @Log4j2
 public class LoadsToolProvider {
 
@@ -70,16 +72,14 @@ public class LoadsToolProvider {
      * Ensures reactive context propagation and proper error handling.
      *
      * @param id      ID of the load to retrieve
-     * @param context Tool execution context
      * @return The requested load
      * @throws McpError with INTERNAL_ERROR code if reactive context is missing or service discovery fails
      * @throws McpError with INVALID_REQUEST code if authentication fails
      * @throws McpError with INVALID_PARAMS code if load is not found or id is invalid
      */
-    @Tool(description = "Find a specific load by its unique identifier", name = "getLoad")
-    public LoadDto getLoadById(
-            @ToolParam(description = "Numeric ID of the load to retrieve", required = true) Long id,
-            ToolContext context) {
+     @McpTool(description = "Find a specific load by its unique identifier", name = "getLoad", annotations = @McpTool.McpAnnotations(title = "Get Load by ID", readOnlyHint = true, destructiveHint = false, idempotentHint = true))
+     public LoadDto getLoadById(
+            @McpToolParam(description = "Numeric ID of the load to retrieve", required = true) Long id) {
         log.debug("Retrieving load with ID: {}", id);
 
         if (id == null || id <= 0) {

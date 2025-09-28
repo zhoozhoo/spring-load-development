@@ -25,12 +25,12 @@ grant_type=urn:ietf:params:oauth:grant-type:uma-ticket&client_id={{client_id}}&c
 
 ### Get list of all loads
 # @name GetLoads
-GET http://localhost:8080/api/loads
+GET {{api_gateway_host}}/api/loads
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Create a new load
 # @name CreateLoad
-POST http://localhost:8080/api/loads
+POST {{api_gateway_host}}/api/loads
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -54,17 +54,17 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get the created load by ID
 # @name GetLoadById
-GET http://localhost:8080/api/loads/{{CreateLoad.response.body.id}}
+GET {{api_gateway_host}}/api/loads/{{CreateLoad.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get load statistics
 # @name GetLoadStats
-GET http://localhost:8080/api/loads/{{CreateLoad.response.body.id}}/statistics
+GET {{api_gateway_host}}/api/loads/{{CreateLoad.response.body.id}}/statistics
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Update the created load
 # @name UpdateLoad
-PUT http://localhost:8080/api/loads/{{CreateLoad.response.body.id}}
+PUT {{api_gateway_host}}/api/loads/{{CreateLoad.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -88,5 +88,5 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Delete the created load
 # @name DeleteLoad
-DELETE http://localhost:8080/api/loads/{{CreateLoad.response.body.id}}
+DELETE {{api_gateway_host}}/api/loads/{{CreateLoad.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}

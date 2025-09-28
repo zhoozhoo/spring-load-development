@@ -59,7 +59,7 @@ public class RiflesService {
                             .headers(h -> h.setBearerAuth(token))
                             .retrieve()
                             .bodyToFlux(RifleDto.class)
-                            .onErrorMap(WebClientResponseException.class, e -> {
+                            .onErrorMap(WebClientResponseException.class, _ -> {
                                 return new McpError(new JSONRPCError(
                                         INVALID_REQUEST,
                                         "Authentication failed",
@@ -98,7 +98,7 @@ public class RiflesService {
                             .headers(h -> h.setBearerAuth(token))
                             .retrieve()
                             .bodyToMono(RifleDto.class)
-                            .onErrorMap(WebClientResponseException.class, e -> {
+                            .onErrorMap(WebClientResponseException.class, _ -> {
                                 return new McpError(new JSONRPCError(
                                         INVALID_REQUEST,
                                         "Authentication failed",

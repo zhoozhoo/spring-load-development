@@ -172,7 +172,7 @@ public class PrimerController {
         return primerRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingPrimer -> primerRepository.delete(existingPrimer)
                         .then(just(new ResponseEntity<Void>(NO_CONTENT)))
-                        .doOnSuccess(result -> log.info("Deleted primer with id: {}", id)))
+                        .doOnSuccess(_ -> log.info("Deleted primer with id: {}", id)))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
     }
 }

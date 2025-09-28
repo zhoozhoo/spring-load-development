@@ -23,12 +23,12 @@ grant_type=urn:ietf:params:oauth:grant-type:uma-ticket&client_id={{client_id}}&c
 
 ### Get list of all cases
 # @name GetCases
-GET http://localhost:8080/api/cases
+GET {{api_gateway_host}}/api/cases
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Create a new case
 # @name CreateCase
-POST http://localhost:8080/api/cases
+POST {{api_gateway_host}}/api/cases
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -45,12 +45,12 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get the created case by ID
 # @name GetCaseById
-GET http://localhost:8080/api/cases/{{CreateCase.response.body.id}}
+GET {{api_gateway_host}}/api/cases/{{CreateCase.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Update the created case
 # @name UpdateCase
-PUT http://localhost:8080/api/cases/{{CreateCase.response.body.id}}
+PUT {{api_gateway_host}}/api/cases/{{CreateCase.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -67,19 +67,19 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Delete the created case
 # @name DeleteCase
-DELETE http://localhost:8080/api/cases/{{CreateCase.response.body.id}}
+DELETE {{api_gateway_host}}/api/cases/{{CreateCase.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 // ==================== POWDERS ====================
 
 ### Get list of all powders
 # @name GetPowders
-GET http://localhost:8080/api/powders
+GET {{api_gateway_host}}/api/powders
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Create a new powder
 # @name CreatePowder
-POST http://localhost:8080/api/powders
+POST {{api_gateway_host}}/api/powders
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -94,12 +94,12 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get the created powder by ID
 # @name GetPowderById
-GET http://localhost:8080/api/powders/{{CreatePowder.response.body.id}}
+GET {{api_gateway_host}}/api/powders/{{CreatePowder.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Update the created powder
 # @name UpdatePowder
-PUT http://localhost:8080/api/powders/{{CreatePowder.response.body.id}}
+PUT {{api_gateway_host}}/api/powders/{{CreatePowder.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -114,19 +114,19 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Delete the created powder
 # @name DeletePowder
-DELETE http://localhost:8080/api/powders/{{CreatePowder.response.body.id}}
+DELETE {{api_gateway_host}}/api/powders/{{CreatePowder.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 // ==================== PRIMERS ====================
 
 ### Get list of all primers
 # @name GetPrimers
-GET http://localhost:8080/api/primers
+GET {{api_gateway_host}}/api/primers
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Create a new primer
 # @name CreatePrimer
-POST http://localhost:8080/api/primers
+POST {{api_gateway_host}}/api/primers
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -141,12 +141,12 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get the created primer by ID
 # @name GetPrimerById
-GET http://localhost:8080/api/primers/{{CreatePrimer.response.body.id}}
+GET {{api_gateway_host}}/api/primers/{{CreatePrimer.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Update the created primer
 # @name UpdatePrimer
-PUT http://localhost:8080/api/primers/{{CreatePrimer.response.body.id}}
+PUT {{api_gateway_host}}/api/primers/{{CreatePrimer.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -161,19 +161,19 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Delete the created primer
 # @name DeletePrimer
-DELETE http://localhost:8080/api/primers/{{CreatePrimer.response.body.id}}
+DELETE {{api_gateway_host}}/api/primers/{{CreatePrimer.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 // ==================== BULLETS ====================
 
 ### Get list of all bullets
 # @name GetBullets
-GET http://localhost:8080/api/bullets
+GET {{api_gateway_host}}/api/bullets
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Create a new bullet
 # @name CreateBullet
-POST http://localhost:8080/api/bullets
+POST {{api_gateway_host}}/api/bullets
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -189,12 +189,12 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get the created bullet by ID
 # @name GetBulletById
-GET http://localhost:8080/api/bullets/{{CreateBullet.response.body.id}}
+GET {{api_gateway_host}}/api/bullets/{{CreateBullet.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Update the created bullet
 # @name UpdateBullet
-PUT http://localhost:8080/api/bullets/{{CreateBullet.response.body.id}}
+PUT {{api_gateway_host}}/api/bullets/{{CreateBullet.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -210,5 +210,5 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Delete the created bullet
 # @name DeleteBullet
-DELETE http://localhost:8080/api/bullets/{{CreateBullet.response.body.id}}
+DELETE {{api_gateway_host}}/api/bullets/{{CreateBullet.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}

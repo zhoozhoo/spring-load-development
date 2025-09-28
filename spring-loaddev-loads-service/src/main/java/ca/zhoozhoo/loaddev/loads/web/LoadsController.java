@@ -202,7 +202,7 @@ public class LoadsController {
         return loadRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingLoad -> loadRepository.delete(existingLoad)
                         .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT)))
-                        .doOnSuccess(result -> log.info("Deleted load with id: {}", id)))
+                        .doOnSuccess(_ -> log.info("Deleted load with id: {}", id)))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
     }
 }

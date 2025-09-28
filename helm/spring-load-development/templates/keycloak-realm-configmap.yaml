@@ -1,0 +1,11 @@
+{{- if and .Values.keycloak.enabled .Values.keycloak.realm.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.keycloak.realm.configMapName | default "keycloak-realm-config" }}
+  namespace: {{ .Values.keycloak.namespace }}
+  labels:
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+data:
+  realm.json: {{ .Files.Get "files/realm.json" | quote }}
+{{- end }}

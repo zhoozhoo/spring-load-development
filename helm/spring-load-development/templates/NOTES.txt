@@ -1,0 +1,238 @@
+1. Get the application URL by running these commands:
+
+{{- if .Values.apiGateway.enabled }}
+  Spring Load Development Application - NodePort Access:
+  export NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="ExternalIP")].address}')
+  
+  - API Gateway (Main Entry Point): http://$NODE_IP:{{ .Values.apiGateway.service.nodePort }}
+    Access the complete reloading management application through this endpoint
+{{- end }}
+
+{{- if and .Values.keycloak.enabled .Values.keycloak.nodePort.enabled }}
+  - Keycloak Admin Console: http://$NODE_IP:{{ .Values.keycloak.nodePort.port }}
+    Username: {{ .Values.keycloak.auth.adminUser }}
+    Password: {{ .Values.keycloak.auth.adminPassword }}
+    Realm: {{ .Values.keycloak.integration.realm }}
+{{- end }}
+
+{{- if .Values.observability.enabled }}
+  Observability Stack - NodePort Access:
+  
+  {{- if .Values.observability.grafana.nodePort.enabled }}
+  - Grafana Dashboard: http://$NODE_IP:{{ .Values.observability.grafana.nodePort.port }}
+    {{- if .Values.observability.grafana.auth.anonymous.enabled }}
+    Access: Anonymous login enabled (no credentials required)
+    {{- else }}
+    Username: {{ .Values.observability.grafana.auth.adminUser }}
+    Password: {{ .Values.observability.grafana.auth.adminPassword }}
+    {{- end }}
+  {{- end }}
+  {{- if .Values.observability.prometheus.nodePort.enabled }}
+  - Prometheus: http://$NODE_IP:{{ .Values.observability.prometheus.nodePort.port }}
+  {{- end }}
+  {{- if .Values.observability.loki.nodePort.enabled }}
+  - Loki: http://$NODE_IP:{{ .Values.observability.loki.nodePort.port }}
+  {{- end }}
+  {{- if .Values.observability.tempo.nodePort.enabled }}
+  - Tempo: http://$NODE_IP:{{ .Values.observability.tempo.nodePort.port }}
+  {{- end }}
+  {{- if .Values.observability.otelCollector.nodePort.enabled }}
+  - OTEL Collector GRPC: $NODE_IP:{{ .Values.observability.otelCollector.nodePort.grpcPort }}
+  - OTEL Collector Prometheus: http://$NODE_IP:{{ .Values.observability.otelCollector.nodePort.prometheusPort }}
+  {{- end }}
+{{- end }}
+
+2. Port-Forward Access (if NodePorts are not available):
+
+{{- if .Values.apiGateway.enabled }}
+  API Gateway (Main Application):
+  kubectl port-forward svc/api-gateway-service 8080:8080 -n {{ .Values.apiGateway.namespace }}
+  echo "Visit http://localhost:8080 to access the Spring Load Development application"
+{{- end }}
+
+{{- if .Values.keycloak.enabled }}
+  Keycloak Admin Console:
+  kubectl port-forward svc/keycloak-service 8080:8080 -n {{ .Values.keycloak.namespace }}
+  echo "Visit http://localhost:8080 to access Keycloak Admin Console"
+  Username: {{ .Values.keycloak.auth.adminUser }}
+  Password: {{ .Values.keycloak.auth.adminPassword }}
+{{- end }}
+
+{{- if and .Values.observability.enabled .Values.observability.grafana.enabled }}
+  Grafana Dashboard:
+  kubectl port-forward svc/grafana-service 3000:3000 -n {{ .Values.observability.namespace }}
+  echo "Visit http://localhost:3000 to access Grafana"
+  {{- if .Values.observability.grafana.auth.anonymous.enabled }}
+  Access: Anonymous login enabled (no credentials required)
+  {{- else }}
+  Username: {{ .Values.observability.grafana.auth.adminUser }}
+  Password: {{ .Values.observability.grafana.auth.adminPassword }}
+  {{- end }}
+{{- end }}
+
+  Individual Microservices (for debugging):
+{{- if .Values.loadsService.enabled }}
+  kubectl port-forward svc/loads-service 8081:8080 -n {{ .Values.loadsService.namespace }}
+{{- end }}
+{{- if .Values.componentsService.enabled }}
+  kubectl port-forward svc/components-service 8082:8080 -n {{ .Values.componentsService.namespace }}
+{{- end }}
+{{- if .Values.riflesService.enabled }}
+  kubectl port-forward svc/rifles-service 8083:8080 -n {{ .Values.riflesService.namespace }}
+{{- end }}
+{{- if .Values.mcpServer.enabled }}
+  kubectl port-forward svc/mcp-server-service 8084:8080 -n {{ .Values.mcpServer.namespace }}
+{{- end }}
+
+3. Component Status:
+   Check the status of all components:
+   kubectl get pods --all-namespaces -l "app.kubernetes.io/instance={{ .Release.Name }}"
+   
+   Check specific namespaces:
+{{- if .Values.postgresql.enabled }}
+   kubectl get pods -n {{ .Values.postgresql.namespace }}  # PostgreSQL database
+{{- end }}
+{{- if .Values.keycloak.enabled }}
+   kubectl get pods -n {{ .Values.keycloak.namespace }}    # Keycloak and its database
+{{- end }}
+{{- if .Values.observability.enabled }}
+   kubectl get pods -n {{ .Values.observability.namespace }}  # Observability stack
+{{- end }}
+{{- if or .Values.apiGateway.enabled .Values.loadsService.enabled .Values.componentsService.enabled .Values.riflesService.enabled .Values.mcpServer.enabled }}
+   kubectl get pods -n {{ .Values.microservices.namespace }}  # Microservices
+{{- end }}
+
+4. Application Health Checks:
+{{- if .Values.apiGateway.enabled }}
+   API Gateway: http://localhost:{{ .Values.apiGateway.service.nodePort }}/actuator/health
+{{- end }}
+   
+   Microservice endpoints through API Gateway:
+{{- if .Values.loadsService.enabled }}
+   - Loads Service: http://localhost:{{ .Values.apiGateway.service.nodePort }}/api/loads/actuator/health
+{{- end }}
+{{- if .Values.componentsService.enabled }}
+   - Components Service: http://localhost:{{ .Values.apiGateway.service.nodePort }}/api/components/actuator/health
+{{- end }}
+{{- if .Values.riflesService.enabled }}
+   - Rifles Service: http://localhost:{{ .Values.apiGateway.service.nodePort }}/api/rifles/actuator/health
+{{- end }}
+{{- if .Values.mcpServer.enabled }}
+   - MCP Server: http://localhost:{{ .Values.apiGateway.service.nodePort }}/api/mcp/actuator/health
+{{- end }}
+
+4. Logs:
+   View logs for any component:
+   kubectl logs -n <namespace> -l app=<component-name>
+   
+   Common log commands:
+{{- if .Values.apiGateway.enabled }}
+   kubectl logs -n {{ .Values.apiGateway.namespace }} -l app=api-gateway -f
+{{- end }}
+{{- if .Values.loadsService.enabled }}
+   kubectl logs -n {{ .Values.loadsService.namespace }} -l app=loads-service -f
+{{- end }}
+{{- if .Values.keycloak.enabled }}
+   kubectl logs -n {{ .Values.keycloak.namespace }} -l app=keycloak -f
+{{- end }}
+{{- if .Values.observability.enabled }}
+   kubectl logs -n {{ .Values.observability.namespace }} -l app=grafana -f
+   kubectl logs -n {{ .Values.observability.namespace }} -l app=otel-collector -f
+{{- end }}
+
+5. Configuration:
+{{- if .Values.postgresql.enabled }}
+   - PostgreSQL is configured with database: {{ .Values.postgresql.auth.database }}
+     Connection: postgres-service.{{ .Values.postgresql.namespace }}.svc.cluster.local:5432
+{{- end }}
+{{- if .Values.keycloak.enabled }}
+   - Keycloak is configured with realm: {{ .Values.keycloak.integration.realm }}
+     Client ID: {{ .Values.keycloak.integration.clientId }}
+     {{- if .Values.keycloak.realm.enabled }}
+     Realm import: enabled
+     {{- end }}
+{{- end }}
+{{- if .Values.observability.enabled }}
+   - Observability stack includes: Loki, Tempo, Prometheus, Grafana, and OpenTelemetry Collector
+     OTEL Endpoint: otel-collector-service.{{ .Values.observability.namespace }}.svc.cluster.local:4317
+{{- end }}
+{{- if .Values.apiGateway.enabled }}
+   - API Gateway routes traffic to all microservices in namespace: {{ .Values.microservices.namespace }}
+{{- end }}
+
+6. Troubleshooting:
+   If pods are not starting, check events:
+   kubectl get events --sort-by=.metadata.creationTimestamp -n <namespace>
+
+   For detailed pod information:
+   kubectl describe pod <pod-name> -n <namespace>
+   
+   Common issues and solutions:
+   - ImagePullBackOff: Check if images exist at {{ .Values.global.imageRegistry }}
+   - CrashLoopBackOff: Check application logs and configuration
+   - Pending pods: Check resource requests and node capacity
+   - Database connection issues: Verify PostgreSQL pod is running in {{ .Values.postgresql.namespace }} namespace
+
+7. Quick Start Commands:
+   # Wait for all pods to be ready
+   kubectl wait --for=condition=ready pod --all --timeout=300s --all-namespaces
+   
+   # Check if API Gateway is responding
+{{- if .Values.apiGateway.enabled }}
+   curl -f http://localhost:{{ .Values.apiGateway.service.nodePort }}/actuator/health
+{{- end }}
+   
+   # Access the application
+{{- if .Values.apiGateway.enabled }}
+   echo "Application available at: http://localhost:{{ .Values.apiGateway.service.nodePort }}"
+{{- end }}
+{{- if .Values.observability.grafana.nodePort.enabled }}
+   echo "Monitoring dashboard: http://localhost:{{ .Values.observability.grafana.nodePort.port }}"
+{{- end }}
+
+8. NodePort Service Access Reference:
+{{- if .Values.apiGateway.enabled }}
+   - API Gateway NodePort: {{ .Values.apiGateway.service.nodePort }}
+{{- end }}
+{{- if and .Values.keycloak.enabled .Values.keycloak.nodePort.enabled }}
+   - Keycloak NodePort: {{ .Values.keycloak.nodePort.port }}
+{{- end }}
+{{- if .Values.observability.grafana.nodePort.enabled }}
+   - Grafana NodePort: {{ .Values.observability.grafana.nodePort.port }}
+{{- end }}
+{{- if .Values.observability.prometheus.nodePort.enabled }}
+   - Prometheus NodePort: {{ .Values.observability.prometheus.nodePort.port }}
+{{- end }}
+{{- if .Values.observability.loki.nodePort.enabled }}
+   - Loki NodePort: {{ .Values.observability.loki.nodePort.port }}
+{{- end }}
+{{- if .Values.observability.tempo.nodePort.enabled }}
+   - Tempo NodePort: {{ .Values.observability.tempo.nodePort.port }}
+{{- end }}
+{{- if .Values.observability.otelCollector.nodePort.enabled }}
+   - OTEL Collector GRPC NodePort: {{ .Values.observability.otelCollector.nodePort.grpcPort }}
+   - OTEL Collector Prometheus NodePort: {{ .Values.observability.otelCollector.nodePort.prometheusPort }}
+{{- end }}
+
+================================================================================
+Thank you for installing {{ .Chart.Name }}-{{ .Chart.Version }}!
+
+Your Spring Load Development application stack is now deployed with:
+{{- if .Values.apiGateway.enabled }}
+✓ API Gateway and Microservices
+{{- end }}
+{{- if .Values.postgresql.enabled }}
+✓ PostgreSQL Database
+{{- end }}
+{{- if .Values.keycloak.enabled }}
+✓ Keycloak Authentication
+{{- end }}
+{{- if .Values.observability.enabled }}
+✓ Complete Observability Stack
+{{- end }}
+
+Main application access: http://localhost:{{ .Values.apiGateway.service.nodePort | default "30090" }}
+Monitoring dashboard: http://localhost:{{ .Values.observability.grafana.nodePort.port | default "30000" }}
+
+For detailed documentation, see the README.adoc file.
+================================================================================

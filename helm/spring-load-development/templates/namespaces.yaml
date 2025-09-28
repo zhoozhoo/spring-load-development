@@ -1,0 +1,39 @@
+{{- if .Values.microservices.namespace }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.microservices.namespace }}
+  labels:
+    name: {{ .Values.microservices.namespace }}
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+{{- end }}
+---
+{{- if .Values.postgresql.enabled }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.postgresql.namespace }}
+  labels:
+    name: {{ .Values.postgresql.namespace }}
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+{{- end }}
+---
+{{- if .Values.keycloak.enabled }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.keycloak.namespace }}
+  labels:
+    name: {{ .Values.keycloak.namespace }}
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+{{- end }}
+---
+{{- if .Values.observability.enabled }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.observability.namespace }}
+  labels:
+    name: {{ .Values.observability.namespace }}
+    {{- include "spring-load-development.labels" . | nindent 4 }}
+{{- end }}

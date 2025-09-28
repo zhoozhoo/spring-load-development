@@ -3,7 +3,7 @@ package ca.zhoozhoo.loaddev.mcp.config;
 import java.util.Arrays;
 
 import org.springframework.ai.mcp.McpToolUtils;
-import org.springframework.ai.mcp.server.autoconfigure.McpServerProperties;
+import org.springframework.ai.mcp.server.common.autoconfigure.properties.McpServerProperties;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
