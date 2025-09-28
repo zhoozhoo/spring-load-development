@@ -30,7 +30,7 @@ The chart includes the following Spring Boot microservices:
 
 == Architecture
 
-[mermaid]
+[source,mermaid]
 ....
 graph TB
     subgraph "Database Layer"
