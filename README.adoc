@@ -258,7 +258,7 @@ Access the observability components at:
 
 The diagram below shows the monitoring data flow used by this project. Services export metrics via the Actuator Prometheus endpoint and send telemetry (traces and logs) over OTLP to an OpenTelemetry Collector. The Collector routes traces to Tempo, logs to Loki and can optionally forward metrics or expose them for Prometheus. Prometheus scrapes the Actuator metrics endpoint; Grafana visualizes metrics, traces and logs; Alertmanager handles alerts from Prometheus; Spring Boot Admin provides a quick actuator UI for all services.
 
-[mermaid]
+[source,mermaid]
 ....
 flowchart LR
     subgraph Services[Services / Applications]
@@ -299,7 +299,7 @@ This observability architecture shows how all telemetry data (traces, logs, and 
 
 == High-Level Architecture
 
-[mermaid]
+[source,mermaid]
 ....
 flowchart TB
     subgraph Client[Clients]
@@ -364,7 +364,7 @@ flowchart TB
 
 == Database Schema
 
-[mermaid]
+[source,mermaid]
 ....
 erDiagram
     LOADS {
