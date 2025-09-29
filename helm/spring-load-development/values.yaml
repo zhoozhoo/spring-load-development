@@ -6,7 +6,7 @@ global:
   imageRegistry: "zhoozhoo.ca"
   imagePullSecrets: []
   storageClass: ""
-  imageTag: "0.0.7-SNAPSHOT"
+  imageTag: "0.0.7"
 
 # Microservices configuration
 microservices:
@@ -584,7 +584,7 @@ apiGateway:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway
-    tag: "0.0.7-SNAPSHOT"
+    tag: "0.0.7"
     pullPolicy: IfNotPresent
   
   service:
@@ -628,7 +628,7 @@ loadsService:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service
-    tag: "0.0.7-SNAPSHOT"
+    tag: "0.0.7"
     pullPolicy: IfNotPresent
   
   service:
@@ -657,7 +657,7 @@ componentsService:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/spring-loaddev-components-service
-    tag: "0.0.7-SNAPSHOT"
+    tag: "0.0.7"
     pullPolicy: IfNotPresent
   
   service:
@@ -686,7 +686,7 @@ riflesService:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service
-    tag: "0.0.7-SNAPSHOT"
+    tag: "0.0.7"
     pullPolicy: IfNotPresent
   
   service:
@@ -715,7 +715,7 @@ mcpServer:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/spring-loaddev-mcp-server
-    tag: "0.0.7-SNAPSHOT"
+    tag: "0.0.7"
     pullPolicy: IfNotPresent
   
   service:

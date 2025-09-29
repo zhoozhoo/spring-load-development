@@ -2,8 +2,8 @@ apiVersion: v2
 name: spring-load-development
 description: A Helm chart for Spring Load Development application with PostgreSQL, Keycloak, and Observability stack
 type: application
-version: 0.0.7-SNAPSHOT
-appVersion: 0.0.7-SNAPSHOT
+version: 0.0.7
+appVersion: 0.0.7
 maintainers:
   - name: Zhubin Salehi
     email: zhoozhoo@yahoo.com

@@ -217,7 +217,7 @@ kubectl port-forward svc/mcp-server-service 8084:8080 -n reloading
 
 ==== API Gateway
 
-* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:0.0.7-SNAPSHOT`
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:0.0.7`
 * *Namespace*: `reloading`
 * *Service*: `api-gateway-service.reloading.svc.cluster.local:8080`
 * *NodePort*: 30090
@@ -226,7 +226,7 @@ kubectl port-forward svc/mcp-server-service 8084:8080 -n reloading
 
 ==== Loads Service
 
-* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:0.0.7-SNAPSHOT`
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:0.0.7`
 * *Namespace*: `reloading`
 * *Service*: `loads-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Manages load data and calculations
@@ -234,7 +234,7 @@ kubectl port-forward svc/mcp-server-service 8084:8080 -n reloading
 
 ==== Components Service
 
-* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-components-service:0.0.7-SNAPSHOT`
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-components-service:0.0.7`
 * *Namespace*: `reloading`
 * *Service*: `components-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Manages reloading components (bullets, powder, primers, cases)
@@ -242,7 +242,7 @@ kubectl port-forward svc/mcp-server-service 8084:8080 -n reloading
 
 ==== Rifles Service
 
-* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:0.0.7-SNAPSHOT`
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:0.0.7`
 * *Namespace*: `reloading`
 * *Service*: `rifles-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Manages rifle and firearm data
@@ -250,7 +250,7 @@ kubectl port-forward svc/mcp-server-service 8084:8080 -n reloading
 
 ==== MCP Server
 
-* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-mcp-server:0.0.7-SNAPSHOT`
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-mcp-server:0.0.7`
 * *Namespace*: `reloading`
 * *Service*: `mcp-server-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Model Context Protocol server for AI integrations
@@ -319,7 +319,7 @@ All application and infrastructure configuration is managed through a single `va
 # Global settings
 global:
   imageRegistry: "zhoozhoo.ca"
-  imageTag: "0.0.7-SNAPSHOT"
+  imageTag: "0.0.7"
 
 # Microservices configuration  
 microservices:
@@ -924,8 +924,8 @@ kubectl get configmap keycloak-realm-config -n keycloak -o yaml > keycloak-realm
 
 == Chart Information
 
-* *Chart Version*: 0.0.7-SNAPSHOT
-* *App Version*: 0.0.7-SNAPSHOT
+* *Chart Version*: 0.0.7
+* *App Version*: 0.0.7
 * *Maintainer*: Zhubin Salehi (zhoozhoo@yahoo.com)
 * *Kubernetes Version*: 1.24+
 * *Helm Version*: 3.x
