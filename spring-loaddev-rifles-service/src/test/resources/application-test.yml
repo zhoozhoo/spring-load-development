@@ -1,6 +1,6 @@
 spring:
   r2dbc:
-    url: "r2dbc:tc:postgresql:///databasename?TC_IMAGE_TAG=17.4"
+    url: "r2dbc:tc:postgresql:///databasename?TC_IMAGE_TAG=17.6"
     name: "sa"
   sql:
     init:
