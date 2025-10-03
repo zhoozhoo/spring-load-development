@@ -4,25 +4,7 @@ This document provides essential knowledge for AI agents to be productive in thi
 
 ## Architecture Overview
 
-This is a **m### Integration Points
-
-### Service-to-Service Communication
-**Non-Kubernetes (Docker/Local):** API Gateway uses **Spring Cloud LoadBalancer** with Eureka service discovery:
-```java
-@Configuration
-public class SecurityConfiguration {
-    @Bean
-    public WebClient webClient(ReactorLoadBalancerExchangeFilterFunction lbFunction) {
-        return WebClient.builder().filter(lbFunction).build();
-    }
-}
-```
-Services register with Eureka and call via service names: `http://loads-service/loads`
-
-**Kubernetes:** Services use **Kubernetes native DNS-based service discovery**:
-- Services discover each other via Kubernetes DNS (e.g., `http://spring-loaddev-loads-service.spring-load-development.svc.cluster.local`)
-- No Eureka server needed (disabled with `spring.cloud.discovery.enabled=false` in kubernetes profile)
-- Service mesh handles load balancing automaticallys-based load development management system** built with Spring Cloud. The system manages reloading data (ammunition development) with user isolation and full observability.
+This is a **microservices-based load development management system** built with Spring Cloud. The system manages reloading data (ammunition development) with user isolation and full observability.
 
 ### Service Boundaries
 - **API Gateway** (`spring-loaddev-api-gateway`) - OAuth2 authentication, UMA token exchange with Keycloak, routes to services
@@ -64,13 +46,34 @@ All services use **Keycloak UMA (User-Managed Access)** for authorization:
 
 - **Java 25** with modern features (`var`, static imports, records)
 - **Spring Boot 3.5.6** + **Spring Cloud 2025.0.0**
+- **Spring Cloud Kubernetes** for native Kubernetes integration (ConfigMap access, service discovery)
 - **WebFlux** for reactive REST APIs (no blocking code)
 - **R2DBC** with PostgreSQL for reactive database access
 - **Spring AI 1.1.0-M2** for MCP server
 - **MapStruct 1.6.3** for DTO mapping (see `GroupStatisticsMapper`)
-- **TestContainers** for integration tests
+- **TestContainers** for integration tests with real database instances (PostgreSQL, R2DBC)
 - **Resilience4J** circuit breaker in API Gateway
 - **OpenTelemetry** for observability (traces to Tempo, logs to Loki, metrics to Prometheus)
+
+## Integration Points
+
+### Service-to-Service Communication
+**Non-Kubernetes (Docker/Local):** API Gateway uses **Spring Cloud LoadBalancer** with Eureka service discovery:
+```java
+@Configuration
+public class SecurityConfiguration {
+    @Bean
+    public WebClient webClient(ReactorLoadBalancerExchangeFilterFunction lbFunction) {
+        return WebClient.builder().filter(lbFunction).build();
+    }
+}
+```
+Services register with Eureka and call via service names: `http://loads-service/loads`
+
+**Kubernetes:** Services use **Kubernetes native DNS-based service discovery**:
+- Services discover each other via Kubernetes DNS (e.g., `http://spring-loaddev-loads-service.spring-load-development.svc.cluster.local`)
+- No Eureka server needed (disabled with `spring.cloud.discovery.enabled=false` in kubernetes profile)
+- Service mesh handles load balancing automatically
 
 ## Critical Patterns
 
@@ -105,7 +108,7 @@ spring:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
 ```
 
-**Kubernetes:** Services use native Kubernetes ConfigMaps and disable Config Server:
+**Kubernetes:** Services use native Kubernetes ConfigMaps accessed via **spring-cloud-kubernetes** library:
 ```yaml
 # application.yml (kubernetes profile)
 spring:
@@ -125,9 +128,13 @@ spring:
         all-namespaces: true  # Use K8s DNS for service discovery
 ```
 
+**Spring Cloud Kubernetes Integration:** The `spring-cloud-starter-kubernetes-client-all` dependency enables direct ConfigMap access through the Kubernetes API without requiring volume mounts. ConfigMaps are automatically loaded and can be refreshed dynamically. The only volume mount needed is for `log4j2.xml` logging configuration, as it requires file-system access for the logging framework.
+
 **Config Server Setup:** The Config Server fetches configurations from the `spring-load-development-config` repository, allowing centralized management of properties files for all services (`loads-service.yml`, `components-service.yml`, etc.).
 
 ### 3. Testing Pattern
+**Unit Testing with TestContainers:** All services that require database access (Loads Service, Components Service, Rifles Service) use **TestContainers** to spin up real PostgreSQL instances for integration tests. This ensures tests run against actual database behavior without requiring manual setup.
+
 Use `WebTestClient` + `mockJwt()` for controller tests:
 ```java
 @SpringBootTest
@@ -138,7 +145,13 @@ class LoadsControllerTest {
     webTestClient.mutateWith(jwt).get().uri("/loads")...
 }
 ```
-TestContainers spin up PostgreSQL automatically.
+
+TestContainers dependencies are configured in each service's `pom.xml`:
+- `org.testcontainers:junit-jupiter` - JUnit 5 integration
+- `org.testcontainers:postgresql` - PostgreSQL container
+- `org.testcontainers:r2dbc` - R2DBC TestContainers support
+
+The PostgreSQL container is automatically started before tests and stopped after, providing isolated test environments.
 
 ### 4. MapStruct Usage
 Interface-based mappers with Spring component model for DTO conversions:
@@ -256,15 +269,15 @@ GitHub Actions workflow (`.github/workflows/ci.yml`) runs on push/PR:
 ### Package Structure
 ```
 ca.zhoozhoo.loaddev.<service>/
-├── web/           # Controllers (@RestController)
-├── service/       # Business logic (@Service)
+├── config/        # Spring configuration
 ├── dao/           # R2DBC repositories
-├── model/         # Entity records with @Table
 ├── dto/           # Data transfer objects
 ├── mapper/        # MapStruct interfaces
+├── model/         # Entity records with @Table
 ├── security/      # Auth helpers (@CurrentUser)
+├── service/       # Business logic (@Service)
 ├── validation/    # Custom validators
-└── config/        # Spring configuration
+└── web/           # Controllers (@RestController)
 ```
 
 ### Naming
@@ -272,18 +285,6 @@ ca.zhoozhoo.loaddev.<service>/
 - Repositories: `{Entity}Repository` (e.g., `LoadRepository extends R2dbcRepository`)
 - Controllers: `{Entity}Controller` with `@RequestMapping("/{entities}")`
 - Mappers: `{Entity}Mapper` with `@Mapper(componentModel = "spring")`
-
-## Integration Points
-
-### Service-to-Service Communication
-API Gateway uses **Spring Cloud LoadBalancer** with service discovery (Eureka):
-```java
-@Bean
-public WebClient webClient(ReactorLoadBalancerExchangeFilterFunction lbFunction) {
-    return WebClient.builder().filter(lbFunction).build();
-}
-```
-Services call via service names: `http://loads-service/loads`
 
 ### Observability
 OpenTelemetry auto-instruments all services:
@@ -315,5 +316,5 @@ No manual instrumentation needed in business code.
 - `docker-compose.yml` - Full stack orchestration
 - `helm/spring-load-development/` - Kubernetes deployment charts
 - `.env` - Environment variables for Docker Compose (versions, ports)
-- `test/*.http` - API integration tests
+- `test/` - API integration tests (`.http` files for REST Client)
 - Each service's `application.yml` - Service-specific bootstrap config
