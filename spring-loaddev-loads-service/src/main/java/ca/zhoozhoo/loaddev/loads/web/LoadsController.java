@@ -44,6 +44,16 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/**
+ * REST controller for managing ammunition load configurations.
+ * <p>
+ * This controller provides endpoints for CRUD operations on load data, including
+ * retrieval of group statistics for load performance analysis. All endpoints are
+ * secured with OAuth2 authentication and enforce user-based access control.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Tag(name = "Loads", description = "Operations on loads belonging to the authenticated user")
 @SecurityScheme(
     name = "Oauth2Security", 

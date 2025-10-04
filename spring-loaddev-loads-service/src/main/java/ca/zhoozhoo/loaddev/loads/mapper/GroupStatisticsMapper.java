@@ -8,6 +8,17 @@ import ca.zhoozhoo.loaddev.loads.dto.ShotDto;
 import ca.zhoozhoo.loaddev.loads.model.GroupStatistics;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
 
+/**
+ * MapStruct mapper for converting between group statistics domain models and DTOs.
+ * <p>
+ * This mapper automatically generates implementation code for transforming
+ * {@link GroupStatistics} entities into {@link GroupStatisticsDto} objects suitable
+ * for API responses. It handles nested object mapping and field extraction from
+ * the embedded Group entity.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Mapper(componentModel = "spring")
 public interface GroupStatisticsMapper {
 

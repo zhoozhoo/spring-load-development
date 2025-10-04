@@ -17,6 +17,13 @@ import reactor.core.publisher.Mono;
 
 /**
  * Service class for handling operations related to Loads, Groups, and Shots.
+ * <p>
+ * This service provides business logic for calculating ballistic statistics from shooting data,
+ * including average velocity, standard deviation, and extreme spread. It coordinates between
+ * repository layers and mappers to transform domain models into DTOs for API responses.
+ * </p>
+ *
+ * @author Zhubin Salehi
  */
 @Service
 public class LoadsService {

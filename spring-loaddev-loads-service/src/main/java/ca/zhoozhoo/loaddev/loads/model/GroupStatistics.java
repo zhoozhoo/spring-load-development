@@ -2,6 +2,17 @@ package ca.zhoozhoo.loaddev.loads.model;
 
 import java.util.List;
 
+/**
+ * Represents calculated ballistic statistics for a shooting group.
+ * <p>
+ * This record encapsulates the statistical analysis of shot velocity data for a group,
+ * including average velocity, standard deviation, and extreme spread (ES). These metrics
+ * are essential for evaluating load consistency and performance. All numeric values are
+ * automatically rounded to one decimal place for presentation.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 public record GroupStatistics(
         Group group,
 

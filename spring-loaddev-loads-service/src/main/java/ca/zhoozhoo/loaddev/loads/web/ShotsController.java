@@ -42,6 +42,17 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/**
+ * REST controller for managing individual shot data.
+ * <p>
+ * This controller provides endpoints for CRUD operations on shot velocity measurements
+ * within shooting groups. Each shot represents a single round fired and recorded during
+ * load testing. All endpoints are secured with OAuth2 authentication and enforce
+ * user-based access control.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Tag(name = "Shots", description = "Operations on shots belonging to the authenticated user")
 @SecurityScheme(
     name = "Oauth2Security", 

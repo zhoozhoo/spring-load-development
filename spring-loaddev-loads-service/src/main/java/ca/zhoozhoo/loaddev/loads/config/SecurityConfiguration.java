@@ -30,6 +30,8 @@ import reactor.core.publisher.Mono;
  * Security configuration for the loads service.
  * Configures WebFlux security with OAuth2 resource server support.
  * This configuration is active in all profiles except 'test'.
+ * 
+ * @author Zhubin Salehi
  */
 @Configuration
 @EnableWebFluxSecurity

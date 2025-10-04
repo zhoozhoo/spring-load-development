@@ -3,6 +3,17 @@ package ca.zhoozhoo.loaddev.loads.dto;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Data Transfer Object for group statistics.
+ * <p>
+ * This DTO provides a simplified view of shooting group statistics for API responses,
+ * containing essential group information along with calculated ballistic metrics.
+ * It excludes internal identifiers and sensitive data while providing all necessary
+ * information for client applications to display load performance data.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 public record GroupStatisticsDto(
 
         LocalDate date,

@@ -4,6 +4,17 @@ import ca.zhoozhoo.loaddev.loads.model.Load;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
+/**
+ * Validator implementation for the {@link LoadMeasurement} constraint.
+ * <p>
+ * This validator ensures that a Load entity has at least one cartridge measurement
+ * specified (either distanceFromLands or caseOverallLength). If neither field is
+ * populated, it adds constraint violations to both fields with appropriate error messages.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ * @see LoadMeasurement
+ */
 public class LoadMeasurementValidator implements ConstraintValidator<LoadMeasurement, Load> {
     
     @Override

@@ -11,6 +11,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
+/**
+ * Represents an individual shot fired as part of a shooting group.
+ * <p>
+ * A shot records the velocity measurement (in feet per second) of a single round fired.
+ * Multiple shots are grouped together to calculate statistical data such as average velocity,
+ * standard deviation, and extreme spread for load performance analysis.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Table(name = "shots")
 public record Shot(
 

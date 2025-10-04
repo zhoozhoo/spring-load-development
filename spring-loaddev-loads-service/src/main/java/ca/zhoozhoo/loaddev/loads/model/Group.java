@@ -12,6 +12,17 @@ import org.springframework.data.relational.core.mapping.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
+/**
+ * Represents a shooting group for a specific load configuration.
+ * <p>
+ * A group represents a set of shots fired on a specific date using a particular load
+ * with a defined powder charge and target distance. The group size (in inches or MOA)
+ * measures the accuracy of the load configuration. Each group is associated with a load
+ * and owned by a specific user.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Table(name = "groups")
 public record Group(
         @Id Long id,

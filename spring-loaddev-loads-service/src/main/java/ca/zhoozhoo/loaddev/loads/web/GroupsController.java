@@ -45,6 +45,17 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/**
+ * REST controller for managing shooting groups.
+ * <p>
+ * This controller provides endpoints for CRUD operations on shooting group data,
+ * including retrieval of ballistic statistics for each group. Groups represent
+ * collections of shots fired with specific load configurations. All endpoints are
+ * secured with OAuth2 authentication and enforce user-based access control.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Tag(name = "Groups", description = "Operations on groups belonging to the authenticated user")
 @SecurityScheme(
     name = "Oauth2Security", 

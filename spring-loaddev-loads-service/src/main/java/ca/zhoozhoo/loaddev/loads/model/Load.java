@@ -13,6 +13,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
+/**
+ * Represents an ammunition load configuration.
+ * <p>
+ * A load defines a complete recipe for ammunition reloading, including powder type and charge,
+ * bullet specifications, primer information, and cartridge measurements. Each load is owned by
+ * a specific user and must comply with either imperial or metric measurement units.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Table(name = "loads")
 @LoadMeasurement
 public record Load(
