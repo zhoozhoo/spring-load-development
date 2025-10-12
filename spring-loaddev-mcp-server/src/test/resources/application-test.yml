@@ -1,0 +1,38 @@
+spring:
+  ai:
+    mcp:
+      server:
+        name: reloading-mcp-server
+        version: 0.0.7-SNAPSHOT
+        type: ASYNC
+        sse-endpoint: /sse
+        sse-message-endpoint: /mcp/messages
+        tool-change-notification: true
+        capabilities:
+          tool: true
+          resource: false
+          prompt: false
+          completion: false
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      enabled: false
+eureka:
+  client:
+    enabled: false
+management:
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  tracing:
+    enabled: false
+otel:
+  sdk:
+    disabled: true
+logging:
+  level:
+    "[io.modelcontextprotocol]": DEBUG
+    "[ca.zhoozhoo.loaddev.mcp.service]": DEBUG
+    "[okhttp3.mockwebserver]": DEBUG
