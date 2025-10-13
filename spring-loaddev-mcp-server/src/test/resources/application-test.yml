@@ -18,9 +18,11 @@ spring:
       enabled: false
     discovery:
       enabled: false
+
 eureka:
   client:
     enabled: false
+
 management:
   otlp:
     metrics:
@@ -28,11 +30,7 @@ management:
         enabled: false
   tracing:
     enabled: false
+
 otel:
   sdk:
     disabled: true
-logging:
-  level:
-    "[io.modelcontextprotocol]": DEBUG
-    "[ca.zhoozhoo.loaddev.mcp.service]": DEBUG
-    "[okhttp3.mockwebserver]": DEBUG
