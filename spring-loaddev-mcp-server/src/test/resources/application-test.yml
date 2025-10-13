@@ -10,7 +10,7 @@ spring:
         tool-change-notification: true
         capabilities:
           tool: true
-          resource: false
+          resource: true
           prompt: false
           completion: false
   cloud:
