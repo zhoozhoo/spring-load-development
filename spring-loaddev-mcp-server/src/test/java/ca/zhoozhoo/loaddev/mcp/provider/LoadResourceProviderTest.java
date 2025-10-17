@@ -90,10 +90,6 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
         mockService("loads-service", loadsInstance);
     }
 
-    // ========================================
-    // Test Methods
-    // ========================================
-
     /**
      * Tests server connectivity by sending a ping request.
      * <p>
@@ -109,28 +105,28 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
     }
 
     /**
-     * Tests the resource discovery functionality.
+     * Tests the resource template discovery functionality.
      * <p>
-     * Verifies that the server returns a list of available MCP resources
-     * using {@link io.modelcontextprotocol.client.McpAsyncClient#listResources(io.modelcontextprotocol.spec.McpSchema.ListResourcesRequest)}. 
-     * The result is blocked to synchronously verify that the resources list is not empty.
+     * Verifies that the server returns a list of available MCP resource templates
+     * using {@link io.modelcontextprotocol.client.McpAsyncClient#listResourceTemplates(io.modelcontextprotocol.spec.McpSchema.ListResourceTemplatesRequest)}. 
+     * The result is blocked to synchronously verify that the resource templates list is not empty.
      * <p>
-     * Expected resources include: load://{id}, load://{id}/{attribute}.
-     * 
-     * NOTE: Currently the LoadResourceProvider uses @McpResource annotation at method level
-     * which registers templates, not static resources in the list. The templates are available
-     * but not returned by resources/list - they are only accessible via resources/read with
-     * the appropriate URI pattern.
+     * Resource templates are URI patterns that define dynamic resources which can be accessed
+     * via resources/read with specific parameter values. For example, load://{id} is a template
+     * where {id} can be replaced with an actual load ID like load://1.
+     * <p>
+     * Expected resource templates include: load://{id}, load://{id}/{attribute}.
+     * These templates are registered via @McpResource annotation at method level in LoadResourceProvider.
      */
     @Test
-    void listResources() {
-        var resourcesList = client.listResources(null).block();
+    void listResourceTemplates() {
+        var resourceTemplateList = client.listResourceTemplates(null).block();
 
-        assertThat(resourcesList).isNotNull();
-        // Resource templates registered with @McpResource at method level don't appear in list
-        // They are accessible via resources/read but not listed in resources/list
-        // This is expected behavior for dynamic resources
-        assertThat(resourcesList.resources()).isEmpty();
+        assertThat(resourceTemplateList).isNotNull();
+        // Resource templates are URI patterns like load://{id} that accept parameters
+        // They are registered via @McpResource annotation and returned by listResourceTemplates()
+        // Clients can use these templates to construct URIs for resources/read requests
+        assertThat(resourceTemplateList.resourceTemplates()).isNotEmpty();
     }
 
     /**
