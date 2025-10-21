@@ -9,9 +9,38 @@ import org.springframework.stereotype.Component;
 import lombok.extern.log4j.Log4j2;
 
 /**
- * Gateway filter factory that forwards the permission token to downstream services.
- * This filter retrieves the permission token from the exchange attributes and adds it
- * to the Authorization header of the request.
+ * Spring Cloud Gateway filter factory that forwards permission tokens to downstream services.
+ * 
+ * <p>This filter retrieves the permission token that was stored in the exchange attributes by
+ * {@link PermissionTokenExchangeFilter} and adds it to the Authorization header of outgoing
+ * requests to backend microservices. This ensures that downstream services receive the
+ * enhanced permission token rather than the original user token.</p>
+ * 
+ * <p><b>Usage in Gateway Routes:</b></p>
+ * <pre>{@code
+ * spring:
+ *   cloud:
+ *     gateway:
+ *       routes:
+ *         - id: my-service
+ *           uri: lb://my-service
+ *           filters:
+ *             - TokenForwarding
+ * }</pre>
+ * 
+ * <p>The filter works in conjunction with {@link PermissionTokenExchangeFilter}:
+ * <ol>
+ *   <li>PermissionTokenExchangeFilter exchanges user token for permission token</li>
+ *   <li>Permission token is stored in exchange attributes with key "permission_token"</li>
+ *   <li>This filter retrieves the token and adds it to the Authorization header</li>
+ *   <li>Request is forwarded to downstream service with permission token</li>
+ * </ol>
+ * 
+ * <p>If no permission token is found in the exchange attributes, the request proceeds
+ * without modification, preserving any existing Authorization header.</p>
+ * 
+ * @author Zhubin Salehi
+ * @see PermissionTokenExchangeFilter
  */
 @Component
 @Log4j2

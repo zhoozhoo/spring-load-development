@@ -19,10 +19,33 @@ import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.log4j.Log4j2;
 
 /**
- * Configuration class for Spring Security settings in a Reactive Web application.
- * This class defines the security policies and configurations for the application,
- * including OAuth2 login, resource server capabilities, bearer token propagation,
- * and webclient setup for service communication.
+ * Security configuration class for the API Gateway using Spring WebFlux Security.
+ * 
+ * <p>This configuration defines the security policies and components for the reactive web application,
+ * including OAuth2 login, JWT-based resource server authentication, bearer token propagation,
+ * and specialized WebClient configurations for service-to-service communication.</p>
+ * 
+ * <p><b>Key Security Features:</b></p>
+ * <ul>
+ *   <li><b>Public Endpoints:</b> Actuator health checks, Swagger UI, and OpenAPI documentation
+ *       are accessible without authentication</li>
+ *   <li><b>Protected Endpoints:</b> All other endpoints require OAuth2 authentication</li>
+ *   <li><b>OAuth2 Login:</b> Supports user authentication through OAuth2 providers (Keycloak)</li>
+ *   <li><b>Resource Server:</b> Validates JWT tokens for API access</li>
+ *   <li><b>Token Propagation:</b> Automatically forwards bearer tokens to downstream services</li>
+ *   <li><b>CSRF:</b> Disabled for stateless API operations</li>
+ * </ul>
+ * 
+ * <p><b>WebClient Configurations:</b></p>
+ * <ul>
+ *   <li><b>Standard WebClient:</b> For load-balanced service discovery calls</li>
+ *   <li><b>OAuth2 Client WebClient:</b> For OAuth2 client credentials flow</li>
+ *   <li><b>Keycloak WebClient:</b> Dedicated client for Keycloak server communication</li>
+ * </ul>
+ * 
+ * @author Zhubin Salehi
+ * @see PermissionTokenExchangeFilter
+ * @see TokenForwardingGatewayFilterFactory
  */
 @Configuration
 @EnableWebFluxSecurity
