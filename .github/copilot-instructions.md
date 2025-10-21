@@ -11,7 +11,7 @@ This is a **microservices-based load development management system** built with 
 - **Loads Service** (`spring-loaddev-loads-service`) - Manages loads, groups, and shots; calculates ballistic statistics
 - **Components Service** (`spring-loaddev-components-service`) - Manages reloading components (bullets, powder, primers, cases)
 - **Rifles Service** (`spring-loaddev-rifles-service`) - Manages rifle configurations
-- **MCP Server** (`spring-loaddev-mcp-server`) - Model Context Protocol server for Spring AI integration
+- **MCP Server** (`spring-loaddev-mcp-server`) - Model Context Protocol server for Spring AI integration with tool and resource capabilities; provides async communication via SSE at `/sse` and `/mcp/messages` endpoints
 - **Config Server** (`spring-loaddev-config-server`) - Centralized configuration from `spring-load-development-config` git repo (Docker/local only)
 - **Discovery Server** (`spring-loaddev-discovery-server`) - Eureka service registry (Docker/local only)
 
@@ -49,7 +49,7 @@ All services use **Keycloak UMA (User-Managed Access)** for authorization:
 - **Spring Cloud Kubernetes** for native Kubernetes integration (ConfigMap access, service discovery)
 - **WebFlux** for reactive REST APIs (no blocking code)
 - **R2DBC** with PostgreSQL for reactive database access
-- **Spring AI 1.1.0-M2** for MCP server
+- **Spring AI 1.1.0-M3** for MCP server
 - **MapStruct 1.6.3** for DTO mapping (see `GroupStatisticsMapper`)
 - **TestContainers** for integration tests with real database instances (PostgreSQL, R2DBC)
 - **Resilience4J** circuit breaker in API Gateway
@@ -128,7 +128,7 @@ spring:
         all-namespaces: true  # Use K8s DNS for service discovery
 ```
 
-**Spring Cloud Kubernetes Integration:** The `spring-cloud-starter-kubernetes-client-all` dependency enables direct ConfigMap access through the Kubernetes API without requiring volume mounts. ConfigMaps are automatically loaded and can be refreshed dynamically. The only volume mount needed is for `log4j2.xml` logging configuration, as it requires file-system access for the logging framework.
+**Spring Cloud Kubernetes Integration:** The `spring-cloud-starter-kubernetes-client-all` dependency enables direct ConfigMap access through the Kubernetes API without requiring volume mounts. ConfigMaps are automatically loaded and can be refreshed dynamically. The only volume mount needed is for `log4j2.yaml` logging configuration, as it requires file-system access for the logging framework.
 
 **Config Server Setup:** The Config Server fetches configurations from the `spring-load-development-config` repository, allowing centralized management of properties files for all services (`loads-service.yml`, `components-service.yml`, etc.).
 
