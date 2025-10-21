@@ -57,7 +57,7 @@ data:
           enabled: true
 
     logging:
-      config: /etc/config/log4j2.xml
+      config: /etc/config/log4j2.yaml
 
     log4j2:
       Configuration:
@@ -68,20 +68,21 @@ data:
         otlp:
           endpoint: {{ .Values.otelCollector.grpcEndpoint | default "http://otel-collector-service.observability.svc.cluster.local:4317" }}
           protocol: grpc
-          interval: 10000
-      service:
-        name: ${spring.application.name}
-      resource:
-        attributes:
-          service.name: ${spring.application.name}
-          service.version: ${project.version:1.0.0}
-          service.environment: ${SPRING_PROFILES_ACTIVE:kubernetes}
       instrumentation:
-        common:
-          experimental:
-            controller-telemetry.enabled: true
         micrometer:
           enabled: true
+        runtime-telemetry:
+          enabled: false
+      metric:
+        export:
+          interval: 10000
+      resource:
+        attributes:
+          service:
+            name: ${spring.application.name}
+            version: ${project.version:0.0.8-SNAPSHOT}
+      service:
+        name: ${spring.application.name}
 
 ---
 apiVersion: v1
@@ -172,7 +173,7 @@ data:
                 - id: mcp-server
                   uri: http://mcp-server-service.{{ .Values.apiGateway.namespace | default "default" }}.svc.cluster.local:8080
                   predicates:
-                    - Path=/mcp/**
+                    - Path=/mcp/**,/sse/**
                   filters:
                     - TokenForwarding
                     - TokenRelay=
@@ -180,20 +181,6 @@ data:
                       args:
                         name: mcpCircuitBreaker
                     - Retry=1
-                - id: mcp-server-sse
-                  uri: http://mcp-server-service.{{ .Values.apiGateway.namespace | default "default" }}.svc.cluster.local:8080
-                  predicates:
-                    - Path=/sse/**
-                  filters:
-                    - TokenForwarding
-                    - TokenRelay=
-                    - name: CircuitBreaker
-                      args:
-                        name: mcpSseCircuitBreaker
-                        fallbackUri: forward:/fallback
-                  metadata:
-                    connect-timeout: 45000
-                    response-timeout: 45000
                 - id: fallback-route
                   order: 100
                   uri: no://op
@@ -232,40 +219,50 @@ metadata:
     {{- include "spring-load-development.labels" . | nindent 4 }}
     app.kubernetes.io/component: log4j2-config
 data:
-  log4j2.xml: |
-    <?xml version="1.0" encoding="UTF-8"?>
-    <Configuration status="WARN">
-        <Properties>
-            <Property name="LOG_EXCEPTION_CONVERSION_WORD">%xwEx</Property>
-            <Property name="LOG_LEVEL_PATTERN">%5p</Property>
-            <Property name="LOG_DATEFORMAT_PATTERN">yyyy-MM-dd'T'HH:mm:ss.SSSXXX</Property>
-            <Property name="CONSOLE_LOG_PATTERN">%clr{%d{${LOG_DATEFORMAT_PATTERN}}}{faint} %clr{${LOG_LEVEL_PATTERN}} %clr{%pid}{magenta} %clr{--- [%15.15t] [trace_id=%X{trace_id} span_id=%X{span_id}]}{faint} %clr{%-40.40c{1.}}{cyan} %clr{:}{faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD}</Property>
-        </Properties>
-
-        <Appenders>
-            <Console name="Console" target="SYSTEM_OUT" follow="true">
-                <PatternLayout pattern="${CONSOLE_LOG_PATTERN}" disableAnsi= "false"/>
-            </Console>
-            <OpenTelemetry name="OpenTelemetryAppender"
-                captureMapMessageAttributes="true"
-                captureMarkerAttribute="true"
-                captureContextDataAttributes="*"/>
-        </Appenders>
-
-        <Loggers>
-            <!-- Application Loggers -->
-            <Logger name="ca.zhoozhoo.loaddev" level="DEBUG" additivity="false">
-                <AppenderRef ref="Console"/>
-                <AppenderRef ref="OpenTelemetryAppender"/>
-            </Logger>
-
-            <!-- Root Logger -->
-            <Root level="INFO">
-                <AppenderRef ref="Console"/>
-                <AppenderRef ref="OpenTelemetryAppender"/>
-            </Root>
-        </Loggers>
-    </Configuration>
+  log4j2.yaml: |
+    Configuration:
+      status: WARN
+      
+      Properties:
+        Property:
+          - name: LOG_EXCEPTION_CONVERSION_WORD
+            value: "%xwEx"
+          - name: LOG_LEVEL_PATTERN
+            value: "%5p"
+          - name: LOG_DATEFORMAT_PATTERN
+            value: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+          - name: CONSOLE_LOG_PATTERN
+            value: "%clr{%d{${LOG_DATEFORMAT_PATTERN}}}{faint} %clr{${LOG_LEVEL_PATTERN}} %clr{%pid}{magenta} %clr{--- [%15.15t] [trace_id=%X{trace_id} span_id=%X{span_id}]}{faint} %clr{%-40.40c{1.}}{cyan} %clr{:}{faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD}"
+      
+      Appenders:
+        Console:
+          name: ConsoleAppender
+          target: SYSTEM_OUT
+          follow: true
+          PatternLayout:
+            pattern: "${CONSOLE_LOG_PATTERN}"
+            disableAnsi: false
+        
+        OpenTelemetry:
+          name: OpenTelemetryAppender
+          captureMapMessageAttributes: true
+          captureMarkerAttribute: true
+          captureContextDataAttributes: "*"
+      
+      Loggers:
+        Logger:
+          - name: ca.zhoozhoo.loaddev
+            level: DEBUG
+            additivity: false
+            AppenderRef:
+              - ref: ConsoleAppender
+              - ref: OpenTelemetryAppender
+        
+        Root:
+          level: INFO
+          AppenderRef:
+            - ref: ConsoleAppender
+            - ref: OpenTelemetryAppender
 {{- end }}
 
 {{- if .Values.loadsService.enabled }}
@@ -389,13 +386,14 @@ data:
         mcp:
           server:
             name: reloading-mcp-server
-            version: 0.0.7-SNAPSHOT
+            version: 0.0.8-SNAPSHOT
             type: ASYNC
+            sse-endpoint: /sse
             sse-message-endpoint: /mcp/messages
             tool-change-notification: true
             capabilities:
               tool: true
-              resource: false
+              resource: true
               prompt: false
               completion: false
       security:

@@ -18,7 +18,7 @@ postgresql:
   enabled: true
   namespace: postgres
   image:
-    tag: "17.6"
+    tag: "18.0"
   
   auth:
     database: loadsdb
@@ -41,7 +41,7 @@ keycloakPostgresql:
   enabled: true
   namespace: keycloak
   image:
-    tag: "17.6"
+    tag: "18.0"
   
   auth:
     database: keycloak
@@ -67,7 +67,7 @@ keycloak:
   image:
     registry: quay.io
     repository: keycloak/keycloak
-    tag: "26.3"
+    tag: "26.4"
   
   auth:
     adminUser: admin
@@ -145,7 +145,7 @@ observability:
     enabled: true
     image:
       repository: grafana/loki
-      tag: "3.5.5"
+      tag: "3.5.7"
     
     config:
       auth_enabled: false
@@ -232,7 +232,7 @@ observability:
     enabled: true
     image:
       repository: grafana/tempo
-      tag: "2.8.2"
+      tag: "2.9.0"
     
     config:
       stream_over_http_enabled: true
@@ -356,7 +356,7 @@ observability:
     enabled: true
     image:
       repository: grafana/grafana
-      tag: "12.1.1"
+      tag: "12.2.0"
     
     auth:
       disable_login_form: true
@@ -453,7 +453,7 @@ observability:
     enabled: true
     image:
       repository: otel/opentelemetry-collector-contrib
-      tag: "0.135.0"
+      tag: "0.137.0"
     
     config:
       extensions:
