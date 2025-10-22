@@ -3,7 +3,7 @@ spring:
     mcp:
       server:
         name: reloading-mcp-server
-        version: 0.0.7-SNAPSHOT
+        version: 0.0.8-SNAPSHOT
         type: ASYNC
         sse-endpoint: /sse
         sse-message-endpoint: /mcp/messages
