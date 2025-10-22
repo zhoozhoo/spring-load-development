@@ -119,6 +119,7 @@ graph TB
 * Kubernetes cluster (Docker Desktop, minikube, or cloud provider)
 * Helm 3.x installed
 * kubectl configured
+* Cluster admin permissions to create namespaces
 
 === Deploy Infrastructure
 
@@ -128,10 +129,19 @@ graph TB
 git clone <your-repo-url>
 cd spring-load-development/helm/spring-load-development
 
-# Deploy the infrastructure
+# Step 1: Create required namespaces
+# The chart requires 4 namespaces: postgres, keycloak, observability, reloading
+./create-namespaces.sh
+
+# Or create them manually:
+# kubectl create namespace postgres
+# kubectl create namespace keycloak
+# kubectl create namespace observability
+# kubectl create namespace reloading
+
+# Step 2: Deploy the infrastructure
 helm install spring-load-development . \
   --values values.yaml \
-  --create-namespace \
   --timeout 300s
 
 # Or upgrade if already installed
@@ -139,6 +149,8 @@ helm upgrade spring-load-development . \
   --values values.yaml \
   --timeout 300s
 ----
+
+NOTE: The chart no longer creates namespaces automatically. This follows Kubernetes best practices where namespace lifecycle should be managed separately from application deployments.
 
 === Access Services
 
@@ -177,25 +189,39 @@ kubectl port-forward svc/mcp-server-service 8084:8080 -n reloading
 
 === PostgreSQL Databases
 
+Both PostgreSQL instances use *StatefulSets* for stable network identity and persistent storage management. This provides:
+
+* Stable, unique network identifiers
+* Stable, persistent storage that survives pod rescheduling
+* Ordered, graceful deployment and scaling
+* Ordered, automated rolling updates
+* Foundation for future HA configurations
+
 ==== Microservices Database
 
+* *Resource Type*: StatefulSet
 * *Namespace*: `postgres`
 * *Service*: `postgres-service.postgres.svc.cluster.local:5432`
 * *Database*: `loadsdb`
 * *Credentials*: `user` / `password`
-* *Storage*: 8Gi persistent volume
-* *Version*: PostgreSQL 17.6
+* *Storage*: 8Gi persistent volume (managed by volumeClaimTemplates)
+* *Version*: PostgreSQL 18.0
+* *Replicas*: 1 (configurable via `postgresql.replicas`)
 * *Purpose*: For Spring Boot microservices data storage
 
 ==== Keycloak Database
 
+* *Resource Type*: StatefulSet
 * *Namespace*: `keycloak`
 * *Service*: `keycloak-postgres-service.keycloak.svc.cluster.local:5432`
 * *Database*: `keycloak`
 * *Credentials*: `user` / `password`
-* *Storage*: 8Gi persistent volume
-* *Version*: PostgreSQL 17.6
+* *Storage*: 8Gi persistent volume (managed by volumeClaimTemplates)
+* *Version*: PostgreSQL 18.0
+* *Replicas*: 1 (configurable via `keycloakPostgresql.replicas`)
 * *Purpose*: Dedicated for Keycloak authentication data
+
+NOTE: StatefulSets provide better guarantees for database workloads compared to Deployments. The persistent storage follows the pod lifecycle and is automatically reattached if the pod is rescheduled.
 
 === Keycloak Authentication Server
 

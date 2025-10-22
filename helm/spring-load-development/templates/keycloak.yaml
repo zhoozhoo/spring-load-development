@@ -42,10 +42,18 @@ spec:
       labels:
         app: keycloak
     spec:
+      securityContext:
+        {{- include "spring-load-development.podSecurityContext" . | nindent 8 }}
       containers:
         - name: keycloak
           image: "{{ .Values.keycloak.image.registry }}/{{ .Values.keycloak.image.repository }}:{{ .Values.keycloak.image.tag }}"
           imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "spring-load-development.containerSecurityContext" . | nindent 12 }}
+          {{- if .Values.keycloak.resources }}
+          resources:
+            {{- toYaml .Values.keycloak.resources | nindent 12 }}
+          {{- end }}
           args:
             - start-dev
             - --import-realm

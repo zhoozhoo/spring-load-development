@@ -148,10 +148,14 @@ spec:
         {{- include "spring-load-development.microservice.selectorLabels" (dict "componentName" $componentName "context" $context) | nindent 8 }}
     spec:
       serviceAccountName: {{ include "spring-load-development.serviceAccountName" $context }}
+      securityContext:
+        {{- include "spring-load-development.podSecurityContext" $context | nindent 8 }}
       containers:
       - name: {{ $componentName }}
         image: {{ $config.image.repository }}:{{ $config.image.tag | default $context.Chart.AppVersion }}
         imagePullPolicy: {{ $config.image.pullPolicy | default "IfNotPresent" }}
+        securityContext:
+          {{- include "spring-load-development.containerSecurityContext" $context | nindent 10 }}
         ports:
         - name: http
           containerPort: 8080
@@ -282,3 +286,45 @@ spec:
     {{- end }}
 {{- end }}
 {{- end }}
+
+{{/*
+Pod security context
+*/}}
+{{- define "spring-load-development.podSecurityContext" -}}
+runAsNonRoot: true
+runAsUser: {{ .Values.securityContext.runAsUser | default 1000 }}
+fsGroup: {{ .Values.securityContext.fsGroup | default 2000 }}
+seccompProfile:
+  type: RuntimeDefault
+{{- end }}
+
+{{/*
+Container security context
+*/}}
+{{- define "spring-load-development.containerSecurityContext" -}}
+allowPrivilegeEscalation: false
+runAsNonRoot: true
+runAsUser: {{ .Values.securityContext.runAsUser | default 1000 }}
+capabilities:
+  drop:
+  - ALL
+readOnlyRootFilesystem: false
+seccompProfile:
+  type: RuntimeDefault
+{{- end }}
+
+{{/*
+Container security context for databases (needs write access)
+*/}}
+{{- define "spring-load-development.databaseSecurityContext" -}}
+allowPrivilegeEscalation: false
+runAsNonRoot: true
+runAsUser: 999
+capabilities:
+  drop:
+  - ALL
+readOnlyRootFilesystem: false
+seccompProfile:
+  type: RuntimeDefault
+{{- end }}
+
