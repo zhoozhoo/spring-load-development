@@ -16,7 +16,7 @@ spring:
     kubernetes:
       config:
         sources:
-          - common-config
-          - rifles-service-config
+          - name: common-config
+          - name: rifles-service-config
       discovery:
         all-namespaces: true

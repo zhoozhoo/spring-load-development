@@ -16,7 +16,7 @@ spring:
     kubernetes:
       config:
         sources:
-          - common-config
-          - components-service-config
+          - name: common-config
+          - name: components-service-config
       discovery:
         all-namespaces: true

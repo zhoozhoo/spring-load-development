@@ -16,7 +16,7 @@ spring:
     kubernetes:
       config:
         sources:
-          - common-config
-          - api-gateway
+          - name: common-config
+          - name: api-gateway
       discovery:
         all-namespaces: true
