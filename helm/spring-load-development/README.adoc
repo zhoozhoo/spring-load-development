@@ -164,7 +164,7 @@ kubectl port-forward svc/grafana-service 3000:3000 -n observability
 kubectl port-forward svc/keycloak-service 8080:8080 -n keycloak
 
 # API Gateway
-kubectl port-forward svc/api-gateway-service 8080:8080 -n reloading
+kubectl port-forward svc/api-gateway 8080:8080 -n reloading
 
 # Individual microservices
 kubectl port-forward svc/loads-service 8081:8080 -n reloading
@@ -219,7 +219,7 @@ kubectl port-forward svc/mcp-server-service 8084:8080 -n reloading
 
 * *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:0.0.8-SNAPSHOT`
 * *Namespace*: `reloading`
-* *Service*: `api-gateway-service.reloading.svc.cluster.local:8080`
+* *Service*: `api-gateway.reloading.svc.cluster.local:8080`
 * *NodePort*: 30090
 * *Purpose*: Main entry point, routing, and load balancing for all microservices
 * *Resources*: CPU 500m-1000m, Memory 512Mi-1Gi
@@ -660,7 +660,7 @@ otel:
   resource:
     attributes:
       service.name: loads-service
-      service.version: 0.0.7-SNAPSHOT
+      service.version: 0.0.8-SNAPSHOT
       service.environment: kubernetes
 
 # Spring Boot specific configuration
@@ -931,3 +931,117 @@ kubectl get configmap keycloak-realm-config -n keycloak -o yaml > keycloak-realm
 * *Helm Version*: 3.x
 * *Dependencies*: None (all components included)
 * *Namespaces*: `postgres`, `keycloak`, `observability`, `reloading`
+
+== Chart Structure
+
+This Helm chart follows modern best practices with a modular, maintainable structure:
+
+=== Key Files
+
+* `.helmignore` - Excludes unnecessary files from chart packages (IDE configs, tests, documentation)
+* `values.schema.json` - JSON Schema validation for values.yaml to prevent misconfigurations
+* `Chart.yaml` - Chart metadata and version information
+* `values.yaml` - Configuration values for all components
+* `README.adoc` - This comprehensive documentation
+
+=== Templates Organization
+
+The chart uses a highly optimized template structure that eliminates code duplication:
+
+==== Core Templates
+
+* `_helpers.tpl` - Reusable template functions and helpers
+** Standard Helm helpers (name, fullname, labels, etc.)
+** *Microservice helpers*: 7 specialized functions for generating consistent microservice resources
+** Database environment helpers
+** Common environment variable generators
+
+* `microservices.yaml` - *Unified microservice template*
+** Single template generates all 5 microservices (API Gateway, Loads Service, Components Service, Rifles Service, MCP Server)
+** Uses parameterized helper functions from `_helpers.tpl`
+** Conditional database configuration
+** Consistent patterns across all services
+** *Replaces 5 individual template files with ~40 lines of code*
+
+==== Infrastructure Templates
+
+* `postgresql.yaml` - Two PostgreSQL instances (microservices DB and Keycloak DB)
+* `keycloak.yaml` - Keycloak authentication server deployment
+* `keycloak-realm-configmap.yaml` - Keycloak realm configuration
+* `observability-stack.yaml` - Complete observability stack (Loki, Tempo, Prometheus, Grafana, OpenTelemetry Collector)
+* `configmaps.yaml` - Application configuration (Log4j2, application properties)
+* `namespaces.yaml` - Namespace definitions
+* `rbac.yaml` - Role-based access control
+* `serviceaccount.yaml` - Service account for microservices
+* `NOTES.txt` - Post-installation instructions and access information
+
+=== Template Helpers
+
+The chart includes 7 specialized helper functions for microservices:
+
+1. `microservice.labels` - Generate consistent labels for any microservice
+2. `microservice.selectorLabels` - Generate selector labels
+3. `microservice.commonEnv` - Common environment variables (Spring profiles, OTEL, Keycloak)
+4. `microservice.databaseEnv` - Database connection configuration
+5. `microservice.deployment` - Generic Deployment template
+6. `microservice.service` - Generic Service template
+7. `microservice.ingress` - Generic Ingress template
+
+These helpers enable:
+
+* *Single source of truth* for microservice patterns
+* *Consistent configuration* across all services
+* *Easy maintenance* - change once, applies to all services
+* *Simple service addition* - just 3 lines of code to add a new microservice
+
+=== Schema Validation
+
+The `values.schema.json` provides comprehensive validation:
+
+* Type checking for all configuration values
+* Required field enforcement
+* Range validation (ports: 1-65535, nodePorts: 30000-32767)
+* Resource specification pattern matching (CPU, memory)
+* Enum validation (service types, pull policies)
+* Prevents deployment with invalid configurations
+
+=== Adding a New Microservice
+
+Thanks to the refactored template structure, adding a new microservice is simple:
+
+*Step 1: Add configuration to values.yaml*
+[source,yaml]
+----
+newService:
+  enabled: true
+  replicas: 1
+  image:
+    repository: zhoozhoo.ca/spring-load-development/new-service
+    tag: "0.0.8-SNAPSHOT"
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    limits: {cpu: 500m, memory: 512Mi}
+    requests: {cpu: 250m, memory: 256Mi}
+----
+
+*Step 2: Add to templates/microservices.yaml*
+[source,yaml]
+----
+{{/* New Service */}}
+{{- if .Values.newService.enabled }}
+{{- include "spring-load-development.microservice.deployment" (dict "componentName" "new-service" "config" .Values.newService "context" . "needsDatabase" true) }}
+{{- include "spring-load-development.microservice.service" (dict "componentName" "new-service" "serviceName" "new-service" "config" .Values.newService "context" .) }}
+{{- end }}
+----
+
+That's it! The helper functions automatically generate the Deployment and Service with all standard configurations.
+
+=== Chart Package
+
+When packaged with `helm package`, the `.helmignore` file ensures only essential files are included:
+
+* Excludes: IDE configs, tests, backup files, VCS files, documentation
+* Reduces package size significantly
+* Improves security by excluding development files

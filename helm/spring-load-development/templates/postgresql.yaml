@@ -64,6 +64,9 @@ spec:
         - name: postgres
           image: "postgres:{{ .Values.postgresql.image.tag }}"
           imagePullPolicy: IfNotPresent
+          env:
+            - name: PGDATA
+              value: /pgdata
           envFrom:
             - configMapRef:
                 name: postgres-config
@@ -75,7 +78,7 @@ spec:
               protocol: TCP
           volumeMounts:
             - name: postgres-storage
-              mountPath: /var/lib/postgresql/data
+              mountPath: /pgdata
           readinessProbe:
             exec:
               command:
@@ -187,6 +190,9 @@ spec:
         - name: postgres
           image: "postgres:{{ .Values.keycloakPostgresql.image.tag }}"
           imagePullPolicy: IfNotPresent
+          env:
+            - name: PGDATA
+              value: /pgdata
           envFrom:
             - configMapRef:
                 name: keycloak-postgres-config
@@ -198,7 +204,7 @@ spec:
               protocol: TCP
           volumeMounts:
             - name: postgres-storage
-              mountPath: /var/lib/postgresql/data
+              mountPath: /pgdata
           readinessProbe:
             exec:
               command:
