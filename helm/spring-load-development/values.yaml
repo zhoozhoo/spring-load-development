@@ -106,14 +106,10 @@ keycloak:
       value: jdbc:postgresql://keycloak-postgres-service.keycloak.svc.cluster.local:5432/keycloak
     - name: KC_DB_USERNAME
       value: user
-    - name: KC_HTTP_HOSTNAME
-      value: keycloak-service.keycloak.svc.cluster.local
     - name: KC_HTTP_PORT
       value: "8080"
     - name: KC_HOSTNAME
       value: keycloak-service.keycloak.svc.cluster.local
-    - name: KC_PROXY_HEADERS
-      value: "xforwarded"
     - name: KC_HEALTH_ENABLED
       value: "true"
     - name: KC_TRACING_ENABLED

@@ -499,6 +499,8 @@ spec:
             - '--web.console.templates=/etc/prometheus/consoles'
             - '--storage.tsdb.retention.time=200h'
             - '--web.enable-lifecycle'
+            - '--web.enable-remote-write-receiver'
+            - '--enable-feature=native-histograms'
           ports:
             - name: http
               containerPort: {{ .Values.observability.prometheus.service.port }}
@@ -847,18 +849,6 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/otel-collector
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 13133
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 13133
-            initialDelaySeconds: 30
-            periodSeconds: 10
       volumes:
         - name: config
           configMap:

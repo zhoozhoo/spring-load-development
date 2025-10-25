@@ -72,22 +72,6 @@ spec:
               mountPath: /opt/keycloak/data/import
               readOnly: true
             {{- end }}
-          readinessProbe:
-            httpGet:
-              path: /realms/master
-              port: {{ .Values.keycloak.service.http.port }}
-            initialDelaySeconds: 60
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-          livenessProbe:
-            httpGet:
-              path: /realms/master
-              port: {{ .Values.keycloak.service.http.port }}
-            initialDelaySeconds: 120
-            periodSeconds: 30
-            timeoutSeconds: 5
-            failureThreshold: 3
       volumes:
         {{- if .Values.keycloak.realm.enabled }}
         - name: realm-config
