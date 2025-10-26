@@ -66,11 +66,11 @@ public class RiflesService {
         if (instances == null || instances.isEmpty()) {
             log.error("Service {} not found in discovery", riflesServiceName);
             return Flux.error(new McpError(new JSONRPCError(
-                    INTERNAL_ERROR, String.format("Service %s not found in discovery", riflesServiceName),
+                    INTERNAL_ERROR, "Service %s not found in discovery".formatted(riflesServiceName),
                     null)));
         }
 
-        String uri = instances.get(0).getUri().toString() + "/rifles";
+        String uri = "%s/rifles".formatted(instances.getFirst().getUri());
         log.debug("Target URI: {}", uri);
 
         return ReactiveSecurityContextHolder.getContext()
@@ -119,11 +119,11 @@ public class RiflesService {
         if (instances == null || instances.isEmpty()) {
             log.error("Service {} not found in discovery", riflesServiceName);
             return Mono.error(new McpError(new JSONRPCError(
-                    INTERNAL_ERROR, String.format("Service %s not found in discovery", riflesServiceName),
+                    INTERNAL_ERROR, "Service %s not found in discovery".formatted(riflesServiceName),
                     null)));
         }
 
-        String uri = instances.get(0).getUri().toString() + "/rifles/" + id;
+        String uri = "%s/rifles/%d".formatted(instances.getFirst().getUri(), id);
         log.debug("Target URI: {}", uri);
 
         return ReactiveSecurityContextHolder.getContext()

@@ -102,9 +102,9 @@ public class LoadsToolProvider {
     /**
      * Retrieves comprehensive details for a specific load.
      * <p>
-     * Combines load information with its associated rifle data and group statistics
-     * into a single comprehensive response. Makes parallel calls to retrieve all
-     * related information efficiently.
+     * Uses optimized parallel fetching with Mono.zip() to retrieve load, rifle, and statistics
+     * concurrently. This is inspired by Structured Concurrency (JEP 480) principles,
+     * ensuring all subtasks complete successfully or fail together with proper error handling.
      * <p>
      * Authentication is automatically propagated from the security context to all
      * downstream service calls.
@@ -127,24 +127,32 @@ public class LoadsToolProvider {
                         null)));
             }
 
+            // First fetch the load to get the rifle ID
             return withReactiveContext(
                 loadsService.getLoadById(id)
                     .doOnSuccess(l -> log.debug("Retrieved load: {}", l))
                     .doOnError(e -> log.error("Error retrieving load {}: {}", id, e.getMessage()))
-            ).flatMap(load ->
-                withReactiveContext(
+            ).flatMap(load -> {
+                // Now fetch rifle and statistics in parallel (Structured Concurrency pattern)
+                // Both operations must complete successfully, or the whole operation fails
+                Mono<ca.zhoozhoo.loaddev.mcp.dto.RifleDto> rifleMono = withReactiveContext(
                     riflesService.getRifleById(load.rifleId())
                         .doOnSuccess(r -> log.debug("Retrieved rifle: {}", r))
                         .doOnError(e -> log.error("Error retrieving rifle for load {}: {}", id, e.getMessage()))
-                ).flatMap(rifle ->
-                    withReactiveContext(
-                        loadsService.getGroupsByLoadId(id)
-                            .collectList()
-                            .doOnSuccess(stats -> log.debug("Retrieved {} statistics for load {}", stats.size(), id))
-                            .doOnError(e -> log.error("Error retrieving statistics for load {}: {}", id, e.getMessage()))
-                    ).map(groups -> new LoadDetails(load, rifle, groups))
-                )
-            );
+                );
+                
+                Mono<java.util.List<ca.zhoozhoo.loaddev.mcp.dto.GroupDto>> groupsMono = withReactiveContext(
+                    loadsService.getGroupsByLoadId(id)
+                        .collectList()
+                        .doOnSuccess(stats -> log.debug("Retrieved {} statistics for load {}", stats.size(), id))
+                        .doOnError(e -> log.error("Error retrieving statistics for load {}: {}", id, e.getMessage()))
+                );
+                
+                // Parallel execution with structured error handling
+                return Mono.zip(rifleMono, groupsMono)
+                    .map(tuple -> new LoadDetails(load, tuple.getT1(), tuple.getT2()))
+                    .doOnSuccess(_ -> log.debug("Successfully assembled LoadDetails for load {}", id));
+            });
     }
     
     /**

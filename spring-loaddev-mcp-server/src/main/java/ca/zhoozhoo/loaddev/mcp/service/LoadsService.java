@@ -3,7 +3,6 @@ package ca.zhoozhoo.loaddev.mcp.service;
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INTERNAL_ERROR;
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_PARAMS;
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_REQUEST;
-import static java.lang.String.format;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
@@ -71,11 +70,11 @@ public class LoadsService {
         if (instances == null || instances.isEmpty()) {
             log.error("Service {} not found in discovery", loadsServiceName);
             return Flux.error(new McpError(new JSONRPCError(
-                    INTERNAL_ERROR, format("Service %s not found in discovery", loadsServiceName),
+                    INTERNAL_ERROR, "Service %s not found in discovery".formatted(loadsServiceName),
                     null)));
         }
 
-        String uri = instances.get(0).getUri().toString() + "/loads";
+        String uri = "%s/loads".formatted(instances.getFirst().getUri());
         log.debug("Target URI: {}", uri);
 
         return ReactiveSecurityContextHolder.getContext()
@@ -133,11 +132,11 @@ public class LoadsService {
         if (instances == null || instances.isEmpty()) {
             log.error("Service {} not found in discovery", loadsServiceName);
             return Mono.error(new McpError(new JSONRPCError(
-                    INTERNAL_ERROR, format("Service %s not found in discovery", loadsServiceName),
+                    INTERNAL_ERROR, "Service %s not found in discovery".formatted(loadsServiceName),
                     null)));
         }
 
-        String uri = instances.get(0).getUri().toString() + "/loads/" + id;
+        String uri = "%s/loads/%d".formatted(instances.getFirst().getUri(), id);
         log.debug("Target URI: {}", uri);
 
         return ReactiveSecurityContextHolder.getContext()
@@ -167,7 +166,7 @@ public class LoadsService {
                                 if (e.getStatusCode() == NOT_FOUND) {
                                     return new McpError(new JSONRPCError(
                                             INVALID_PARAMS,
-                                            "Load not found with ID: " + id,
+                                            "Load not found with ID: %d".formatted(id),
                                             null));
                                 }
                                 return e;
@@ -197,11 +196,11 @@ public class LoadsService {
         if (instances == null || instances.isEmpty()) {
             log.error("Service {} not found in discovery", loadsServiceName);
             return Flux.error(new McpError(new JSONRPCError(
-                    INTERNAL_ERROR, format("Service %s not found in discovery", loadsServiceName),
+                    INTERNAL_ERROR, "Service %s not found in discovery".formatted(loadsServiceName),
                     null)));
         }
 
-        String uri = instances.get(0).getUri().toString() + "/loads/" + id + "/statistics";
+        String uri = "%s/loads/%d/statistics".formatted(instances.getFirst().getUri(), id);
         log.debug("Target URI: {}", uri);
 
         return ReactiveSecurityContextHolder.getContext()
@@ -231,7 +230,7 @@ public class LoadsService {
                                 if (e.getStatusCode() == NOT_FOUND) {
                                     return new McpError(new JSONRPCError(
                                             INVALID_PARAMS,
-                                            "Load not found with ID: " + id,
+                                            "Load not found with ID: %d".formatted(id),
                                             null));
                                 }
                                 return e;
