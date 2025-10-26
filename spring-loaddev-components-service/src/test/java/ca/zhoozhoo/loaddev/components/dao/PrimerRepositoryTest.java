@@ -46,9 +46,8 @@ class PrimerRepositoryTest {
     @Test
     void savePrimer() {
         var userId = randomUUID().toString();
-        var savedPrimer = primerRepository.save(createTestPrimer(userId));
 
-        create(savedPrimer)
+        create(primerRepository.save(createTestPrimer(userId)))
                 .assertNext(p -> {
                     assertThat(p.id()).isNotNull();
                     assertThat(p.ownerId()).isEqualTo(userId);
@@ -66,9 +65,8 @@ class PrimerRepositoryTest {
     void findPrimerById() {
         var userId = randomUUID().toString();
         var savedPrimer = primerRepository.save(createTestPrimer(userId)).block();
-        var foundPrimer = primerRepository.findByIdAndOwnerId(savedPrimer.id(), userId);
 
-        create(foundPrimer)
+        create(primerRepository.findByIdAndOwnerId(savedPrimer.id(), userId))
                 .assertNext(p -> {
                     assertThat(p.id()).isEqualTo(savedPrimer.id());
                     assertThat(p.ownerId()).isEqualTo(userId);
@@ -97,9 +95,7 @@ class PrimerRepositoryTest {
                 "CAD",
                 500);
 
-        var result = primerRepository.save(updatedPrimer);
-
-        create(result)
+        create(primerRepository.save(updatedPrimer))
                 .assertNext(p -> {
                     assertThat(p.id()).isEqualTo(savedPrimer.id());
                     assertThat(p.ownerId()).isEqualTo(userId);
@@ -118,16 +114,9 @@ class PrimerRepositoryTest {
         var userId = randomUUID().toString();
         var savedPrimer = primerRepository.save(createTestPrimer(userId)).block();
 
-        var deletedPrimer = primerRepository.delete(savedPrimer);
+        create(primerRepository.delete(savedPrimer)).verifyComplete();
 
-        create(deletedPrimer)
-                .verifyComplete();
-
-        var foundPrimer = primerRepository.findByIdAndOwnerId(savedPrimer.id(), userId);
-
-        create(foundPrimer)
-                .expectNextCount(0)
-                .verifyComplete();
+        create(primerRepository.findByIdAndOwnerId(savedPrimer.id(), userId)).expectNextCount(0).verifyComplete();
     }
 
     @Test
@@ -146,9 +135,7 @@ class PrimerRepositoryTest {
 
         primerRepository.saveAll(just(primer1, primer2)).blockLast();
 
-        var result = primerRepository.findAllByOwnerId(userId);
-
-        create(result)
+        create(primerRepository.findAllByOwnerId(userId))
                 .expectNextMatches(p -> p.manufacturer().equals("CCI"))
                 .expectNextMatches(p -> p.manufacturer().equals("Winchester"))
                 .verifyComplete();
@@ -157,12 +144,10 @@ class PrimerRepositoryTest {
     @Test
     void searchByOwnerIdAndQuery() {
         var ownerId = randomUUID().toString();
-        var primer = createTestPrimer(ownerId);
 
-        primerRepository.saveAll(just(primer)).blockLast();
+        primerRepository.saveAll(just(createTestPrimer(ownerId))).blockLast();
 
-        var positive = primerRepository.searchByOwnerIdAndQuery(ownerId, "CCI BR-4");
-        create(positive)
+        create(primerRepository.searchByOwnerIdAndQuery(ownerId, "CCI BR-4"))
                 .expectNextMatches(pp -> pp.manufacturer().equals("CCI"))
                 .verifyComplete();
     }
@@ -170,12 +155,10 @@ class PrimerRepositoryTest {
     @Test
     void searchByOwnerIdAndQueryNegative() {
         var ownerId = randomUUID().toString();
-        var primer = createTestPrimer(ownerId);
 
-        primerRepository.saveAll(just(primer)).blockLast();
+        primerRepository.saveAll(just(createTestPrimer(ownerId))).blockLast();
 
-        var negative = primerRepository.searchByOwnerIdAndQuery(ownerId, "CCI 45o");
-        create(negative)
+        create(primerRepository.searchByOwnerIdAndQuery(ownerId, "CCI 45o"))
                 .expectNextCount(0)
                 .verifyComplete();
     }

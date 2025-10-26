@@ -13,6 +13,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
+/**
+ * Represents a bullet component for ammunition reloading.
+ * <p>
+ * A bullet defines the projectile specifications including manufacturer, weight, type,
+ * and cost information. Bullets can be measured in either metric or imperial units.
+ * Each bullet is owned by a specific user for multi-tenant data isolation.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Table(name = "bullets")
 public record Bullet(
 
@@ -38,6 +48,11 @@ public record Bullet(
 
     public static final String IMPERIAL = "Imperial";
 
+    /**
+     * Custom equals() excluding ownerId to focus on business equality.
+     * Records auto-generate equals() including ALL fields, but ownerId is a
+     * database-level concern and shouldn't affect business object equality.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

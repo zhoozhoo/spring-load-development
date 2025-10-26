@@ -46,9 +46,8 @@ class CaseRepositoryTest {
     @Test
     void saveCase() {
         var userId = randomUUID().toString();
-        var savedCase = caseRepository.save(createTestCase(userId));
 
-        create(savedCase)
+        create(caseRepository.save(createTestCase(userId)))
                 .assertNext(c -> {
                     assertThat(c.id()).isNotNull();
                     assertThat(c.ownerId()).isEqualTo(userId);
@@ -66,9 +65,8 @@ class CaseRepositoryTest {
     void findCaseById() {
         var userId = randomUUID().toString();
         var savedCase = caseRepository.save(createTestCase(userId)).block();
-        var foundCase = caseRepository.findByIdAndOwnerId(savedCase.id(), userId);
 
-        create(foundCase)
+        create(caseRepository.findByIdAndOwnerId(savedCase.id(), userId))
                 .assertNext(c -> {
                     assertThat(c.id()).isEqualTo(savedCase.id());
                     assertThat(c.ownerId()).isEqualTo(userId);
@@ -97,9 +95,7 @@ class CaseRepositoryTest {
                 "CAD",
                 50);
 
-        var result = caseRepository.save(updatedCase);
-
-        create(result)
+        create(caseRepository.save(updatedCase))
                 .assertNext(c -> {
                     assertThat(c.id()).isEqualTo(savedCase.id());
                     assertThat(c.ownerId()).isEqualTo(userId);
@@ -118,16 +114,8 @@ class CaseRepositoryTest {
         var userId = randomUUID().toString();
         var savedCase = caseRepository.save(createTestCase(userId)).block();
 
-        var deletedCase = caseRepository.delete(savedCase);
-
-        create(deletedCase)
-                .verifyComplete();
-
-        var foundCase = caseRepository.findByIdAndOwnerId(savedCase.id(), userId);
-
-        create(foundCase)
-                .expectNextCount(0)
-                .verifyComplete();
+        create(caseRepository.delete(savedCase)).verifyComplete();
+        create(caseRepository.findByIdAndOwnerId(savedCase.id(), userId)).expectNextCount(0).verifyComplete();
     }
 
     @Test
@@ -146,9 +134,7 @@ class CaseRepositoryTest {
 
         caseRepository.saveAll(just(case1, case2)).blockLast();
 
-        var result = caseRepository.findAllByOwnerId(userId);
-
-        create(result)
+        create(caseRepository.findAllByOwnerId(userId))
                 .expectNextMatches(c -> c.manufacturer().equals("Lapua"))
                 .expectNextMatches(c -> c.manufacturer().equals("Starline"))
                 .verifyComplete();
@@ -157,12 +143,10 @@ class CaseRepositoryTest {
     @Test
     void searchByOwnerIdAndQuery() {
         var userId = randomUUID().toString();
-        var case1 = createTestCase(userId);
 
-        caseRepository.saveAll(just(case1)).blockLast();
+        caseRepository.saveAll(just(createTestCase(userId))).blockLast();
 
-        var result = caseRepository.searchByOwnerIdAndQuery(userId, "Lapua 6.5 Creedmoor");
-        create(result)
+        create(caseRepository.searchByOwnerIdAndQuery(userId, "Lapua 6.5 Creedmoor"))
                 .expectNextMatches(cc -> cc.manufacturer().equals("Lapua"))
                 .verifyComplete();
     }
@@ -170,12 +154,10 @@ class CaseRepositoryTest {
     @Test
     void searchByOwnerIdAndQueryNegative() {
         var ownerId = randomUUID().toString();
-        var case1 = createTestCase(ownerId);
 
-        caseRepository.saveAll(just(case1)).blockLast();
+        caseRepository.saveAll(just(createTestCase(ownerId))).blockLast();
 
-        var result = caseRepository.searchByOwnerIdAndQuery(ownerId, "Lapua 6mm BR");
-        create(result)
+        create(caseRepository.searchByOwnerIdAndQuery(ownerId, "Lapua 6mm BR"))
                 .expectNextCount(0)
                 .verifyComplete();
     }

@@ -14,6 +14,18 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * Represents a primer component for ammunition reloading.
+ * <p>
+ * A primer provides the ignition source for ammunition. This record defines primer
+ * specifications including manufacturer, type (e.g., magnum, standard), size (small
+ * rifle, large rifle, etc.), and cost information. Primers must match both the case
+ * primer pocket size and the powder charge requirements. Each primer is owned by
+ * a specific user for multi-tenant data isolation.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Table("primers")
 public record Primer(
     
@@ -33,6 +45,11 @@ public record Primer(
 
         @NotNull(message = "Quantity per box is required") @Min(value = 1, message = "Quantity per box must be greater than 0") @Column("quantity_per_box") Integer quantityPerBox) {
 
+    /**
+     * Custom equals() excluding ownerId to focus on business equality.
+     * Records auto-generate equals() including ALL fields, but ownerId is a
+     * database-level concern and shouldn't affect business object equality.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -49,7 +66,6 @@ public record Primer(
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, manufacturer, type, primerSize,
-                cost, currency, quantityPerBox);
+        return Objects.hash(id, manufacturer, type, primerSize, cost, currency, quantityPerBox);
     }
 }

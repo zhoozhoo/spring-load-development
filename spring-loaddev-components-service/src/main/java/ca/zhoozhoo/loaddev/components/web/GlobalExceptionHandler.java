@@ -17,6 +17,17 @@ import org.springframework.web.server.ResponseStatusException;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
+/**
+ * Global exception handler for the components service.
+ * <p>
+ * This class provides centralized exception handling for all REST controllers in the
+ * components service. It handles common exceptions like validation errors, data integrity
+ * violations, access denied, and general server errors, returning appropriate HTTP status
+ * codes and error messages.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @RestControllerAdvice
 @Log4j2
 public class GlobalExceptionHandler {
@@ -34,13 +45,11 @@ public class GlobalExceptionHandler {
         String error = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(err -> {
-                    String field = err.getField();
-                    String message = err.getDefaultMessage();
-                    Object rejectedValue = err.getRejectedValue();
-                    return String.format("%s: %s (rejected value: %s)", field, message, rejectedValue);
-                })
-                .reduce((a, b) -> a + "; " + b)
+                .map(err -> "%s: %s (rejected value: %s)".formatted(
+                        err.getField(),
+                        err.getDefaultMessage(),
+                        err.getRejectedValue()))
+                .reduce((a, b) -> "%s; %s".formatted(a, b))
                 .orElse("Validation failed");
         return just(ResponseEntity.status(BAD_REQUEST).body(error));
     }

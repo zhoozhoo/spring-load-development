@@ -8,6 +8,16 @@ import ca.zhoozhoo.loaddev.components.model.Case;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/**
+ * Reactive repository for managing {@link Case} entities.
+ * <p>
+ * Provides reactive data access operations for cartridge case components including
+ * multi-tenant filtering by owner ID and full-text search capabilities using
+ * PostgreSQL's text search features.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 public interface CaseRepository extends ReactiveCrudRepository<Case, Long> {
     
     Flux<Case> findAllByOwnerId(String ownerId);

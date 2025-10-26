@@ -14,6 +14,17 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * Represents a cartridge case component for ammunition reloading.
+ * <p>
+ * A case defines the brass cartridge specifications including manufacturer, caliber,
+ * primer size requirements, and cost information. Cases are the foundation of reloaded
+ * ammunition and must match the specific caliber being loaded. Each case is owned by
+ * a specific user for multi-tenant data isolation.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Table("cases")
 public record Case(
     
@@ -33,25 +44,27 @@ public record Case(
 
         @NotNull(message = "Quantity per box is required") @Min(value = 1, message = "Quantity per box must be greater than 0") @Column("quantity_per_box") Integer quantityPerBox) {
 
+    /**
+     * Custom equals() excluding ownerId to focus on business equality.
+     * Records auto-generate equals() including ALL fields, but ownerId is a
+     * database-level concern and shouldn't affect business object equality.
+     */
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        Case casing = (Case) o;
-        return Objects.equals(id, casing.id) &&
-                Objects.equals(manufacturer, casing.manufacturer) &&
-                Objects.equals(caliber, casing.caliber) &&
-                primerSize == casing.primerSize &&
-                Objects.equals(cost, casing.cost) &&
-                Objects.equals(currency, casing.currency) &&
-                Objects.equals(quantityPerBox, casing.quantityPerBox);
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Case caseItem = (Case) o;
+        return Objects.equals(id, caseItem.id) &&
+                Objects.equals(manufacturer, caseItem.manufacturer) &&
+                Objects.equals(caliber, caseItem.caliber) &&
+                primerSize == caseItem.primerSize &&
+                Objects.equals(cost, caseItem.cost) &&
+                Objects.equals(currency, caseItem.currency) &&
+                Objects.equals(quantityPerBox, caseItem.quantityPerBox);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, manufacturer, caliber, primerSize,
-                cost, currency, quantityPerBox);
+        return Objects.hash(id, manufacturer, caliber, primerSize, cost, currency, quantityPerBox);
     }
 }
