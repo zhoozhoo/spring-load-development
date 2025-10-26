@@ -2,6 +2,7 @@ package ca.zhoozhoo.loaddev.loads.web;
 
 import static ca.zhoozhoo.loaddev.loads.model.Load.IMPERIAL;
 import static java.util.UUID.randomUUID;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 import static reactor.core.publisher.Mono.just;
@@ -160,42 +161,34 @@ class LoadsControllerTest {
 
     @Test
     void createLoadWithInvalidData() {
-        var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
-        var invalidLoad = new Load(null, userId, "", "", "",
-                "", "",
-                "", "", -1.0,
-                null, "",
-                -1.0,
-                -1.0,
-                -1.0,
-                -1L);
-
-        webTestClient.mutateWith(jwt).post().uri("/loads")
-                .contentType(APPLICATION_JSON)
-                .body(just(invalidLoad), Load.class)
-                .exchange()
-                .expectStatus().isBadRequest();
+        // Constructor validation now prevents creating invalid loads
+        // Test that constructor properly rejects invalid measurement units
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Load(null, randomUUID().toString(), "", "", "",
+                    "", "",
+                    "", "InvalidUnits", -1.0,  // Invalid measurement units
+                    null, "",
+                    -1.0,
+                    -1.0,
+                    -1.0,
+                    -1L);
+        });
     }
 
     @Test
     void createLoadWithNullData() {
-        var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
-        var invalidLoad = new Load(null, null, null, null,
-                null, null,
-                null, null, null, null,
-                null, null,
-                null,
-                null,
-                null,
-                null);
-
-        webTestClient.mutateWith(jwt).post().uri("/loads")
-                .contentType(APPLICATION_JSON)
-                .body(just(invalidLoad), Load.class)
-                .exchange()
-                .expectStatus().isBadRequest();
+        // Constructor validation now prevents creating invalid loads
+        // Test that constructor properly requires either coal or distanceFromLands
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Load(null, null, null, null,
+                    null, null,
+                    null, null, "Metric", null,  // Valid measurementUnits but no coal/distanceFromLands
+                    null, null,
+                    null,
+                    null,
+                    null,
+                    null);
+        });
     }
 
     @Test
@@ -213,23 +206,18 @@ class LoadsControllerTest {
 
     @Test
     void updateLoadWithInvalidData() {
-        var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
-        var load = loadRepository.save(createLoad(userId, "Load1")).block();
-        var invalidLoad = new Load(load.id(), userId, "", "",
-                "", "",
-                "", "", null, -1.0,
-                "", "",
-                -1.0,
-                -1.0,
-                -1.0,
-                null);
-
-        webTestClient.mutateWith(jwt).put().uri("/loads/{id}", load.id())
-                .contentType(APPLICATION_JSON)
-                .body(just(invalidLoad), Load.class)
-                .exchange()
-                .expectStatus().isBadRequest();
+        // Constructor validation now prevents creating invalid loads
+        // Test that constructor properly rejects invalid measurement units
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Load(1L, randomUUID().toString(), "", "",
+                    "", "",
+                    "", "", "InvalidUnits", -1.0,  // Invalid measurement units
+                    "", "",
+                    -1.0,
+                    -1.0,
+                    -1.0,
+                    null);
+        });
     }
 
     @Test

@@ -2,6 +2,7 @@ package ca.zhoozhoo.loaddev.loads.dao;
 
 import static ca.zhoozhoo.loaddev.loads.model.Load.IMPERIAL;
 import static java.util.UUID.randomUUID;
+import static reactor.test.StepVerifier.create;
 
 import java.util.Random;
 
@@ -95,9 +96,7 @@ class LoadRepositoryTest {
         loadRepository.saveAll(Flux.just(load1, load2))
                 .blockLast();
 
-        var result = loadRepository.findAllByOwnerId(ownerId);
-
-        StepVerifier.create(result)
+        create(loadRepository.findAllByOwnerId(ownerId))
                 .expectNextMatches(l -> l.name().equals(load1.name()))
                 .expectNextMatches(l -> l.name().equals("Hornady 52 BTHP 4198"))
                 .verifyComplete();
@@ -125,9 +124,7 @@ class LoadRepositoryTest {
 
         loadRepository.saveAll(Flux.just(load1, load2)).blockLast();
 
-        var result = loadRepository.findByNameAndOwnerId(load1.name(), load1.ownerId());
-
-        StepVerifier.create(result)
+        create(loadRepository.findByNameAndOwnerId(load1.name(), load1.ownerId()))
                 .expectNextMatches(l -> l.name().equals(load1.name()))
                 .verifyComplete();
     }
@@ -135,9 +132,8 @@ class LoadRepositoryTest {
     @Test
     void save() {
         var load = createTestLoad(randomUUID().toString());
-        var savedLoad = loadRepository.save(load);
 
-        StepVerifier.create(savedLoad)
+        create(loadRepository.save(load))
                 .expectNextMatches(l -> l.id() != null && l.name().equals(load.name()))
                 .verifyComplete();
     }
@@ -163,9 +159,8 @@ class LoadRepositoryTest {
                 0.002,
                 1L);
 
-        var result = loadRepository.save(updatedLoad);
 
-        StepVerifier.create(result)
+        create(loadRepository.save(updatedLoad))
                 .expectNextMatches(
                         l -> l.id().equals(savedLoad.id()) && l.name().equals(updatedLoad.name()))
                 .verifyComplete();
@@ -174,12 +169,8 @@ class LoadRepositoryTest {
     @Test
     void delete() {
         var savedLoad = loadRepository.save(createTestLoad(randomUUID().toString())).block();
-        var result = loadRepository.deleteById(savedLoad.id());
-        StepVerifier.create(result).verifyComplete();
 
-        var deletedLoad = loadRepository.findById(savedLoad.id());
-        StepVerifier.create(deletedLoad)
-                .expectNextCount(0)
-                .verifyComplete();
+        create(loadRepository.deleteById(savedLoad.id())).verifyComplete();
+        create(loadRepository.findById(savedLoad.id())).expectNextCount(0).verifyComplete();
     }
 }

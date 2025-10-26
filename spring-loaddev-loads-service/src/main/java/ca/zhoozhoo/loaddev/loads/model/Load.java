@@ -8,7 +8,6 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import ca.zhoozhoo.loaddev.loads.validation.LoadMeasurement;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -24,7 +23,6 @@ import jakarta.validation.constraints.Positive;
  * @author Zhubin Salehi
  */
 @Table(name = "loads")
-@LoadMeasurement
 public record Load(
 
         @Id Long id,
@@ -77,6 +75,42 @@ public record Load(
 
     public static final String IMPERIAL = "Imperial";
 
+    /**
+     * Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
+     * <p>
+     * This constructor performs business rule validation beyond what Jakarta Bean Validation
+     * provides, ensuring measurement unit consistency and value constraints using Java 25
+     * enhanced pattern matching.
+     * </p>
+     */
+    public Load {
+        // Validate measurement units
+        if (measurementUnits != null && !METRIC.equals(measurementUnits) && !IMPERIAL.equals(measurementUnits)) {
+            throw new IllegalArgumentException(
+                "Measurement units must be either '%s' or '%s'".formatted(METRIC, IMPERIAL)
+            );
+        }
+        
+        // At least one cartridge measurement must be specified
+        if (distanceFromLands == null && caseOverallLength == null) {
+            throw new IllegalArgumentException(
+                "Either distance from lands or case overall length must be specified"
+            );
+        }
+        
+        // Validate neck tension using enhanced instanceof pattern matching (Java 25)
+        if (neckTension instanceof Double tension && tension <= 0) {
+            throw new IllegalArgumentException(
+                "Neck tension must be positive, got: %.4f".formatted(tension)
+            );
+        }
+    }
+
+    /**
+     * Custom equals() excluding ownerId to focus on business equality.
+     * Records auto-generate equals() including ALL fields, but ownerId is a
+     * database-level concern and shouldn't affect business object equality.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

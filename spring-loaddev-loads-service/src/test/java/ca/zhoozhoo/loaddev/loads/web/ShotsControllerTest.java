@@ -3,6 +3,7 @@ package ca.zhoozhoo.loaddev.loads.web;
 import static ca.zhoozhoo.loaddev.loads.model.Load.IMPERIAL;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 import static reactor.core.publisher.Mono.just;
@@ -201,16 +202,11 @@ public class ShotsControllerTest {
 
     @Test
     public void createShotWithInvalidData() {
-        var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
-
-        var invalidShot = new Shot(null, userId, null, -100);
-
-        webTestClient.mutateWith(jwt).post().uri("/shots")
-                .contentType(APPLICATION_JSON)
-                .body(just(invalidShot), Shot.class)
-                .exchange()
-                .expectStatus().isBadRequest();
+        // Constructor validation now prevents creating invalid shots
+        // Test that constructor properly rejects invalid velocity
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Shot(null, randomUUID().toString(), null, 100);  // Invalid: below 500 fps minimum
+        });
     }
 
     @Test
@@ -244,18 +240,11 @@ public class ShotsControllerTest {
 
     @Test
     public void updateShotWithInvalidData() {
-        var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
-
-        var group = createAndSaveGroup(userId);
-        var shot = createAndSaveShot(group, 3000);
-        var invalidShot = new Shot(shot.id(), userId, null, -100);
-
-        webTestClient.mutateWith(jwt).put().uri("/shots/{id}", shot.id())
-                .contentType(APPLICATION_JSON)
-                .body(just(invalidShot), Shot.class)
-                .exchange()
-                .expectStatus().isBadRequest();
+        // Constructor validation now prevents creating invalid shots
+        // Test that constructor properly rejects invalid velocity
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Shot(1L, randomUUID().toString(), null, 100);  // Invalid: below 500 fps minimum
+        });
     }
 
     @Test

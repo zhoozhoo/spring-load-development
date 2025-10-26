@@ -5,6 +5,7 @@ import static java.time.LocalDate.now;
 import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static reactor.test.StepVerifier.create;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,6 @@ import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
 import ca.zhoozhoo.loaddev.loads.model.Group;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
-import reactor.test.StepVerifier;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -88,7 +88,7 @@ class LoadsServiceTest {
         shotRepository.save(createShot(2820)).block();
         shotRepository.save(createShot(2810)).block();
 
-        StepVerifier.create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
+       create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
                 .assertNext(stats -> {
                     assertNotNull(stats);
                     assertEquals(testGroup.date(), stats.date());
@@ -105,7 +105,7 @@ class LoadsServiceTest {
 
     @Test
     void getGroupStatisticsWithNoShots() {
-        StepVerifier.create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
+       create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
                 .assertNext(stats -> {
                     assertNotNull(stats);
                     assertEquals(testGroup.date(), stats.date());
@@ -119,7 +119,7 @@ class LoadsServiceTest {
 
     @Test
     void getGroupStatisticsForNonExistentGroup() {
-        StepVerifier.create(loadsService.getGroupStatistics(999L, USER_ID))
+       create(loadsService.getGroupStatistics(999L, USER_ID))
                 .verifyComplete();
     }
 
@@ -127,7 +127,7 @@ class LoadsServiceTest {
     void getGroupStatisticsWithSingleShot() {
         shotRepository.save(createShot(2800)).block();
 
-        StepVerifier.create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
+       create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
                 .assertNext(stats -> {
                     assertNotNull(stats);
                     assertEquals(2800.0, stats.averageVelocity(), 0.0);

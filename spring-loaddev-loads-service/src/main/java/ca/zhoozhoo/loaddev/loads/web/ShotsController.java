@@ -166,7 +166,8 @@ public class ShotsController {
             @Parameter(description = "Id of shot") @PathVariable Long id) {
         return shotRepository.findById(id)
                 .flatMap(existingShot -> shotRepository.delete(existingShot)
-                        .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT))))
+                        .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT)))
+                        .doOnSuccess(_ -> log.info("Deleted shot with id: {}", id)))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
     }
 }

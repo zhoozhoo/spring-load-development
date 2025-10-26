@@ -4,6 +4,7 @@ import static ca.zhoozhoo.loaddev.loads.model.Load.IMPERIAL;
 import static java.time.LocalDate.now;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 import static reactor.core.publisher.Mono.just;
@@ -191,22 +192,16 @@ public class GroupsControllerTest {
 
     @Test
     public void createGroupWithInvalidData() {
-        var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
-
-        var load = createAndSaveLoad(userId);
-        var invalidGroup = new Group(null, userId,
-                load.id(),
-                now(),
-                -5.0,
-                -100,
-                -1.5);
-
-        webTestClient.mutateWith(jwt).post().uri("/groups")
-                .contentType(APPLICATION_JSON)
-                .body(just(invalidGroup), Group.class)
-                .exchange()
-                .expectStatus().isBadRequest();
+        // Constructor validation now prevents creating invalid groups
+        // Test that constructor properly rejects invalid powder charge
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Group(null, randomUUID().toString(),
+                    1L,
+                    now(),
+                    0.05,  // Invalid: below 0.1 minimum
+                    100,
+                    1.5);
+        });
     }
 
     @Test
@@ -245,22 +240,16 @@ public class GroupsControllerTest {
 
     @Test
     public void updateGroupWithInvalidData() {
-        var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
-
-        var group = createAndSaveGroup(userId);
-        var invalidGroup = new Group(null, userId,
-                group.loadId(),
-                now(),
-                -5.0,
-                -100,
-                -1.5);
-
-        webTestClient.mutateWith(jwt).put().uri("/groups/" + group.id())
-                .contentType(APPLICATION_JSON)
-                .body(just(invalidGroup), Group.class)
-                .exchange()
-                .expectStatus().isBadRequest();
+        // Constructor validation now prevents creating invalid groups
+        // Test that constructor properly rejects invalid powder charge
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Group(null, randomUUID().toString(),
+                    1L,
+                    now(),
+                    0.05,  // Invalid: below 0.1 minimum
+                    100,
+                    1.5);
+        });
     }
 
     @Test

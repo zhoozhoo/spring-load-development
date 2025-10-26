@@ -42,16 +42,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(WebExchangeBindException.class)
     public Mono<ResponseEntity<String>> handleValidationException(WebExchangeBindException ex) {
         log.error("Validation error: {}", ex.getMessage());
+
         String error = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
-                .map(err -> {
-                    String field = err.getField();
-                    String message = err.getDefaultMessage();
-                    Object rejectedValue = err.getRejectedValue();
-                    return String.format("%s: %s (rejected value: %s)", field, message, rejectedValue);
-                })
-                .reduce((a, b) -> a + "; " + b)
+                .map(err -> "%s: %s (rejected value: %s)".formatted(
+                        err.getField(),
+                        err.getDefaultMessage(),
+                        err.getRejectedValue()))
+                .reduce((a, b) -> "%s; %s".formatted(a, b))
                 .orElse("Validation failed");
         return just(ResponseEntity.status(BAD_REQUEST).body(error));
     }

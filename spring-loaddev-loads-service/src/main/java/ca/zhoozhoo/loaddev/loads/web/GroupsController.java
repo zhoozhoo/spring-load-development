@@ -191,7 +191,8 @@ public class GroupsController {
             @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id) {
         return groupRepository.findById(id)
                 .flatMap(existingGroup -> groupRepository.delete(existingGroup)
-                        .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT))))
+                        .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT)))
+                        .doOnSuccess(_ -> log.info("Deleted group with id: {}", id)))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
     }
 }
