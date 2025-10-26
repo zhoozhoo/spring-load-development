@@ -16,6 +16,7 @@ import reactor.core.publisher.Mono;
  * This resolver intercepts controller method parameters annotated with {@link CurrentUser}
  * and automatically injects the authenticated user's ID (extracted from the JWT subject claim).
  * It enables clean and declarative access to the current user context in reactive controllers.
+ * Uses Java 25 pattern matching for switch to safely handle different principal types.
  * </p>
  *
  * @author Zhubin Salehi
@@ -36,7 +37,9 @@ public class CurrentUserMethodArgumentResolver implements HandlerMethodArgumentR
         return exchange.getPrincipal()
                 .cast(Authentication.class)
                 .map(Authentication::getPrincipal)
-                .cast(Jwt.class)
-                .map(Jwt::getSubject);
+                .mapNotNull(principal -> switch (principal) {
+                    case Jwt jwt -> jwt.getSubject();
+                    case null, default -> null;
+                });
     }
 }
