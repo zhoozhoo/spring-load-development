@@ -1,9 +1,9 @@
 package ca.zhoozhoo.loaddev.rifles.dao;
 
 import static ca.zhoozhoo.loaddev.rifles.model.Rifle.IMPERIAL;
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.UUID;
+import static reactor.test.StepVerifier.create;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +13,16 @@ import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.rifles.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.rifles.model.Rifle;
-import reactor.test.StepVerifier;
 
+/**
+ * Integration tests for {@link RifleRepository}.
+ * <p>
+ * Tests repository CRUD operations and custom queries with an embedded database,
+ * verifying data persistence, retrieval, owner-based filtering, and reactive behavior.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
@@ -25,7 +33,7 @@ class RifleRepositoryTest {
 
     @Test
     void saveRifle() {
-        var userId = UUID.randomUUID().toString();
+        var userId = randomUUID().toString();
         var savedRifle = rifleRepository
                 .save(new Rifle(null, userId,
                         "Bergara B-14 HMR",
@@ -38,7 +46,7 @@ class RifleRepositoryTest {
                         "6 Groove",
                         0.155));
 
-        StepVerifier.create(savedRifle)
+        create(savedRifle)
                 .assertNext(r -> {
                     assertThat(r.id()).isNotNull();
                     assertThat(r.ownerId()).isEqualTo(userId);
@@ -57,7 +65,7 @@ class RifleRepositoryTest {
 
     @Test
     void findRifleById() {
-        var userId = UUID.randomUUID().toString();
+        var userId = randomUUID().toString();
         var savedRifle = rifleRepository.save(new Rifle(null, userId,
                 "Ruger Precision Rifle",
                 "Gen 3 RPR with custom barrel",
@@ -71,7 +79,7 @@ class RifleRepositoryTest {
 
         var foundRifle = rifleRepository.findById(savedRifle.id());
 
-        StepVerifier.create(foundRifle)
+        create(foundRifle)
                 .assertNext(fr -> {
                     assertThat(fr.id()).isEqualTo(savedRifle.id());
                     assertThat(fr.ownerId()).isEqualTo(userId);
@@ -90,7 +98,7 @@ class RifleRepositoryTest {
 
     @Test
     void updateRifle() {
-        var userId = UUID.randomUUID().toString();
+        var userId = randomUUID().toString();
         var savedRifle = rifleRepository
                 .save(new Rifle(null, userId,
                         "Custom 700",
@@ -115,7 +123,7 @@ class RifleRepositoryTest {
                 "4 Groove",
                 0.153));
 
-        StepVerifier.create(updatedRifle)
+        create(updatedRifle)
                 .assertNext(r -> {
                     assertThat(r.id()).isEqualTo(savedRifle.id());
                     assertThat(r.name()).isEqualTo("Custom 700 PRS");
@@ -133,7 +141,7 @@ class RifleRepositoryTest {
 
     @Test
     void deleteRifle() {
-        var userId = UUID.randomUUID().toString();
+        var userId = randomUUID().toString();
         var savedRifle = rifleRepository.save(new Rifle(null, userId,
                 "Savage 110 Elite Precision",
                 "Chassis rifle with adjustable stock",
@@ -145,15 +153,7 @@ class RifleRepositoryTest {
                 "5R",
                 0.156)).block();
 
-        var deletedRifle = rifleRepository.delete(savedRifle);
-
-        StepVerifier.create(deletedRifle)
-                .verifyComplete();
-
-        var foundRifle = rifleRepository.findById(savedRifle.id());
-
-        StepVerifier.create(foundRifle)
-                .expectNextCount(0)
-                .verifyComplete();
+        create(rifleRepository.delete(savedRifle)).verifyComplete();
+        create(rifleRepository.findById(savedRifle.id())).expectNextCount(0).verifyComplete();
     }
 }

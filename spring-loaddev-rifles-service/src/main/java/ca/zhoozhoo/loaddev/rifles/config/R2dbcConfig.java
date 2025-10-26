@@ -8,6 +8,17 @@ import org.springframework.transaction.ReactiveTransactionManager;
 
 import io.r2dbc.spi.ConnectionFactory;
 
+/**
+ * Configuration class for R2DBC (Reactive Relational Database Connectivity).
+ * <p>
+ * This configuration enables reactive database access for the rifles service,
+ * providing non-blocking database operations with PostgreSQL. It configures
+ * the reactive transaction manager for handling database transactions in a
+ * reactive programming model.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Configuration
 @EnableR2dbcRepositories
 public class R2dbcConfig {

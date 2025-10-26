@@ -10,6 +10,18 @@ import org.springframework.web.server.ServerWebExchange;
 
 import reactor.core.publisher.Mono;
 
+/**
+ * Custom method argument resolver for injecting the current user's ID from JWT tokens.
+ * <p>
+ * This resolver processes controller method parameters annotated with {@link CurrentUser}
+ * and automatically extracts the user ID (subject claim) from the authenticated JWT token.
+ * It enables clean controller code by eliminating the need to manually extract authentication
+ * details in every method.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ * @see CurrentUser
+ */
 public class CurrentUserMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
     @Override

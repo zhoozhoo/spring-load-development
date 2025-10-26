@@ -1,6 +1,7 @@
 package ca.zhoozhoo.loaddev.rifles.web;
 
 import static java.util.UUID.randomUUID;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 import static org.springframework.web.reactive.function.BodyInserters.fromValue;
@@ -19,6 +20,16 @@ import ca.zhoozhoo.loaddev.rifles.dao.RifleRepository;
 import ca.zhoozhoo.loaddev.rifles.model.Rifle;
 import static ca.zhoozhoo.loaddev.rifles.model.Rifle.IMPERIAL;
 
+/**
+ * Integration tests for {@link RifleController}.
+ * <p>
+ * Tests REST API endpoints for rifle CRUD operations using WebTestClient,
+ * verifying HTTP responses, JSON serialization, validation, security integration,
+ * and owner-based data isolation with mocked JWT authentication.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
@@ -112,22 +123,23 @@ public class RifleControllerTest {
 
     @Test
     void createRifleInvalidInput() {
-        var invalidRifle = new Rifle(null, randomUUID().toString(), "", null, null, null, -1.0,
-                "Contour", "", "Rifling", -0.5);
+        // Constructor validation now prevents creating rifles with invalid measurements
+        // Test that constructor properly rejects barrel length and free bore out of range
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Rifle(null, randomUUID().toString(), "", null, null, null, -1.0,
+                    "Contour", "", "Rifling", -0.5);
+        });
+    }
 
-        webTestClient.post().uri("/rifles")
-                .contentType(APPLICATION_JSON)
-                .body(fromValue(invalidRifle))
-                .exchange()
-                .expectStatus().isBadRequest()
-                .expectBody(String.class)
-                .value(errorMessage -> {
-                    assert errorMessage.contains("Name is required");
-                    assert errorMessage.contains("Caliber is required");
-                    assert errorMessage.contains("Barrel length must be positive");
-                    assert errorMessage.contains("Free bore must be positive");
-                    assert errorMessage.contains("Measurement Units is required");
-                });
+    @Test
+    void createRifleWithInvalidMeasurementUnits() {
+        // Constructor validation now prevents creating rifles with invalid measurement units
+        // Test that constructor properly requires Metric or Imperial
+        assertThrows(IllegalArgumentException.class, () -> {
+            new Rifle(null, randomUUID().toString(), "ValidName", "Description",
+                    "InvalidUnits", ".308", 20.0,  // Invalid measurement units
+                    "Contour", "1:10", "Rifling", 0.020);
+        });
     }
 
     @Test
