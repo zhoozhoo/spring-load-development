@@ -1,7 +1,6 @@
 package ca.zhoozhoo.loaddev.rifles.config;
 
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 
 import java.util.Collection;
 import java.util.List;
@@ -110,16 +109,16 @@ public class SecurityConfiguration {
                     .flatMap(permission -> {
                         var resourceName = permission.get("rsname").toString();
                         
-                        if (!(permission.get("scopes") instanceof Collection<?> rawScopes)) {
-                            return Stream.empty();
-                        }
-
-                        return rawScopes.stream()
-                                .filter(scope -> scope instanceof String)
-                                .map(scope -> "%s:%s".formatted(resourceName, scope))
-                                .map(SimpleGrantedAuthority::new);
+                        return switch (permission.get("scopes")) {
+                            case Collection<?> rawScopes -> rawScopes.stream()
+                                    .filter(scope -> scope instanceof String)
+                                    .map(scope -> "%s:%s".formatted(resourceName, scope))
+                                    .map(SimpleGrantedAuthority::new);
+                            case null, default -> Stream.empty();
+                        };
                     })
-                    .collect(toList());
+                    .map(authority -> (GrantedAuthority) authority)
+                    .toList();
         }
     }
 }
