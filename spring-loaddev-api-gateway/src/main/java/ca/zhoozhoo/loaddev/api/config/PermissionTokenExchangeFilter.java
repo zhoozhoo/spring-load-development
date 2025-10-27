@@ -112,11 +112,9 @@ public class PermissionTokenExchangeFilter implements WebFilter {
      */
     private String extractToken(@NonNull ServerHttpRequest request) {
         HttpHeaders headers = request.getHeaders();
-        if (headers != null) {
-            String authHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                return authHeader.substring(7);
-            }
+        String authHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
         }
         return null;
     }

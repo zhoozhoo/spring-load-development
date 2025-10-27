@@ -19,4 +19,11 @@ public record LoadDetails(
         RifleDto rifle,
 
         List<GroupDto> groups) {
+
+    /**
+     * Compact constructor that creates defensive copies of mutable collections.
+     */
+    public LoadDetails {
+        groups = groups != null ? List.copyOf(groups) : List.of();
+    }
 }

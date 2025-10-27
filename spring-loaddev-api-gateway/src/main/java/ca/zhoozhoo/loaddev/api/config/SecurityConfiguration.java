@@ -16,7 +16,6 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import io.micrometer.observation.ObservationRegistry;
-import lombok.extern.log4j.Log4j2;
 
 /**
  * Security configuration class for the API Gateway using Spring WebFlux Security.
@@ -49,7 +48,6 @@ import lombok.extern.log4j.Log4j2;
  */
 @Configuration
 @EnableWebFluxSecurity
-@Log4j2
 public class SecurityConfiguration {
 
     /**

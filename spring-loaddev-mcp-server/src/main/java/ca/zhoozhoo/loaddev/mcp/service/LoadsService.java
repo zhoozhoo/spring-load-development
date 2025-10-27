@@ -100,7 +100,7 @@ public class LoadsService {
                             .retrieve()
                             .bodyToFlux(LoadDto.class)
                             .onErrorMap(WebClientResponseException.class, e -> {
-                                if (e.getStatusCode() == UNAUTHORIZED) {
+                                if (UNAUTHORIZED.equals(e.getStatusCode())) {
                                     return new McpError(new JSONRPCError(
                                             INVALID_REQUEST,
                                             "Authentication failed",
@@ -157,13 +157,13 @@ public class LoadsService {
                             .retrieve()
                             .bodyToMono(LoadDto.class)
                             .onErrorMap(WebClientResponseException.class, e -> {
-                                if (e.getStatusCode() == UNAUTHORIZED) {
+                                if (UNAUTHORIZED.equals(e.getStatusCode())) {
                                     return new McpError(new JSONRPCError(
                                             INVALID_REQUEST,
                                             "Authentication failed",
                                             null));
                                 }
-                                if (e.getStatusCode() == NOT_FOUND) {
+                                if (NOT_FOUND.equals(e.getStatusCode())) {
                                     return new McpError(new JSONRPCError(
                                             INVALID_PARAMS,
                                             "Load not found with ID: %d".formatted(id),
@@ -221,13 +221,13 @@ public class LoadsService {
                             .retrieve()
                             .bodyToFlux(GroupDto.class)
                             .onErrorMap(WebClientResponseException.class, e -> {
-                                if (e.getStatusCode() == UNAUTHORIZED) {
+                                if (UNAUTHORIZED.equals(e.getStatusCode())) {
                                     return new McpError(new JSONRPCError(
                                             INVALID_REQUEST,
                                             "Authentication failed",
                                             null));
                                 }
-                                if (e.getStatusCode() == NOT_FOUND) {
+                                if (NOT_FOUND.equals(e.getStatusCode())) {
                                     return new McpError(new JSONRPCError(
                                             INVALID_PARAMS,
                                             "Load not found with ID: %d".formatted(id),

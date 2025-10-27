@@ -1,5 +1,7 @@
 package ca.zhoozhoo.loaddev.mcp.provider;
 
+import static java.util.Locale.ROOT;
+
 import java.util.List;
 
 import org.springaicommunity.mcp.annotation.McpResource;
@@ -8,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import ca.zhoozhoo.loaddev.mcp.dto.LoadDto;
 import ca.zhoozhoo.loaddev.mcp.service.LoadsService;
+import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema.ReadResourceRequest;
 import io.modelcontextprotocol.spec.McpSchema.ReadResourceResult;
 import io.modelcontextprotocol.spec.McpSchema.TextResourceContents;
@@ -73,7 +76,9 @@ public class LoadResourceProvider {
         }
 
         // Determine units based on measurement system
-        boolean isMetric = "Metric".equalsIgnoreCase(load.measurementUnits());
+        // Use toUpperCase with ROOT locale to avoid locale-specific Unicode issues (SpotBugs IMPROPER_UNICODE)
+        boolean isMetric = "METRIC".equals(load.measurementUnits() != null ? 
+            load.measurementUnits().toUpperCase(ROOT) : "");
         String weightUnit = isMetric ? "grams" : "grains";
         String lengthUnit = isMetric ? "mm" : "inches";
 
