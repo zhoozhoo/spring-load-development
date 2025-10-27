@@ -37,6 +37,9 @@
         <mapstruct.version>1.6.3</mapstruct.version>
         <opentelemetry-instrumentation.version>2.21.0</opentelemetry-instrumentation.version>
         <opentelemetry-instrumentation.version.alpha>2.21.0-alpha</opentelemetry-instrumentation.version.alpha>
+        <spotbugs-maven-plugin.version>4.9.8.1</spotbugs-maven-plugin.version>
+        <spotbugs.version>4.9.8</spotbugs.version>
+        <findsecbugs-plugin.version>1.14.0</findsecbugs-plugin.version>
     </properties>
 
     <scm>
@@ -168,8 +171,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <image>
-                        <name>
-                            zhoozhoo.ca/spring-load-development/${project.artifactId}:${project.version}</name>
+                        <name>zhoozhoo.ca/spring-load-development/${project.artifactId}:${project.version}</name>
                         <buildpacks>
                             <buildpack>docker.io/paketobuildpacks/adoptium</buildpack>
                             <buildpack>docker.io/paketobuildpacks/java</buildpack>
@@ -189,6 +191,42 @@
                     </execution>
                 </executions>
             </plugin>
+                <plugin>
+                    <groupId>com.github.spotbugs</groupId>
+                    <artifactId>spotbugs-maven-plugin</artifactId>
+                    <version>${spotbugs-maven-plugin.version}</version>
+                    <dependencies>
+                        <dependency>
+                        <groupId>com.github.spotbugs</groupId>
+                            <artifactId>spotbugs</artifactId>
+                        <version>${spotbugs.version}</version>
+                        </dependency>
+                    </dependencies>
+                    <configuration>
+                        <effort>Max</effort>
+                        <threshold>medium</threshold>
+                        <failOnError>true</failOnError>
+                        <htmlOutput>true</htmlOutput>
+                        <xmlOutput>false</xmlOutput>
+                        <omitVisitors>FindDeadLocalStores</omitVisitors>
+                        <relaxed>true</relaxed>
+                        <excludeFilterFile>../spotbugs-exclude.xml</excludeFilterFile>
+                        <plugins>
+                            <plugin>
+                                <groupId>com.h3xstream.findsecbugs</groupId>
+                                <artifactId>findsecbugs-plugin</artifactId>
+                                <version>${findsecbugs-plugin.version}</version>
+                            </plugin>
+                        </plugins>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
         </plugins>
     </build>
 </project>
