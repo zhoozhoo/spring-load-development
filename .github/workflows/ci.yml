@@ -25,4 +25,4 @@ jobs:
         maven-version: 4.0.0-rc-4
 
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn -B verify --file pom.xml
