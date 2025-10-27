@@ -60,24 +60,24 @@ public record Group(
             throw new IllegalArgumentException("Group date cannot be in the future");
         }
         
-        // Validate reasonable powder charge range (0.1 to 150 grains) using enhanced instanceof
-        if (powderCharge instanceof Double charge && (charge < 0.1 || charge > 150.0)) {
+        // Validate reasonable powder charge range (0.1 to 150 grains)
+        if (powderCharge != null && (powderCharge < 0.1 || powderCharge > 150.0)) {
             throw new IllegalArgumentException(
-                "Powder charge must be between 0.1 and 150.0 grains, got: %.2f".formatted(charge)
+                "Powder charge must be between 0.1 and 150.0 grains, got: %.2f".formatted(powderCharge)
             );
         }
         
-        // Validate reasonable target range (10 to 2000 yards) using enhanced instanceof
-        if (targetRange instanceof Integer range && (range < 10 || range > 2000)) {
+        // Validate reasonable target range (10 to 2000 yards)
+        if (targetRange != null && (targetRange < 10 || targetRange > 2000)) {
             throw new IllegalArgumentException(
-                "Target range must be between 10 and 2000 yards, got: %d".formatted(range)
+                "Target range must be between 10 and 2000 yards, got: %d".formatted(targetRange)
             );
         }
         
-        // Validate reasonable group size (0.01 to 50 inches) using enhanced instanceof
-        if (groupSize instanceof Double size && (size < 0.01 || size > 50.0)) {
+        // Validate reasonable group size (0.01 to 50 inches)
+        if (groupSize != null && (groupSize < 0.01 || groupSize > 50.0)) {
             throw new IllegalArgumentException(
-                "Group size must be between 0.01 and 50.0 inches, got: %.3f".formatted(size)
+                "Group size must be between 0.01 and 50.0 inches, got: %.3f".formatted(groupSize)
             );
         }
     }

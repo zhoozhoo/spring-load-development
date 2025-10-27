@@ -98,10 +98,10 @@ public record Load(
             );
         }
         
-        // Validate neck tension using enhanced instanceof pattern matching (Java 25)
-        if (neckTension instanceof Double tension && tension <= 0) {
+        // Validate neck tension
+        if (neckTension != null && neckTension <= 0) {
             throw new IllegalArgumentException(
-                "Neck tension must be positive, got: %.4f".formatted(tension)
+                "Neck tension must be positive, got: %.4f".formatted(neckTension)
             );
         }
     }

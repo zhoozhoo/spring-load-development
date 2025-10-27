@@ -38,16 +38,15 @@ public record Shot(
     /**
      * Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
      * <p>
-     * Validates that velocity is within reasonable ballistic ranges for small arms ammunition
-     * using Java 25 enhanced instanceof pattern matching.
+     * Validates that velocity is within reasonable ballistic ranges for small arms ammunition.
      * </p>
      */
     public Shot {
-        // Validate reasonable velocity range (500 to 5000 fps) using enhanced instanceof
+        // Validate reasonable velocity range (500 to 5000 fps)
         // Most rifle rounds fall between 800-3500 fps
-        if (velocity instanceof Integer v && (v < 500 || v > 5000)) {
+        if (velocity != null && (velocity < 500 || velocity > 5000)) {
             throw new IllegalArgumentException(
-                "Velocity must be between 500 and 5000 fps (feet per second), got: %d".formatted(v)
+                "Velocity must be between 500 and 5000 fps (feet per second), got: %d".formatted(velocity)
             );
         }
     }

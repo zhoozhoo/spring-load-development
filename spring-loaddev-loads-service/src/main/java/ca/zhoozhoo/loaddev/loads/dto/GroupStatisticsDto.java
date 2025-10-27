@@ -31,4 +31,11 @@ public record GroupStatisticsDto(
         double extremeSpread,
 
         List<ShotDto> shots) {
+
+    /**
+     * Compact constructor that creates defensive copies of mutable collections.
+     */
+    public GroupStatisticsDto {
+        shots = shots != null ? List.copyOf(shots) : List.of();
+    }
 }

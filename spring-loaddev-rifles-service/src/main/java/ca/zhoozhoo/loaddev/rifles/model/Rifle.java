@@ -68,16 +68,16 @@ public record Rifle(
         }
         
         // Validate reasonable barrel length (4 to 50 inches)
-        if (barrelLength instanceof Double length && (length < 4.0 || length > 50.0)) {
+        if (barrelLength != null && (barrelLength < 4.0 || barrelLength > 50.0)) {
             throw new IllegalArgumentException(
-                "Barrel length must be between 4.0 and 50.0 inches, got: %.2f".formatted(length)
+                "Barrel length must be between 4.0 and 50.0 inches, got: %.2f".formatted(barrelLength)
             );
         }
         
         // Validate reasonable free bore (0.001 to 0.5 inches)
-        if (freeBore instanceof Double bore && (bore < 0.001 || bore > 0.5)) {
+        if (freeBore != null && (freeBore < 0.001 || freeBore > 0.5)) {
             throw new IllegalArgumentException(
-                "Free bore must be between 0.001 and 0.5 inches, got: %.4f".formatted(bore)
+                "Free bore must be between 0.001 and 0.5 inches, got: %.4f".formatted(freeBore)
             );
         }
     }

@@ -26,10 +26,13 @@ public record GroupStatistics(
 
         List<Shot> shots) {
 
-    // Custom constructor that rounds double values to one decimal point
+    /**
+     * Compact constructor that rounds double values and creates defensive copies of mutable collections.
+     */
     public GroupStatistics {
         averageVelocity = round(averageVelocity * 10.0) / 10.0;
         standardDeviation = round(standardDeviation * 10.0) / 10.0;
         extremeSpread = round(extremeSpread * 10.0) / 10.0;
+        shots = shots != null ? List.copyOf(shots) : List.of();
     }
 }
