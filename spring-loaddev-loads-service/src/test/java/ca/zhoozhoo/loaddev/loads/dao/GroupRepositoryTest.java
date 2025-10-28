@@ -99,21 +99,18 @@ class GroupRepositoryTest {
     @Test
     void updateGroup() {
         var savedGroup = groupRepository.save(createTestGroup()).block();
-
-        var updatedGroup = new Group(savedGroup.id(),
+        var updatedGroup = groupRepository.save(new Group(savedGroup.id(),
                 savedGroup.ownerId(),
                 savedGroup.loadId(),
                 now(),
                 28.0,
                 200,
-                0.50);
+                0.50)).block();
 
-        var updatedGroupResult = groupRepository.save(updatedGroup).block();
-
-        assertEquals(savedGroup.loadId(), updatedGroupResult.loadId());
-        assertEquals(28.0, updatedGroupResult.powderCharge());
-        assertEquals(200, updatedGroupResult.targetRange());
-        assertEquals(0.50, updatedGroupResult.groupSize());
+        assertEquals(savedGroup.loadId(), updatedGroup.loadId());
+        assertEquals(28.0, updatedGroup.powderCharge());
+        assertEquals(200, updatedGroup.targetRange());
+        assertEquals(0.50, updatedGroup.groupSize());
     }
 
     @Test

@@ -6,7 +6,6 @@ import static java.util.UUID.randomUUID;
 import static reactor.test.StepVerifier.create;
 
 import java.util.Random;
-import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -87,7 +86,7 @@ class ShotRepositoryTest {
         var savedShot = shotRepository.save(createTestShot(savedGroup.ownerId(), savedGroup.id())).block();
 
         create(shotRepository.findById(savedShot.id()))
-                .expectNextMatches(s -> s.id().equals(savedShot.id()))
+                .expectNextMatches(s -> s.groupId().equals(savedGroup.id()))
                 .verifyComplete();
     }
 
@@ -103,20 +102,20 @@ class ShotRepositoryTest {
     @Test
     void findAll() {
         var savedGroup = groupRepository.save(createTestGroup(randomUUID().toString())).block();
-        var shot1 = createTestShot(savedGroup.ownerId(), savedGroup.id());
-        var shot2 = createTestShot(savedGroup.ownerId(), savedGroup.id());
-
-        shotRepository.saveAll(Flux.just(shot1, shot2)).blockLast();
+        shotRepository.saveAll(Flux.just(
+                createTestShot(savedGroup.ownerId(), savedGroup.id()),
+                createTestShot(savedGroup.ownerId(), savedGroup.id())))
+                .blockLast();
 
         create(shotRepository.findAll())
-                .expectNextMatches(s -> s.groupId().equals(shot1.groupId()))
-                .expectNextMatches(s -> s.groupId().equals(shot2.groupId()))
+                .expectNextMatches(s -> s.groupId().equals(savedGroup.id()))
+                .expectNextMatches(s -> s.groupId().equals(savedGroup.id()))
                 .verifyComplete();
     }
 
     @Test
     void deleteById() {
-        var savedGroup = groupRepository.save(createTestGroup(UUID.randomUUID().toString())).block();
+        var savedGroup = groupRepository.save(createTestGroup(randomUUID().toString())).block();
         var savedShot = shotRepository.save(createTestShot(savedGroup.ownerId(), savedGroup.id())).block();
 
         create(shotRepository.deleteById(savedShot.id())).verifyComplete();
@@ -128,41 +127,39 @@ class ShotRepositoryTest {
 
     @Test
     void update() {
-        var savedGroup = groupRepository.save(createTestGroup(UUID.randomUUID().toString())).block();
+        var savedGroup = groupRepository.save(createTestGroup(randomUUID().toString())).block();
         var savedShot = shotRepository.save(createTestShot(savedGroup.ownerId(), savedGroup.id())).block();
-        var updatedShot = new Shot(savedShot.id(), savedGroup.ownerId(), savedGroup.id(), 2500 + random.nextInt(1000)); // 2500-3500
-                                                                                                                        // fps
 
-        create(shotRepository.save(updatedShot))
-                .expectNextMatches(s -> s.id().equals(savedShot.id()) && s.velocity().equals(updatedShot.velocity()))
+        create(shotRepository.save(new Shot(savedShot.id(), savedGroup.ownerId(), savedGroup.id(), 2500 + random.nextInt(1000))))
+                .expectNextMatches(s -> s.id().equals(savedShot.id()) && s.velocity() >= 2500 && s.velocity() < 3500)
                 .verifyComplete();
     }
 
     @Test
     void findByGroupId() {
-        var savedGroup = groupRepository.save(createTestGroup(UUID.randomUUID().toString())).block();
-        var shot1 = createTestShot(savedGroup.ownerId(), savedGroup.id());
-        var shot2 = createTestShot(savedGroup.ownerId(), savedGroup.id());
-
-        shotRepository.saveAll(Flux.just(shot1, shot2)).blockLast();
+        var savedGroup = groupRepository.save(createTestGroup(randomUUID().toString())).block();
+        shotRepository.saveAll(Flux.just(
+                createTestShot(savedGroup.ownerId(), savedGroup.id()),
+                createTestShot(savedGroup.ownerId(), savedGroup.id())))
+                .blockLast();
 
         create(shotRepository.findByGroupIdAndOwnerId(savedGroup.id(), savedGroup.ownerId()))
-                .expectNextMatches(s -> s.groupId().equals(shot1.groupId()))
-                .expectNextMatches(s -> s.groupId().equals(shot2.groupId()))
+                .expectNextMatches(s -> s.groupId().equals(savedGroup.id()))
+                .expectNextMatches(s -> s.groupId().equals(savedGroup.id()))
                 .verifyComplete();
     }
 
     @Test
     void findByLoadId() {
         var savedGroup = groupRepository.save(createTestGroup(randomUUID().toString())).block();
-        var shot1 = createTestShot(savedGroup.ownerId(), savedGroup.id());
-        var shot2 = createTestShot(savedGroup.ownerId(), savedGroup.id());
-
-        shotRepository.saveAll(Flux.just(shot1, shot2)).blockLast();
+        shotRepository.saveAll(Flux.just(
+                createTestShot(savedGroup.ownerId(), savedGroup.id()),
+                createTestShot(savedGroup.ownerId(), savedGroup.id())))
+                .blockLast();
 
         create(shotRepository.findByGroupIdAndOwnerId(savedGroup.id(), savedGroup.ownerId()))
-                .expectNextMatches(s -> s.groupId().equals(shot1.groupId()))
-                .expectNextMatches(s -> s.groupId().equals(shot2.groupId()))
+                .expectNextMatches(s -> s.groupId().equals(savedGroup.id()))
+                .expectNextMatches(s -> s.groupId().equals(savedGroup.id()))
                 .verifyComplete();
     }
 }

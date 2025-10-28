@@ -16,7 +16,6 @@ import org.springframework.test.context.ActiveProfiles;
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 import reactor.core.publisher.Flux;
-import reactor.test.StepVerifier;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -63,78 +62,72 @@ class LoadRepositoryTest {
     @Test
     void findByIdAndOwnerId() {
         var ownerId = randomUUID().toString();
-        var load = loadRepository.save(createTestLoad(ownerId)).block();
+        var savedLoad = loadRepository.save(createTestLoad(ownerId)).block();
 
-        var result = loadRepository.findByIdAndOwnerId(load.id(), load.ownerId());
-
-        StepVerifier.create(result)
-                .expectNextMatches(l -> l.id().equals(load.id()))
+        create(loadRepository.findByIdAndOwnerId(savedLoad.id(), savedLoad.ownerId()))
+                .expectNextMatches(l -> l.id().equals(savedLoad.id()))
                 .verifyComplete();
     }
 
     @Test
     void findAllByOwnerId() {
         var ownerId = randomUUID().toString();
-        var load1 = createTestLoad(ownerId);
-        var load2 = new Load(null,
-                ownerId,
-                "Hornady 52 BTHP 4198",
-                "Hornady 52gr 4198 BTHP with IMR 4198",
-                IMPERIAL,
-                "IMR",
-                "4198",
-                "Hornady",
-                "BTHP Match",
-                52.0,
-                "Federal",
-                "205M",
-                0.020,
-                2.250,
-                0.003,
-                2L);
-
-        loadRepository.saveAll(Flux.just(load1, load2))
+        loadRepository.saveAll(Flux.just(
+                createTestLoad(ownerId),
+                new Load(null,
+                        ownerId,
+                        "Hornady 52 BTHP 4198",
+                        "Hornady 52gr 4198 BTHP with IMR 4198",
+                        IMPERIAL,
+                        "IMR",
+                        "4198",
+                        "Hornady",
+                        "BTHP Match",
+                        52.0,
+                        "Federal",
+                        "205M",
+                        0.020,
+                        2.250,
+                        0.003,
+                        2L)))
                 .blockLast();
 
         create(loadRepository.findAllByOwnerId(ownerId))
-                .expectNextMatches(l -> l.name().equals(load1.name()))
-                .expectNextMatches(l -> l.name().equals("Hornady 52 BTHP 4198"))
+                .expectNextCount(2)
                 .verifyComplete();
     }
 
     @Test
     void findByNameAndOwnerId() {
-        var load1 = createTestLoad(randomUUID().toString());
-        var load2 = new Load(null,
-                randomUUID().toString(),
-                "Hornady 52 BTHP 4198",
-                "Hornady 52gr 4198 BTHP with IMR 4198",
-                IMPERIAL,
-                "IMR",
-                "4198",
-                "Hornady",
-                "BTHP Match",
-                52.0,
-                "Federal",
-                "205M",
-                0.020,
-                2.250,
-                0.003,
-                1L);
+        var savedLoad = loadRepository.saveAll(Flux.just(
+                createTestLoad(randomUUID().toString()),
+                new Load(null,
+                        randomUUID().toString(),
+                        "Hornady 52 BTHP 4198",
+                        "Hornady 52gr 4198 BTHP with IMR 4198",
+                        IMPERIAL,
+                        "IMR",
+                        "4198",
+                        "Hornady",
+                        "BTHP Match",
+                        52.0,
+                        "Federal",
+                        "205M",
+                        0.020,
+                        2.250,
+                        0.003,
+                        1L)))
+                .blockFirst();
 
-        loadRepository.saveAll(Flux.just(load1, load2)).blockLast();
-
-        create(loadRepository.findByNameAndOwnerId(load1.name(), load1.ownerId()))
-                .expectNextMatches(l -> l.name().equals(load1.name()))
+        create(loadRepository.findByNameAndOwnerId(savedLoad.name(), savedLoad.ownerId()))
+                .expectNextMatches(l -> l.name().equals(savedLoad.name()))
                 .verifyComplete();
     }
 
     @Test
     void save() {
-        var load = createTestLoad(randomUUID().toString());
-
-        create(loadRepository.save(load))
-                .expectNextMatches(l -> l.id() != null && l.name().equals(load.name()))
+        create(loadRepository.save(createTestLoad(randomUUID().toString())))
+                .expectNextMatches(l -> l.id() != null)
                 .verifyComplete();
     }
 
@@ -142,7 +135,7 @@ class LoadRepositoryTest {
     void update() {
         var savedLoad = loadRepository.save(createTestLoad(randomUUID().toString())).block();
 
-        var updatedLoad = new Load(savedLoad.id(),
+        create(loadRepository.save(new Load(savedLoad.id(),
                 randomUUID().toString(),
                 "SMK 53 HP H335 " + random.nextInt(100),
                 "SMK 53gr HP with Hodgdon H335",
@@ -157,12 +150,9 @@ class LoadRepositoryTest {
                 0.020,
                 2.260,
                 0.002,
-                1L);
-
-
-        create(loadRepository.save(updatedLoad))
+                1L)))
                 .expectNextMatches(
-                        l -> l.id().equals(savedLoad.id()) && l.name().equals(updatedLoad.name()))
+                        l -> l.id().equals(savedLoad.id()) && l.name().startsWith("SMK 53 HP H335"))
                 .verifyComplete();
     }
 

@@ -81,8 +81,8 @@ public class PermissionTokenExchangeFilter implements WebFilter {
     @Override
     @NonNull
     public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
-        ServerHttpRequest request = Objects.requireNonNull(exchange.getRequest(), "request must not be null");
-        String originalToken = extractToken(request);
+        var request = Objects.requireNonNull(exchange.getRequest(), "request must not be null");
+        var originalToken = extractToken(request);
 
         if (originalToken == null) {
             return chain.filter(exchange);
@@ -111,12 +111,13 @@ public class PermissionTokenExchangeFilter implements WebFilter {
      * @return the token string without the "Bearer " prefix, or null if not present
      */
     private String extractToken(@NonNull ServerHttpRequest request) {
-        HttpHeaders headers = request.getHeaders();
-        String authHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
-        }
-        return null;
+        var headers = request.getHeaders();
+        return switch (headers) {
+            case null -> null;
+            case HttpHeaders h when h.getFirst(HttpHeaders.AUTHORIZATION) instanceof String auth 
+                && auth.startsWith("Bearer ") -> auth.substring(7);
+            default -> null;
+        };
     }
 
     /**
@@ -142,7 +143,7 @@ public class PermissionTokenExchangeFilter implements WebFilter {
 
         return webClient.post()
                 .uri(tokenUri)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + originalToken)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer %s".formatted(originalToken))
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData(formData))
                 .retrieve()
