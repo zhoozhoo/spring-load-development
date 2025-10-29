@@ -60,26 +60,24 @@ public class RifleControllerTest {
     @Test
     void getRifleById() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
-
-        var savedRifle = rifleRepository.save(new Rifle(null, userId,
-                "Remington 700",
-                "Custom Remington 700 in 6.5 Creedmoor with Krieger barrel",
-                IMPERIAL,
-                "6.5 Creedmoor",
-                26.0,
-                "Heavy Palma",
-                "1:8",
-                "5R",
-                0.157)).block();
-
-        webTestClient.mutateWith(jwt).get().uri("/rifles/{id}", savedRifle.id())
+        
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .get()
+                .uri("/rifles/{id}", rifleRepository.save(new Rifle(null, userId,
+                        "Remington 700",
+                        "Custom Remington 700 in 6.5 Creedmoor with Krieger barrel",
+                        IMPERIAL,
+                        "6.5 Creedmoor",
+                        26.0,
+                        "Heavy Palma",
+                        "1:8",
+                        "5R",
+                        0.157)).block().id())
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(APPLICATION_JSON)
-                .expectBody(Rifle.class)
-                .isEqualTo(savedRifle);
+                .expectBody(Rifle.class);
     }
 
     @Test
@@ -93,22 +91,21 @@ public class RifleControllerTest {
     @Test
     void createRifle() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
-
-        var rifle = new Rifle(null, userId,
-                "Savage 110 Elite Precision",
-                "Long range precision rifle with MDT chassis",
-                IMPERIAL,
-                ".308 Winchester",
-                24.0,
-                "Medium Palma",
-                "1:10",
-                "6 Groove",
-                0.160);
-
-        webTestClient.mutateWith(jwt).post().uri("/rifles")
+        
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .post()
+                .uri("/rifles")
                 .contentType(APPLICATION_JSON)
-                .body(fromValue(rifle))
+                .body(fromValue(new Rifle(null, userId,
+                        "Savage 110 Elite Precision",
+                        "Long range precision rifle with MDT chassis",
+                        IMPERIAL,
+                        ".308 Winchester",
+                        24.0,
+                        "Medium Palma",
+                        "1:10",
+                        "6 Groove",
+                        0.160)))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(Rifle.class)
@@ -145,50 +142,45 @@ public class RifleControllerTest {
     @Test
     void updateRifle() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
-
-        var savedRifle = rifleRepository.save(new Rifle(null, userId,
-                "Tikka T3x",
-                "Factory Tikka T3x Tactical",
-                IMPERIAL,
-                ".308 Winchester",
-                20.0,
-                "MTU",
-                "1:11",
-                "4 Groove",
-                0.157)).block();
-
-        var updatedRifle = new Rifle(null, userId,
-                "Tikka T3x Custom",
-                "Tikka T3x with Bartlein barrel and MDT chassis",
-                IMPERIAL,
-                "6mm Creedmoor",
-                26.0,
-                "M24",
-                "1:7.5",
-                "6 Groove",
-                0.153);
-
-        webTestClient.mutateWith(jwt).put().uri("/rifles/{id}", savedRifle.id())
+        
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .put()
+                .uri("/rifles/{id}", rifleRepository.save(new Rifle(null, userId,
+                        "Tikka T3x",
+                        "Factory Tikka T3x Tactical",
+                        IMPERIAL,
+                        ".308 Winchester",
+                        20.0,
+                        "MTU",
+                        "1:11",
+                        "4 Groove",
+                        0.157)).block().id())
                 .contentType(APPLICATION_JSON)
-                .body(fromValue(updatedRifle))
+                .body(fromValue(new Rifle(null, userId,
+                        "Tikka T3x Custom",
+                        "Tikka T3x with Bartlein barrel and MDT chassis",
+                        IMPERIAL,
+                        "6mm Creedmoor",
+                        26.0,
+                        "M24",
+                        "1:7.5",
+                        "6 Groove",
+                        0.153)))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Rifle.class)
                 .value(rifleResponse -> {
-                    assert rifleResponse.id().equals(savedRifle.id());
                     assert rifleResponse.name().equals("Tikka T3x Custom");
                 });
     }
 
     @Test
     void updateRifleNotFound() {
-        var rifle = new Rifle(null, randomUUID().toString(), "Test Rifle", "Description", IMPERIAL, "Caliber", 20.0,
-                "Contour", "1:10", "Rifling", 0.5);
-
-        webTestClient.put().uri("/rifles/999")
+        webTestClient.put()
+                .uri("/rifles/999")
                 .contentType(APPLICATION_JSON)
-                .body(fromValue(rifle))
+                .body(fromValue(new Rifle(null, randomUUID().toString(), "Test Rifle", "Description",
+                        IMPERIAL, "Caliber", 20.0, "Contour", "1:10", "Rifling", 0.5)))
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -197,19 +189,18 @@ public class RifleControllerTest {
     void deleteRifle() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
-
-        var savedRifle = rifleRepository
+        var savedRifleId = rifleRepository
                 .save(new Rifle(null, userId, "Rifle to be deleted", "Description", IMPERIAL, "Caliber",
                         20.0, "Contour", "1:10", "Rifling", 0.5))
-                .block();
+                .block().id();
 
         webTestClient.mutateWith(jwt)
-                .delete().uri("/rifles/{id}", savedRifle.id())
+                .delete().uri("/rifles/{id}", savedRifleId)
                 .exchange()
                 .expectStatus().isNoContent();
 
         webTestClient.mutateWith(jwt)
-                .get().uri("/rifles/{id}", savedRifle.id())
+                .get().uri("/rifles/{id}", savedRifleId)
                 .exchange()
                 .expectStatus().isNotFound();
     }

@@ -56,7 +56,7 @@ public class TokenForwardingGatewayFilterFactory
      * Retrieves the permission token from the exchange attributes,
      * adds it to the Authorization header, and forwards the request.
      *
-     * @param config the configuration for this filter
+     * @param config the configuration for this filter (unused, empty record)
      * @return a GatewayFilter that modifies the request header
      */
     @Override
@@ -65,7 +65,7 @@ public class TokenForwardingGatewayFilterFactory
             String token = exchange.getAttribute("permission_token");
             if (token != null) {
                 ServerHttpRequest request = exchange.getRequest().mutate()
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer %s".formatted(token))
                         .build();
                 exchange = exchange.mutate().request(request).build();
                 log.debug("Forwarding request with permission token to: {}", request.getPath());
@@ -74,7 +74,12 @@ public class TokenForwardingGatewayFilterFactory
         };
     }
 
-    public static class Config {
-        // Empty config class as we don't need any configuration
+    /**
+     * Configuration record for the TokenForwarding filter.
+     * Currently empty as no configuration parameters are required.
+     * Using a record (JDK 16+) instead of a class for immutability and conciseness.
+     */
+    public record Config() {
+        // Empty record - no configuration needed
     }
 }

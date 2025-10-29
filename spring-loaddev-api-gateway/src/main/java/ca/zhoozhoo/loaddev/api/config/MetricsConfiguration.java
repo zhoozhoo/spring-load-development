@@ -86,16 +86,14 @@ public class MetricsConfiguration {
         }
 
         // Verify we have a CompositeMeterRegistry to work with
-        if (!(meterRegistry instanceof CompositeMeterRegistry)) {
+        if (!(meterRegistry instanceof CompositeMeterRegistry composite)) {
             log.warn("MeterRegistry is not a CompositeMeterRegistry: {}", meterRegistry.getClass().getName());
             return;
         }
-
-        CompositeMeterRegistry composite = (CompositeMeterRegistry) meterRegistry;
         
         // Create the OpenTelemetry MeterRegistry with the Micrometer clock
         log.info("Creating OpenTelemetryMeterRegistry");
-        MeterRegistry otelRegistry = OpenTelemetryMeterRegistry.builder(openTelemetry)
+        var otelRegistry = OpenTelemetryMeterRegistry.builder(openTelemetry)
                 .setClock(clock)
                 .build();
         

@@ -111,13 +111,11 @@ public class PermissionTokenExchangeFilter implements WebFilter {
      * @return the token string without the "Bearer " prefix, or null if not present
      */
     private String extractToken(@NonNull ServerHttpRequest request) {
-        var headers = request.getHeaders();
-        return switch (headers) {
-            case null -> null;
-            case HttpHeaders h when h.getFirst(HttpHeaders.AUTHORIZATION) instanceof String auth 
-                && auth.startsWith("Bearer ") -> auth.substring(7);
-            default -> null;
-        };
+        var auth = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        if (auth != null && auth.startsWith("Bearer ")) {
+            return auth.substring(7);
+        }
+        return null;
     }
 
     /**

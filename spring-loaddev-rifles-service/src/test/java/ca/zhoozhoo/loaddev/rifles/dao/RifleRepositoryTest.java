@@ -66,7 +66,7 @@ class RifleRepositoryTest {
     @Test
     void findRifleById() {
         var userId = randomUUID().toString();
-        var savedRifle = rifleRepository.save(new Rifle(null, userId,
+        var savedRifleId = rifleRepository.save(new Rifle(null, userId,
                 "Ruger Precision Rifle",
                 "Gen 3 RPR with custom barrel",
                 IMPERIAL,
@@ -75,13 +75,11 @@ class RifleRepositoryTest {
                 "M24",
                 "1:8.5",
                 "5R",
-                0.158)).block();
+                0.158)).block().id();
 
-        var foundRifle = rifleRepository.findById(savedRifle.id());
-
-        create(foundRifle)
+        create(rifleRepository.findById(savedRifleId))
                 .assertNext(fr -> {
-                    assertThat(fr.id()).isEqualTo(savedRifle.id());
+                    assertThat(fr.id()).isEqualTo(savedRifleId);
                     assertThat(fr.ownerId()).isEqualTo(userId);
                     assertThat(fr.name()).isEqualTo("Ruger Precision Rifle");
                     assertThat(fr.description()).isEqualTo("Gen 3 RPR with custom barrel");
@@ -141,8 +139,7 @@ class RifleRepositoryTest {
 
     @Test
     void deleteRifle() {
-        var userId = randomUUID().toString();
-        var savedRifle = rifleRepository.save(new Rifle(null, userId,
+        var savedRifleId = rifleRepository.save(new Rifle(null, randomUUID().toString(),
                 "Savage 110 Elite Precision",
                 "Chassis rifle with adjustable stock",
                 IMPERIAL,
@@ -151,9 +148,9 @@ class RifleRepositoryTest {
                 "Heavy",
                 "1:8",
                 "5R",
-                0.156)).block();
+                0.156)).block().id();
 
-        create(rifleRepository.delete(savedRifle)).verifyComplete();
-        create(rifleRepository.findById(savedRifle.id())).expectNextCount(0).verifyComplete();
+        create(rifleRepository.deleteById(savedRifleId)).verifyComplete();
+        create(rifleRepository.findById(savedRifleId)).expectNextCount(0).verifyComplete();
     }
 }
