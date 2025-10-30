@@ -22,6 +22,8 @@ jobs:
 
     - name: Run tests with coverage
       run: ./mvnw -B clean test jacoco:report jacoco:check
+      env:
+        MAVEN_OPTS: "-Dmaven.mainClass=org.apache.maven.cling.MavenCling"
 
   spotbugs:
     name: SpotBugs Analysis
@@ -38,6 +40,8 @@ jobs:
 
     - name: Run SpotBugs
       run: ./mvnw -B compile spotbugs:check
+      env:
+        MAVEN_OPTS: "-Dmaven.mainClass=org.apache.maven.cling.MavenCling"
 
   package:
     name: Package
@@ -55,3 +59,5 @@ jobs:
 
     - name: Package application
       run: ./mvnw -B package -DskipTests
+      env:
+        MAVEN_OPTS: "-Dmaven.mainClass=org.apache.maven.cling.MavenCling"
