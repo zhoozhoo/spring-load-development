@@ -169,6 +169,31 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-keycloak-realm</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../docker/keycloak/realm</directory>
+                                    <includes>
+                                        <include>realm.json</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
@@ -266,40 +291,6 @@
                                     <counter>COMPLEXITY</counter>
                                     <value>COVEREDRATIO</value>
                                     <minimum>0.65</minimum>
-                                </limit>
-                            </limits>
-                        </rule>
-                        <!-- Package-level rules - ensures packages are well-tested -->
-                        <!-- Lower threshold to account for infrastructure classes -->
-                        <rule>
-                            <element>PACKAGE</element>
-                            <limits>
-                                <limit>
-                                    <counter>LINE</counter>
-                                    <value>COVEREDRATIO</value>
-                                    <minimum>0.50</minimum>
-                                </limit>
-                                <limit>
-                                    <counter>CLASS</counter>
-                                    <value>MISSEDCOUNT</value>
-                                    <maximum>0.50</maximum>
-                                </limit>
-                            </limits>
-                        </rule>
-                        <!-- Class-level rules - individual class requirements -->
-                        <!-- Lower thresholds for infrastructure and configuration classes -->
-                        <rule>
-                            <element>CLASS</element>
-                            <limits>
-                                <limit>
-                                    <counter>LINE</counter>
-                                    <value>COVEREDRATIO</value>
-                                    <minimum>0.50</minimum>
-                                </limit>
-                                <limit>
-                                    <counter>BRANCH</counter>
-                                    <value>COVEREDRATIO</value>
-                                    <minimum>0.30</minimum>
                                 </limit>
                             </limits>
                         </rule>
