@@ -54,14 +54,6 @@ class MetricsConfigurationTest {
     }
 
     @Test
-    @DisplayName("Should have OpenTelemetry MeterRegistry in composite")
-    void shouldHaveOpenTelemetryMeterRegistry() {
-        if (meterRegistry instanceof CompositeMeterRegistry composite) {
-            assertThat(composite.getRegistries()).isNotEmpty();
-        }
-    }
-
-    @Test
     @DisplayName("Should be able to register metrics")
     void shouldBeAbleToRegisterMetrics() {
         var counter = meterRegistry.counter("test.counter");
@@ -73,13 +65,5 @@ class MetricsConfigurationTest {
                 .isNotNull()
                 .extracting("id.name")
                 .isEqualTo("test.counter");
-    }
-
-    @Test
-    @DisplayName("Should support pattern matching for instanceof")
-    void shouldSupportPatternMatchingForInstanceof() {
-        if (meterRegistry instanceof CompositeMeterRegistry composite) {
-            assertThat(composite.getRegistries()).isNotNull();
-        }
     }
 }

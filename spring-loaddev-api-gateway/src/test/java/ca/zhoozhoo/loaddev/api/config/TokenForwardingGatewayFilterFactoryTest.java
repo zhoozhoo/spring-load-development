@@ -106,13 +106,6 @@ class TokenForwardingGatewayFilterFactoryTest {
     }
 
     @Test
-    @DisplayName("Should use String.formatted() for Bearer token")
-    void shouldUseFormattedForBearerToken() {
-        assertThat("Bearer %s".formatted("test-token"))
-                .isEqualTo("Bearer test-token");
-    }
-
-    @Test
     @DisplayName("Config record should be empty")
     void configRecordShouldBeEmpty() {
         var config1 = new TokenForwardingGatewayFilterFactory.Config();

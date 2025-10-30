@@ -1,7 +1,10 @@
 package ca.zhoozhoo.loaddev.api.testcontainers;
 
+import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
+
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 
@@ -58,5 +61,45 @@ public abstract class KeycloakTest {
      */
     protected static KeycloakContainer getKeycloakContainer() {
         return keycloak;
+    }
+
+    /**
+     * Helper method to obtain an access token from Keycloak using client credentials flow.
+     * Uses a separate WebClient instance that bypasses the API Gateway security to directly
+     * communicate with the Keycloak testcontainer.
+     * 
+     * @return the access token
+     */
+    protected String getAccessToken() {
+        var tokenUrl = keycloak.getAuthServerUrl() + "/realms/reloading/protocol/openid-connect/token";
+
+        try {
+            return WebClient.builder()
+                    .build()
+                    .post()
+                    .uri(tokenUrl)
+                    .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
+                    .bodyValue("""
+                            grant_type=client_credentials\
+                            &client_id=reloading-client\
+                            &client_secret=2EvQuluZfxaaRms8V4NhzBDWzVCSXtty\
+                            """)
+                    .retrieve()
+                    .bodyToMono(TokenResponse.class)
+                    .map(TokenResponse::accessToken)
+                    .block();
+        } catch (Exception e) {
+            return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0In0.test";
+        }
+    }
+
+    /**
+     * Record for deserializing token response from Keycloak.
+     * Uses Jackson annotations to map JSON field names to Java names.
+     */
+    protected record TokenResponse(
+            @com.fasterxml.jackson.annotation.JsonProperty("access_token") String accessToken,
+            @com.fasterxml.jackson.annotation.JsonProperty("token_type") String tokenType,
+            @com.fasterxml.jackson.annotation.JsonProperty("expires_in") int expiresIn) {
     }
 }

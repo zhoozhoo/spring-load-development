@@ -2,7 +2,6 @@ package ca.zhoozhoo.loaddev.api.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +9,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
 import org.springframework.security.oauth2.server.resource.web.reactive.function.client.ServerBearerExchangeFilterFunction;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ca.zhoozhoo.loaddev.api.testcontainers.KeycloakTest;
@@ -41,20 +38,6 @@ class SecurityConfigurationIntegrationTest extends KeycloakTest {
 
     @Autowired
     private ObservationRegistry observationRegistry;
-
-    @DynamicPropertySource
-    static void registerKeycloakProperties(DynamicPropertyRegistry registry) {
-        // Properties are set dynamically in @BeforeEach
-    }
-
-    @BeforeEach
-    void setUp() {
-        var realmUrl = keycloak.getAuthServerUrl() + "/realms/reloading";
-        
-        System.setProperty("keycloak.issuer-uri", realmUrl);
-        System.setProperty("keycloak.token-uri", realmUrl + "/protocol/openid-connect/token");
-        System.setProperty("keycloak.base-url", keycloak.getAuthServerUrl());
-    }
 
     @Test
     @DisplayName("Should create Bearer token exchange filter bean")
