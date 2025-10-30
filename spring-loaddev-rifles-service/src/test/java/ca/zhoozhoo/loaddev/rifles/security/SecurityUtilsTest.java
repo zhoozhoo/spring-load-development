@@ -1,9 +1,11 @@
 package ca.zhoozhoo.loaddev.rifles.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
@@ -33,43 +35,35 @@ class SecurityUtilsTest {
     }
 
     @Test
-    void testAuthenticationExtraction() {
-        // Test the logic that would be used in the actual implementation
+    void extractUserId_fromJwtPrincipal_shouldReturnSubject() {
         var auth = new JwtAuthenticationToken(Jwt.withTokenValue("token")
                 .header("alg", "none")
                 .subject("user123")
                 .build());
         
-        var userId = switch (auth.getPrincipal()) {
+        assertEquals("user123", switch (auth.getPrincipal()) {
             case Jwt j -> j.getSubject();
             case null, default -> null;
-        };
-        
-        assertEquals("user123", userId);
+        });
     }
 
     @Test
-    void testNonJwtPrincipal() {
-        var auth = new org.springframework.security.authentication.TestingAuthenticationToken("user", "password");
-        
-        var userId = switch (auth.getPrincipal()) {
+    void extractUserId_fromNonJwtPrincipal_shouldReturnNull() {
+        assertNull(switch (new TestingAuthenticationToken("user", "password").getPrincipal()) {
             case Jwt jwt -> jwt.getSubject();
             case null, default -> null;
-        };
-        
-        assertNull(userId);
+        });
     }
 
     @Test
-    void testUnauthenticated() {
+    void checkAuthentication_whenNotAuthenticated_shouldBeFalse() {
         var auth = new JwtAuthenticationToken(Jwt.withTokenValue("token")
                 .header("alg", "none")
                 .subject("user123")
                 .build());
         auth.setAuthenticated(false);
         
-        // The filter in getCurrentUserId checks auth.isAuthenticated()
-        assertEquals(false, auth.isAuthenticated());
+        assertFalse(auth.isAuthenticated());
     }
 }
 

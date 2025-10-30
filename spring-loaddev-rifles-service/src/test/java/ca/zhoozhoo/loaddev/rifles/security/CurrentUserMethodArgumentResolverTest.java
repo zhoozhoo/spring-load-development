@@ -8,6 +8,7 @@ import static reactor.test.StepVerifier.create;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
+import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
@@ -43,33 +44,29 @@ class CurrentUserMethodArgumentResolverTest {
 
     @Test
     void resolveArgument_withJwtPrincipal_shouldReturnUserId() throws NoSuchMethodException {
-        var exchange = from(get("/").build())
-                .mutate()
-                .principal(Mono.just(new JwtAuthenticationToken(Jwt.withTokenValue("token")
-                        .header("alg", "none")
-                        .subject("user456")
-                        .build())))
-                .build();
-
         create(resolver.resolveArgument(
                         new MethodParameter(TestController.class.getMethod("testMethod", String.class), 0),
                         null,
-                        exchange))
+                        from(get("/").build())
+                                .mutate()
+                                .principal(Mono.just(new JwtAuthenticationToken(Jwt.withTokenValue("token")
+                                        .header("alg", "none")
+                                        .subject("user456")
+                                        .build())))
+                                .build()))
                 .expectNext("user456")
                 .verifyComplete();
     }
 
     @Test
     void resolveArgument_withNonJwtPrincipal_shouldReturnEmpty() throws NoSuchMethodException {
-        var exchange = from(get("/").build())
-                .mutate()
-                .principal(Mono.just(new org.springframework.security.authentication.TestingAuthenticationToken("user", "password")))
-                .build();
-
         create(resolver.resolveArgument(
                         new MethodParameter(TestController.class.getMethod("testMethod", String.class), 0),
                         null,
-                        exchange))
+                        from(get("/").build())
+                                .mutate()
+                                .principal(Mono.just(new TestingAuthenticationToken("user", "password")))
+                                .build()))
                 .verifyComplete();
     }
 

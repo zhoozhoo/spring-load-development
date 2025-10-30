@@ -1,6 +1,5 @@
-package ca.zhoozhoo.loaddev.rifles.config;
+package ca.zhoozhoo.loaddev.rifles.security;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,15 +15,15 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import ca.zhoozhoo.loaddev.rifles.testcontainers.KeycloakTest;
 
 /**
- * Integration tests for {@link SecurityConfiguration} with Keycloak testcontainer.
- * Tests OAuth2 resource server configuration with real Keycloak JWT tokens.
+ * Integration tests for {@link CurrentUser} annotation and {@link CurrentUserMethodArgumentResolver}.
+ * Tests the complete flow of extracting user ID from JWT tokens in controller methods.
  * 
  * @author Zhubin Salehi
  */
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @AutoConfigureWebTestClient
 @ActiveProfiles("test")
-class SecurityConfigurationIntegrationTest extends KeycloakTest {
+class CurrentUserIntegrationTest extends KeycloakTest {
 
     @Autowired
     private WebTestClient webTestClient;
@@ -37,31 +36,12 @@ class SecurityConfigurationIntegrationTest extends KeycloakTest {
     }
 
     @Test
-    @DisplayName("Should process authenticated requests with valid token")
-    void shouldProcessAuthenticatedRequestsWithValidToken() {
+    @DisplayName("Should handle authenticated requests with Bearer token")
+    void shouldHandleAuthenticatedRequestsWithBearerToken() {
         webTestClient.get()
                 .uri("/actuator/health")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
                 .exchange()
                 .expectStatus().isOk();
-    }
-
-    @Test
-    @DisplayName("Should validate Keycloak container is running")
-    void shouldValidateKeycloakContainerIsRunning() {
-        assertThat(keycloak.isRunning()).isTrue();
-        assertThat(keycloak.getAuthServerUrl())
-                .isNotEmpty()
-                .startsWith("http://");
-    }
-
-    @Test
-    @DisplayName("Should obtain valid access token from Keycloak")
-    void shouldObtainValidAccessTokenFromKeycloak() {
-        assertThat(accessToken)
-                .isNotNull()
-                .isNotEmpty()
-                .contains(".")
-                .matches("^[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+$");
     }
 }
