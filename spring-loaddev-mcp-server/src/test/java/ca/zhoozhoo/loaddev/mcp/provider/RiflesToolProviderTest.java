@@ -96,7 +96,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
      * Validates that the result is not null and indicates no errors.
      */
     @Test
-    void testGetRifles() {
+    void getRifles() {
         var riflesResult = client.callTool(new CallToolRequest("getRifles", Map.of())).block();
 
         assertThat(riflesResult).isNotNull();
@@ -114,7 +114,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
      * Validates that the result is not null and indicates no errors.
      */
     @Test
-    void testGetRifleById() {
+    void getRifleById() {
         var rifleResult = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
 
         assertThat(rifleResult).isNotNull();
@@ -136,7 +136,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
      * Expected: isError = true, error message contains authentication or error details
      */
     @Test
-    void testGetRifleById_NotFound() {
+    void getRifleById_NotFound() {
         var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 999L))).block();
 
         assertThat(result).isNotNull();
@@ -146,5 +146,187 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(content).isInstanceOf(TextContent.class);
         var textContent = (TextContent) content;
         assertThat(textContent.text()).contains("Error invoking method");
+    }
+
+    /**
+     * Tests getRifles with authentication failure (401 response).
+     * <p>
+     * Verifies proper error handling when the rifles-service returns a 401 Unauthorized
+     * response. The service should propagate this error to the client.
+     * <p>
+     * Expected: isError = true, error message contains error details
+     */
+    @Test
+    void getRifles_Unauthorized() {
+        // Reconfigure mock server to return 401 for this test
+        mockRiflesServer.setDispatcher(new okhttp3.mockwebserver.Dispatcher() {
+            @Override
+            public okhttp3.mockwebserver.MockResponse dispatch(okhttp3.mockwebserver.RecordedRequest request) {
+                return new okhttp3.mockwebserver.MockResponse()
+                        .setResponseCode(401)
+                        .setHeader("Content-Type", "application/json")
+                        .setBody("{\"error\": \"Unauthorized\"}");
+            }
+        });
+
+        var result = client.callTool(new CallToolRequest("getRifles", Map.of())).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Error invoking method");
+
+        // Restore original dispatcher for other tests
+        mockRiflesServer.setDispatcher(createRiflesDispatcher());
+    }
+
+    /**
+     * Tests getRifleById with authentication failure (401 response).
+     * <p>
+     * Verifies proper error handling when the rifles-service returns a 401 Unauthorized
+     * response for a specific rifle. The service should propagate this error to the client.
+     * <p>
+     * Expected: isError = true, error message contains error details
+     */
+    @Test
+    void getRifleById_Unauthorized() {
+        // Reconfigure mock server to return 401 for this test
+        mockRiflesServer.setDispatcher(new okhttp3.mockwebserver.Dispatcher() {
+            @Override
+            public okhttp3.mockwebserver.MockResponse dispatch(okhttp3.mockwebserver.RecordedRequest request) {
+                return new okhttp3.mockwebserver.MockResponse()
+                        .setResponseCode(401)
+                        .setHeader("Content-Type", "application/json")
+                        .setBody("{\"error\": \"Unauthorized\"}");
+            }
+        });
+
+        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Error invoking method");
+
+        // Restore original dispatcher for other tests
+        mockRiflesServer.setDispatcher(createRiflesDispatcher());
+    }
+
+    /**
+     * Tests getRifles when service discovery returns null.
+     * <p>
+     * Verifies proper error handling when the DiscoveryClient returns null
+     * for the rifles-service, simulating a service discovery failure.
+     * <p>
+     * Expected: isError = true, error message contains service discovery error
+     */
+    @Test
+    void getRifles_ServiceDiscoveryReturnsNull() {
+        // Mock discovery client to return null
+        org.mockito.Mockito.when(discoveryClient.getInstances("rifles-service"))
+                .thenReturn(null);
+
+        var result = client.callTool(new CallToolRequest("getRifles", Map.of())).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Error invoking method");
+
+        // Restore original mock for other tests
+        mockServiceDiscovery();
+    }
+
+    /**
+     * Tests getRifles when service discovery returns an empty list.
+     * <p>
+     * Verifies proper error handling when the DiscoveryClient returns an empty
+     * list for the rifles-service, simulating no available service instances.
+     * <p>
+     * Expected: isError = true, error message contains service discovery error
+     */
+    @Test
+    void getRifles_ServiceDiscoveryReturnsEmptyList() {
+        // Mock discovery client to return empty list
+        org.mockito.Mockito.when(discoveryClient.getInstances("rifles-service"))
+                .thenReturn(java.util.List.of());
+
+        var result = client.callTool(new CallToolRequest("getRifles", Map.of())).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Error invoking method");
+
+        // Restore original mock for other tests
+        mockServiceDiscovery();
+    }
+
+    /**
+     * Tests getRifleById when service discovery returns null.
+     * <p>
+     * Verifies proper error handling when the DiscoveryClient returns null
+     * for the rifles-service during a getRifleById call.
+     * <p>
+     * Expected: isError = true, error message contains service discovery error
+     */
+    @Test
+    void getRifleById_ServiceDiscoveryReturnsNull() {
+        // Mock discovery client to return null
+        org.mockito.Mockito.when(discoveryClient.getInstances("rifles-service"))
+                .thenReturn(null);
+
+        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Error invoking method");
+
+        // Restore original mock for other tests
+        mockServiceDiscovery();
+    }
+
+    /**
+     * Tests getRifleById when service discovery returns an empty list.
+     * <p>
+     * Verifies proper error handling when the DiscoveryClient returns an empty
+     * list for the rifles-service during a getRifleById call.
+     * <p>
+     * Expected: isError = true, error message contains service discovery error
+     */
+    @Test
+    void getRifleById_ServiceDiscoveryReturnsEmptyList() {
+        // Mock discovery client to return empty list
+        org.mockito.Mockito.when(discoveryClient.getInstances("rifles-service"))
+                .thenReturn(java.util.List.of());
+
+        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Error invoking method");
+
+        // Restore original mock for other tests
+        mockServiceDiscovery();
     }
 }

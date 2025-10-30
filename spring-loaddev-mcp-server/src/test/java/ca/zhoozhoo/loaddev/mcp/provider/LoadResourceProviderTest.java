@@ -141,7 +141,7 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
      * text/plain format.
      */
     @Test
-    void testGetLoadById() {
+    void getLoadById() {
         var readRequest = new ReadResourceRequest("load://1");
         var resourceResult = client.readResource(readRequest).block();
 
@@ -185,7 +185,7 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
      * Expected: An McpError exception with message "Load not found with ID: 999".
      */
     @Test
-    void testGetLoadById_NotFound() {
+    void getLoadById_NotFound() {
         var readRequest = new ReadResourceRequest("load://999");
         
         // The MCP framework throws an McpError when a resource is not found
@@ -202,7 +202,7 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
      * is working correctly.
      */
     @Test
-    void testGetLoadById_DifferentId() {
+    void getLoadById_DifferentId() {
         var readRequest = new ReadResourceRequest("load://2");
         var resourceResult = client.readResource(readRequest).block();
 
@@ -220,5 +220,157 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
         // The mock returns the same load data but we verify it's processed correctly
         String text = textContent.text();
         assertThat(text).contains("ID: 1"); // Mock returns same data for any valid ID
+    }
+
+    /**
+     * Tests reading a load resource with authentication failure (401 response).
+     * <p>
+     * Verifies proper error handling when the loads-service returns a 401 Unauthorized
+     * response for a resource read. The service should propagate this error to the client.
+     * <p>
+     * Expected: An McpError exception with message containing "Authentication failed".
+     */
+    @Test
+    void getLoadById_Unauthorized() {
+        // Reconfigure mock server to return 401 for this test
+        mockLoadsServer.setDispatcher(new okhttp3.mockwebserver.Dispatcher() {
+            @Override
+            public okhttp3.mockwebserver.MockResponse dispatch(okhttp3.mockwebserver.RecordedRequest request) {
+                return new okhttp3.mockwebserver.MockResponse()
+                        .setResponseCode(401)
+                        .setHeader("Content-Type", "application/json")
+                        .setBody("{\"error\": \"Unauthorized\"}");
+            }
+        });
+
+        var readRequest = new ReadResourceRequest("load://1");
+        
+        // The MCP framework should throw an McpError when authentication fails
+        assertThatThrownBy(() -> client.readResource(readRequest).block())
+                .isInstanceOf(io.modelcontextprotocol.spec.McpError.class)
+                .hasMessageContaining("Authentication failed");
+
+        // Restore original dispatcher for other tests
+        mockLoadsServer.setDispatcher(createLoadsDispatcher());
+    }
+
+    /**
+     * Tests reading a load resource with invalid ID format (null).
+     * <p>
+     * Verifies proper error handling when the URI contains a null or empty ID.
+     * The resource provider should fail gracefully with an appropriate error.
+     * <p>
+     * Expected: An McpError exception with message indicating invalid ID format.
+     */
+    @Test
+    void getLoadById_NullId() {
+        var readRequest = new ReadResourceRequest("load://");
+        
+        // The MCP framework should throw an McpError when ID is missing/empty
+        assertThatThrownBy(() -> client.readResource(readRequest).block())
+                .isInstanceOf(io.modelcontextprotocol.spec.McpError.class);
+    }
+
+    /**
+     * Tests reading a load resource with invalid ID format (zero).
+     * <p>
+     * Verifies proper error handling when the URI contains ID = 0.
+     * Although the mock server might not enforce this, we test the behavior.
+     * <p>
+     * Expected: The request should either succeed (if mock allows) or fail with appropriate error.
+     */
+    @Test
+    void getLoadById_ZeroId() {
+        var readRequest = new ReadResourceRequest("load://0");
+        
+        // This test documents current behavior - may return error or mock response
+        var result = client.readResource(readRequest).block();
+        
+        assertThat(result).isNotNull();
+        // The result depends on mock implementation - we just verify it doesn't crash
+    }
+
+    /**
+     * Tests reading a load resource with invalid ID format (negative).
+     * <p>
+     * Verifies proper error handling when the URI contains a negative ID.
+     * Although the mock server might not enforce this, we test the behavior.
+     * <p>
+     * Expected: The request should either succeed (if mock allows) or fail with appropriate error.
+     */
+    @Test
+    void getLoadById_NegativeId() {
+        var readRequest = new ReadResourceRequest("load://-1");
+        
+        // This test documents current behavior - may return error or mock response
+        var result = client.readResource(readRequest).block();
+        
+        assertThat(result).isNotNull();
+        // The result depends on mock implementation - we just verify it doesn't crash
+    }
+
+    /**
+     * Tests reading a load resource with non-numeric ID.
+     * <p>
+     * Verifies proper error handling when the URI contains a non-numeric ID
+     * that cannot be parsed as a Long.
+     * <p>
+     * Expected: An McpError exception due to NumberFormatException.
+     */
+    @Test
+    void getLoadById_InvalidIdFormat() {
+        var readRequest = new ReadResourceRequest("load://invalid");
+        
+        // The MCP framework should throw an McpError when ID is not a valid number
+        assertThatThrownBy(() -> client.readResource(readRequest).block())
+                .isInstanceOf(io.modelcontextprotocol.spec.McpError.class);
+    }
+
+    /**
+     * Tests reading a load resource when service discovery returns null.
+     * <p>
+     * Verifies proper error handling when the DiscoveryClient returns null
+     * for the loads-service, simulating a service discovery failure.
+     * <p>
+     * Expected: An McpError exception with message containing service discovery error.
+     */
+    @Test
+    void getLoadById_ServiceDiscoveryReturnsNull() {
+        // Mock discovery client to return null
+        org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
+                .thenReturn(null);
+
+        var readRequest = new ReadResourceRequest("load://1");
+        
+        // The MCP framework should throw an McpError when service discovery fails
+        assertThatThrownBy(() -> client.readResource(readRequest).block())
+                .isInstanceOf(io.modelcontextprotocol.spec.McpError.class);
+
+        // Restore original mock for other tests
+        mockServiceDiscovery();
+    }
+
+    /**
+     * Tests reading a load resource when service discovery returns an empty list.
+     * <p>
+     * Verifies proper error handling when the DiscoveryClient returns an empty
+     * list for the loads-service, simulating no available service instances.
+     * <p>
+     * Expected: An McpError exception with message containing service discovery error.
+     */
+    @Test
+    void getLoadById_ServiceDiscoveryReturnsEmptyList() {
+        // Mock discovery client to return empty list
+        org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
+                .thenReturn(java.util.List.of());
+
+        var readRequest = new ReadResourceRequest("load://1");
+        
+        // The MCP framework should throw an McpError when service discovery fails
+        assertThatThrownBy(() -> client.readResource(readRequest).block())
+                .isInstanceOf(io.modelcontextprotocol.spec.McpError.class);
+
+        // Restore original mock for other tests
+        mockServiceDiscovery();
     }
 }

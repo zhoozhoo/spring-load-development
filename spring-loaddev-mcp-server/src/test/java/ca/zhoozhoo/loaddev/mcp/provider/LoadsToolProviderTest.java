@@ -167,7 +167,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
      * Validates that the result is not null and indicates no errors.
      */
     @Test
-    void testGetLoadById() {
+    void getLoadById() {
         var loadResult = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L))).block();
 
         assertThat(loadResult).isNotNull();
@@ -192,7 +192,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
      * Validates that the result is not null.
      */
     @Test
-    void testGetLoadDetails() {
+    void getLoadDetails() {
         var loadDetailsResult = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L))).block();
 
         assertThat(loadDetailsResult).isNotNull();
@@ -208,7 +208,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
      * Expected: isError = true, error message indicates ID must be positive
      */
     @Test
-    void testGetLoadById_NullId() {
+    void getLoadById_NullId() {
         var result = client.callTool(new CallToolRequest("getLoad", Map.of())).block();
 
         assertThat(result).isNotNull();
@@ -230,7 +230,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
      * Expected: isError = true, error message indicates ID must be positive
      */
     @Test
-    void testGetLoadById_ZeroId() {
+    void getLoadById_ZeroId() {
         var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 0L))).block();
 
         assertThat(result).isNotNull();
@@ -252,7 +252,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
      * Expected: isError = true, error message indicates ID must be positive
      */
     @Test
-    void testGetLoadById_NegativeId() {
+    void getLoadById_NegativeId() {
         var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", -1L))).block();
 
         assertThat(result).isNotNull();
@@ -274,7 +274,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
      * Expected: isError = true, error message contains error details
      */
     @Test
-    void testGetLoadById_NotFound() {
+    void getLoadById_NotFound() {
         var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 999L))).block();
 
         assertThat(result).isNotNull();
@@ -296,7 +296,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
      * Expected: isError = true, error message indicates ID must be positive
      */
     @Test
-    void testGetLoadDetails_NullId() {
+    void getLoadDetails_NullId() {
         var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of())).block();
 
         assertThat(result).isNotNull();
@@ -318,7 +318,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
      * Expected: isError = true, error message indicates ID must be positive
      */
     @Test
-    void testGetLoadDetails_ZeroId() {
+    void getLoadDetails_ZeroId() {
         var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 0L))).block();
 
         assertThat(result).isNotNull();
@@ -340,7 +340,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
      * Expected: isError = true, error message indicates ID must be positive
      */
     @Test
-    void testGetLoadDetails_NegativeId() {
+    void getLoadDetails_NegativeId() {
         var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", -1L))).block();
 
         assertThat(result).isNotNull();
@@ -362,7 +362,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
      * Expected: isError = true, error message contains error details
      */
     @Test
-    void testGetLoadDetails_NotFound() {
+    void getLoadDetails_NotFound() {
         var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 999L))).block();
 
         assertThat(result).isNotNull();
@@ -373,4 +373,278 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         var textContent = (TextContent) content;
         assertThat(textContent.text()).contains("Error invoking method");
     }
+
+    /**
+     * Tests getLoads with authentication failure (401 response).
+     * <p>
+     * Verifies proper error handling when the loads-service returns a 401 Unauthorized
+     * response. The service should map this to INVALID_REQUEST with "Authentication failed".
+     * <p>
+     * Expected: isError = true, error message indicates authentication failure
+     */
+    @Test
+    void getLoads_Unauthorized() {
+        // Reconfigure mock server to return 401 for this test
+        mockLoadsServer.setDispatcher(new okhttp3.mockwebserver.Dispatcher() {
+            @Override
+            public okhttp3.mockwebserver.MockResponse dispatch(okhttp3.mockwebserver.RecordedRequest request) {
+                return new okhttp3.mockwebserver.MockResponse()
+                        .setResponseCode(401)
+                        .setHeader("Content-Type", "application/json")
+                        .setBody("{\"error\": \"Unauthorized\"}");
+            }
+        });
+
+        var result = client.callTool(new CallToolRequest("getLoads", Map.of())).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Authentication failed");
+
+        // Restore original dispatcher for other tests
+        mockLoadsServer.setDispatcher(createLoadsDispatcher());
+    }
+
+    /**
+     * Tests getLoad with authentication failure (401 response).
+     * <p>
+     * Verifies proper error handling when the loads-service returns a 401 Unauthorized
+     * response for a specific load. The service should map this to INVALID_REQUEST.
+     * <p>
+     * Expected: isError = true, error message indicates authentication failure
+     */
+    @Test
+    void getLoadById_Unauthorized() {
+        // Reconfigure mock server to return 401 for this test
+        mockLoadsServer.setDispatcher(new okhttp3.mockwebserver.Dispatcher() {
+            @Override
+            public okhttp3.mockwebserver.MockResponse dispatch(okhttp3.mockwebserver.RecordedRequest request) {
+                return new okhttp3.mockwebserver.MockResponse()
+                        .setResponseCode(401)
+                        .setHeader("Content-Type", "application/json")
+                        .setBody("{\"error\": \"Unauthorized\"}");
+            }
+        });
+
+        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L))).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Authentication failed");
+
+        // Restore original dispatcher for other tests
+        mockLoadsServer.setDispatcher(createLoadsDispatcher());
+    }
+
+    /**
+     * Tests getLoadDetails with authentication failure (401 response).
+     * <p>
+     * Verifies proper error handling when the loads-service returns a 401 Unauthorized
+     * response when fetching load details or statistics.
+     * <p>
+     * Expected: isError = true, error message indicates authentication failure
+     */
+    @Test
+    void getLoadDetails_Unauthorized() {
+        // Reconfigure mock server to return 401 for this test
+        mockLoadsServer.setDispatcher(new okhttp3.mockwebserver.Dispatcher() {
+            @Override
+            public okhttp3.mockwebserver.MockResponse dispatch(okhttp3.mockwebserver.RecordedRequest request) {
+                return new okhttp3.mockwebserver.MockResponse()
+                        .setResponseCode(401)
+                        .setHeader("Content-Type", "application/json")
+                        .setBody("{\"error\": \"Unauthorized\"}");
+            }
+        });
+
+        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L))).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Authentication failed");
+
+        // Restore original dispatcher for other tests
+        mockLoadsServer.setDispatcher(createLoadsDispatcher());
+    }
+
+    /**
+     * Tests getLoads when service discovery returns null.
+     * <p>
+     * Verifies proper error handling when the DiscoveryClient returns null
+     * for the loads-service, simulating a service discovery failure.
+     * <p>
+     * Expected: isError = true, error message contains service discovery error
+     */
+    @Test
+    void getLoads_ServiceDiscoveryReturnsNull() {
+        // Mock discovery client to return null
+        org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
+                .thenReturn(null);
+
+        var result = client.callTool(new CallToolRequest("getLoads", Map.of())).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Error invoking method");
+
+        // Restore original mock for other tests
+        mockServiceDiscovery();
+    }
+
+    /**
+     * Tests getLoads when service discovery returns an empty list.
+     * <p>
+     * Verifies proper error handling when the DiscoveryClient returns an empty
+     * list for the loads-service, simulating no available service instances.
+     * <p>
+     * Expected: isError = true, error message contains service discovery error
+     */
+    @Test
+    void getLoads_ServiceDiscoveryReturnsEmptyList() {
+        // Mock discovery client to return empty list
+        org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
+                .thenReturn(java.util.List.of());
+
+        var result = client.callTool(new CallToolRequest("getLoads", Map.of())).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Error invoking method");
+
+        // Restore original mock for other tests
+        mockServiceDiscovery();
+    }
+
+    /**
+     * Tests getLoadById when service discovery returns null.
+     * <p>
+     * Verifies proper error handling when the DiscoveryClient returns null
+     * for the loads-service during a getLoadById call.
+     * <p>
+     * Expected: isError = true, error message contains service discovery error
+     */
+    @Test
+    void getLoadById_ServiceDiscoveryReturnsNull() {
+        // Mock discovery client to return null
+        org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
+                .thenReturn(null);
+
+        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L))).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Error invoking method");
+
+        // Restore original mock for other tests
+        mockServiceDiscovery();
+    }
+
+    /**
+     * Tests getLoadById when service discovery returns an empty list.
+     * <p>
+     * Verifies proper error handling when the DiscoveryClient returns an empty
+     * list for the loads-service during a getLoadById call.
+     * <p>
+     * Expected: isError = true, error message contains service discovery error
+     */
+    @Test
+    void getLoadById_ServiceDiscoveryReturnsEmptyList() {
+        // Mock discovery client to return empty list
+        org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
+                .thenReturn(java.util.List.of());
+
+        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L))).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Error invoking method");
+
+        // Restore original mock for other tests
+        mockServiceDiscovery();
+    }
+
+    /**
+     * Tests getLoadDetails when service discovery returns null.
+     * <p>
+     * Verifies proper error handling when the DiscoveryClient returns null
+     * for the loads-service during a getLoadDetails call.
+     * <p>
+     * Expected: isError = true, error message contains service discovery error
+     */
+    @Test
+    void getLoadDetails_ServiceDiscoveryReturnsNull() {
+        // Mock discovery client to return null
+        org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
+                .thenReturn(null);
+
+        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L))).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Error invoking method");
+
+        // Restore original mock for other tests
+        mockServiceDiscovery();
+    }
+
+    /**
+     * Tests getLoadDetails when service discovery returns an empty list.
+     * <p>
+     * Verifies proper error handling when the DiscoveryClient returns an empty
+     * list for the loads-service during a getLoadDetails call.
+     * <p>
+     * Expected: isError = true, error message contains service discovery error
+     */
+    @Test
+    void getLoadDetails_ServiceDiscoveryReturnsEmptyList() {
+        // Mock discovery client to return empty list
+        org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
+                .thenReturn(java.util.List.of());
+
+        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L))).block();
+
+        assertThat(result).isNotNull();
+        assertThat(result.isError()).isTrue();
+        assertThat(result.content()).isNotEmpty();
+        var content = result.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        assertThat(textContent.text()).contains("Error invoking method");
+
+        // Restore original mock for other tests
+        mockServiceDiscovery();
+    }
 }
+
