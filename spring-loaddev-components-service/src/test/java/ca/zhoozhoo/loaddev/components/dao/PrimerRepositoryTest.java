@@ -1,5 +1,7 @@
 package ca.zhoozhoo.loaddev.components.dao;
 
+import static ca.zhoozhoo.loaddev.components.model.PrimerSize.LARGE_RIFLE;
+import static ca.zhoozhoo.loaddev.components.model.PrimerSize.LARGE_RIFLE_MAGNUM;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static reactor.core.publisher.Flux.just;
@@ -16,7 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.components.model.Primer;
-import ca.zhoozhoo.loaddev.components.model.PrimerSize;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -37,7 +38,7 @@ class PrimerRepositoryTest {
                 ownerId,
                 "CCI",
                 "BR-4",
-                PrimerSize.LARGE_RIFLE,
+                LARGE_RIFLE,
                 new BigDecimal("89.99"),
                 "CAD",
                 1000);
@@ -53,7 +54,7 @@ class PrimerRepositoryTest {
                     assertThat(p.ownerId()).isEqualTo(userId);
                     assertThat(p.manufacturer()).isEqualTo("CCI");
                     assertThat(p.type()).isEqualTo("BR-4");
-                    assertThat(p.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
+                    assertThat(p.primerSize()).isEqualTo(LARGE_RIFLE);
                     assertThat(p.cost()).isEqualTo(new BigDecimal("89.99"));
                     assertThat(p.currency()).isEqualTo("CAD");
                     assertThat(p.quantityPerBox()).isEqualTo(1000);
@@ -72,7 +73,7 @@ class PrimerRepositoryTest {
                     assertThat(p.ownerId()).isEqualTo(userId);
                     assertThat(p.manufacturer()).isEqualTo("CCI");
                     assertThat(p.type()).isEqualTo("BR-4");
-                    assertThat(p.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
+                    assertThat(p.primerSize()).isEqualTo(LARGE_RIFLE);
                     assertThat(p.cost()).isEqualTo(new BigDecimal("89.99"));
                     assertThat(p.currency()).isEqualTo("CAD");
                     assertThat(p.quantityPerBox()).isEqualTo(1000);
@@ -90,7 +91,7 @@ class PrimerRepositoryTest {
                 userId,
                 "Federal",
                 "205M",
-                PrimerSize.LARGE_RIFLE_MAGNUM,
+                LARGE_RIFLE_MAGNUM,
                 new BigDecimal("99.99"),
                 "CAD",
                 500);
@@ -101,7 +102,7 @@ class PrimerRepositoryTest {
                     assertThat(p.ownerId()).isEqualTo(userId);
                     assertThat(p.manufacturer()).isEqualTo("Federal");
                     assertThat(p.type()).isEqualTo("205M");
-                    assertThat(p.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE_MAGNUM);
+                    assertThat(p.primerSize()).isEqualTo(LARGE_RIFLE_MAGNUM);
                     assertThat(p.cost()).isEqualTo(new BigDecimal("99.99"));
                     assertThat(p.currency()).isEqualTo("CAD");
                     assertThat(p.quantityPerBox()).isEqualTo(500);
@@ -128,7 +129,7 @@ class PrimerRepositoryTest {
                 userId,
                 "Winchester",
                 "WLR",
-                PrimerSize.LARGE_RIFLE,
+                LARGE_RIFLE,
                 new BigDecimal("79.99"),
                 "CAD",
                 1000);

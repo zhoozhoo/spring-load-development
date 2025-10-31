@@ -1,5 +1,7 @@
 package ca.zhoozhoo.loaddev.components.dao;
 
+import static ca.zhoozhoo.loaddev.components.model.PrimerSize.LARGE_RIFLE;
+import static ca.zhoozhoo.loaddev.components.model.PrimerSize.LARGE_RIFLE_MAGNUM;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static reactor.core.publisher.Flux.just;
@@ -16,7 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.components.model.Case;
-import ca.zhoozhoo.loaddev.components.model.PrimerSize;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -37,7 +38,7 @@ class CaseRepositoryTest {
                 ownerId,
                 "Lapua",
                 "6.5 Creedmoor",
-                PrimerSize.LARGE_RIFLE,
+                LARGE_RIFLE,
                 new BigDecimal("89.99"),
                 "CAD",
                 100);
@@ -53,7 +54,7 @@ class CaseRepositoryTest {
                     assertThat(c.ownerId()).isEqualTo(userId);
                     assertThat(c.manufacturer()).isEqualTo("Lapua");
                     assertThat(c.caliber()).isEqualTo("6.5 Creedmoor");
-                    assertThat(c.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
+                    assertThat(c.primerSize()).isEqualTo(LARGE_RIFLE);
                     assertThat(c.cost()).isEqualTo(new BigDecimal("89.99"));
                     assertThat(c.currency()).isEqualTo("CAD");
                     assertThat(c.quantityPerBox()).isEqualTo(100);
@@ -72,7 +73,7 @@ class CaseRepositoryTest {
                     assertThat(c.ownerId()).isEqualTo(userId);
                     assertThat(c.manufacturer()).isEqualTo("Lapua");
                     assertThat(c.caliber()).isEqualTo("6.5 Creedmoor");
-                    assertThat(c.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
+                    assertThat(c.primerSize()).isEqualTo(LARGE_RIFLE);
                     assertThat(c.cost()).isEqualTo(new BigDecimal("89.99"));
                     assertThat(c.currency()).isEqualTo("CAD");
                     assertThat(c.quantityPerBox()).isEqualTo(100);
@@ -90,7 +91,7 @@ class CaseRepositoryTest {
                 userId,
                 "Peterson",
                 "308 Winchester",
-                PrimerSize.LARGE_RIFLE,
+                LARGE_RIFLE,
                 new BigDecimal("99.99"),
                 "CAD",
                 50);
@@ -101,7 +102,7 @@ class CaseRepositoryTest {
                     assertThat(c.ownerId()).isEqualTo(userId);
                     assertThat(c.manufacturer()).isEqualTo("Peterson");
                     assertThat(c.caliber()).isEqualTo("308 Winchester");
-                    assertThat(c.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
+                    assertThat(c.primerSize()).isEqualTo(LARGE_RIFLE);
                     assertThat(c.cost()).isEqualTo(new BigDecimal("99.99"));
                     assertThat(c.currency()).isEqualTo("CAD");
                     assertThat(c.quantityPerBox()).isEqualTo(50);
@@ -127,7 +128,7 @@ class CaseRepositoryTest {
                 userId,
                 "Starline",
                 "300 PRC",
-                PrimerSize.LARGE_RIFLE_MAGNUM,
+                LARGE_RIFLE_MAGNUM,
                 new BigDecimal("129.99"),
                 "CAD",
                 50);
