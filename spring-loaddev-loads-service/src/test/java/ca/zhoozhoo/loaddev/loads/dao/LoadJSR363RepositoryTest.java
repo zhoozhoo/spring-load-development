@@ -31,10 +31,18 @@ class LoadJSR363RepositoryTest {
     private static final String PRIMER_TYPE = "BR-2";
 
     @Autowired
+    private ShotJsr385Repository shotRepository;
+    
+    @Autowired
+    private GroupJsr385Repository groupRepository;
+    
+    @Autowired
     private LoadJSR363Repository loadRepository;
 
     @BeforeEach
     public void setup() {
+        shotRepository.deleteAll().block();
+        groupRepository.deleteAll().block();
         loadRepository.deleteAll().block();
     }
 

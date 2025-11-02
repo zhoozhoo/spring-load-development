@@ -28,6 +28,9 @@ class GroupJsr385RepositoryTest {
     private static final LocalDate TEST_DATE = LocalDate.now().minusDays(1);
 
     @Autowired
+    private ShotJsr385Repository shotRepository;
+    
+    @Autowired
     private GroupJsr385Repository groupRepository;
     
     @Autowired
@@ -37,6 +40,7 @@ class GroupJsr385RepositoryTest {
 
     @BeforeEach
     public void setup() {
+        shotRepository.deleteAll().block();
         groupRepository.deleteAll().block();
         loadRepository.deleteAll().block();
         
