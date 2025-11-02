@@ -16,10 +16,26 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import ca.zhoozhoo.loaddev.mcp.dto.RifleDto;
 import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema.JSONRPCResponse.JSONRPCError;
+import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/**
+ * Service for managing rifle data operations through the rifles microservice.
+ * <p>
+ * Provides reactive methods to retrieve rifle information, including individual rifles
+ * and collections of rifles. All methods automatically extract and propagate JWT
+ * authentication tokens from the reactive security context.
+ * <p>
+ * This service uses service discovery to locate the rifles-service backend and
+ * communicates via WebClient with proper authentication headers.
+ * 
+ * @author Zhubin Salehi
+ * @see ReactiveSecurityContextHolder
+ * @see WebClient
+ */
 @Service
+@Log4j2
 public class RiflesService {
 
     @Autowired
@@ -32,26 +48,41 @@ public class RiflesService {
     private String riflesServiceName;
 
     /**
-     * Retrieves all rifles from the rifles service.
+     * Retrieves all rifles accessible to the authenticated user.
+     * <p>
+     * Automatically extracts the JWT token from the reactive security context and
+     * includes it in the Authorization header when calling the backend rifles-service.
+     * <p>
+     * Uses service discovery to locate the rifles-service instance dynamically.
      *
-     * @return A Flux emitting Rifle objects, or error with:
-     *         - McpError(INTERNAL_ERROR) if service discovery fails
-     *         - McpError(INVALID_REQUEST) if authentication fails
+     * @return a Flux emitting RifleDto objects for all accessible rifles
+     * @throws McpError with INTERNAL_ERROR if service discovery fails
+     * @throws McpError with INVALID_REQUEST if authentication fails (401 response)
      */
     public Flux<RifleDto> getRifles() {
+        log.debug("RiflesService.getRifles() called");
+        
         var instances = discoveryClient.getInstances(riflesServiceName);
         if (instances == null || instances.isEmpty()) {
+            log.error("Service {} not found in discovery", riflesServiceName);
             return Flux.error(new McpError(new JSONRPCError(
-                    INTERNAL_ERROR, String.format("Service %s not found in discovery", riflesServiceName),
+                    INTERNAL_ERROR, "Service %s not found in discovery".formatted(riflesServiceName),
                     null)));
         }
 
-        String uri = instances.get(0).getUri().toString() + "/rifles";
+        String uri = "%s/rifles".formatted(instances.getFirst().getUri());
+        log.debug("Target URI: {}", uri);
 
         return ReactiveSecurityContextHolder.getContext()
+                .doOnNext(ctx -> {
+                    log.debug("ReactiveSecurityContextHolder returned context: {}", ctx);
+                    log.debug("Authentication present: {}", ctx.getAuthentication() != null);
+                })
                 .map(SecurityContext::getAuthentication)
                 .flatMapMany(auth -> {
+                    log.debug("Extracting token from authentication");
                     String token = ((Jwt) auth.getCredentials()).getTokenValue();
+                    log.debug("Token extracted (first 20 chars): {}...", token.substring(0, Math.min(20, token.length())));
 
                     return webClient
                             .get()
@@ -69,28 +100,42 @@ public class RiflesService {
     }
 
     /**
-     * Retrieves a single rifle by its ID from the rifles service.
-     * Returns a Mono that emits the RifleDto or an error.
+     * Retrieves a specific rifle by its unique identifier.
+     * <p>
+     * Automatically extracts the JWT token from the reactive security context and
+     * includes it in the Authorization header when calling the backend rifles-service.
+     * <p>
+     * Uses service discovery to locate the rifles-service instance dynamically.
      *
-     * @param id The ID of the rifle to retrieve
-     * @return A Mono emitting the RifleDto, or error with:
-     *         - McpError(INTERNAL_ERROR) if service discovery fails
-     *         - McpError(INVALID_REQUEST) if authentication fails
+     * @param id the unique identifier of the rifle to retrieve
+     * @return a Mono emitting the RifleDto if found
+     * @throws McpError with INTERNAL_ERROR if service discovery fails
+     * @throws McpError with INVALID_REQUEST if authentication fails (401 response)
      */
     public Mono<RifleDto> getRifleById(Long id) {
+        log.debug("RiflesService.getRifleById({}) called", id);
+        
         var instances = discoveryClient.getInstances(riflesServiceName);
         if (instances == null || instances.isEmpty()) {
+            log.error("Service {} not found in discovery", riflesServiceName);
             return Mono.error(new McpError(new JSONRPCError(
-                    INTERNAL_ERROR, String.format("Service %s not found in discovery", riflesServiceName),
+                    INTERNAL_ERROR, "Service %s not found in discovery".formatted(riflesServiceName),
                     null)));
         }
 
-        String uri = instances.get(0).getUri().toString() + "/rifles/" + id;
+        String uri = "%s/rifles/%d".formatted(instances.getFirst().getUri(), id);
+        log.debug("Target URI: {}", uri);
 
         return ReactiveSecurityContextHolder.getContext()
+                .doOnNext(ctx -> {
+                    log.debug("ReactiveSecurityContextHolder returned context: {}", ctx);
+                    log.debug("Authentication present: {}", ctx.getAuthentication() != null);
+                })
                 .map(SecurityContext::getAuthentication)
                 .flatMap(auth -> {
+                    log.debug("Extracting token from authentication");
                     String token = ((Jwt) auth.getCredentials()).getTokenValue();
+                    log.debug("Token extracted (first 20 chars): {}...", token.substring(0, Math.min(20, token.length())));
 
                     return webClient
                             .get()

@@ -137,6 +137,12 @@
             <artifactId>postgresql</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.dasniko</groupId>
+            <artifactId>testcontainers-keycloak</artifactId>
+            <version>${testcontainers-keycloak.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -161,10 +167,6 @@
                             <version>0.2.0</version>
                         </path>
                     </annotationProcessorPaths>
-                    <compilerArgs>
-                        <arg>-Amapstruct.defaultComponentModel=spring</arg>
-                        <arg>-Amapstruct.verbose=true</arg>
-                    </compilerArgs>
                 </configuration>
             </plugin>
         </plugins>

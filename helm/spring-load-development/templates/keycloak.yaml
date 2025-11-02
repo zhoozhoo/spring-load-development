@@ -42,10 +42,18 @@ spec:
       labels:
         app: keycloak
     spec:
+      securityContext:
+        {{- include "spring-load-development.podSecurityContext" . | nindent 8 }}
       containers:
         - name: keycloak
           image: "{{ .Values.keycloak.image.registry }}/{{ .Values.keycloak.image.repository }}:{{ .Values.keycloak.image.tag }}"
           imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "spring-load-development.containerSecurityContext" . | nindent 12 }}
+          {{- if .Values.keycloak.resources }}
+          resources:
+            {{- toYaml .Values.keycloak.resources | nindent 12 }}
+          {{- end }}
           args:
             - start-dev
             - --import-realm
@@ -64,22 +72,6 @@ spec:
               mountPath: /opt/keycloak/data/import
               readOnly: true
             {{- end }}
-          readinessProbe:
-            httpGet:
-              path: /realms/master
-              port: {{ .Values.keycloak.service.http.port }}
-            initialDelaySeconds: 60
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-          livenessProbe:
-            httpGet:
-              path: /realms/master
-              port: {{ .Values.keycloak.service.http.port }}
-            initialDelaySeconds: 120
-            periodSeconds: 30
-            timeoutSeconds: 5
-            failureThreshold: 3
       volumes:
         {{- if .Values.keycloak.realm.enabled }}
         - name: realm-config

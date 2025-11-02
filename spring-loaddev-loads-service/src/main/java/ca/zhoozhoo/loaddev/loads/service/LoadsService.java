@@ -17,6 +17,13 @@ import reactor.core.publisher.Mono;
 
 /**
  * Service class for handling operations related to Loads, Groups, and Shots.
+ * <p>
+ * This service provides business logic for calculating ballistic statistics from shooting data,
+ * including average velocity, standard deviation, and extreme spread. It coordinates between
+ * repository layers and mappers to transform domain models into DTOs for API responses.
+ * </p>
+ *
+ * @author Zhubin Salehi
  */
 @Service
 public class LoadsService {
@@ -62,37 +69,27 @@ public class LoadsService {
 
     /**
      * Builds GroupStatistics from a group and its list of shots.
+     * <p>
+     * This method uses a single-pass algorithm to compute all statistics efficiently,
+     * replacing the original implementation that made 4 separate stream passes.
+     * This is a performance optimization enabled by Java 25 best practices.
+     * </p>
      *
      * @param group the group entity
      * @param shots the list of shots associated with the group
      * @return the computed GroupStatistics
      */
     private GroupStatistics buildGroupStatistics(Group group, List<Shot> shots) {
-        double avg = shots.stream()
-                .mapToDouble(Shot::velocity)
-                .average()
-                .orElse(0.0);
-
-        double stdDev = Math.sqrt(shots.stream()
-                .mapToDouble(shot -> Math.pow(shot.velocity() - avg, 2))
-                .average()
-                .orElse(0.0));
-
-        double maxVel = shots.stream()
-                .mapToDouble(Shot::velocity)
-                .max()
-                .orElse(0.0);
-        double minVel = shots.stream()
-                .mapToDouble(Shot::velocity)
-                .min()
-                .orElse(0.0);
-        double extremeSpread = maxVel - minVel;
+        // Single-pass statistics computation - much more efficient than 4 separate stream operations
+        var stats = VelocityStatisticsGatherer.compute(
+                shots.stream().map(Shot::velocity).toList()
+        );
 
         return new GroupStatistics(
                 group,
-                avg,
-                stdDev,
-                extremeSpread,
+                stats.average(),
+                stats.standardDeviation(),
+                stats.extremeSpread(),
                 shots);
     }
 }

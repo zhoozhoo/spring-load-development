@@ -1,32 +1,38 @@
 package ca.zhoozhoo.loaddev.mcp.provider;
 
-import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INTERNAL_ERROR;
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_PARAMS;
-import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_REQUEST;
-
-import java.util.List;
 
 import org.springaicommunity.mcp.annotation.McpTool;
 import org.springaicommunity.mcp.annotation.McpToolParam;
-import org.springframework.ai.chat.model.ToolContext;
-import org.springframework.ai.tool.annotation.Tool;
-import org.springframework.ai.tool.annotation.ToolParam;
+import org.springframework.ai.model.tool.internal.ToolCallReactiveContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ca.zhoozhoo.loaddev.mcp.config.McpToolRegistrationConfig.ReactiveContextHolder;
-import ca.zhoozhoo.loaddev.mcp.dto.GroupDto;
 import ca.zhoozhoo.loaddev.mcp.dto.LoadDetails;
 import ca.zhoozhoo.loaddev.mcp.dto.LoadDto;
-import ca.zhoozhoo.loaddev.mcp.dto.RifleDto;
 import ca.zhoozhoo.loaddev.mcp.service.LoadsService;
 import ca.zhoozhoo.loaddev.mcp.service.RiflesService;
 import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema.JSONRPCResponse.JSONRPCError;
 import lombok.extern.log4j.Log4j2;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.context.ContextView;
 
+/**
+ * MCP tool provider for load-related operations.
+ * <p>
+ * Exposes load management functionality through Model Context Protocol (MCP) tools.
+ * All tools support reactive return types (Flux/Mono) and automatic authentication
+ * context propagation via ReactiveSecurityContextHolder.
+ * <p>
+ * Tools are automatically discovered and registered by the MCP framework through
+ * the {@code @McpTool} annotation. Authentication is handled transparently using
+ * JWT tokens from the security context.
+ * 
+ * @author Zhubin Salehi
+ * @see org.springaicommunity.mcp.annotation.McpTool
+ * @see org.springframework.ai.model.tool.internal.ToolCallReactiveContextHolder
+ */
 @Component
 @Log4j2
 public class LoadsToolProvider {
@@ -39,178 +45,163 @@ public class LoadsToolProvider {
 
     /**
      * Retrieves all loads accessible to the current user.
-     * Ensures reactive context propagation and proper error handling.
+     * <p>
+     * Streams loads as they become available for better performance with reactive execution.
+     * Authentication is automatically propagated from the security context.
      *
-     * @param context Tool execution context
-     * @return List of all accessible loads
-     * @throws McpError with INTERNAL_ERROR code if reactive context is missing or service discovery fails
-     * @throws McpError with INVALID_REQUEST code if authentication fails
+     * @return Flux stream of LoadDto objects
+     * @throws McpError with INTERNAL_ERROR if service discovery fails
+     * @throws McpError with INVALID_REQUEST if authentication fails
      */
-    @Tool(description = "Retrieve all available loads in the system", name = "getLoads")
-    public List<LoadDto> getLoads(ToolContext context) {
-        log.debug("Retrieving all loads");
+    @McpTool(description = "Retrieve all available loads in the system", name = "getLoads")
+    public Flux<LoadDto> getLoads() {
+        log.debug("=== LoadsToolProvider.getLoads() called ===");
+        log.debug("ToolCallReactiveContextHolder.getContext(): {}", ToolCallReactiveContextHolder.getContext());
 
-        Mono<List<LoadDto>> loadsMono = loadsService.getLoads()
-            .contextWrite(ctx -> ctx.putAll(getReactiveContext()))
-            .collectList()
-            .doOnSuccess(list -> log.debug("Successfully retrieved {} loads", list.size()))
-            .doOnError(e -> log.error("Error retrieving loads: {}", e.getMessage()));
-
-        try {
-            return loadsMono.block();
-        } catch (Exception e) {
-            Throwable cause = e.getCause() != null ? e.getCause() : e;
-            if (cause instanceof McpError) {
-                throw (McpError) cause;
-            }
-            throw handleException("Failed to retrieve loads", e);
-        }
+        return withReactiveContext(
+            loadsService.getLoads()
+                .doOnNext(load -> log.debug("Streaming load: {}", load))
+                .doOnComplete(() -> log.debug("Completed streaming all loads"))
+                .doOnError(e -> log.error("Error retrieving loads: {}", e.getMessage(), e))
+        );
     }
 
      /**
-     * Retrieves a specific load by its ID.
-     * Ensures reactive context propagation and proper error handling.
+     * Retrieves a specific load by its unique identifier.
+     * <p>
+     * Returns detailed information about a single load including all its properties.
+     * Authentication is automatically propagated from the security context.
      *
-     * @param id      ID of the load to retrieve
-     * @return The requested load
-     * @throws McpError with INTERNAL_ERROR code if reactive context is missing or service discovery fails
-     * @throws McpError with INVALID_REQUEST code if authentication fails
-     * @throws McpError with INVALID_PARAMS code if load is not found or id is invalid
+     * @param id the unique identifier of the load to retrieve (must be positive)
+     * @return Mono emitting the requested LoadDto
+     * @throws McpError with INTERNAL_ERROR if service discovery fails
+     * @throws McpError with INVALID_REQUEST if authentication fails
+     * @throws McpError with INVALID_PARAMS if id is null, non-positive, or load not found
      */
      @McpTool(description = "Find a specific load by its unique identifier", name = "getLoad", annotations = @McpTool.McpAnnotations(title = "Get Load by ID", readOnlyHint = true, destructiveHint = false, idempotentHint = true))
-     public LoadDto getLoadById(
+     public Mono<LoadDto> getLoadById(
             @McpToolParam(description = "Numeric ID of the load to retrieve", required = true) Long id) {
-        log.debug("Retrieving load with ID: {}", id);
+        log.debug("=== LoadsToolProvider.getLoadById({}) called ===", id);
+        log.debug("ToolCallReactiveContextHolder.getContext(): {}", ToolCallReactiveContextHolder.getContext());
 
         if (id == null || id <= 0) {
-            throw new McpError(new JSONRPCError(
+            log.error("Invalid load ID: {}", id);
+            return Mono.error(new McpError(new JSONRPCError(
                     INVALID_PARAMS,
                     "Load ID must be a positive number",
-                    null));
+                    null)));
         }
 
-        Mono<LoadDto> loadMono = loadsService.getLoadById(id)
-            .contextWrite(ctx -> ctx.putAll(getReactiveContext()))
-            .doOnSuccess(load -> log.debug("Successfully retrieved load: {}", load))
-            .doOnError(e -> log.error("Error retrieving load {}: {}", id, e.getMessage()));
-
-        try {
-            return loadMono.block();
-        } catch (Exception e) {
-            Throwable cause = e.getCause() != null ? e.getCause() : e;
-            if (cause instanceof McpError) {
-                throw (McpError) cause;
-            }
-            throw handleException("Failed to retrieve load", e);
-        }
+        return withReactiveContext(
+            loadsService.getLoadById(id)
+                .doOnSuccess(load -> log.debug("Successfully retrieved load: {}", load))
+                .doOnError(e -> log.error("Error retrieving load {}: {}", id, e.getMessage(), e))
+        );
     }
 
     /**
-     * Retrieves detailed information for a specific load.
-     * Includes load details, associated rifle information, and group statistics.
-     * Ensures reactive context propagation and proper error handling.
+     * Retrieves comprehensive details for a specific load.
+     * <p>
+     * Uses optimized parallel fetching with Mono.zip() to retrieve load, rifle, and statistics
+     * concurrently. This is inspired by Structured Concurrency (JEP 480) principles,
+     * ensuring all subtasks complete successfully or fail together with proper error handling.
+     * <p>
+     * Authentication is automatically propagated from the security context to all
+     * downstream service calls.
      *
-     * @param id      ID of the load to retrieve details for
-     * @param context Tool execution context
-     * @return LoadDetails containing load, rifle and group statistics
-     * @throws McpError with INTERNAL_ERROR code if reactive context is missing or service discovery fails
-     * @throws McpError with INVALID_REQUEST code if authentication fails
-     * @throws McpError with INVALID_PARAMS code if load is not found or id is invalid
+     * @param id the unique identifier of the load (must be positive)
+     * @return Mono emitting LoadDetails containing load, rifle, and statistics data
+     * @throws McpError with INTERNAL_ERROR if service discovery fails
+     * @throws McpError with INVALID_REQUEST if authentication fails
+     * @throws McpError with INVALID_PARAMS if id is null, non-positive, or load/rifle not found
      */
-    @Tool(description = "Get detailed information for a specific load", name = "getLoadDetails")
-    public LoadDetails getLoadDetailsById(
-        @ToolParam(description = "Numeric ID of the load", required = true) Long id,
-        ToolContext context) {
+    @McpTool(description = "Get detailed information for a specific load", name = "getLoadDetails")
+    public Mono<LoadDetails> getLoadDetailsById(
+        @McpToolParam(description = "Numeric ID of the load", required = true) Long id) {
             log.debug("Retrieving detailed information for load ID: {}", id);
 
             if (id == null || id <= 0) {
-                throw new McpError(new JSONRPCError(
+                return Mono.error(new McpError(new JSONRPCError(
                         INVALID_PARAMS,
                         "Load ID must be a positive number",
-                        null));
+                        null)));
             }
 
-            try {
-                // Get the reactive context once and reuse it
-                ContextView reactiveContext = getReactiveContext();
-
-                // Get load details
-                LoadDto load = loadsService.getLoadById(id)
-                    .contextWrite(ctx -> ctx.putAll(reactiveContext))
+            // First fetch the load to get the rifle ID
+            return withReactiveContext(
+                loadsService.getLoadById(id)
                     .doOnSuccess(l -> log.debug("Retrieved load: {}", l))
                     .doOnError(e -> log.error("Error retrieving load {}: {}", id, e.getMessage()))
-                    .block();
-
-                // Get rifle details
-                RifleDto rifle = riflesService.getRifleById(load.rifleId())
-                    .contextWrite(ctx -> ctx.putAll(reactiveContext))
-                    .doOnSuccess(r -> log.debug("Retrieved rifle: {}", r))
-                    .doOnError(e -> log.error("Error retrieving rifle for load {}: {}", id, e.getMessage()))
-                    .block();
-
-                // Get group statistics
-                List<GroupDto> groups = loadsService.getGroupsByLoadId(id)
-                    .contextWrite(ctx -> ctx.putAll(reactiveContext))
-                    .collectList()
-                    .doOnSuccess(stats -> log.debug("Retrieved {} statistics for load {}", stats.size(), id))
-                    .doOnError(e -> log.error("Error retrieving statistics for load {}: {}", id, e.getMessage()))
-                    .block();
-
-                return new LoadDetails(load, rifle, groups);
-
-            } catch (Exception e) {
-                Throwable cause = e.getCause() != null ? e.getCause() : e;
-                if (cause instanceof McpError) {
-                    throw (McpError) cause;
-                }
-                throw handleException("Failed to retrieve load details", e);
-            }
+            ).flatMap(load -> {
+                // Now fetch rifle and statistics in parallel (Structured Concurrency pattern)
+                // Both operations must complete successfully, or the whole operation fails
+                Mono<ca.zhoozhoo.loaddev.mcp.dto.RifleDto> rifleMono = withReactiveContext(
+                    riflesService.getRifleById(load.rifleId())
+                        .doOnSuccess(r -> log.debug("Retrieved rifle: {}", r))
+                        .doOnError(e -> log.error("Error retrieving rifle for load {}: {}", id, e.getMessage()))
+                );
+                
+                Mono<java.util.List<ca.zhoozhoo.loaddev.mcp.dto.GroupDto>> groupsMono = withReactiveContext(
+                    loadsService.getGroupsByLoadId(id)
+                        .collectList()
+                        .doOnSuccess(stats -> log.debug("Retrieved {} statistics for load {}", stats.size(), id))
+                        .doOnError(e -> log.error("Error retrieving statistics for load {}: {}", id, e.getMessage()))
+                );
+                
+                // Parallel execution with structured error handling
+                return Mono.zip(rifleMono, groupsMono)
+                    .map(tuple -> new LoadDetails(load, tuple.getT1(), tuple.getT2()))
+                    .doOnSuccess(_ -> log.debug("Successfully assembled LoadDetails for load {}", id));
+            });
     }
     
     /**
-     * Retrieves the reactive context from thread-local storage.
+     * Wraps a Mono with reactive context propagation.
+     * <p>
+     * Applies the security context and other contextual information from
+     * {@link ToolCallReactiveContextHolder} to the reactive chain. This ensures
+     * authentication tokens and other request context are available throughout
+     * the reactive execution pipeline.
+     * <p>
+     * The MCP framework automatically populates the ToolCallReactiveContextHolder
+     * with the necessary context before tool execution.
      *
-     * @return The current reactive context
-     * @throws McpError with INTERNAL_ERROR code if no reactive context is available
+     * @param <T> the type of elements emitted by the Mono
+     * @param mono the Mono to wrap with context
+     * @return a Mono with reactive context applied
      */
-    private ContextView getReactiveContext() {
-        var reactiveContext = ReactiveContextHolder.reactiveContext.get();
-        if (reactiveContext == null) {
-            throw new McpError(new JSONRPCError(
-                    INTERNAL_ERROR,
-                    "No reactive context available",
-                    null));
-        }
-
-        return reactiveContext;
+    private <T> Mono<T> withReactiveContext(Mono<T> mono) {
+        log.debug("Adding reactive context to Mono");
+        var reactiveContext = ToolCallReactiveContextHolder.getContext();
+        log.debug("Reactive context size: {}", reactiveContext.size());
+        reactiveContext.forEach((key, value) -> 
+            log.debug("  Context key: {}, value type: {}", key, value != null ? value.getClass().getName() : "null")
+        );
+        return mono.contextWrite(ctx -> ctx.putAll(reactiveContext));
     }
 
     /**
-     * Handles exceptions by mapping them to appropriate McpError with JSON-RPC
-     * error codes.
-     * Special handling for authentication and state-related errors.
+     * Wraps a Flux with reactive context propagation.
+     * <p>
+     * Applies the security context and other contextual information from
+     * {@link ToolCallReactiveContextHolder} to the reactive chain. This ensures
+     * authentication tokens and other request context are available throughout
+     * the reactive execution pipeline.
+     * <p>
+     * The MCP framework automatically populates the ToolCallReactiveContextHolder
+     * with the necessary context before tool execution.
      *
-     * @param message Base error message
-     * @param e       Original exception
-     * @return McpError with appropriate JSON-RPC error code
+     * @param <T> the type of elements emitted by the Flux
+     * @param flux the Flux to wrap with context
+     * @return a Flux with reactive context applied
      */
-    private McpError handleException(String message, Exception e) {
-        if (e instanceof IllegalStateException) {
-            return new McpError(new JSONRPCError(
-                    INTERNAL_ERROR,
-                    e.getMessage(),
-                    null));
-        }
-        if (e.getCause() instanceof SecurityException) {
-            return new McpError(new JSONRPCError(
-                    INVALID_REQUEST,
-                    "Authentication failed: " + e.getMessage(),
-                    null));
-        }
-        log.error(message, e);
-        return new McpError(new JSONRPCError(
-                INTERNAL_ERROR,
-                message + ": " + e.getMessage(),
-                null));
+    private <T> Flux<T> withReactiveContext(Flux<T> flux) {
+        log.debug("Adding reactive context to Flux");
+        var reactiveContext = ToolCallReactiveContextHolder.getContext();
+        log.debug("Reactive context size: {}", reactiveContext.size());
+        reactiveContext.forEach((key, value) -> 
+            log.debug("  Context key: {}, value type: {}", key, value != null ? value.getClass().getName() : "null")
+        );
+        return flux.contextWrite(ctx -> ctx.putAll(reactiveContext));
     }
 }

@@ -8,6 +8,16 @@ import org.springframework.transaction.ReactiveTransactionManager;
 
 import io.r2dbc.spi.ConnectionFactory;
 
+/**
+ * R2DBC configuration for the components service.
+ * <p>
+ * Configures reactive database connectivity and transaction management
+ * for R2DBC repositories. Enables reactive non-blocking database access
+ * with transaction support.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Configuration
 @EnableR2dbcRepositories
 public class R2dbcConfig {

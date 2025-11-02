@@ -8,6 +8,16 @@ import ca.zhoozhoo.loaddev.components.model.Primer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/**
+ * Reactive repository for managing {@link Primer} entities.
+ * <p>
+ * Provides reactive data access operations for primer components including
+ * multi-tenant filtering by owner ID and full-text search capabilities using
+ * PostgreSQL's text search features.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 public interface PrimerRepository extends ReactiveCrudRepository<Primer, Long> {
     
     Flux<Primer> findAllByOwnerId(String ownerId);

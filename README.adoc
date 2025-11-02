@@ -464,6 +464,14 @@ erDiagram
     RIFLES ||--o{ LOADS : "uses"
 ....
 
+== TODO
+
+* [ ] Upgrade to Spring AI 1.1.0
+* [ ] Update MCP server to support resources and prompts
+* [ ] Add brass case attributes such as neck tension, headspace, etc.
+* [ ] Implement load comparison and analysis tools
+* [ ] Add shooting session tracking and analytics
+
 == License
 
 This project is licensed under the Apache License 2.0 - see the LICENSE file for details.

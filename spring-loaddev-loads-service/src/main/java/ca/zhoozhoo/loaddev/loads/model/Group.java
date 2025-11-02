@@ -12,6 +12,17 @@ import org.springframework.data.relational.core.mapping.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
+/**
+ * Represents a shooting group for a specific load configuration.
+ * <p>
+ * A group represents a set of shots fired on a specific date using a particular load
+ * with a defined powder charge and target distance. The group size (in inches or MOA)
+ * measures the accuracy of the load configuration. Each group is associated with a load
+ * and owned by a specific user.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Table(name = "groups")
 public record Group(
         @Id Long id,
@@ -36,6 +47,46 @@ public record Group(
         @Positive(message = "Group size must be positive")
         @Column("group_size") Double groupSize
 ) {
+    /**
+     * Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
+     * <p>
+     * Validates business rules including reasonable ranges for ballistic measurements
+     * using Java 25 enhanced instanceof pattern matching for cleaner validation code.
+     * </p>
+     */
+    public Group {
+        // Validate date is not in the future
+        if (date != null && date.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Group date cannot be in the future");
+        }
+        
+        // Validate reasonable powder charge range (0.1 to 150 grains)
+        if (powderCharge != null && (powderCharge < 0.1 || powderCharge > 150.0)) {
+            throw new IllegalArgumentException(
+                "Powder charge must be between 0.1 and 150.0 grains, got: %.2f".formatted(powderCharge)
+            );
+        }
+        
+        // Validate reasonable target range (10 to 2000 yards)
+        if (targetRange != null && (targetRange < 10 || targetRange > 2000)) {
+            throw new IllegalArgumentException(
+                "Target range must be between 10 and 2000 yards, got: %d".formatted(targetRange)
+            );
+        }
+        
+        // Validate reasonable group size (0.01 to 50 inches)
+        if (groupSize != null && (groupSize < 0.01 || groupSize > 50.0)) {
+            throw new IllegalArgumentException(
+                "Group size must be between 0.01 and 50.0 inches, got: %.3f".formatted(groupSize)
+            );
+        }
+    }
+
+    /**
+     * Custom equals() excluding ownerId to focus on business equality.
+     * Records auto-generate equals() including ALL fields, but ownerId is a
+     * database-level concern and shouldn't affect business object equality.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

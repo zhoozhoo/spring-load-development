@@ -1,0 +1,36 @@
+spring:
+  ai:
+    mcp:
+      server:
+        name: reloading-mcp-server
+        version: 0.0.8-SNAPSHOT
+        type: ASYNC
+        sse-endpoint: /sse
+        sse-message-endpoint: /mcp/messages
+        tool-change-notification: true
+        capabilities:
+          tool: true
+          resource: true
+          prompt: false
+          completion: false
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false
+
+management:
+  otlp:
+    metrics:
+      export:
+        enabled: false
+  tracing:
+    enabled: false
+
+otel:
+  sdk:
+    disabled: true

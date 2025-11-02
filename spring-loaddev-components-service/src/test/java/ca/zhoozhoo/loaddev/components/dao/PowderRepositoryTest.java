@@ -47,9 +47,8 @@ public class PowderRepositoryTest {
     @Test
     void savePowder() {
         var userId = randomUUID().toString();
-        var savedPowder = powderRepository.save(createTestPowder(userId));
 
-        create(savedPowder)
+        create(powderRepository.save(createTestPowder(userId)))
                 .assertNext(p -> {
                     assertThat(p.id()).isNotNull();
                     assertThat(p.ownerId()).isEqualTo(userId);
@@ -67,9 +66,8 @@ public class PowderRepositoryTest {
     void findPowderById() {
         var userId = randomUUID().toString();
         var savedPowder = powderRepository.save(createTestPowder(userId)).block();
-        var foundPowder = powderRepository.findByIdAndOwnerId(savedPowder.id(), userId);
 
-        create(foundPowder)
+        create(powderRepository.findByIdAndOwnerId(savedPowder.id(), userId))
                 .assertNext(p -> {
                     assertThat(p.id()).isEqualTo(savedPowder.id());
                     assertThat(p.ownerId()).isEqualTo(userId);
@@ -98,9 +96,7 @@ public class PowderRepositoryTest {
                 "CAD",
                 8.0);
 
-        var result = powderRepository.save(updatedPowder);
-
-        create(result)
+        create(powderRepository.save(updatedPowder))
                 .assertNext(p -> {
                     assertThat(p.id()).isEqualTo(savedPowder.id());
                     assertThat(p.ownerId()).isEqualTo(userId);
@@ -117,20 +113,11 @@ public class PowderRepositoryTest {
     @Test
     void deletePowder() {
         var userId = randomUUID().toString();
-        var savedPowder = powderRepository
-                .save(createTestPowder(userId))
-                .block();
+        var savedPowder = powderRepository.save(createTestPowder(userId)).block();
 
-        var deletedPowder = powderRepository.delete(savedPowder);
+        create(powderRepository.delete(savedPowder)).verifyComplete();
 
-        create(deletedPowder)
-                .verifyComplete();
-
-        var foundPowder = powderRepository.findByIdAndOwnerId(savedPowder.id(), userId);
-
-        create(foundPowder)
-                .expectNextCount(0)
-                .verifyComplete();
+        create(powderRepository.findByIdAndOwnerId(savedPowder.id(), userId)).expectNextCount(0).verifyComplete();
     }
 
     @Test
@@ -149,9 +136,7 @@ public class PowderRepositoryTest {
 
         powderRepository.saveAll(just(powder1, powder2)).blockLast();
 
-        var result = powderRepository.findAllByOwnerId(userId);
-
-        create(result)
+        create(powderRepository.findAllByOwnerId(userId))
                 .expectNextMatches(p -> p.manufacturer().equals("Hodgdon"))
                 .expectNextMatches(p -> p.manufacturer().equals("Vihtavuori"))
                 .verifyComplete();
@@ -160,12 +145,9 @@ public class PowderRepositoryTest {
     @Test
     void searchByOwnerIdAndQuery() {
         var ownerId = randomUUID().toString();
-        var powder = createTestPowder(ownerId);
+        powderRepository.saveAll(just(createTestPowder(ownerId))).blockLast();
 
-        powderRepository.saveAll(just(powder)).blockLast();
-
-        var result = powderRepository.searchByOwnerIdAndQuery(ownerId, "Hodgdon H4350");
-        create(result)
+        create(powderRepository.searchByOwnerIdAndQuery(ownerId, "Hodgdon H4350"))
                 .expectNextMatches(pp -> pp.manufacturer().equals("Hodgdon"))
                 .verifyComplete();
     }
@@ -173,12 +155,9 @@ public class PowderRepositoryTest {
     @Test
     void searchByOwnerIdAndQueryNegative() {
         var ownerId = randomUUID().toString();
-        var powder = createTestPowder(ownerId);
+        powderRepository.saveAll(just(createTestPowder(ownerId))).blockLast();
 
-        powderRepository.saveAll(just(powder)).blockLast();
-
-        var result = powderRepository.searchByOwnerIdAndQuery(ownerId, "H4350 Varget");
-        create(result)
+        create(powderRepository.searchByOwnerIdAndQuery(ownerId, "H4350 Varget"))
                 .expectNextCount(0)
                 .verifyComplete();
     }

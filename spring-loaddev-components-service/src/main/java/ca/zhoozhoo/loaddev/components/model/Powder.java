@@ -13,6 +13,18 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
+/**
+ * Represents a powder component for ammunition reloading.
+ * <p>
+ * Powder (propellant) is the combustible substance that generates gas pressure to propel
+ * the bullet. This record defines powder specifications including manufacturer, type
+ * (e.g., IMR 4064, H4350), measurement units (metric or imperial), container weight,
+ * and cost information. Powder selection is critical for achieving desired velocities
+ * and pressures safely. Each powder is owned by a specific user for multi-tenant data isolation.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Table(name = "powders")
 public record Powder(
         @Id Long id,
@@ -35,12 +47,15 @@ public record Powder(
 
     public static final String IMPERIAL = "Imperial";
 
+    /**
+     * Custom equals() excluding ownerId to focus on business equality.
+     * Records auto-generate equals() including ALL fields, but ownerId is a
+     * database-level concern and shouldn't affect business object equality.
+     */
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         Powder powder = (Powder) o;
         return Objects.equals(id, powder.id) &&
                 Objects.equals(manufacturer, powder.manufacturer) &&

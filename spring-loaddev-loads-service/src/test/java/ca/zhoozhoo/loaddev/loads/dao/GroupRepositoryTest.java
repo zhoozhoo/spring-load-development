@@ -5,6 +5,7 @@ import static java.time.LocalDate.now;
 import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static reactor.test.StepVerifier.create;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,6 @@ import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.model.Group;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 import reactor.core.publisher.Flux;
-import reactor.test.StepVerifier;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -70,10 +70,7 @@ class GroupRepositoryTest {
 
     @Test
     void saveGroup() {
-        var group = createTestGroup();
-        var savedGroup = groupRepository.save(group);
-
-        StepVerifier.create(savedGroup)
+        create(groupRepository.save(createTestGroup()))
                 .assertNext(g -> {
                     assertNotNull(g.id());
                     assertEquals(testLoad.id(), g.loadId());
@@ -86,11 +83,9 @@ class GroupRepositoryTest {
 
     @Test
     void findGroupById() {
-        var group = createTestGroup();
-        var savedGroup = groupRepository.save(group).block();
-        var foundGroup = groupRepository.findById(savedGroup.id());
+        var savedGroup = groupRepository.save(createTestGroup()).block();
 
-        StepVerifier.create(foundGroup)
+        create(groupRepository.findById(savedGroup.id()))
                 .assertNext(fg -> {
                     assertEquals(savedGroup.id(), fg.id());
                     assertEquals(savedGroup.loadId(), fg.loadId());
@@ -103,48 +98,37 @@ class GroupRepositoryTest {
 
     @Test
     void updateGroup() {
-        var group = createTestGroup();
-        var savedGroup = groupRepository.save(group).block();
-
-        var updatedGroup = new Group(savedGroup.id(),
+        var savedGroup = groupRepository.save(createTestGroup()).block();
+        var updatedGroup = groupRepository.save(new Group(savedGroup.id(),
                 savedGroup.ownerId(),
                 savedGroup.loadId(),
                 now(),
                 28.0,
                 200,
-                0.50);
+                0.50)).block();
 
-        var updatedGroupResult = groupRepository.save(updatedGroup).block();
-
-        assertEquals(savedGroup.loadId(), updatedGroupResult.loadId());
-        assertEquals(28.0, updatedGroupResult.powderCharge());
-        assertEquals(200, updatedGroupResult.targetRange());
-        assertEquals(0.50, updatedGroupResult.groupSize());
+        assertEquals(savedGroup.loadId(), updatedGroup.loadId());
+        assertEquals(28.0, updatedGroup.powderCharge());
+        assertEquals(200, updatedGroup.targetRange());
+        assertEquals(0.50, updatedGroup.groupSize());
     }
 
     @Test
     void deleteGroup() {
-        var group = createTestGroup();
-        var savedGroup = groupRepository.save(group).block();
+        var savedGroup = groupRepository.save(createTestGroup()).block();
 
         groupRepository.delete(savedGroup).block();
 
-        var foundGroup = groupRepository.findById(savedGroup.id());
-
-        StepVerifier.create(foundGroup)
+        create(groupRepository.findById(savedGroup.id()))
                 .expectNextCount(0)
                 .verifyComplete();
     }
 
     @Test
     void findAllByLoadIdAndOwnerId() {
-        var group1 = createTestGroup();
-        var group2 = createTestGroup();
-        groupRepository.saveAll(Flux.just(group1, group2)).blockLast();
+        groupRepository.saveAll(Flux.just(createTestGroup(), createTestGroup())).blockLast();
 
-        var result = groupRepository.findAllByLoadIdAndOwnerId(testLoad.id(), testLoad.ownerId());
-
-        StepVerifier.create(result)
+        create(groupRepository.findAllByLoadIdAndOwnerId(testLoad.id(), testLoad.ownerId()))
                 .expectNextCount(2)
                 .verifyComplete();
     }

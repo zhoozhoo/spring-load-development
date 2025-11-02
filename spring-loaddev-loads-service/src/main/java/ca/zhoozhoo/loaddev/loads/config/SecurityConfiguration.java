@@ -30,6 +30,8 @@ import reactor.core.publisher.Mono;
  * Security configuration for the loads service.
  * Configures WebFlux security with OAuth2 resource server support.
  * This configuration is active in all profiles except 'test'.
+ * 
+ * @author Zhubin Salehi
  */
 @Configuration
 @EnableWebFluxSecurity
@@ -82,36 +84,43 @@ public class SecurityConfiguration {
      * Processes the 'authorization' claim and converts permissions into
      * GrantedAuthority objects.
      * The format of the granted authority is "resourceName:scope".
+     * <p>
+     * Uses Java 25 enhanced pattern matching for cleaner type checks and casts.
+     * </p>
      */
     static class KeycloakPermissionsConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
         @Override
         public Collection<GrantedAuthority> convert(@NonNull Jwt jwt) {
-            var authorization = jwt.getClaimAsMap("authorization");
-            if (authorization == null) {
+            // Use pattern matching to safely extract and validate authorization claim
+            Object authorizationObj = jwt.getClaims().get("authorization");
+            if (!(authorizationObj instanceof Map<?, ?> authorization)) {
                 return emptyList();
             }
 
-            @SuppressWarnings("unchecked")
-            var permissions = (List<Map<String, Object>>) authorization.get("permissions");
-            if (permissions == null) {
+            // Use pattern matching for permissions extraction
+            Object permissionsObj = authorization.get("permissions");
+            if (!(permissionsObj instanceof List<?> permissions)) {
                 return emptyList();
             }
 
-            // Convert Keycloak permissions to Spring Security GrantedAuthorities
+            // Convert Keycloak permissions to Spring Security GrantedAuthorities with enhanced pattern matching
             return permissions.stream()
-                    .filter(permission -> permission.get("rsname") != null)
+                    .filter(permission -> permission instanceof Map<?, ?>)
+                    .map(permission -> (Map<?, ?>) permission)
+                    .filter(permission -> permission.get("rsname") instanceof String)
                     .flatMap(permission -> {
-                        var resourceName = permission.get("rsname").toString();
-                        @SuppressWarnings("unchecked")
-                        var scopes = (Collection<String>) permission.get("scopes");
-
-                        if (scopes == null) {
+                        String resourceName = (String) permission.get("rsname");
+                        Object scopesObj = permission.get("scopes");
+                        
+                        // Pattern match for scopes collection
+                        if (!(scopesObj instanceof Collection<?> scopes)) {
                             return Stream.empty();
                         }
 
                         return scopes.stream()
-                                .map(scope -> String.format("%s:%s", resourceName, scope))
+                                .filter(scope -> scope instanceof String)
+                                .map(scope -> "%s:%s".formatted(resourceName, scope))
                                 .map(SimpleGrantedAuthority::new);
                     })
                     .collect(toList());

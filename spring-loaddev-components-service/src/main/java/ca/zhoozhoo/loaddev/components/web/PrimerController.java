@@ -44,6 +44,16 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+/**
+ * REST controller for managing primer components.
+ * <p>
+ * This controller provides endpoints for CRUD operations on primer data, including
+ * full-text search capabilities. All endpoints are secured with OAuth2 authentication
+ * and enforce user-based access control for multi-tenant data isolation.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @Tag(name = "Primers", description = "Operations on primers belonging to the authenticated user")
 @SecurityScheme(name = "Oauth2Security", type = OAUTH2, flows = @OAuthFlows(authorizationCode = @OAuthFlow(authorizationUrl = "${springdoc.oauth2.authorization-url}", tokenUrl = "${springdoc.oauth2.token-url}", scopes = {
         @OAuthScope(name = "components:view", description = "View access"),

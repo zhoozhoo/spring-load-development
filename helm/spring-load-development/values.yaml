@@ -17,8 +17,9 @@ microservices:
 postgresql:
   enabled: true
   namespace: postgres
+  replicas: 1  # Can be increased for HA with replication configured
   image:
-    tag: "17.6"
+    tag: "18.0"
   
   auth:
     database: loadsdb
@@ -31,6 +32,14 @@ postgresql:
     size: 8Gi
     storageClass: ""
   
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+  
   service:
     type: ClusterIP
     ports:
@@ -40,8 +49,9 @@ postgresql:
 keycloakPostgresql:
   enabled: true
   namespace: keycloak
+  replicas: 1  # Can be increased for HA with replication configured
   image:
-    tag: "17.6"
+    tag: "18.0"
   
   auth:
     database: keycloak
@@ -53,6 +63,14 @@ keycloakPostgresql:
     enabled: true
     size: 8Gi
     storageClass: ""
+  
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
   
   service:
     type: ClusterIP
@@ -67,7 +85,7 @@ keycloak:
   image:
     registry: quay.io
     repository: keycloak/keycloak
-    tag: "26.3"
+    tag: "26.4"
   
   auth:
     adminUser: admin
@@ -88,14 +106,10 @@ keycloak:
       value: jdbc:postgresql://keycloak-postgres-service.keycloak.svc.cluster.local:5432/keycloak
     - name: KC_DB_USERNAME
       value: user
-    - name: KC_HTTP_HOSTNAME
-      value: keycloak-service.keycloak.svc.cluster.local
     - name: KC_HTTP_PORT
       value: "8080"
     - name: KC_HOSTNAME
       value: keycloak-service.keycloak.svc.cluster.local
-    - name: KC_PROXY_HEADERS
-      value: "xforwarded"
     - name: KC_HEALTH_ENABLED
       value: "true"
     - name: KC_TRACING_ENABLED
@@ -108,6 +122,14 @@ keycloak:
       value: "false"
     - name: QUARKUS_OTEL_TRACES_SUPPRESS_NON_APPLICATION_URIS
       value: "true"
+  
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
   
   service:
     type: ClusterIP
@@ -145,7 +167,7 @@ observability:
     enabled: true
     image:
       repository: grafana/loki
-      tag: "3.5.5"
+      tag: "3.5.7"
     
     config:
       auth_enabled: false
@@ -232,7 +254,7 @@ observability:
     enabled: true
     image:
       repository: grafana/tempo
-      tag: "2.8.2"
+      tag: "2.9.0"
     
     config:
       stream_over_http_enabled: true
@@ -321,7 +343,7 @@ observability:
     enabled: true
     image:
       repository: prom/prometheus
-      tag: "v3.6.0"
+      tag: "v3.7.2"
     
     config:
       global:
@@ -356,7 +378,7 @@ observability:
     enabled: true
     image:
       repository: grafana/grafana
-      tag: "12.1.1"
+      tag: "12.2.1"
     
     auth:
       disable_login_form: true
@@ -453,7 +475,7 @@ observability:
     enabled: true
     image:
       repository: otel/opentelemetry-collector-contrib
-      tag: "0.135.0"
+      tag: "0.138.0"
     
     config:
       extensions:
@@ -549,11 +571,36 @@ serviceAccount:
   name: ""
   annotations: {}
 
-# Security context
+# Security context - Applied to all pods
 securityContext:
   runAsNonRoot: true
   runAsUser: 1000
   fsGroup: 2000
+
+# Pod Disruption Budgets - Ensures availability during node maintenance
+podDisruptionBudget:
+  enabled: true
+  
+  # Infrastructure components
+  postgresql:
+    minAvailable: 1
+  keycloakPostgresql:
+    minAvailable: 1
+  keycloak:
+    minAvailable: 1
+  
+  # Observability stack
+  observability:
+    grafana:
+      minAvailable: 1
+    prometheus:
+      minAvailable: 1
+    loki:
+      minAvailable: 1
+    tempo:
+      minAvailable: 1
+    otelCollector:
+      minAvailable: 1
 
 # Node selector, tolerations and affinity
 nodeSelector: {}
@@ -612,6 +659,10 @@ apiGateway:
   
   env: []
   
+  # Pod Disruption Budget for API Gateway
+  podDisruptionBudget:
+    minAvailable: 1
+  
   nodeSelector: {}
   tolerations: []
   affinity: {}
@@ -645,6 +696,10 @@ loadsService:
   
   env: []
   
+  # Pod Disruption Budget
+  podDisruptionBudget:
+    minAvailable: 1
+  
   nodeSelector: {}
   tolerations: []
   affinity: {}
@@ -673,6 +728,10 @@ componentsService:
       memory: 256Mi
   
   env: []
+  
+  # Pod Disruption Budget
+  podDisruptionBudget:
+    minAvailable: 1
   
   nodeSelector: {}
   tolerations: []
@@ -703,6 +762,10 @@ riflesService:
   
   env: []
   
+  # Pod Disruption Budget
+  podDisruptionBudget:
+    minAvailable: 1
+  
   nodeSelector: {}
   tolerations: []
   affinity: {}
@@ -732,6 +795,11 @@ mcpServer:
   
   env: []
   
+  # Pod Disruption Budget
+  podDisruptionBudget:
+    minAvailable: 1
+  
   nodeSelector: {}
   tolerations: []
   affinity: {}
+

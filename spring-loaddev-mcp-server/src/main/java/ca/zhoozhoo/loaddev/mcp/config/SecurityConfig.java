@@ -9,22 +9,29 @@ import org.springframework.security.config.annotation.web.reactive.EnableWebFlux
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
+import lombok.extern.log4j.Log4j2;
+
 /**
  * Security configuration for the MCP server application.
  * Configures OAuth2 resource server with JWT authentication and defines security rules
  * for different URL patterns.
- * 
+ * <p>
  * Key features:
- * - OAuth2 resource server with JWT validation
- * - Public access to actuator endpoints for monitoring
- * - Protected access to MCP and SSE endpoints
- * - Authentication required for all other endpoints
- * 
+ * <ul>
+ * <li>OAuth2 resource server with JWT validation</li>
+ * <li>Public access to actuator endpoints for monitoring</li>
+ * <li>Protected access to MCP and SSE endpoints</li>
+ * <li>Authentication required for all other endpoints</li>
+ * </ul>
+ * <p>
  * Note: This configuration is not active in test profile.
+ * 
+ * @author Zhubin Salehi
  */
 @Configuration
 @EnableWebFluxSecurity
 @Profile("!test")
+@Log4j2
 public class SecurityConfig {
 
     /**
@@ -40,10 +47,12 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+        log.debug("Configuring SecurityWebFilterChain");
+        
         return http
                 .authorizeExchange(exchanges -> exchanges
                         .pathMatchers("/actuator/**").permitAll()
-                        .pathMatchers("/mcp/**", "/sse/**").authenticated()
+                        .pathMatchers("/mcp/**", "/sse/**", "/sse").authenticated()
                         .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()))
                 .build();

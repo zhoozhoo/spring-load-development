@@ -1,7 +1,6 @@
 package ca.zhoozhoo.loaddev.rifles.config;
 
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 
 import java.util.Collection;
 import java.util.List;
@@ -28,8 +27,14 @@ import reactor.core.publisher.Mono;
 
 /**
  * Security configuration for the rifles service.
- * Configures WebFlux security with OAuth2 resource server support.
- * This configuration is active in all profiles except 'test'.
+ * <p>
+ * Configures WebFlux security with OAuth2 resource server support, JWT validation,
+ * and role-based access control. This configuration extracts roles from Keycloak
+ * JWT tokens (both realm roles and client-specific roles) and converts them to
+ * Spring Security authorities. It is active in all profiles except 'test'.
+ * </p>
+ *
+ * @author Zhubin Salehi
  */
 @Configuration
 @EnableWebFluxSecurity
@@ -92,29 +97,28 @@ public class SecurityConfiguration {
                 return emptyList();
             }
 
-            @SuppressWarnings("unchecked")
-            var permissions = (List<Map<String, Object>>) authorization.get("permissions");
-            if (permissions == null) {
+            if (!(authorization.get("permissions") instanceof List<?> rawPermissions)) {
                 return emptyList();
             }
 
             // Convert Keycloak permissions to Spring Security GrantedAuthorities
-            return permissions.stream()
+            return rawPermissions.stream()
+                    .filter(perm -> perm instanceof Map<?, ?>)
+                    .map(perm -> (Map<?, ?>) perm)
                     .filter(permission -> permission.get("rsname") != null)
                     .flatMap(permission -> {
                         var resourceName = permission.get("rsname").toString();
-                        @SuppressWarnings("unchecked")
-                        var scopes = (Collection<String>) permission.get("scopes");
-
-                        if (scopes == null) {
-                            return Stream.empty();
-                        }
-
-                        return scopes.stream()
-                                .map(scope -> String.format("%s:%s", resourceName, scope))
-                                .map(SimpleGrantedAuthority::new);
+                        
+                        return switch (permission.get("scopes")) {
+                            case Collection<?> rawScopes -> rawScopes.stream()
+                                    .filter(scope -> scope instanceof String)
+                                    .map(scope -> "%s:%s".formatted(resourceName, scope))
+                                    .map(SimpleGrantedAuthority::new);
+                            case null, default -> Stream.empty();
+                        };
                     })
-                    .collect(toList());
+                    .map(authority -> (GrantedAuthority) authority)
+                    .toList();
         }
     }
 }

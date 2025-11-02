@@ -1,35 +1,22 @@
 package ca.zhoozhoo.loaddev.mcp.config;
 
-import org.springframework.ai.tool.ToolCallbackProvider;
-import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import ca.zhoozhoo.loaddev.mcp.provider.LoadsToolProvider;
-import ca.zhoozhoo.loaddev.mcp.provider.RiflesToolProvider;
 import io.micrometer.observation.ObservationRegistry;
 
 /**
  * Configuration class for Model Context Protocol (MCP) server.
- * Provides beans for tool callbacks and web client configuration.
+ * Provides beans for web client configuration.
+ * <p>
+ * Note: Tool registration is handled automatically by MCP auto-configuration
+ * which discovers @McpTool annotated methods.
+ * 
+ * @author Zhubin Salehi
  */
 @Configuration
 public class McpServerConfig {
-
-    /**
-     * Creates a ToolCallbackProvider for Load and Rifle operations.
-     * This bean enables the MCP server to discover and execute tool methods
-     * defined in the LoadsTools and RiflesTools classs.
-     *
-     * @param loadTools the LoadTools instance containing tool methods
-     * @param riflesTools the RiflesTools instance containing tool methods
-     * @return configured ToolCallbackProvider
-     */
-    @Bean
-    public ToolCallbackProvider toolsCallbackProvider(LoadsToolProvider loadTools, RiflesToolProvider riflesTools) {
-        return MethodToolCallbackProvider.builder().toolObjects(loadTools, riflesTools).build();
-    }
 
     /**
      * Creates a WebClient for Keycloak authentication server communication.

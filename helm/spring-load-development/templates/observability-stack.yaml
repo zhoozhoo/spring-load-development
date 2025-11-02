@@ -106,10 +106,14 @@ spec:
       labels:
         app: loki
     spec:
+      securityContext:
+        {{- include "spring-load-development.podSecurityContext" . | nindent 8 }}
       containers:
         - name: loki
           image: "{{ .Values.observability.loki.image.repository }}:{{ .Values.observability.loki.image.tag }}"
           imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "spring-load-development.containerSecurityContext" . | nindent 12 }}
           args:
             - "-config.file=/etc/loki/local-config.yaml"
           ports:
@@ -321,10 +325,14 @@ spec:
       labels:
         app: tempo
     spec:
+      securityContext:
+        {{- include "spring-load-development.podSecurityContext" . | nindent 8 }}
       containers:
         - name: tempo
           image: "{{ .Values.observability.tempo.image.repository }}:{{ .Values.observability.tempo.image.tag }}"
           imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "spring-load-development.containerSecurityContext" . | nindent 12 }}
           args:
             - "-config.file=/etc/tempo/tempo.yaml"
           ports:
@@ -342,7 +350,7 @@ spec:
               mountPath: /etc/tempo
             {{- if .Values.observability.tempo.persistence.enabled }}
             - name: storage
-              mountPath: /tmp/tempo
+              mountPath: /var/tempo
             {{- end }}
           readinessProbe:
             httpGet:
@@ -476,10 +484,14 @@ spec:
       labels:
         app: prometheus
     spec:
+      securityContext:
+        {{- include "spring-load-development.podSecurityContext" . | nindent 8 }}
       containers:
         - name: prometheus
           image: "{{ .Values.observability.prometheus.image.repository }}:{{ .Values.observability.prometheus.image.tag }}"
           imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "spring-load-development.containerSecurityContext" . | nindent 12 }}
           args:
             - '--config.file=/etc/prometheus/prometheus.yml'
             - '--storage.tsdb.path=/prometheus/'
@@ -487,6 +499,8 @@ spec:
             - '--web.console.templates=/etc/prometheus/consoles'
             - '--storage.tsdb.retention.time=200h'
             - '--web.enable-lifecycle'
+            - '--web.enable-remote-write-receiver'
+            - '--enable-feature=native-histograms'
           ports:
             - name: http
               containerPort: {{ .Values.observability.prometheus.service.port }}
@@ -646,10 +660,14 @@ spec:
       labels:
         app: grafana
     spec:
+      securityContext:
+        {{- include "spring-load-development.podSecurityContext" . | nindent 8 }}
       containers:
         - name: grafana
           image: "{{ .Values.observability.grafana.image.repository }}:{{ .Values.observability.grafana.image.tag }}"
           imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "spring-load-development.containerSecurityContext" . | nindent 12 }}
           ports:
             - name: http
               containerPort: {{ .Values.observability.grafana.service.port }}
@@ -805,10 +823,14 @@ spec:
       labels:
         app: otel-collector
     spec:
+      securityContext:
+        {{- include "spring-load-development.podSecurityContext" . | nindent 8 }}
       containers:
         - name: otel-collector
           image: "{{ .Values.observability.otelCollector.image.repository }}:{{ .Values.observability.otelCollector.image.tag }}"
           imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "spring-load-development.containerSecurityContext" . | nindent 12 }}
           args:
             - "--config=/etc/otel-collector/otel-collector.yaml"
           ports:
@@ -827,18 +849,6 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/otel-collector
-          readinessProbe:
-            httpGet:
-              path: /
-              port: 13133
-            initialDelaySeconds: 30
-            periodSeconds: 10
-          livenessProbe:
-            httpGet:
-              path: /
-              port: 13133
-            initialDelaySeconds: 30
-            periodSeconds: 10
       volumes:
         - name: config
           configMap:

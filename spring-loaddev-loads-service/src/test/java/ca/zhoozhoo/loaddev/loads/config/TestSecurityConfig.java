@@ -12,8 +12,8 @@ public class TestSecurityConfig {
 
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
-        http.csrf(csrf -> csrf.disable())
-                .authorizeExchange(auth -> auth.anyExchange().permitAll());
+        http.csrf(csrf -> csrf.disable()).authorizeExchange(auth -> auth.anyExchange().permitAll());
+
         return http.build();
     }
 }

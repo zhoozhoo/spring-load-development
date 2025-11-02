@@ -26,10 +26,30 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
 /**
- * This filter handles the exchange of user tokens for permission tokens in a Keycloak-secured application.
- * It intercepts incoming requests, extracts the original Bearer token, and exchanges it for a permission token
- * using Keycloak's token exchange endpoint. The new permission token is then stored in the exchange attributes
- * for use by downstream filters.
+ * Web filter that handles the exchange of user tokens for permission tokens in a Keycloak-secured application.
+ * 
+ * <p>This filter intercepts incoming requests, extracts the original Bearer token from the Authorization
+ * header, and exchanges it for a permission token using Keycloak's UMA (User-Managed Access) token exchange
+ * endpoint. The new permission token, which contains resource-specific permissions, is then stored in the
+ * exchange attributes for use by downstream filters and services.</p>
+ * 
+ * <p>The filter runs with {@code @Order(0)} to ensure it executes early in the filter chain, before
+ * security filters that may need the permission token.</p>
+ * 
+ * <p><b>Token Exchange Flow:</b></p>
+ * <ol>
+ *   <li>Extract Bearer token from Authorization header</li>
+ *   <li>Call Keycloak token endpoint with UMA grant type</li>
+ *   <li>Receive permission token with resource permissions</li>
+ *   <li>Store permission token in exchange attributes</li>
+ *   <li>Continue filter chain with enhanced permissions</li>
+ * </ol>
+ * 
+ * <p>If token exchange fails, the filter logs the error and continues with the original token,
+ * allowing the request to proceed without enhanced permissions.</p>
+ * 
+ * @author Zhubin Salehi
+ * @see TokenForwardingGatewayFilterFactory
  */
 @Component
 @Order(0)
@@ -61,8 +81,8 @@ public class PermissionTokenExchangeFilter implements WebFilter {
     @Override
     @NonNull
     public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
-        ServerHttpRequest request = Objects.requireNonNull(exchange.getRequest(), "request must not be null");
-        String originalToken = extractToken(request);
+        var request = Objects.requireNonNull(exchange.getRequest(), "request must not be null");
+        var originalToken = extractToken(request);
 
         if (originalToken == null) {
             return chain.filter(exchange);
@@ -91,12 +111,9 @@ public class PermissionTokenExchangeFilter implements WebFilter {
      * @return the token string without the "Bearer " prefix, or null if not present
      */
     private String extractToken(@NonNull ServerHttpRequest request) {
-        HttpHeaders headers = request.getHeaders();
-        if (headers != null) {
-            String authHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                return authHeader.substring(7);
-            }
+        var auth = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        if (auth != null && auth.startsWith("Bearer ")) {
+            return auth.substring(7);
         }
         return null;
     }
@@ -124,7 +141,7 @@ public class PermissionTokenExchangeFilter implements WebFilter {
 
         return webClient.post()
                 .uri(tokenUri)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + originalToken)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer %s".formatted(originalToken))
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData(formData))
                 .retrieve()
