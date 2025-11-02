@@ -33,7 +33,7 @@ import static systems.uom.ucum.UCUM.YARD_INTERNATIONAL;
  *
  * @author Zhubin Salehi
  */
-@Table(name = "groups")
+@Table(name = "groups_jsr385")
 public record GroupJsr385(
         @Id Long id,
 

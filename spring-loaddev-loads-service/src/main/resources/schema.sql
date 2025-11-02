@@ -67,3 +67,34 @@ CREATE TABLE IF NOT EXISTS shots (
         FOREIGN KEY (group_id)
         REFERENCES groups(id)
 );
+
+-- groups_jsr385 table using JSR-385 (Units of Measurement API)
+-- This table stores measurement data with unit information in JSONB columns
+-- Stores Quantity<Mass> for powder_charge, Quantity<Length> for target_range and group_size
+-- Supported via javax.measure.Quantity types and custom R2DBC converters
+CREATE TABLE IF NOT EXISTS groups_jsr385 (
+    id BIGSERIAL PRIMARY KEY,
+    owner_id VARCHAR(255) NOT NULL,
+    load_id BIGSERIAL NOT NULL,
+    date DATE NOT NULL,
+    powder_charge JSONB NOT NULL,             -- Stores Quantity<Mass> as JSON with value and unit (e.g., grains)
+    target_range JSONB NOT NULL,              -- Stores Quantity<Length> as JSON with value and unit (e.g., yards)
+    group_size JSONB,                         -- Stores Quantity<Length> as JSON with value and unit (e.g., inches)
+    CONSTRAINT fk_load_jsr385
+        FOREIGN KEY (load_id)
+        REFERENCES loads_jsr363(id)
+);
+
+-- shots_jsr385 table using JSR-385 (Units of Measurement API)
+-- This table stores velocity measurement with unit information in JSONB column
+-- Stores Quantity<Speed> for velocity
+-- Supported via javax.measure.Quantity types and custom R2DBC converters
+CREATE TABLE IF NOT EXISTS shots_jsr385 (
+    id BIGSERIAL PRIMARY KEY,
+    owner_id VARCHAR(255) NOT NULL,
+    group_id BIGSERIAL NOT NULL,
+    velocity JSONB,                           -- Stores Quantity<Speed> as JSON with value and unit (e.g., fps)
+    CONSTRAINT fk_group_jsr385
+        FOREIGN KEY (group_id)
+        REFERENCES groups_jsr385(id)
+);

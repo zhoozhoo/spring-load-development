@@ -30,7 +30,7 @@ import static systems.uom.ucum.UCUM.FOOT_INTERNATIONAL;
  *
  * @author Zhubin Salehi
  */
-@Table(name = "shots")
+@Table(name = "shots_jsr385")
 public record ShotJsr385(
 
         @Id Long id,
