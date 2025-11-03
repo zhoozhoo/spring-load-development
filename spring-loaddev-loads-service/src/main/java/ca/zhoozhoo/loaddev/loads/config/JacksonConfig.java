@@ -5,12 +5,14 @@ import java.io.IOException;
 import javax.measure.Quantity;
 import javax.measure.format.MeasurementParseException;
 
-import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.http.codec.json.Jackson2JsonEncoder;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
+
+import jakarta.annotation.PostConstruct;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -41,32 +43,31 @@ public class JacksonConfig implements WebFluxConfigurer {
 
     private static final SimpleQuantityFormat QUANTITY_FORMAT = SimpleQuantityFormat.getInstance();
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     /**
-     * Configures ObjectMapper with custom Quantity serializers.
-     *
-     * @return ObjectMapper configured with Quantity support
+     * Configures the application ObjectMapper with custom modules.
+     * Registers custom Quantity serializers for JSR 363 types.
      */
-    @Bean
-    public ObjectMapper objectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
+    @PostConstruct
+    public void configureObjectMapper() {
+        // Register custom Quantity serializers
         SimpleModule quantityModule = new SimpleModule();
         quantityModule.addSerializer(Quantity.class, new QuantitySerializer());
         quantityModule.addDeserializer(Quantity.class, new QuantityDeserializer());
-        mapper.registerModule(quantityModule);
-        return mapper;
+        objectMapper.registerModule(quantityModule);
     }
 
     /**
-     * Configures HTTP message codecs to use the custom ObjectMapper.
-     * Uses @Bean method to get the Spring-managed ObjectMapper instance.
+     * Configures HTTP message codecs to use the application ObjectMapper.
      *
      * @param configurer the codec configurer to customize
      */
     @Override
     public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
-        ObjectMapper mapper = objectMapper();
-        configurer.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(mapper));
-        configurer.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(mapper));
+        configurer.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
+        configurer.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
     }
 
     /**
