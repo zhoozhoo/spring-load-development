@@ -54,14 +54,9 @@ public class QuantityConverters {
 
         @Override
         public Json convert(@NonNull Quantity<?> source) {
-            try {
-                String quantityStr = QUANTITY_FORMAT.format(source);
-                String json = String.format("{\"quantity\":\"%s\"}", quantityStr);
-                return Json.of(json);
-            } catch (Exception e) {
-                throw new IllegalArgumentException(
-                    "Failed to serialize Quantity to JSON: " + source, e);
-            }
+            String quantityStr = QUANTITY_FORMAT.format(source);
+            String json = String.format("{\"quantity\":\"%s\"}", quantityStr);
+            return Json.of(json);
         }
     }
 

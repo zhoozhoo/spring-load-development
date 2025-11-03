@@ -77,6 +77,8 @@ public class JacksonConfig implements WebFluxConfigurer {
     @SuppressWarnings("rawtypes")
     private static class QuantitySerializer extends StdSerializer<Quantity> {
         
+        private static final long serialVersionUID = 1L;
+        
         protected QuantitySerializer() {
             super(Quantity.class);
         }
@@ -94,6 +96,8 @@ public class JacksonConfig implements WebFluxConfigurer {
      */
     @SuppressWarnings("rawtypes")
     private static class QuantityDeserializer extends StdDeserializer<Quantity> {
+        
+        private static final long serialVersionUID = 1L;
         
         protected QuantityDeserializer() {
             super(Quantity.class);
