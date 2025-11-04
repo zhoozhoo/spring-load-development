@@ -235,10 +235,34 @@ GitHub Actions workflow (`.github/workflows/ci.yml`) runs on push/PR:
   import static org.springframework.http.ResponseEntity.ok;
   import static org.springframework.http.ResponseEntity.status;
   ```
-- **`var`** keyword where type is obvious:
+- **Use static imports in tests** for assertion methods, test utilities, and frequently used constants:
+  ```java
+  import static org.junit.jupiter.api.Assertions.assertEquals;
+  import static org.junit.jupiter.api.Assertions.assertNotNull;
+  import static org.mapstruct.factory.Mappers.getMapper;
+  import static systems.uom.ucum.UCUM.GRAIN;
+  import static tech.units.indriya.quantity.Quantities.getQuantity;
+  ```
+- **`var` keyword** - Use where type is obvious from the right-hand side (do not use for method return types, parameters, or fields):
   ```java
   var userId = randomUUID().toString();
   var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
+  var dto = mapper.toDto(statistics);
+  var shots = List.of(shot1, shot2, shot3);
+  ```
+- **Eliminate single-use variables** - Avoid creating variables that are only used once; inline them directly:
+  ```java
+  // Bad: Single-use variable
+  var statistics = createValidGroupStatistics();
+  var dto = mapper.toDto(statistics);
+  
+  // Good: Inline the expression
+  var dto = mapper.toDto(createValidGroupStatistics());
+  
+  // Exception: Keep variable if it improves readability or is used in assertions
+  var dto = mapper.toDto(statistics);
+  assertNotNull(dto);
+  assertEquals(expectedDate, dto.date());  // 'dto' used multiple times
   ```
 - **Records** for immutable models/DTOs:
   ```java
