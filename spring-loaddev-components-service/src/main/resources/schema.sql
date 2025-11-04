@@ -31,6 +31,40 @@ FOR EACH ROW EXECUTE FUNCTION bullets_update_search_vector();
 CREATE INDEX IF NOT EXISTS idx_bullets_search_vector ON bullets USING GIN (search_vector);
 CREATE INDEX IF NOT EXISTS idx_bullets_text_trgm ON bullets USING GIN ((coalesce(manufacturer,'') || ' ' || coalesce(type,'')) gin_trgm_ops);
 
+CREATE TABLE IF NOT EXISTS projectiles (
+    id BIGSERIAL PRIMARY KEY,
+    owner_id VARCHAR(255) NOT NULL,
+    manufacturer VARCHAR(255) NOT NULL,
+    weight JSONB NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    cost JSONB NOT NULL,
+    quantity_per_box INTEGER NOT NULL,
+    search_vector tsvector
+);
+
+-- Comments for JSR-385 and JSR-354 support
+COMMENT ON TABLE projectiles IS 'Projectile components using JSR-385 units of measurement and JSR-354 money';
+COMMENT ON COLUMN projectiles.weight IS 'Stores Quantity<Mass> as JSONB with value and unit. Example: {"value": 150, "unit": "gr"}. Supported via javax.measure.Quantity types and custom R2DBC converters';
+COMMENT ON COLUMN projectiles.cost IS 'Stores MonetaryAmount as JSONB with amount and currency. Example: {"amount": 45.99, "currency": "USD"}. Supported via javax.money.MonetaryAmount and custom R2DBC converters';
+
+CREATE OR REPLACE FUNCTION projectiles_update_search_vector() RETURNS trigger AS '
+BEGIN
+  NEW.search_vector :=
+  setweight(to_tsvector(''english'', coalesce(NEW.manufacturer,'''')), ''A'') ||
+  setweight(to_tsvector(''english'', coalesce(NEW.type,'''')), ''B'') ||
+  setweight(to_tsvector(''english'', coalesce((NEW.weight->>''value'')::text,'''')), ''C'');
+  RETURN NEW;
+END
+' LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS projectiles_search_vector_update ON projectiles;
+CREATE TRIGGER projectiles_search_vector_update
+BEFORE INSERT OR UPDATE ON projectiles
+FOR EACH ROW EXECUTE FUNCTION projectiles_update_search_vector();
+
+CREATE INDEX IF NOT EXISTS idx_projectiles_search_vector ON projectiles USING GIN (search_vector);
+CREATE INDEX IF NOT EXISTS idx_projectiles_text_trgm ON projectiles USING GIN ((coalesce(manufacturer,'') || ' ' || coalesce(type,'')) gin_trgm_ops);
+
 CREATE TABLE IF NOT EXISTS powders (
     id BIGSERIAL PRIMARY KEY,
     owner_id VARCHAR(255) NOT NULL,
@@ -57,6 +91,36 @@ FOR EACH ROW EXECUTE FUNCTION powders_update_search_vector();
 
 CREATE INDEX IF NOT EXISTS idx_powders_search_vector ON powders USING GIN (search_vector);
 CREATE INDEX IF NOT EXISTS idx_powders_text_trgm ON powders USING GIN ((coalesce(manufacturer,'') || ' ' || coalesce(type,'')) gin_trgm_ops);
+
+CREATE TABLE IF NOT EXISTS propellants (
+    id BIGSERIAL PRIMARY KEY,
+    owner_id VARCHAR(255) NOT NULL,
+    manufacturer VARCHAR(255) NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    cost JSONB,
+    weight_per_container JSONB,
+    search_vector tsvector
+);
+
+-- Comments for JSR-385 and JSR-354 support
+COMMENT ON TABLE propellants IS 'Propellant components using JSR-385 units of measurement and JSR-354 money';
+COMMENT ON COLUMN propellants.weight_per_container IS 'Stores Quantity<Mass> as JSONB with value and unit. Example: {"value": 1, "unit": "lb"}. Supported via javax.measure.Quantity types and custom R2DBC converters';
+COMMENT ON COLUMN propellants.cost IS 'Stores MonetaryAmount as JSONB with amount and currency. Example: {"amount": 35.99, "currency": "USD"}. Supported via javax.money.MonetaryAmount and custom R2DBC converters';
+
+CREATE OR REPLACE FUNCTION propellants_update_search_vector() RETURNS trigger AS '
+BEGIN
+  NEW.search_vector := to_tsvector(''english'', coalesce(NEW.manufacturer,'''') || '' '' || coalesce(NEW.type,''''));
+  RETURN NEW;
+END
+' LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS propellants_search_vector_update ON propellants;
+CREATE TRIGGER propellants_search_vector_update
+BEFORE INSERT OR UPDATE ON propellants
+FOR EACH ROW EXECUTE FUNCTION propellants_update_search_vector();
+
+CREATE INDEX IF NOT EXISTS idx_propellants_search_vector ON propellants USING GIN (search_vector);
+CREATE INDEX IF NOT EXISTS idx_propellants_text_trgm ON propellants USING GIN ((coalesce(manufacturer,'') || ' ' || coalesce(type,'')) gin_trgm_ops);
 
 CREATE TABLE IF NOT EXISTS primers (
     id BIGSERIAL PRIMARY KEY,

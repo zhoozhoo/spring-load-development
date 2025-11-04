@@ -125,17 +125,6 @@
             <artifactId>systems-unicode</artifactId>
             <version>2.2</version>
         </dependency>
-        <!-- <dependency>
-            <groupId>tech.uom.lib</groupId>
-            <artifactId>uom-lib-jackson</artifactId>
-            <version>2.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>systems.uom</groupId>
-                    <artifactId>systems-ucum</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency> -->
 
         <!-- Test dependencies -->
         <dependency>
