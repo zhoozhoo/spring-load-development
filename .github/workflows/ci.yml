@@ -21,11 +21,8 @@ jobs:
         java-version: '25'
         distribution: 'temurin'
 
-    - name: Clean Maven local repository cache
-      run: rm -rf ~/.m2/repository/org/mockito/mockito-core
-
     - name: Run tests with coverage
-      run: ./mvnw -B -U clean compile test-compile test jacoco:report jacoco:check
+      run: ./mvnw -B clean compile test-compile test jacoco:report jacoco:check
       env:
         MAVEN_OPTS: "-Dmaven.mainClass=org.apache.maven.cling.MavenCling"
 
