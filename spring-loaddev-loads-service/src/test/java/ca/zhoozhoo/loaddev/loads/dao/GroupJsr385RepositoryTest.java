@@ -18,7 +18,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.model.GroupJsr385;
-import ca.zhoozhoo.loaddev.loads.model.LoadJSR363;
+import ca.zhoozhoo.loaddev.loads.model.LoadJsr385;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -34,7 +34,7 @@ class GroupJsr385RepositoryTest {
     private GroupJsr385Repository groupRepository;
     
     @Autowired
-    private LoadJSR363Repository loadRepository;
+    private LoadJsr385Repository loadRepository;
     
     private Long testLoadId;
 
@@ -51,8 +51,8 @@ class GroupJsr385RepositoryTest {
         testLoadId = savedLoad.id();
     }
     
-    private LoadJSR363 createTestLoad(String ownerId) {
-        return new LoadJSR363(
+    private LoadJsr385 createTestLoad(String ownerId) {
+        return new LoadJsr385(
                 null,
                 ownerId,
                 "Test Load",

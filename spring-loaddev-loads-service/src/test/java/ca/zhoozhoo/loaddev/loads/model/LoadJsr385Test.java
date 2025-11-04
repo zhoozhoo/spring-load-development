@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for the {@link LoadJSR363} model class.
+ * Unit tests for the {@link LoadJsr385} model class.
  * <p>
  * Tests validation logic, equals/hashCode contracts, and JSR-363 Quantity handling.
  * Note: Uses SI units (grams, meters) as imperial units require additional dependencies.
@@ -28,8 +28,8 @@ import org.junit.jupiter.api.Test;
  *
  * @author Zhubin Salehi
  */
-@DisplayName("LoadJSR363 Model Tests")
-class LoadJSR363Test {
+@DisplayName("LoadJsr385 Model Tests")
+class LoadJsr385Test {
 
     // Test data constants
     private static final String OWNER_ID = "user123";
@@ -43,10 +43,10 @@ class LoadJSR363Test {
     private static final String PRIMER_TYPE = "BR-2";
 
     /**
-     * Creates a valid LoadJSR363 instance for testing with metric units (grams and millimeters).
+     * Creates a valid LoadJsr385 instance for testing with metric units (grams and millimeters).
      */
-    private LoadJSR363 createValidLoadMetric() {
-        return new LoadJSR363(
+    private LoadJsr385 createValidLoadMetric() {
+        return new LoadJsr385(
             1L,
             OWNER_ID,
             NAME,
@@ -78,7 +78,7 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should create valid load with only distance from lands")
         void shouldCreateValidLoadWithOnlyDistanceFromLands() {
-            assertDoesNotThrow(() -> new LoadJSR363(
+            assertDoesNotThrow(() -> new LoadJsr385(
                 null, OWNER_ID, NAME, DESCRIPTION,
                 POWDER_MFG, POWDER_TYPE, BULLET_MFG, BULLET_TYPE,
                 getQuantity(9.07, GRAM),
@@ -93,7 +93,7 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should create valid load with only case overall length")
         void shouldCreateValidLoadWithOnlyCaseOverallLength() {
-            assertDoesNotThrow(() -> new LoadJSR363(
+            assertDoesNotThrow(() -> new LoadJsr385(
                 null, OWNER_ID, NAME, DESCRIPTION,
                 POWDER_MFG, POWDER_TYPE, BULLET_MFG, BULLET_TYPE,
                 getQuantity(9.07, GRAM),
@@ -109,7 +109,7 @@ class LoadJSR363Test {
         @DisplayName("Should throw exception when both distance from lands and case overall length are null")
         void shouldThrowExceptionWhenBothMeasurementsAreNull() {
             var exception = assertThrows(IllegalArgumentException.class, () ->
-                new LoadJSR363(
+                new LoadJsr385(
                     null, OWNER_ID, NAME, DESCRIPTION,
                     POWDER_MFG, POWDER_TYPE, BULLET_MFG, BULLET_TYPE,
                     getQuantity(9.07, GRAM),
@@ -129,7 +129,7 @@ class LoadJSR363Test {
         @DisplayName("Should throw exception when neck tension is negative")
         void shouldThrowExceptionWhenNeckTensionIsNegative() {
             var exception = assertThrows(IllegalArgumentException.class, () ->
-                new LoadJSR363(
+                new LoadJsr385(
                     null, OWNER_ID, NAME, DESCRIPTION,
                     POWDER_MFG, POWDER_TYPE, BULLET_MFG, BULLET_TYPE,
                     getQuantity(9.07, GRAM),
@@ -148,7 +148,7 @@ class LoadJSR363Test {
         @DisplayName("Should throw exception when neck tension is zero")
         void shouldThrowExceptionWhenNeckTensionIsZero() {
             var exception = assertThrows(IllegalArgumentException.class, () ->
-                new LoadJSR363(
+                new LoadJsr385(
                     null, OWNER_ID, NAME, DESCRIPTION,
                     POWDER_MFG, POWDER_TYPE, BULLET_MFG, BULLET_TYPE,
                     getQuantity(9.07, GRAM),
@@ -166,7 +166,7 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should accept null neck tension")
         void shouldAcceptNullNeckTension() {
-            assertDoesNotThrow(() -> new LoadJSR363(
+            assertDoesNotThrow(() -> new LoadJsr385(
                 null, OWNER_ID, NAME, DESCRIPTION,
                 POWDER_MFG, POWDER_TYPE, BULLET_MFG, BULLET_TYPE,
                 getQuantity(9.07, GRAM),
@@ -186,7 +186,7 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should handle metric units correctly")
         void shouldHandleMetricUnitsCorrectly() {
-            LoadJSR363 load = createValidLoadMetric();
+            LoadJsr385 load = createValidLoadMetric();
             
             assertEquals(9.07, load.bulletWeight().getValue().doubleValue(), 0.01);
             assertEquals(GRAM, load.bulletWeight().getUnit());
@@ -197,7 +197,7 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should handle different metric length measurements")
         void shouldHandleDifferentMetricLengthMeasurements() {
-            LoadJSR363 load = createValidLoadMetric();
+            LoadJsr385 load = createValidLoadMetric();
             
             assertEquals(0.508, load.distanceFromLands().getValue().doubleValue(), 0.001);
             assertEquals(71.12, load.caseOverallLength().getValue().doubleValue(), 0.01);
@@ -207,7 +207,7 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should support unit conversion for bullet weight")
         void shouldSupportUnitConversionForBulletWeight() {
-            LoadJSR363 load = createValidLoadMetric();
+            LoadJsr385 load = createValidLoadMetric();
             
             Quantity<Mass> weightInGrams = load.bulletWeight();
             Quantity<Mass> weightInKg = weightInGrams.to(KILOGRAM);
@@ -218,7 +218,7 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should support unit conversion for length measurements")
         void shouldSupportUnitConversionForLengthMeasurements() {
-            LoadJSR363 load = createValidLoadMetric();
+            LoadJsr385 load = createValidLoadMetric();
             
             Quantity<Length> lengthInMm = load.caseOverallLength();
             Quantity<Length> lengthInMeters = lengthInMm.to(METRE);
@@ -229,7 +229,7 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should allow mixed units in same load")
         void shouldAllowMixedUnitsInSameLoad() {
-            assertDoesNotThrow(() -> new LoadJSR363(
+            assertDoesNotThrow(() -> new LoadJsr385(
                 null, OWNER_ID, NAME, DESCRIPTION,
                 POWDER_MFG, POWDER_TYPE, BULLET_MFG, BULLET_TYPE,
                 getQuantity(9.07, GRAM),
@@ -249,28 +249,28 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should be equal to itself")
         void shouldBeEqualToItself() {
-            LoadJSR363 load = createValidLoadMetric();
+            LoadJsr385 load = createValidLoadMetric();
             assertEquals(load, load);
         }
 
         @Test
         @DisplayName("Should not equal null")
         void shouldNotEqualNull() {
-            LoadJSR363 load = createValidLoadMetric();
+            LoadJsr385 load = createValidLoadMetric();
             assertNotEquals(null, load);
         }
 
         @Test
         @DisplayName("Should not equal different class")
         void shouldNotEqualDifferentClass() {
-            LoadJSR363 load = createValidLoadMetric();
-            assertNotEquals(load, "Not a LoadJSR363");
+            LoadJsr385 load = createValidLoadMetric();
+            assertNotEquals(load, "Not a LoadJsr385");
         }
 
         @Test
         @DisplayName("Should be equal when all fields match except ownerId")
         void shouldBeEqualWhenAllFieldsMatchExceptOwnerId() {
-            LoadJSR363 load1 = new LoadJSR363(
+            LoadJsr385 load1 = new LoadJsr385(
                 1L, "user1", NAME, DESCRIPTION,
                 POWDER_MFG, POWDER_TYPE, BULLET_MFG, BULLET_TYPE,
                 getQuantity(9.07, GRAM),
@@ -281,7 +281,7 @@ class LoadJSR363Test {
                 1L
             );
             
-            LoadJSR363 load2 = new LoadJSR363(
+            LoadJsr385 load2 = new LoadJsr385(
                 1L, "user2", NAME, DESCRIPTION, // different ownerId
                 POWDER_MFG, POWDER_TYPE, BULLET_MFG, BULLET_TYPE,
                 getQuantity(9.07, GRAM),
@@ -298,9 +298,9 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should not be equal when Quantity values differ")
         void shouldNotBeEqualWhenQuantityValuesDiffer() {
-            LoadJSR363 load1 = createValidLoadMetric();
+            LoadJsr385 load1 = createValidLoadMetric();
             
-            LoadJSR363 load2 = new LoadJSR363(
+            LoadJsr385 load2 = new LoadJsr385(
                 1L, OWNER_ID, NAME, DESCRIPTION,
                 POWDER_MFG, POWDER_TYPE, BULLET_MFG, BULLET_TYPE,
                 getQuantity(10.0, GRAM), // different bullet weight
@@ -317,7 +317,7 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should have consistent hashCode")
         void shouldHaveConsistentHashCode() {
-            LoadJSR363 load = createValidLoadMetric();
+            LoadJsr385 load = createValidLoadMetric();
             int hashCode1 = load.hashCode();
             int hashCode2 = load.hashCode();
             assertEquals(hashCode1, hashCode2);
@@ -326,8 +326,8 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Equal objects should have same hashCode")
         void equalObjectsShouldHaveSameHashCode() {
-            LoadJSR363 load1 = createValidLoadMetric();
-            LoadJSR363 load2 = createValidLoadMetric();
+            LoadJsr385 load1 = createValidLoadMetric();
+            LoadJsr385 load2 = createValidLoadMetric();
             
             assertEquals(load1, load2);
             assertEquals(load1.hashCode(), load2.hashCode());
@@ -341,7 +341,7 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should return correct values from accessors")
         void shouldReturnCorrectValuesFromAccessors() {
-            LoadJSR363 load = createValidLoadMetric();
+            LoadJsr385 load = createValidLoadMetric();
             
             assertEquals(1L, load.id());
             assertEquals(OWNER_ID, load.ownerId());
@@ -363,7 +363,7 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should handle null optional fields")
         void shouldHandleNullOptionalFields() {
-            LoadJSR363 load = new LoadJSR363(
+            LoadJsr385 load = new LoadJsr385(
                 null, OWNER_ID, NAME, null, // null description
                 POWDER_MFG, POWDER_TYPE, BULLET_MFG, BULLET_TYPE,
                 getQuantity(9.07, GRAM),
@@ -388,7 +388,7 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should handle very small Quantity values")
         void shouldHandleVerySmallQuantityValues() {
-            assertDoesNotThrow(() -> new LoadJSR363(
+            assertDoesNotThrow(() -> new LoadJsr385(
                 null, OWNER_ID, NAME, DESCRIPTION,
                 POWDER_MFG, POWDER_TYPE, BULLET_MFG, BULLET_TYPE,
                 getQuantity(0.001, GRAM),
@@ -403,7 +403,7 @@ class LoadJSR363Test {
         @Test
         @DisplayName("Should handle very large Quantity values")
         void shouldHandleVeryLargeQuantityValues() {
-            assertDoesNotThrow(() -> new LoadJSR363(
+            assertDoesNotThrow(() -> new LoadJsr385(
                 null, OWNER_ID, NAME, DESCRIPTION,
                 POWDER_MFG, POWDER_TYPE, BULLET_MFG, BULLET_TYPE,
                 getQuantity(1000.0, GRAM),
@@ -419,7 +419,7 @@ class LoadJSR363Test {
         @DisplayName("Should handle empty strings for required fields")
         void shouldHandleEmptyStringsForRequiredFields() {
             // Note: Bean validation would catch this in a real scenario
-            assertDoesNotThrow(() -> new LoadJSR363(
+            assertDoesNotThrow(() -> new LoadJsr385(
                 null, OWNER_ID, "", "", // empty name and description
                 POWDER_MFG, POWDER_TYPE, BULLET_MFG, BULLET_TYPE,
                 getQuantity(9.07, GRAM),

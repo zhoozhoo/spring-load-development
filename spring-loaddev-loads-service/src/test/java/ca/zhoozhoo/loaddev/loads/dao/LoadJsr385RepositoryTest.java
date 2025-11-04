@@ -15,11 +15,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
-import ca.zhoozhoo.loaddev.loads.model.LoadJSR363;
+import ca.zhoozhoo.loaddev.loads.model.LoadJsr385;
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
-class LoadJSR363RepositoryTest {
+class LoadJsr385RepositoryTest {
 
     private static final String NAME = "6.5 Creedmoor Match Load";
     private static final String DESCRIPTION = "Long range precision load";
@@ -37,7 +37,7 @@ class LoadJSR363RepositoryTest {
     private GroupJsr385Repository groupRepository;
     
     @Autowired
-    private LoadJSR363Repository loadRepository;
+    private LoadJsr385Repository loadRepository;
 
     @BeforeEach
     public void setup() {
@@ -46,8 +46,8 @@ class LoadJSR363RepositoryTest {
         loadRepository.deleteAll().block();
     }
 
-    private LoadJSR363 createTestLoad(String ownerId) {
-        return new LoadJSR363(
+    private LoadJsr385 createTestLoad(String ownerId) {
+        return new LoadJsr385(
                 null,
                 ownerId,
                 NAME,
@@ -94,7 +94,7 @@ class LoadJSR363RepositoryTest {
     void findAllByOwnerId() {
         var ownerId = randomUUID().toString();
         var load1 = createTestLoad(ownerId);
-        var load2 = new LoadJSR363(null,
+        var load2 = new LoadJsr385(null,
                 ownerId,
                 "Hornady 52 BTHP 4198",
                 "Hornady 52gr 4198 BTHP with IMR 4198",
@@ -138,7 +138,7 @@ class LoadJSR363RepositoryTest {
     @Test
     void findByNameAndOwnerId() {
         var ownerId = randomUUID().toString();
-        var expectedLoad = new LoadJSR363(null,
+        var expectedLoad = new LoadJsr385(null,
                 ownerId,
                 "Hornady 52 BTHP 4198",
                 "Hornady 52gr 4198 BTHP with IMR 4198",
@@ -195,7 +195,7 @@ class LoadJSR363RepositoryTest {
         var ownerId = randomUUID().toString();
         var savedLoad = loadRepository.save(createTestLoad(ownerId)).block();
         
-        var updatedLoad = new LoadJSR363(
+        var updatedLoad = new LoadJsr385(
                 savedLoad.id(),
                 ownerId,
                 "SMK 53 HP H335",

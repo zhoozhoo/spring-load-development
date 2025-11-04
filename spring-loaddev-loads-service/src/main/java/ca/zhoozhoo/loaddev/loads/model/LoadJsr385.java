@@ -28,8 +28,8 @@ import tech.units.indriya.format.SimpleQuantityFormat;
  *
  * @author Zhubin Salehi
  */
-@Table(name = "loads_jsr363")
-public record LoadJSR363(
+@Table(name = "loads_jsr385")
+public record LoadJsr385(
 
         @Id Long id,
 
@@ -88,7 +88,7 @@ public record LoadJSR363(
      * enhanced pattern matching.
      * </p>
      */
-    public LoadJSR363 {        
+    public LoadJsr385 {        
         // At least one cartridge measurement must be specified
         if (distanceFromLands == null && caseOverallLength == null) {
             throw new IllegalArgumentException(
@@ -113,7 +113,7 @@ public record LoadJSR363(
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        LoadJSR363 load = (LoadJSR363) o;
+        LoadJsr385 load = (LoadJsr385) o;
         return Objects.equals(id, load.id) &&
                 Objects.equals(name, load.name) &&
                 Objects.equals(description, load.description) &&
