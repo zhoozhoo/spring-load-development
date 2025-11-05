@@ -92,37 +92,37 @@
         <dependency>
             <groupId>javax.measure</groupId>
             <artifactId>unit-api</artifactId>
-            <version>2.2</version>
+            <version>${javax.measure.version}</version>
         </dependency>
         <dependency>
             <groupId>tech.units</groupId>
             <artifactId>indriya</artifactId>
-            <version>2.2.3</version>
+            <version>${tech.units.indriya.version}</version>
         </dependency>
         <dependency>
             <groupId>systems.uom</groupId>
             <artifactId>systems-quantity</artifactId>
-            <version>2.2</version>
+            <version>${systems.uom.version}</version>
         </dependency>
         <dependency>
             <groupId>systems.uom</groupId>
             <artifactId>systems-ucum</artifactId>
-            <version>2.2</version>
+            <version>${systems.uom.version}</version>
         </dependency>
         <dependency>
             <groupId>systems.uom</groupId>
             <artifactId>systems-unicode</artifactId>
-            <version>2.2</version>
+            <version>${systems.uom.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.money</groupId>
             <artifactId>money-api</artifactId>
-            <version>1.1</version>
+            <version>${javax.money.version}</version>
         </dependency>
         <dependency>
             <groupId>org.javamoney</groupId>
             <artifactId>moneta</artifactId>
-            <version>1.4.5</version>
+            <version>${org.javamoney.version}</version>
             <type>pom</type>
         </dependency>
 
