@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import com.fasterxml.jackson.databind.Module;
 
 import ca.zhoozhoo.loaddev.components.converter.Jsr385Jsr354Module;
-import lombok.extern.log4j.Log4j2;
 
 /**
  * Jackson configuration for custom serialization/deserialization.
@@ -18,7 +17,6 @@ import lombok.extern.log4j.Log4j2;
  * @author Zhubin Salehi
  */
 @Configuration
-@Log4j2
 public class JacksonConfig {
 
     @Bean
