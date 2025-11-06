@@ -1,0 +1,215 @@
+// ==================== VARIABLES ====================
+// Set the rifle ID to use for load operations
+@rifle_id = 
+
+### Get OpenID configuration from Keycloak
+GET {{authorization_host}}/realms/{{realm}}/.well-known/openid-configuration
+
+### Authenticate to Keycloak and get a token
+# @name Authenticate
+POST {{authorization_host}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{client_id}}&client_secret={{client_secret}}&username={{username}}&password={{password}}&scope=openid
+
+### [TEST ONLY] Authenticate to Keycloak using UMA ticket grant (for advanced authorization testing)
+# This call is for testing purposes only. It requests a token from Keycloak using the UMA ticket grant type,
+# which is used for fine-grained authorization scenarios (RBAC).
+# Spring Cloud Gateway is configured to do this automatically. Only used this if you need to call services directly.
+# @name Authenticate
+POST {{authorization_host}}/realms/{{realm}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+grant_type=urn:ietf:params:oauth:grant-type:uma-ticket&client_id={{client_id}}&client_secret={{client_secret}}&audience={{client_id}}&scope=openid
+
+### Get list of all JSR-385 loads
+# @name GetLoads
+GET {{api_gateway_host}}/api/jsr385/loads
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new JSR-385 load (223 Remington)
+# @name CreateLoad
+POST {{api_gateway_host}}/api/jsr385/loads
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "223 Remington Varmint Load",
+  "description": "Accurate varmint load for 223 Remington using Hodgdon H335 and Hornady 55gr FMJ",
+  "powderManufacturer": "Hodgdon",
+  "powderType": "H335",
+  "bulletManufacturer": "Hornady",
+  "bulletType": "FMJ",
+  "bulletWeight": {
+    "value": 55,
+    "unit": "[gr]"
+  },
+  "primerManufacturer": "CCI",
+  "primerType": "Small Rifle",
+  "distanceFromLands": {
+    "value": 0.02,
+    "unit": "[in_i]"
+  },
+  "caseOverallLength": {
+    "value": 2.260,
+    "unit": "[in_i]"
+  },
+  "neckTension": {
+    "value": 0.002,
+    "unit": "[in_i]"
+  },
+  "rifleId": {{rifle_id}}
+}
+
+### Create a new JSR-385 load (308 Winchester)
+# @name CreateLoad308
+POST {{api_gateway_host}}/api/jsr385/loads
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "308 Winchester Match Load",
+  "description": "Match load for 308 Win using IMR 4064 and Sierra 168gr HPBT",
+  "powderManufacturer": "IMR",
+  "powderType": "4064",
+  "bulletManufacturer": "Sierra",
+  "bulletType": "HPBT",
+  "bulletWeight": {
+    "value": 168,
+    "unit": "[gr]"
+  },
+  "primerManufacturer": "Federal",
+  "primerType": "Large Rifle",
+  "distanceFromLands": {
+    "value": 0.03,
+    "unit": "[in_i]"
+  },
+  "caseOverallLength": {
+    "value": 2.800,
+    "unit": "[in_i]"
+  },
+  "neckTension": {
+    "value": 0.003,
+    "unit": "[in_i]"
+  },
+  "rifleId": {{rifle_id}}
+}
+
+### Create a new JSR-385 load (6.5 Creedmoor with metric units)
+# @name CreateLoadMetric
+POST {{api_gateway_host}}/api/jsr385/loads
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "6.5 Creedmoor Match Load",
+  "description": "Precision load for 6.5 Creedmoor using H4350 and Hornady 140gr ELD-M",
+  "powderManufacturer": "Hodgdon",
+  "powderType": "H4350",
+  "bulletManufacturer": "Hornady",
+  "bulletType": "ELD-M",
+  "bulletWeight": {
+    "value": 9.07,
+    "unit": "g"
+  },
+  "primerManufacturer": "CCI",
+  "primerType": "BR-2",
+  "distanceFromLands": {
+    "value": 0.508,
+    "unit": "mm"
+  },
+  "caseOverallLength": {
+    "value": 71.12,
+    "unit": "mm"
+  },
+  "neckTension": {
+    "value": 0.0508,
+    "unit": "mm"
+  },
+  "rifleId": {{rifle_id}}
+}
+
+### Get the created load by ID
+# @name GetLoadById
+GET {{api_gateway_host}}/api/jsr385/loads/{{CreateLoad.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Get load statistics
+# @name GetLoadStats
+GET {{api_gateway_host}}/api/jsr385/loads/{{CreateLoad.response.body.id}}/statistics
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Update the created load
+# @name UpdateLoad
+PUT {{api_gateway_host}}/api/jsr385/loads/{{CreateLoad.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "id": {{CreateLoad.response.body.id}},
+  "name": "308 Winchester Match Load - Updated",
+  "description": "Updated match load for 308 Win using Hodgdon H4350 and Berger 175gr Hybrid Target",
+  "powderManufacturer": "Hodgdon",
+  "powderType": "H4350",
+  "bulletManufacturer": "Berger",
+  "bulletType": "Hybrid Target",
+  "bulletWeight": {
+    "value": 175,
+    "unit": "[gr]"
+  },
+  "primerManufacturer": "Federal",
+  "primerType": "210M",
+  "distanceFromLands": {
+    "value": 0.025,
+    "unit": "[in_i]"
+  },
+  "caseOverallLength": {
+    "value": 2.850,
+    "unit": "[in_i]"
+  },
+  "neckTension": {
+    "value": 0.003,
+    "unit": "[in_i]"
+  },
+  "rifleId": {{rifle_id}}
+}
+
+### Delete the created load
+# @name DeleteLoad
+DELETE {{api_gateway_host}}/api/jsr385/loads/{{CreateLoad.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Validation Test: Create load with invalid bullet weight (should fail)
+# @name CreateInvalidLoad
+POST {{api_gateway_host}}/api/jsr385/loads
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "Invalid Load",
+  "description": "This should fail validation",
+  "powderManufacturer": "Hodgdon",
+  "powderType": "H4350",
+  "bulletManufacturer": "Hornady",
+  "bulletType": "ELD-M",
+  "bulletWeight": {
+    "value": 500,
+    "unit": "[gr]"
+  },
+  "primerManufacturer": "CCI",
+  "primerType": "BR-2",
+  "distanceFromLands": {
+    "value": 0.020,
+    "unit": "[in_i]"
+  },
+  "caseOverallLength": {
+    "value": 2.800,
+    "unit": "[in_i]"
+  },
+  "neckTension": {
+    "value": 0.002,
+    "unit": "[in_i]"
+  },
+  "rifleId": {{rifle_id}}
+}
