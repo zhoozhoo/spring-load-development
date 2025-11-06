@@ -1,6 +1,6 @@
 // ==================== VARIABLES ====================
-// Set the rifle ID to use for load operations
-@rifle_id = 
+// Set the rifle ID to use for load operations (use null if no rifle assigned)
+@rifle_id = null
 
 ### Get OpenID configuration from Keycloak
 GET {{authorization_host}}/realms/{{realm}}/.well-known/openid-configuration
@@ -43,21 +43,25 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
   "bulletType": "FMJ",
   "bulletWeight": {
     "value": 55,
-    "unit": "[gr]"
+    "unit": "[gr]",
+    "scale": "ABSOLUTE"
   },
   "primerManufacturer": "CCI",
   "primerType": "Small Rifle",
   "distanceFromLands": {
     "value": 0.02,
-    "unit": "[in_i]"
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
   },
   "caseOverallLength": {
     "value": 2.260,
-    "unit": "[in_i]"
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
   },
   "neckTension": {
     "value": 0.002,
-    "unit": "[in_i]"
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
   },
   "rifleId": {{rifle_id}}
 }
@@ -77,21 +81,25 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
   "bulletType": "HPBT",
   "bulletWeight": {
     "value": 168,
-    "unit": "[gr]"
+    "unit": "[gr]",
+    "scale": "ABSOLUTE"
   },
   "primerManufacturer": "Federal",
   "primerType": "Large Rifle",
   "distanceFromLands": {
     "value": 0.03,
-    "unit": "[in_i]"
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
   },
   "caseOverallLength": {
     "value": 2.800,
-    "unit": "[in_i]"
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
   },
   "neckTension": {
     "value": 0.003,
-    "unit": "[in_i]"
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
   },
   "rifleId": {{rifle_id}}
 }
@@ -111,21 +119,25 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
   "bulletType": "ELD-M",
   "bulletWeight": {
     "value": 9.07,
-    "unit": "g"
+    "unit": "g",
+    "scale": "ABSOLUTE"
   },
   "primerManufacturer": "CCI",
   "primerType": "BR-2",
   "distanceFromLands": {
     "value": 0.508,
-    "unit": "mm"
+    "unit": "mm",
+    "scale": "ABSOLUTE"
   },
   "caseOverallLength": {
     "value": 71.12,
-    "unit": "mm"
+    "unit": "mm",
+    "scale": "ABSOLUTE"
   },
   "neckTension": {
     "value": 0.0508,
-    "unit": "mm"
+    "unit": "mm",
+    "scale": "ABSOLUTE"
   },
   "rifleId": {{rifle_id}}
 }
@@ -156,21 +168,25 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
   "bulletType": "Hybrid Target",
   "bulletWeight": {
     "value": 175,
-    "unit": "[gr]"
+    "unit": "[gr]",
+    "scale": "ABSOLUTE"
   },
   "primerManufacturer": "Federal",
   "primerType": "210M",
   "distanceFromLands": {
     "value": 0.025,
-    "unit": "[in_i]"
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
   },
   "caseOverallLength": {
     "value": 2.850,
-    "unit": "[in_i]"
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
   },
   "neckTension": {
     "value": 0.003,
-    "unit": "[in_i]"
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
   },
   "rifleId": {{rifle_id}}
 }
@@ -195,21 +211,25 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
   "bulletType": "ELD-M",
   "bulletWeight": {
     "value": 500,
-    "unit": "[gr]"
+    "unit": "[gr]",
+    "scale": "ABSOLUTE"
   },
   "primerManufacturer": "CCI",
   "primerType": "BR-2",
   "distanceFromLands": {
     "value": 0.020,
-    "unit": "[in_i]"
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
   },
   "caseOverallLength": {
     "value": 2.800,
-    "unit": "[in_i]"
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
   },
   "neckTension": {
     "value": 0.002,
-    "unit": "[in_i]"
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
   },
   "rifleId": {{rifle_id}}
 }
