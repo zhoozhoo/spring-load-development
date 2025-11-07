@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 http://maven.apache.org/xsd/maven-4.1.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 http://maven.apache.org/xsd/maven-4.1.0.xsd">
     <modelVersion>4.1.0</modelVersion>
 
     <parent>
@@ -24,6 +26,7 @@
         <subproject>spring-loaddev-admin-server</subproject>
         <subproject>spring-loaddev-api-gateway</subproject>
         <subproject>spring-loaddev-components-service</subproject>
+        <subproject>spring-loaddev-integration-tests</subproject>
     </subprojects>
 
     <properties>
@@ -160,7 +163,7 @@
                                 <replaceregexp file="helm/spring-load-development/values.yaml" match="(global:[\s\S]*?imageTag: &quot;)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?(&quot;)" replace="\1${project.version}\3" flags="gs" />
 
                                 <echo message="All versions updated to ${project.version}" />
-                                
+
                                 <!-- Add updated files to git -->
                                 <exec executable="git">
                                     <arg value="add" />
@@ -170,31 +173,6 @@
                                     <arg value="helm/spring-load-development/values.yaml" />
                                 </exec>
                             </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.1</version>
-                <executions>
-                    <execution>
-                        <id>copy-keycloak-realm</id>
-                        <phase>process-test-resources</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.testOutputDirectory}</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>${project.basedir}/../docker/keycloak/realm</directory>
-                                    <includes>
-                                        <include>realm.json</include>
-                                    </includes>
-                                </resource>
-                            </resources>
                         </configuration>
                     </execution>
                 </executions>

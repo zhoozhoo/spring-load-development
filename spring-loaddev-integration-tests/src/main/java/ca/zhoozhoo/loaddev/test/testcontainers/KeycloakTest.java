@@ -1,4 +1,4 @@
-package ca.zhoozhoo.loaddev.components.testcontainers;
+package ca.zhoozhoo.loaddev.test.testcontainers;
 
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 
@@ -9,9 +9,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 
 /**
- * Abstract base class for components service integration tests.
+ * Abstract base class for riles service integration tests.
  * Provides Keycloak testcontainer with dynamic property registration.
- * Test classes should extend this class to inherit the Keycloak container setup.
+ * Test classes should extend this class to inherit the Keycloak container
+ * setup.
  * 
  * @author Zhubin Salehi
  */
@@ -25,7 +26,7 @@ public abstract class KeycloakTest {
     static {
         keycloak.start();
     }
-    
+
     /**
      * Dynamically registers Keycloak properties after container starts.
      * These properties override the static values in application-test.yml
@@ -40,16 +41,17 @@ public abstract class KeycloakTest {
         var authorizationUri = issuerUri + "/protocol/openid-connect/auth";
         var userInfoUri = issuerUri + "/protocol/openid-connect/userinfo";
         var jwkSetUri = issuerUri + "/protocol/openid-connect/certs";
-        
+
         // Override the OAuth2 provider properties
+        registry.add("spring.security.oauth2.client.provider.keycloak.issuer-uri", () -> issuerUri);
         registry.add("spring.security.oauth2.client.provider.keycloak.token-uri", () -> tokenUri);
         registry.add("spring.security.oauth2.client.provider.keycloak.authorization-uri", () -> authorizationUri);
         registry.add("spring.security.oauth2.client.provider.keycloak.user-info-uri", () -> userInfoUri);
         registry.add("spring.security.oauth2.client.provider.keycloak.jwk-set-uri", () -> jwkSetUri);
-        
+
         // Override the OAuth2 resource server properties
         registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri", () -> jwkSetUri);
-        
+
         // Override the Keycloak WebClient base URL
         registry.add("spring.webclient.keycloak.base-url", () -> authServerUrl);
     }
@@ -64,33 +66,30 @@ public abstract class KeycloakTest {
     }
 
     /**
-     * Helper method to obtain an access token from Keycloak using client credentials flow.
-     * Uses a separate WebClient instance that bypasses the components service security to directly
+     * Helper method to obtain an access token from Keycloak using client
+     * credentials flow.
+     * Uses a separate WebClient instance that bypasses the riles service security
+     * to directly
      * communicate with the Keycloak testcontainer.
      * 
      * @return the access token
      */
     protected String getAccessToken() {
-        var tokenUrl = keycloak.getAuthServerUrl() + "/realms/reloading/protocol/openid-connect/token";
+        return WebClient.builder()
+                .build()
+                .post()
+                .uri(keycloak.getAuthServerUrl() + "/realms/reloading/protocol/openid-connect/token")
+                .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
+                .bodyValue("""
+                        grant_type=client_credentials\
+                        &client_id=reloading-client\
+                        &client_secret=2EvQuluZfxaaRms8V4NhzBDWzVCSXtty\
+                        """)
+                .retrieve()
+                .bodyToMono(TokenResponse.class)
+                .map(TokenResponse::accessToken)
+                .block();
 
-        try {
-            return WebClient.builder()
-                    .build()
-                    .post()
-                    .uri(tokenUrl)
-                    .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
-                    .bodyValue("""
-                            grant_type=client_credentials\
-                            &client_id=reloading-client\
-                            &client_secret=2EvQuluZfxaaRms8V4NhzBDWzVCSXtty\
-                            """)
-                    .retrieve()
-                    .bodyToMono(TokenResponse.class)
-                    .map(TokenResponse::accessToken)
-                    .block();
-        } catch (Exception e) {
-            return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ0ZXN0In0.test";
-        }
     }
 
     /**

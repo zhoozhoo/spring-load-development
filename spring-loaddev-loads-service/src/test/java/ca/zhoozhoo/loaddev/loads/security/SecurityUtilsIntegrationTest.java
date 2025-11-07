@@ -1,4 +1,4 @@
-package ca.zhoozhoo.loaddev.rifles.security;
+package ca.zhoozhoo.loaddev.loads.security;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import ca.zhoozhoo.loaddev.rifles.testcontainers.KeycloakTest;
+import ca.zhoozhoo.loaddev.test.testcontainers.KeycloakTest;
 
 /**
  * Enhanced integration tests for {@link SecurityUtils}.
@@ -19,7 +19,7 @@ import ca.zhoozhoo.loaddev.rifles.testcontainers.KeycloakTest;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-class SecurityUtilsEnhancedIntegrationTest extends KeycloakTest {
+class SecurityUtilsIntegrationTest extends KeycloakTest {
 
     @Autowired
     private SecurityUtils securityUtils;
