@@ -33,6 +33,7 @@ class ModelTests {
                 "PrimerMfg", "PrimerType", 0.020, null, null, 1L).equals(null));
     }
 
+    @SuppressWarnings("unlikely-arg-type")
     @Test
     void load_equals_shouldHandleDifferentClass() {
         assertFalse(new Load(1L, "user1", "Test Load", "Description", IMPERIAL,
@@ -86,6 +87,7 @@ class ModelTests {
         assertFalse(new Group(1L, "user1", 1L, now(), 40.5, 100, 1.5).equals(null));
     }
 
+    @SuppressWarnings("unlikely-arg-type")
     @Test
     void group_equals_shouldHandleDifferentClass() {
         assertFalse(new Group(1L, "user1", 1L, now(), 40.5, 100, 1.5).equals("Not a Group"));
@@ -129,6 +131,7 @@ class ModelTests {
         assertFalse(new Shot(1L, "user1", 1L, 2850).equals(null));
     }
 
+    @SuppressWarnings("unlikely-arg-type")
     @Test
     void shot_equals_shouldHandleDifferentClass() {
         assertFalse(new Shot(1L, "user1", 1L, 2850).equals("Not a Shot"));

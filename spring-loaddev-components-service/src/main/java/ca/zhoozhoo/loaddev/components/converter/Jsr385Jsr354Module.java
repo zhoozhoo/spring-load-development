@@ -20,7 +20,7 @@ public class Jsr385Jsr354Module extends SimpleModule {
 
     private static final long serialVersionUID = 1L;
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Jsr385Jsr354Module() {
         super("Jsr385Jsr354Module", new Version(1, 0, 0, null,
                 Jsr385Jsr354Module.class.getPackage().getName(), "spring-loaddev-components"));

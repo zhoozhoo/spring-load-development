@@ -10,7 +10,7 @@ public class QuantityModule extends SimpleModule {
 
     private static final long serialVersionUID = 1L;
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public QuantityModule() {
         super("UnitJsonSerializationModule", new Version(2, 1, 0, null,
                 QuantityModule.class.getPackage().getName(), "uom-lib-jackson"));
