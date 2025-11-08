@@ -1,4 +1,9 @@
 spring:
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      enabled: false
   threads:
     virtual:
       enabled: true
