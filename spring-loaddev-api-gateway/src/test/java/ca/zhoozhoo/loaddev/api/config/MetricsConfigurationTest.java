@@ -9,7 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
+import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
 
 /**
  * Integration tests for {@link MetricsConfiguration}.
@@ -44,13 +44,10 @@ class MetricsConfigurationTest {
     }
 
     @Test
-    @DisplayName("Should use CompositeMeterRegistry")
-    void shouldUseCompositeMeterRegistry() {
-        assertThat(meterRegistry)
-                .isInstanceOf(CompositeMeterRegistry.class);
-        
-        assertThat(((CompositeMeterRegistry) meterRegistry).getRegistries())
-                .isNotEmpty();
+    @DisplayName("Should use OpenTelemetryMeterRegistry as primary")
+    void shouldUseOpenTelemetryMeterRegistryAsPrimary() {
+    assertThat(meterRegistry)
+        .isInstanceOf(OpenTelemetryMeterRegistry.class);
     }
 
     @Test
