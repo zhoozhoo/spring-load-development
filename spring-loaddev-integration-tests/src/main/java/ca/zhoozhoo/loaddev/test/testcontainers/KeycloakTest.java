@@ -50,6 +50,9 @@ public abstract class KeycloakTest {
         registry.add("spring.security.oauth2.client.provider.keycloak.jwk-set-uri", () -> jwkSetUri);
 
         // Override the OAuth2 resource server properties
+        // Ensure both JWK Set and Issuer URI match the running Keycloak container,
+        // overriding any values coming from Spring Cloud Config during tests.
+        registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri", () -> issuerUri);
         registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri", () -> jwkSetUri);
 
         // Override the Keycloak WebClient base URL
@@ -81,9 +84,12 @@ public abstract class KeycloakTest {
                 .uri(keycloak.getAuthServerUrl() + "/realms/reloading/protocol/openid-connect/token")
                 .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
                 .bodyValue("""
-                        grant_type=client_credentials\
+                        grant_type=password\
                         &client_id=reloading-client\
                         &client_secret=2EvQuluZfxaaRms8V4NhzBDWzVCSXtty\
+                        &username=reloader1\
+                        &password=reloader1\
+                        &scope=openid\
                         """)
                 .retrieve()
                 .bodyToMono(TokenResponse.class)
