@@ -1,8 +1,6 @@
 package ca.zhoozhoo.loaddev.rifles.web;
 
 import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.ResponseEntity.notFound;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
@@ -43,11 +41,12 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * REST controller for managing rifle firearm data.
+ * REST controller for managing rifle firearm data using JSR-385 units.
  * <p>
  * This controller provides endpoints for CRUD operations on rifle specifications including
- * caliber, barrel length, and twist rate. All endpoints are secured with OAuth2 authentication
- * and enforce user-based access control for multi-tenant data isolation.
+ * caliber, barrel length (using JSR-385 Quantity&lt;Length&gt;), and twist rate. 
+ * All endpoints are secured with OAuth2 authentication and enforce user-based access control 
+ * for multi-tenant data isolation.
  * </p>
  *
  * @author Zhubin Salehi
@@ -78,30 +77,20 @@ public class RifleController {
     @Autowired
     private RifleRepository rifleRepository;
 
-    @Operation(summary = "Get all rifles", 
-               description = "Retrieves all rifles belonging to the authenticated user")
+    @Operation(summary = "Get all rifles", description = "Retrieves all rifles belonging to the authenticated user")
     @SecurityRequirement(name = "Oauth2Security", scopes = "view")
-    @ApiResponse(responseCode = "200", 
-                 description = "Successfully retrieved list of rifles",
-                 content = @Content(mediaType = "application/json",
-                                   array = @ArraySchema(schema = @Schema(implementation = Rifle.class))))
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved list of rifles", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Rifle.class))))
     @GetMapping
     @PreAuthorize("hasAuthority('rifles:view')")
     public Flux<Rifle> getAllRifles(@Parameter(hidden = true) @CurrentUser String userId) {
         return rifleRepository.findAllByOwnerId(userId);
     }
 
-    @Operation(summary = "Get rifle by ID",
-               description = "Retrieves a specific rifle by its ID for the authenticated user")
+    @Operation(summary = "Get rifle by ID", description = "Retrieves a specific rifle by its ID for the authenticated user")
     @SecurityRequirement(name = "Oauth2Security", scopes = "view")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", 
-                     description = "Successfully retrieved rifle",
-                     content = @Content(mediaType = "application/json",
-                                       schema = @Schema(implementation = Rifle.class))),
-        @ApiResponse(responseCode = "404", 
-                     description = "Rifle not found",
-                     content = @Content)
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved rifle", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Rifle.class))),
+            @ApiResponse(responseCode = "404", description = "Rifle not found", content = @Content)
     })
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('rifles:view')")
@@ -109,24 +98,16 @@ public class RifleController {
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Rifle ID", required = true) @PathVariable Long id) {
         return rifleRepository.findByIdAndOwnerId(id, userId)
-                .map(rifle -> {
-                    log.debug("Found rifle: {}", rifle);
-                    return ok(rifle);
-                })
+                .doOnNext(rifle -> log.debug("Found rifle: {}", rifle))
+                .map(rifle -> ok(rifle))
                 .defaultIfEmpty(notFound().build());
     }
 
-    @Operation(summary = "Create a new rifle",
-               description = "Creates a new rifle for the authenticated user")
+    @Operation(summary = "Create a new rifle", description = "Creates a new rifle for the authenticated user")
     @SecurityRequirement(name = "Oauth2Security", scopes = "edit")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201",
-                     description = "Rifle successfully created",
-                     content = @Content(mediaType = "application/json",
-                                       schema = @Schema(implementation = Rifle.class))),
-        @ApiResponse(responseCode = "400",
-                     description = "Invalid rifle data",
-                     content = @Content)
+            @ApiResponse(responseCode = "201", description = "Rifle successfully created", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Rifle.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid rifle data", content = @Content)
     })
     @PostMapping
     @ResponseStatus(CREATED)
@@ -139,7 +120,6 @@ public class RifleController {
                 userId,
                 rifle.name(),
                 rifle.description(),
-                rifle.measurementUnits(),
                 rifle.caliber(),
                 rifle.barrelLength(),
                 rifle.barrelContour(),
@@ -147,65 +127,45 @@ public class RifleController {
                 rifle.rifling(),
                 rifle.freeBore()))
                 .flatMap(rifleRepository::save)
-                .map(savedRifle -> {
-                    log.info("Created new rifle with id: {}", savedRifle.id());
-                    return status(CREATED).body(savedRifle);
-                });
+                .doOnNext(savedRifle -> log.info("Created new rifle with id: {}", savedRifle.id()))
+                .map(savedRifle -> status(CREATED).body(savedRifle));
     }
 
-    @Operation(summary = "Update an existing rifle",
-               description = "Updates an existing rifle by its ID")
+    @Operation(summary = "Update an existing rifle", description = "Updates an existing rifle by its ID")
     @SecurityRequirement(name = "Oauth2Security", scopes = "edit")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200",
-                     description = "Rifle successfully updated",
-                     content = @Content(mediaType = "application/json",
-                                       schema = @Schema(implementation = Rifle.class))),
-        @ApiResponse(responseCode = "400",
-                     description = "Invalid rifle data",
-                     content = @Content),
-        @ApiResponse(responseCode = "404",
-                     description = "Rifle not found",
-                     content = @Content)
+            @ApiResponse(responseCode = "200", description = "Rifle successfully updated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Rifle.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid rifle data", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Rifle not found", content = @Content)
     })
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('rifles:edit')")
     public Mono<ResponseEntity<Rifle>> updateRifle(
+            @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Rifle ID", required = true) @PathVariable Long id,
             @Parameter(description = "Updated rifle data", required = true) @Valid @RequestBody Rifle rifle) {
-        return rifleRepository.findById(id)
-                .flatMap(existingRifle -> {
-                    Rifle updatedRifle = new Rifle(
-                            existingRifle.id(),
-                            existingRifle.ownerId(),
-                            rifle.name(),
-                            rifle.description(),
-                            rifle.measurementUnits(),
-                            rifle.caliber(),
-                            rifle.barrelLength(),
-                            rifle.barrelContour(),
-                            rifle.twistRate(),
-                            rifle.rifling(),
-                            rifle.freeBore());
-                    return rifleRepository.save(updatedRifle);
-                })
-                .map(updatedRifle -> {
-                    log.info("Updated rifle with id: {}", updatedRifle.id());
-                    return ok(updatedRifle);
-                })
+        return rifleRepository.findByIdAndOwnerId(id, userId)
+                .flatMap(existingRifle -> rifleRepository.save(new Rifle(
+                        existingRifle.id(),
+                        existingRifle.ownerId(),
+                        rifle.name(),
+                        rifle.description(),
+                        rifle.caliber(),
+                        rifle.barrelLength(),
+                        rifle.barrelContour(),
+                        rifle.twistRate(),
+                        rifle.rifling(),
+                        rifle.freeBore())))
+                .doOnNext(updatedRifle -> log.info("Updated rifle with id: {}", updatedRifle.id()))
+                .map(updatedRifle -> ok(updatedRifle))
                 .defaultIfEmpty(notFound().build());
     }
 
-    @Operation(summary = "Delete a rifle",
-               description = "Deletes a rifle by its ID for the authenticated user")
+    @Operation(summary = "Delete a rifle", description = "Deletes a rifle by its ID for the authenticated user")
     @SecurityRequirement(name = "Oauth2Security", scopes = "delete")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "204",
-                     description = "Rifle successfully deleted",
-                     content = @Content),
-        @ApiResponse(responseCode = "404",
-                     description = "Rifle not found",
-                     content = @Content)
+            @ApiResponse(responseCode = "204", description = "Rifle successfully deleted", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Rifle not found", content = @Content)
     })
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('rifles:delete')")
@@ -214,8 +174,8 @@ public class RifleController {
             @Parameter(description = "Rifle ID", required = true) @PathVariable Long id) {
         return rifleRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingRifle -> rifleRepository.delete(existingRifle)
-                        .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT)))
+                        .thenReturn(ResponseEntity.noContent().<Void>build())
                         .doOnSuccess(_ -> log.info("Deleted rifle with id: {}", id)))
-                .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }

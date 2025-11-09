@@ -2,6 +2,7 @@ package ca.zhoozhoo.loaddev.rifles.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -41,7 +41,7 @@ class SecurityConfigurationIntegrationTest extends KeycloakTest {
     void shouldProcessAuthenticatedRequestsWithValidToken() {
         webTestClient.get()
                 .uri("/actuator/health")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .header(AUTHORIZATION, "Bearer " + accessToken)
                 .exchange()
                 .expectStatus().isOk();
     }

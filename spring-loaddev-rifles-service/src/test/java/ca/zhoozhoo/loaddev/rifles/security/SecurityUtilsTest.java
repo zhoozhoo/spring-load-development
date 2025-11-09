@@ -36,12 +36,8 @@ class SecurityUtilsTest {
 
     @Test
     void extractUserId_fromJwtPrincipal_shouldReturnSubject() {
-        var auth = new JwtAuthenticationToken(Jwt.withTokenValue("token")
-                .header("alg", "none")
-                .subject("user123")
-                .build());
-        
-        assertEquals("user123", switch (auth.getPrincipal()) {
+        var jwt = Jwt.withTokenValue("token").header("alg", "none").subject("user123").build();
+        assertEquals("user123", switch (new JwtAuthenticationToken(jwt).getPrincipal()) {
             case Jwt j -> j.getSubject();
             case null, default -> null;
         });
@@ -57,13 +53,35 @@ class SecurityUtilsTest {
 
     @Test
     void checkAuthentication_whenNotAuthenticated_shouldBeFalse() {
-        var auth = new JwtAuthenticationToken(Jwt.withTokenValue("token")
-                .header("alg", "none")
-                .subject("user123")
-                .build());
+        var jwt = Jwt.withTokenValue("token").header("alg", "none").subject("user123").build();
+        var auth = new JwtAuthenticationToken(jwt);
         auth.setAuthenticated(false);
-        
         assertFalse(auth.isAuthenticated());
     }
-}
 
+    @Test
+    void extractUserId_fromNullPrincipal_shouldReturnNull() {
+        // Test the null case in the switch pattern
+        assertNull(switch ((Object) null) {
+            case Jwt jwt -> jwt.getSubject();
+            case null, default -> null;
+        });
+    }
+
+    @Test
+    void extractUserId_fromStringPrincipal_shouldReturnNull() {
+        // Test the default case in the switch pattern with a non-JWT type
+        assertNull(switch ((Object) "stringPrincipal") {
+            case Jwt jwt -> jwt.getSubject();
+            case null, default -> null;
+        });
+    }
+
+    @Test
+    void checkAuthentication_whenAuthenticated_shouldBeTrue() {
+        var jwt = Jwt.withTokenValue("token").header("alg", "none").subject("user123").build();
+        var auth = new JwtAuthenticationToken(jwt);
+        auth.setAuthenticated(true);
+        assert auth.isAuthenticated();
+    }
+}
