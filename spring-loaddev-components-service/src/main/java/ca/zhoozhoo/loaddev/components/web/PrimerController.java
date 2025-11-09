@@ -2,8 +2,6 @@ package ca.zhoozhoo.loaddev.components.web;
 
 import static io.swagger.v3.oas.annotations.enums.SecuritySchemeType.OAUTH2;
 import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.ResponseEntity.notFound;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
@@ -45,10 +43,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * REST controller for managing primer components.
+ * REST controller for managing primer components using JSR-385 and JSR-354 units.
  * <p>
- * This controller provides endpoints for CRUD operations on primer data, including
- * full-text search capabilities. All endpoints are secured with OAuth2 authentication
+ * This controller provides endpoints for CRUD operations on primer data with JSR-385 Units of
+ * Measurement for quantity per box and JSR-354 Money and Currency API for cost handling.
+ * All endpoints include full-text search capabilities, are secured with OAuth2 authentication,
  * and enforce user-based access control for multi-tenant data isolation.
  * </p>
  *
@@ -102,10 +101,8 @@ public class PrimerController {
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of primer") @PathVariable Long id) {
         return primerRepository.findByIdAndOwnerId(id, userId)
-                .map(primer -> {
-                    log.debug("Found primer: {}", primer);
-                    return ok(primer);
-                })
+                .doOnNext(primer -> log.debug("Found primer: {}", primer))
+                .map(primer -> ok(primer))
                 .defaultIfEmpty(notFound().build());
     }
 
@@ -128,13 +125,10 @@ public class PrimerController {
                         p.type(),
                         p.primerSize(),
                         p.cost(),
-                        p.currency(),
                         p.quantityPerBox()))
                 .flatMap(primerRepository::save)
-                .map(savedPrimer -> {
-                    log.info("Created new primer with id: {}", savedPrimer.id());
-                    return status(CREATED).body(savedPrimer);
-                });
+                .doOnNext(savedPrimer -> log.debug("Created new primer with id: {}", savedPrimer.id()))
+                .map(savedPrimer -> status(CREATED).body(savedPrimer));
     }
 
     @Operation(summary = "Update an existing primer", security = {
@@ -150,22 +144,16 @@ public class PrimerController {
             @Parameter(description = "Id of primer") @PathVariable Long id,
             @Valid @RequestBody Primer primer) {
         return primerRepository.findByIdAndOwnerId(id, userId)
-                .flatMap(existingPrimer -> {
-                    Primer updatedPrimer = new Primer(
-                            existingPrimer.id(),
-                            existingPrimer.ownerId(),
-                            primer.manufacturer(),
-                            primer.type(),
-                            primer.primerSize(),
-                            primer.cost(),
-                            primer.currency(),
-                            primer.quantityPerBox());
-                    return primerRepository.save(updatedPrimer);
-                })
-                .map(updatedPrimer -> {
-                    log.info("Updated primer with id: {}", updatedPrimer.id());
-                    return ok(updatedPrimer);
-                })
+                .flatMap(existingPrimer -> primerRepository.save(new Primer(
+                        existingPrimer.id(),
+                        existingPrimer.ownerId(),
+                        primer.manufacturer(),
+                        primer.type(),
+                        primer.primerSize(),
+                        primer.cost(),
+                        primer.quantityPerBox())))
+                .doOnNext(updatedPrimer -> log.debug("Updated primer with id: {}", updatedPrimer.id()))
+                .map(updatedPrimer -> ok(updatedPrimer))
                 .defaultIfEmpty(notFound().build());
     }
 
@@ -181,8 +169,8 @@ public class PrimerController {
             @Parameter(description = "Id of primer") @PathVariable Long id) {
         return primerRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingPrimer -> primerRepository.delete(existingPrimer)
-                        .then(just(new ResponseEntity<Void>(NO_CONTENT)))
-                        .doOnSuccess(_ -> log.info("Deleted primer with id: {}", id)))
-                .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
+                        .thenReturn(ResponseEntity.noContent().<Void>build())
+                        .doOnSuccess(_ -> log.debug("Deleted primer with id: {}", id)))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }

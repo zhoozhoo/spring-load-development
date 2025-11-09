@@ -15,11 +15,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 /**
  * Represents a propellant component for ammunition reloading using JSR-385 and JSR-354 units.
  * <p>
- * Propellant (powder) is the combustible substance that generates gas pressure to propel
+ * Propellant (smokeless powder) is the combustible substance that generates gas pressure to propel
  * the projectile. This record defines propellant specifications including manufacturer, type
  * (e.g., IMR 4064, H4350), container weight as a JSR-385 Quantity, and cost as a JSR-354
  * MonetaryAmount. The weight is stored using the JSR-385 Units of Measurement API, and the
@@ -46,7 +47,7 @@ public record Propellant(
 
         @NotBlank(message = "Type is required") @Column("type") String type,
 
-        @NotNull(message = "Cost is required") @Column("cost") MonetaryAmount cost,
+        @NotNull(message = "Cost is required") @PositiveOrZero(message = "Cost must be non-negative") @Column("cost") MonetaryAmount cost,
 
         @NotNull(message = "Weight per container is required") @Positive(message = "Weight per container must be positive") @Column("weight_per_container") Quantity<Mass> weightPerContainer) {
 

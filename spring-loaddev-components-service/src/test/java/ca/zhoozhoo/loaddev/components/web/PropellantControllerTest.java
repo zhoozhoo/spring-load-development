@@ -1,14 +1,15 @@
 package ca.zhoozhoo.loaddev.components.web;
 
-import static ca.zhoozhoo.loaddev.components.model.Powder.IMPERIAL;
-import static ca.zhoozhoo.loaddev.components.model.Powder.METRIC;
 import static java.util.UUID.randomUUID;
+import static javax.money.Monetary.getCurrency;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.javamoney.moneta.Money.of;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 import static reactor.core.publisher.Mono.just;
-
-import java.math.BigDecimal;
+import static systems.uom.ucum.UCUM.POUND;
+import static tech.units.indriya.quantity.Quantities.getQuantity;
+import static tech.units.indriya.unit.Units.KILOGRAM;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,218 +21,211 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
-import ca.zhoozhoo.loaddev.components.dao.PowderRepository;
-import ca.zhoozhoo.loaddev.components.model.Powder;
+import ca.zhoozhoo.loaddev.components.dao.PropellantRepository;
+import ca.zhoozhoo.loaddev.components.model.Propellant;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
 @Import(TestSecurityConfig.class)
-public class PowderControllerTest {
+public class PropellantControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;
 
     @Autowired
-    private PowderRepository powderRepository;
+    private PropellantRepository propellantRepository;
 
     @BeforeEach
     void setUp() {
-        powderRepository.deleteAll().block();
+        propellantRepository.deleteAll().block();
     }
 
     @Test
-    void getAllPowders() {
+    void getAllPropellants() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/powders")
+        webTestClient.mutateWith(jwt).get().uri("/propellants")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(APPLICATION_JSON)
-                .expectBodyList(Powder.class);
+                .expectBodyList(Propellant.class);
     }
 
     @Test
-    void searchPowders() {
+    void searchPropellants() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedPowder = powderRepository.save(createTestPowder(userId)).block();
+        var savedPropellant = propellantRepository.save(createTestPropellant(userId)).block();
 
-        webTestClient.mutateWith(jwt).get().uri(uriBuilder -> uriBuilder.path("/powders/search").queryParam("query", "Hodgdon H4350").build())
+        webTestClient.mutateWith(jwt).get().uri(uriBuilder -> uriBuilder.path("/propellants/search").queryParam("query", "Hodgdon H4350").build())
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(APPLICATION_JSON)
-                .expectBodyList(Powder.class)
+                .expectBodyList(Propellant.class)
                 .value(list -> {
                     assertThat(list).isNotEmpty();
-                    assertThat(list).contains(savedPowder);
+                    assertThat(list).contains(savedPropellant);
                 });
     }
 
     @Test
-    void getPowderById() {
+    void getPropellantById() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedPowder = powderRepository.save(createTestPowder(userId)).block();
+        var savedPropellant = propellantRepository.save(createTestPropellant(userId)).block();
 
-        webTestClient.mutateWith(jwt).get().uri("/powders/{id}", savedPowder.id())
+        webTestClient.mutateWith(jwt).get().uri("/propellants/{id}", savedPropellant.id())
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(APPLICATION_JSON)
-                .expectBody(Powder.class)
-                .isEqualTo(savedPowder);
+                .expectBody(Propellant.class)
+                .isEqualTo(savedPropellant);
     }
 
     @Test
-    void getPowderByIdNotFound() {
+    void getPropellantByIdNotFound() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/powders/999")
+        webTestClient.mutateWith(jwt).get().uri("/propellants/999")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    void createPowder() {
+    void createPropellant() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var powder = createTestPowder(userId);
+        var propellant = createTestPropellant(userId);
 
-        webTestClient.mutateWith(jwt).post().uri("/powders")
+        webTestClient.mutateWith(jwt).post().uri("/propellants")
                 .contentType(APPLICATION_JSON)
-                .body(just(powder), Powder.class)
+                .body(just(propellant), Propellant.class)
                 .exchange()
                 .expectStatus().isCreated()
-                .expectBody(Powder.class)
+                .expectBody(Propellant.class)
                 .value(p -> {
                     assertThat(p.id()).isNotNull();
                     assertThat(p.manufacturer()).isEqualTo("Hodgdon");
                     assertThat(p.type()).isEqualTo("H4350");
-                    assertThat(p.measurementUnits()).isEqualTo(IMPERIAL);
-                    assertThat(p.cost()).isEqualTo(new BigDecimal("45.99"));
-                    assertThat(p.currency()).isEqualTo("CAD");
-                    assertThat(p.weightPerContainer()).isEqualTo(1.0);
+                    assertThat(p.cost()).isEqualTo(of(45.99, getCurrency("CAD")));
+                    assertThat(p.weightPerContainer().getValue().doubleValue()).isEqualTo(1.0);
+                    assertThat(p.weightPerContainer().getUnit()).isEqualTo(POUND);
                 });
     }
 
     @Test
-    void createPowderInvalidInput() {
+    void createPropellantInvalidInput() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidPowder = new Powder(null, userId, "", "", "", 
-                new BigDecimal("-1"), "", -1.0);
+        var invalidPropellant = new Propellant(null, userId, "", "", 
+                of(-1, getCurrency("CAD")), 
+                getQuantity(-1, KILOGRAM));
 
-        webTestClient.mutateWith(jwt).post().uri("/powders")
+        webTestClient.mutateWith(jwt).post().uri("/propellants")
                 .contentType(APPLICATION_JSON)
-                .body(just(invalidPowder), Powder.class)
+                .body(just(invalidPropellant), Propellant.class)
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody(String.class)
                 .value(errorMessage -> {
                     assertThat(errorMessage).contains("Manufacturer is required");
                     assertThat(errorMessage).contains("Type is required");
-                    assertThat(errorMessage).contains("Measurement Units is required");
-                    assertThat(errorMessage).contains("Cost must be positive");
-                    assertThat(errorMessage).contains("Currency is required");
+                    assertThat(errorMessage).contains("Cost must be non-negative");
                     assertThat(errorMessage).contains("Weight per container must be positive");
                 });
     }
 
     @Test
-    void updatePowder() {
+    void updatePropellant() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedPowder = powderRepository.save(createTestPowder(userId)).block();
+        var savedPropellant = propellantRepository.save(createTestPropellant(userId)).block();
 
-        var updatedPowder = new Powder(
-                savedPowder.id(),
+        var updatedPropellant = new Propellant(
+                savedPropellant.id(),
                 userId,
                 "IMR",
                 "4895",
-                METRIC,
-                new BigDecimal("49.99"),
-                "CAD",
-                0.5);
+                of(49.99, getCurrency("CAD")),
+                getQuantity(0.5, KILOGRAM));
 
-        webTestClient.mutateWith(jwt).put().uri("/powders/{id}", savedPowder.id())
+        webTestClient.mutateWith(jwt).put().uri("/propellants/{id}", savedPropellant.id())
                 .contentType(APPLICATION_JSON)
-                .body(just(updatedPowder), Powder.class)
+                .body(just(updatedPropellant), Propellant.class)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Powder.class)
+                .expectBody(Propellant.class)
                 .value(p -> {
-                    assertThat(p.id()).isEqualTo(savedPowder.id());
+                    assertThat(p.id()).isEqualTo(savedPropellant.id());
                     assertThat(p.manufacturer()).isEqualTo("IMR");
                     assertThat(p.type()).isEqualTo("4895");
-                    assertThat(p.measurementUnits()).isEqualTo(METRIC);
-                    assertThat(p.cost()).isEqualTo(new BigDecimal("49.99"));
-                    assertThat(p.currency()).isEqualTo("CAD");
-                    assertThat(p.weightPerContainer()).isEqualTo(0.5);
+                    assertThat(p.cost()).isEqualTo(of(49.99, getCurrency("CAD")));
+                    assertThat(p.weightPerContainer().getValue().doubleValue()).isEqualTo(0.5);
+                    assertThat(p.weightPerContainer().getUnit().toString()).isEqualTo(KILOGRAM.toString());
                 });
     }
 
     @Test
-    void updatePowderNotFound() {
+    void updatePropellantNotFound() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var powder = createTestPowder(userId);
+        var propellant = createTestPropellant(userId);
 
-        webTestClient.mutateWith(jwt).put().uri("/powders/999")
+        webTestClient.mutateWith(jwt).put().uri("/propellants/999")
                 .contentType(APPLICATION_JSON)
-                .body(just(powder), Powder.class)
+                .body(just(propellant), Propellant.class)
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    void deletePowder() {
+    void deletePropellant() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedPowder = powderRepository.save(createTestPowder(userId)).block();
+        var savedPropellant = propellantRepository.save(createTestPropellant(userId)).block();
 
         webTestClient.mutateWith(jwt)
-                .delete().uri("/powders/{id}", savedPowder.id())
+                .delete().uri("/propellants/{id}", savedPropellant.id())
                 .exchange()
                 .expectStatus().isNoContent();
 
         webTestClient.mutateWith(jwt)
-                .get().uri("/powders/{id}", savedPowder.id())
+                .get().uri("/propellants/{id}", savedPropellant.id())
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    void deletePowderNotFound() {
+    void deletePropellantNotFound() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).delete().uri("/powders/999")
+        webTestClient.mutateWith(jwt).delete().uri("/propellants/999")
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
-    private Powder createTestPowder(String ownerId) {
-        return new Powder(
+    private Propellant createTestPropellant(String ownerId) {
+        return new Propellant(
                 null,
                 ownerId,
                 "Hodgdon",
                 "H4350",
-                IMPERIAL,
-                new BigDecimal("45.99"),
-                "CAD",
-                1.0);
+                of(45.99, getCurrency("CAD")),
+                getQuantity(1.0, POUND));
     }
 }

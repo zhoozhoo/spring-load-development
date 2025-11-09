@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 /**
  * Represents a projectile component for ammunition reloading using JSR-385 and JSR-354 units.
@@ -46,7 +47,7 @@ public record Projectile(
 
         @NotBlank(message = "Type is required") @Column("type") String type,
 
-        @NotNull(message = "Cost is required") @Column("cost") MonetaryAmount cost,
+        @NotNull(message = "Cost is required") @PositiveOrZero(message = "Cost must be non-negative") @Column("cost") MonetaryAmount cost,
 
         @NotNull(message = "Quantity per box is required") @Positive(message = "Quantity per box must be positive") @Column Integer quantityPerBox) {
 

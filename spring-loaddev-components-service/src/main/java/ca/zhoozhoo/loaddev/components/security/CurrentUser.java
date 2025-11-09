@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
  * <p>
  * Example usage:
  * <pre>
- * public Mono&lt;ResponseEntity&lt;Bullet&gt;&gt; getBullet(@CurrentUser String userId) {
+ * public Mono&lt;ResponseEntity&lt;Projectile&gt;&gt; getProjectile(@CurrentUser String userId) {
  *     // userId is automatically extracted from JWT
  * }
  * </pre>

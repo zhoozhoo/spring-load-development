@@ -3,11 +3,13 @@ package ca.zhoozhoo.loaddev.components.dao;
 import static ca.zhoozhoo.loaddev.components.model.PrimerSize.LARGE_RIFLE;
 import static ca.zhoozhoo.loaddev.components.model.PrimerSize.LARGE_RIFLE_MAGNUM;
 import static java.util.UUID.randomUUID;
+import static javax.money.Monetary.getCurrency;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.javamoney.moneta.Money.of;
 import static reactor.core.publisher.Flux.just;
 import static reactor.test.StepVerifier.create;
-
-import java.math.BigDecimal;
+import static tech.units.indriya.AbstractUnit.ONE;
+import static tech.units.indriya.quantity.Quantities.getQuantity;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,9 +41,8 @@ class PrimerRepositoryTest {
                 "CCI",
                 "BR-4",
                 LARGE_RIFLE,
-                new BigDecimal("89.99"),
-                "CAD",
-                1000);
+                of(89.99, getCurrency("CAD")),
+                getQuantity(1000, ONE));
     }
 
     @Test
@@ -55,9 +56,10 @@ class PrimerRepositoryTest {
                     assertThat(p.manufacturer()).isEqualTo("CCI");
                     assertThat(p.type()).isEqualTo("BR-4");
                     assertThat(p.primerSize()).isEqualTo(LARGE_RIFLE);
-                    assertThat(p.cost()).isEqualTo(new BigDecimal("89.99"));
-                    assertThat(p.currency()).isEqualTo("CAD");
-                    assertThat(p.quantityPerBox()).isEqualTo(1000);
+                    assertThat(p.cost().getNumber().doubleValue()).isEqualTo(89.99);
+                    assertThat(p.cost().getCurrency()).isEqualTo(getCurrency("CAD"));
+                    assertThat(p.quantityPerBox().getValue().doubleValue()).isEqualTo(1000.0);
+                    assertThat(p.quantityPerBox().getUnit()).isEqualTo(ONE);
                 })
                 .verifyComplete();
     }
@@ -74,9 +76,10 @@ class PrimerRepositoryTest {
                     assertThat(p.manufacturer()).isEqualTo("CCI");
                     assertThat(p.type()).isEqualTo("BR-4");
                     assertThat(p.primerSize()).isEqualTo(LARGE_RIFLE);
-                    assertThat(p.cost()).isEqualTo(new BigDecimal("89.99"));
-                    assertThat(p.currency()).isEqualTo("CAD");
-                    assertThat(p.quantityPerBox()).isEqualTo(1000);
+                    assertThat(p.cost().getNumber().doubleValue()).isEqualTo(89.99);
+                    assertThat(p.cost().getCurrency()).isEqualTo(getCurrency("CAD"));
+                    assertThat(p.quantityPerBox().getValue().doubleValue()).isEqualTo(1000.0);
+                    assertThat(p.quantityPerBox().getUnit()).isEqualTo(ONE);
                 })
                 .verifyComplete();
     }
@@ -92,9 +95,8 @@ class PrimerRepositoryTest {
                 "Federal",
                 "205M",
                 LARGE_RIFLE_MAGNUM,
-                new BigDecimal("99.99"),
-                "CAD",
-                500);
+                of(99.99, getCurrency("CAD")),
+                getQuantity(500, ONE));
 
         create(primerRepository.save(updatedPrimer))
                 .assertNext(p -> {
@@ -103,9 +105,10 @@ class PrimerRepositoryTest {
                     assertThat(p.manufacturer()).isEqualTo("Federal");
                     assertThat(p.type()).isEqualTo("205M");
                     assertThat(p.primerSize()).isEqualTo(LARGE_RIFLE_MAGNUM);
-                    assertThat(p.cost()).isEqualTo(new BigDecimal("99.99"));
-                    assertThat(p.currency()).isEqualTo("CAD");
-                    assertThat(p.quantityPerBox()).isEqualTo(500);
+                    assertThat(p.cost().getNumber().doubleValue()).isEqualTo(99.99);
+                    assertThat(p.cost().getCurrency()).isEqualTo(getCurrency("CAD"));
+                    assertThat(p.quantityPerBox().getValue().doubleValue()).isEqualTo(500.0);
+                    assertThat(p.quantityPerBox().getUnit()).isEqualTo(ONE);
                 })
                 .verifyComplete();
     }
@@ -130,9 +133,8 @@ class PrimerRepositoryTest {
                 "Winchester",
                 "WLR",
                 LARGE_RIFLE,
-                new BigDecimal("79.99"),
-                "CAD",
-                1000);
+                of(79.99, getCurrency("CAD")),
+                getQuantity(1000, ONE));
 
         primerRepository.saveAll(just(primer1, primer2)).blockLast();
 

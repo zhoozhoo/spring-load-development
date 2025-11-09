@@ -3,11 +3,13 @@ package ca.zhoozhoo.loaddev.components.dao;
 import static ca.zhoozhoo.loaddev.components.model.PrimerSize.LARGE_RIFLE;
 import static ca.zhoozhoo.loaddev.components.model.PrimerSize.LARGE_RIFLE_MAGNUM;
 import static java.util.UUID.randomUUID;
+import static javax.money.Monetary.getCurrency;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.javamoney.moneta.Money.of;
 import static reactor.core.publisher.Flux.just;
 import static reactor.test.StepVerifier.create;
-
-import java.math.BigDecimal;
+import static tech.units.indriya.AbstractUnit.ONE;
+import static tech.units.indriya.quantity.Quantities.getQuantity;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,9 +41,8 @@ class CaseRepositoryTest {
                 "Lapua",
                 "6.5 Creedmoor",
                 LARGE_RIFLE,
-                new BigDecimal("89.99"),
-                "CAD",
-                100);
+                of(89.99, getCurrency("CAD")),
+                getQuantity(100, ONE));
     }
 
     @Test
@@ -55,9 +56,10 @@ class CaseRepositoryTest {
                     assertThat(c.manufacturer()).isEqualTo("Lapua");
                     assertThat(c.caliber()).isEqualTo("6.5 Creedmoor");
                     assertThat(c.primerSize()).isEqualTo(LARGE_RIFLE);
-                    assertThat(c.cost()).isEqualTo(new BigDecimal("89.99"));
-                    assertThat(c.currency()).isEqualTo("CAD");
-                    assertThat(c.quantityPerBox()).isEqualTo(100);
+                    assertThat(c.cost().getNumber().doubleValue()).isEqualTo(89.99);
+                    assertThat(c.cost().getCurrency()).isEqualTo(getCurrency("CAD"));
+                    assertThat(c.quantityPerBox().getValue().doubleValue()).isEqualTo(100.0);
+                    assertThat(c.quantityPerBox().getUnit()).isEqualTo(ONE);
                 })
                 .verifyComplete();
     }
@@ -74,9 +76,10 @@ class CaseRepositoryTest {
                     assertThat(c.manufacturer()).isEqualTo("Lapua");
                     assertThat(c.caliber()).isEqualTo("6.5 Creedmoor");
                     assertThat(c.primerSize()).isEqualTo(LARGE_RIFLE);
-                    assertThat(c.cost()).isEqualTo(new BigDecimal("89.99"));
-                    assertThat(c.currency()).isEqualTo("CAD");
-                    assertThat(c.quantityPerBox()).isEqualTo(100);
+                    assertThat(c.cost().getNumber().doubleValue()).isEqualTo(89.99);
+                    assertThat(c.cost().getCurrency()).isEqualTo(getCurrency("CAD"));
+                    assertThat(c.quantityPerBox().getValue().doubleValue()).isEqualTo(100.0);
+                    assertThat(c.quantityPerBox().getUnit()).isEqualTo(ONE);
                 })
                 .verifyComplete();
     }
@@ -92,9 +95,8 @@ class CaseRepositoryTest {
                 "Peterson",
                 "308 Winchester",
                 LARGE_RIFLE,
-                new BigDecimal("99.99"),
-                "CAD",
-                50);
+                of(99.99, getCurrency("CAD")),
+                getQuantity(50, ONE));
 
         create(caseRepository.save(updatedCase))
                 .assertNext(c -> {
@@ -103,9 +105,10 @@ class CaseRepositoryTest {
                     assertThat(c.manufacturer()).isEqualTo("Peterson");
                     assertThat(c.caliber()).isEqualTo("308 Winchester");
                     assertThat(c.primerSize()).isEqualTo(LARGE_RIFLE);
-                    assertThat(c.cost()).isEqualTo(new BigDecimal("99.99"));
-                    assertThat(c.currency()).isEqualTo("CAD");
-                    assertThat(c.quantityPerBox()).isEqualTo(50);
+                    assertThat(c.cost().getNumber().doubleValue()).isEqualTo(99.99);
+                    assertThat(c.cost().getCurrency()).isEqualTo(getCurrency("CAD"));
+                    assertThat(c.quantityPerBox().getValue().doubleValue()).isEqualTo(50.0);
+                    assertThat(c.quantityPerBox().getUnit()).isEqualTo(ONE);
                 })
                 .verifyComplete();
     }
@@ -129,9 +132,8 @@ class CaseRepositoryTest {
                 "Starline",
                 "300 PRC",
                 LARGE_RIFLE_MAGNUM,
-                new BigDecimal("129.99"),
-                "CAD",
-                50);
+                of(129.99, getCurrency("CAD")),
+                getQuantity(50, ONE));
 
         caseRepository.saveAll(just(case1, case2)).blockLast();
 

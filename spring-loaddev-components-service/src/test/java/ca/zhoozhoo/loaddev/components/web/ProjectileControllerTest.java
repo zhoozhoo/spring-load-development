@@ -7,8 +7,9 @@ import static org.javamoney.moneta.Money.of;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 import static reactor.core.publisher.Mono.just;
-import static tech.units.indriya.AbstractUnit.ONE;
 import static tech.units.indriya.quantity.Quantities.getQuantity;
+import static tech.units.indriya.unit.Units.GRAM;
+import static tech.units.indriya.unit.Units.KILOGRAM;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,218 +21,216 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
-import ca.zhoozhoo.loaddev.components.dao.PrimerRepository;
-import ca.zhoozhoo.loaddev.components.model.Primer;
-import ca.zhoozhoo.loaddev.components.model.PrimerSize;
+import ca.zhoozhoo.loaddev.components.dao.ProjectileRepository;
+import ca.zhoozhoo.loaddev.components.model.Projectile;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
 @Import(TestSecurityConfig.class)
-public class PrimerControllerTest {
+public class ProjectileControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;
 
     @Autowired
-    private PrimerRepository primerRepository;
+    private ProjectileRepository projectileRepository;
 
     @BeforeEach
     void setUp() {
-        primerRepository.deleteAll().block();
+        projectileRepository.deleteAll().block();
     }
 
     @Test
-    void getAllPrimers() {
+    void getAllProjectiles() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/primers")
+        webTestClient.mutateWith(jwt).get().uri("/projectiles")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(APPLICATION_JSON)
-                .expectBodyList(Primer.class);
+                .expectBodyList(Projectile.class);
     }
 
     @Test
-    void searchPrimers() {
+    void searchProjectiles() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedPrimer = primerRepository.save(createTestPrimer(userId)).block();
+        var savedProjectile = projectileRepository.save(createTestProjectile(userId)).block();
 
-        webTestClient.mutateWith(jwt).get().uri(uriBuilder -> uriBuilder.path("/primers/search").queryParam("query", "CCI BR-4").build())
+        webTestClient.mutateWith(jwt).get().uri(uriBuilder -> uriBuilder.path("/projectiles/search").queryParam("query", "Hornady ELD-X").build())
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(APPLICATION_JSON)
-                .expectBodyList(Primer.class)
+                .expectBodyList(Projectile.class)
                 .value(list -> {
                     assertThat(list).isNotEmpty();
-                    assertThat(list).contains(savedPrimer);
+                    assertThat(list).contains(savedProjectile);
                 });
     }
 
     @Test
-    void getPrimerById() {
+    void getProjectileById() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedPrimer = primerRepository.save(createTestPrimer(userId)).block();
+        var savedProjectile = projectileRepository.save(createTestProjectile(userId)).block();
 
-        webTestClient.mutateWith(jwt).get().uri("/primers/{id}", savedPrimer.id())
+        webTestClient.mutateWith(jwt).get().uri("/projectiles/{id}", savedProjectile.id())
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(APPLICATION_JSON)
-                .expectBody(Primer.class)
-                .isEqualTo(savedPrimer);
+                .expectBody(Projectile.class)
+                .isEqualTo(savedProjectile);
     }
 
     @Test
-    void getPrimerByIdNotFound() {
+    void getProjectileByIdNotFound() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/primers/999")
+        webTestClient.mutateWith(jwt).get().uri("/projectiles/999")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    void createPrimer() {
+    void createProjectile() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var primer = createTestPrimer(userId);
+        var projectile = createTestProjectile(userId);
 
-        webTestClient.mutateWith(jwt).post().uri("/primers")
+        webTestClient.mutateWith(jwt).post().uri("/projectiles")
                 .contentType(APPLICATION_JSON)
-                .body(just(primer), Primer.class)
+                .body(just(projectile), Projectile.class)
                 .exchange()
                 .expectStatus().isCreated()
-                .expectBody(Primer.class)
+                .expectBody(Projectile.class)
                 .value(p -> {
                     assertThat(p.id()).isNotNull();
-                    assertThat(p.manufacturer()).isEqualTo("CCI");
-                    assertThat(p.type()).isEqualTo("BR-4");
-                    assertThat(p.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
-                    assertThat(p.cost()).isEqualTo(of(89.99, getCurrency("CAD")));
-                    assertThat(p.quantityPerBox().getValue().doubleValue()).isEqualTo(1000.0);
-                    assertThat(p.quantityPerBox().getUnit()).isEqualTo(ONE);
+                    assertThat(p.manufacturer()).isEqualTo("Hornady");
+                    assertThat(p.type()).isEqualTo("ELD-X");
+                    assertThat(p.weight().getValue().doubleValue()).isEqualTo(178.0);
+                    assertThat(p.weight().getUnit()).isEqualTo(GRAM);
+                    assertThat(p.cost()).isEqualTo(of(52.99, getCurrency("CAD")));
+                    assertThat(p.quantityPerBox()).isEqualTo(100);
                 });
     }
 
     @Test
-    void createPrimerInvalidInput() {
+    void createProjectileInvalidInput() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidPrimer = new Primer(null, userId, "", "", null,
-                of(-1, getCurrency("CAD")), 
-                getQuantity(-1, ONE));
+        var invalidProjectile = new Projectile(null, userId, "", 
+                getQuantity(-1, GRAM), "", 
+                of(-1, getCurrency("CAD")), -1);
 
-        webTestClient.mutateWith(jwt).post().uri("/primers")
+        webTestClient.mutateWith(jwt).post().uri("/projectiles")
                 .contentType(APPLICATION_JSON)
-                .body(just(invalidPrimer), Primer.class)
+                .body(just(invalidProjectile), Projectile.class)
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody(String.class)
                 .value(errorMessage -> {
                     assertThat(errorMessage).contains("Manufacturer is required");
                     assertThat(errorMessage).contains("Type is required");
-                    assertThat(errorMessage).contains("Primer size is required");
+                    assertThat(errorMessage).contains("Weight must be positive");
                     assertThat(errorMessage).contains("Cost must be non-negative");
                     assertThat(errorMessage).contains("Quantity per box must be positive");
                 });
     }
 
     @Test
-    void updatePrimer() {
+    void updateProjectile() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedPrimer = primerRepository.save(createTestPrimer(userId)).block();
+        var savedProjectile = projectileRepository.save(createTestProjectile(userId)).block();
 
-        var updatedPrimer = new Primer(
-                savedPrimer.id(),
+        var updatedProjectile = new Projectile(
+                savedProjectile.id(),
                 userId,
-                "Federal",
-                "205M",
-                PrimerSize.LARGE_RIFLE_MAGNUM,
-                of(99.99, getCurrency("CAD")),
-                getQuantity(500, ONE));
+                "Sierra",
+                getQuantity(0.168, KILOGRAM),
+                "MatchKing",
+                of(49.99, getCurrency("CAD")),
+                50);
 
-        webTestClient.mutateWith(jwt).put().uri("/primers/{id}", savedPrimer.id())
+        webTestClient.mutateWith(jwt).put().uri("/projectiles/{id}", savedProjectile.id())
                 .contentType(APPLICATION_JSON)
-                .body(just(updatedPrimer), Primer.class)
+                .body(just(updatedProjectile), Projectile.class)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Primer.class)
+                .expectBody(Projectile.class)
                 .value(p -> {
-                    assertThat(p.id()).isEqualTo(savedPrimer.id());
-                    assertThat(p.manufacturer()).isEqualTo("Federal");
-                    assertThat(p.type()).isEqualTo("205M");
-                    assertThat(p.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE_MAGNUM);
-                    assertThat(p.cost()).isEqualTo(of(99.99, getCurrency("CAD")));
-                    assertThat(p.quantityPerBox().getValue().doubleValue()).isEqualTo(500.0);
-                    assertThat(p.quantityPerBox().getUnit()).isEqualTo(ONE);
+                    assertThat(p.id()).isEqualTo(savedProjectile.id());
+                    assertThat(p.manufacturer()).isEqualTo("Sierra");
+                    assertThat(p.type()).isEqualTo("MatchKing");
+                    assertThat(p.weight().getValue().doubleValue()).isEqualTo(0.168);
+                    assertThat(p.weight().getUnit().toString()).isEqualTo(KILOGRAM.toString());
+                    assertThat(p.cost()).isEqualTo(of(49.99, getCurrency("CAD")));
+                    assertThat(p.quantityPerBox()).isEqualTo(50);
                 });
     }
 
     @Test
-    void updatePrimerNotFound() {
+    void updateProjectileNotFound() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var primer = createTestPrimer(userId);
+        var projectile = createTestProjectile(userId);
 
-        webTestClient.mutateWith(jwt).put().uri("/primers/999")
+        webTestClient.mutateWith(jwt).put().uri("/projectiles/999")
                 .contentType(APPLICATION_JSON)
-                .body(just(primer), Primer.class)
+                .body(just(projectile), Projectile.class)
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    void deletePrimer() {
+    void deleteProjectile() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var savedPrimer = primerRepository.save(createTestPrimer(userId)).block();
+        var savedProjectile = projectileRepository.save(createTestProjectile(userId)).block();
 
         webTestClient.mutateWith(jwt)
-                .delete().uri("/primers/{id}", savedPrimer.id())
+                .delete().uri("/projectiles/{id}", savedProjectile.id())
                 .exchange()
                 .expectStatus().isNoContent();
 
         webTestClient.mutateWith(jwt)
-                .get().uri("/primers/{id}", savedPrimer.id())
+                .get().uri("/projectiles/{id}", savedProjectile.id())
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    void deletePrimerNotFound() {
+    void deleteProjectileNotFound() {
         var userId = randomUUID().toString();
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).delete().uri("/primers/999")
+        webTestClient.mutateWith(jwt).delete().uri("/projectiles/999")
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
-    private Primer createTestPrimer(String ownerId) {
-        return new Primer(
+    private Projectile createTestProjectile(String ownerId) {
+        return new Projectile(
                 null,
                 ownerId,
-                "CCI",
-                "BR-4",
-                PrimerSize.LARGE_RIFLE,
-                of(89.99, getCurrency("CAD")),
-                getQuantity(1000, ONE));
+                "Hornady",
+                getQuantity(178.0, GRAM),
+                "ELD-X",
+                of(52.99, getCurrency("CAD")),
+                100);
     }
 }
-
