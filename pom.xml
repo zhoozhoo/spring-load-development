@@ -27,6 +27,7 @@
         <subproject>spring-loaddev-api-gateway</subproject>
         <subproject>spring-loaddev-components-service</subproject>
         <subproject>spring-loaddev-integration-tests</subproject>
+        <subproject>spring-loaddev-common</subproject>
     </subprojects>
 
     <properties>
