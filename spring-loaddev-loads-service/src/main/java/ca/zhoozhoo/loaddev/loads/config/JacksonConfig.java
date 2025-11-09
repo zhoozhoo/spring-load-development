@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.fasterxml.jackson.databind.Module;
 
-import ca.zhoozhoo.loaddev.loads.converter.QuantityModule;
+import ca.zhoozhoo.loaddev.common.jackson.QuantityModule;
 
 @Configuration
 public class JacksonConfig {

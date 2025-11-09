@@ -69,6 +69,11 @@
 
         <!-- Third parties -->
         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>spring-loaddev-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
             <version>${springdoc.version}</version>
