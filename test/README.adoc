@@ -58,26 +58,14 @@ Contains requests for testing the Rifles API endpoints:
 
 ==== loads-service.http
 
-Contains requests for testing the Loads API endpoints:
+Containing requests for testing Loads, Groups, and Shots API endpoints:
 
 * Authentication with Keycloak
-* CRUD operations for loads
-* Load statistics
-
-==== groups-service.http
-
-Contains requests for testing the Groups API endpoints:
-
-* Authentication with Keycloak
-* CRUD operations for groups
-* Group statistics
-
-==== shots-service.http
-
-Contains requests for testing the Shots API endpoints:
-
-* Authentication with Keycloak
-* CRUD operations for shots
+* Loads: CRUD operations for loads, load statistics
+* Groups: CRUD operations for groups, group statistics
+* Shots: CRUD operations for shots
+* All tests use JSR-385 Quantity types with proper units (imperial and metric)
+* Workflow-based organization: Loads → Groups → Shots
 
 ==== components-service.http
 
