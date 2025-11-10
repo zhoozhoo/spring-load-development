@@ -9,9 +9,10 @@ import reactor.core.publisher.Mono;
 /**
  * Reactive repository interface for {@link Group} entity operations.
  * <p>
- * Provides CRUD operations and custom query methods for shooting group data,
- * which represents a collection of shots fired with a specific load configuration.
- * All queries support owner-based filtering for secure multi-tenant access.
+ * Provides CRUD operations and custom query methods for shooting group data using
+ * javax.measure Quantity API. Groups represent collections of shots fired with
+ * a specific load configuration. All queries support owner-based filtering for
+ * secure multi-tenant access.
  * </p>
  *
  * @author Zhubin Salehi

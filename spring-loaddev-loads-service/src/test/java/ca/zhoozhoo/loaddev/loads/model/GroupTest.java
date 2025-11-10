@@ -20,16 +20,16 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for the {@link GroupJsr385} model class.
+ * Unit tests for the {@link Group} model class.
  * <p>
- * Tests validation logic, equals/hashCode contracts, and JSR-385 Quantity handling
+ * Tests validation logic, equals/hashCode contracts
  * for shooting group records with powder charge, target range, and group size measurements.
  * </p>
  *
  * @author Zhubin Salehi
  */
-@DisplayName("GroupJsr385 Model Tests")
-class GroupJsr385Test {
+@DisplayName("Group Model Tests")
+class GroupTest {
 
     // Test data constants
     private static final String OWNER_ID = "user123";
@@ -37,10 +37,10 @@ class GroupJsr385Test {
     private static final LocalDate TEST_DATE = LocalDate.of(2024, 11, 1);
 
     /**
-     * Creates a valid GroupJsr385 instance for testing using imperial units.
+     * Creates a valid Group instance for testing using imperial units.
      */
-    private GroupJsr385 createValidGroup() {
-        return new GroupJsr385(
+    private Group createValidGroup() {
+        return new Group(
             1L,
             OWNER_ID,
             LOAD_ID,
@@ -52,10 +52,10 @@ class GroupJsr385Test {
     }
 
     /**
-     * Creates a valid GroupJsr385 instance using metric units.
+     * Creates a valid Group instance using metric units.
      */
-    private GroupJsr385 createValidGroupMetric() {
-        return new GroupJsr385(
+    private Group createValidGroupMetric() {
+        return new Group(
             2L,
             OWNER_ID,
             LOAD_ID,
@@ -88,7 +88,7 @@ class GroupJsr385Test {
             LocalDate futureDate = LocalDate.now().plusDays(1);
             
             var exception = assertThrows(IllegalArgumentException.class, () ->
-                new GroupJsr385(
+                new Group(
                     null,
                     OWNER_ID,
                     LOAD_ID,
@@ -105,7 +105,7 @@ class GroupJsr385Test {
         @Test
         @DisplayName("Should accept today's date")
         void shouldAcceptTodaysDate() {
-            assertDoesNotThrow(() -> new GroupJsr385(
+            assertDoesNotThrow(() -> new Group(
                 null,
                 OWNER_ID,
                 LOAD_ID,
@@ -120,7 +120,7 @@ class GroupJsr385Test {
         @DisplayName("Should throw exception when powder charge is below minimum (0.1 grains)")
         void shouldThrowExceptionWhenPowderChargeTooLow() {
             var exception = assertThrows(IllegalArgumentException.class, () ->
-                new GroupJsr385(
+                new Group(
                     null,
                     OWNER_ID,
                     LOAD_ID,
@@ -138,7 +138,7 @@ class GroupJsr385Test {
         @DisplayName("Should throw exception when powder charge is above maximum (150 grains)")
         void shouldThrowExceptionWhenPowderChargeTooHigh() {
             var exception = assertThrows(IllegalArgumentException.class, () ->
-                new GroupJsr385(
+                new Group(
                     null,
                     OWNER_ID,
                     LOAD_ID,
@@ -155,7 +155,7 @@ class GroupJsr385Test {
         @Test
         @DisplayName("Should accept minimum powder charge (0.1 grains)")
         void shouldAcceptMinimumPowderCharge() {
-            assertDoesNotThrow(() -> new GroupJsr385(
+            assertDoesNotThrow(() -> new Group(
                 null,
                 OWNER_ID,
                 LOAD_ID,
@@ -169,7 +169,7 @@ class GroupJsr385Test {
         @Test
         @DisplayName("Should accept maximum powder charge (150 grains)")
         void shouldAcceptMaximumPowderCharge() {
-            assertDoesNotThrow(() -> new GroupJsr385(
+            assertDoesNotThrow(() -> new Group(
                 null,
                 OWNER_ID,
                 LOAD_ID,
@@ -184,7 +184,7 @@ class GroupJsr385Test {
         @DisplayName("Should throw exception when target range is below minimum (10 yards)")
         void shouldThrowExceptionWhenTargetRangeTooShort() {
             var exception = assertThrows(IllegalArgumentException.class, () ->
-                new GroupJsr385(
+                new Group(
                     null,
                     OWNER_ID,
                     LOAD_ID,
@@ -202,7 +202,7 @@ class GroupJsr385Test {
         @DisplayName("Should throw exception when target range is above maximum (2000 yards)")
         void shouldThrowExceptionWhenTargetRangeTooLong() {
             var exception = assertThrows(IllegalArgumentException.class, () ->
-                new GroupJsr385(
+                new Group(
                     null,
                     OWNER_ID,
                     LOAD_ID,
@@ -220,7 +220,7 @@ class GroupJsr385Test {
         @DisplayName("Should throw exception when group size is below minimum (0.01 inches)")
         void shouldThrowExceptionWhenGroupSizeTooSmall() {
             var exception = assertThrows(IllegalArgumentException.class, () ->
-                new GroupJsr385(
+                new Group(
                     null,
                     OWNER_ID,
                     LOAD_ID,
@@ -238,7 +238,7 @@ class GroupJsr385Test {
         @DisplayName("Should throw exception when group size is above maximum (50 inches)")
         void shouldThrowExceptionWhenGroupSizeTooLarge() {
             var exception = assertThrows(IllegalArgumentException.class, () ->
-                new GroupJsr385(
+                new Group(
                     null,
                     OWNER_ID,
                     LOAD_ID,
@@ -255,7 +255,7 @@ class GroupJsr385Test {
         @Test
         @DisplayName("Should accept null group size")
         void shouldAcceptNullGroupSize() {
-            assertDoesNotThrow(() -> new GroupJsr385(
+            assertDoesNotThrow(() -> new Group(
                 null,
                 OWNER_ID,
                 LOAD_ID,
@@ -325,7 +325,7 @@ class GroupJsr385Test {
         @Test
         @DisplayName("Should allow mixed units in same group")
         void shouldAllowMixedUnitsInSameGroup() {
-            assertDoesNotThrow(() -> new GroupJsr385(
+            assertDoesNotThrow(() -> new Group(
                 null,
                 OWNER_ID,
                 LOAD_ID,
@@ -359,13 +359,13 @@ class GroupJsr385Test {
         @DisplayName("Should not equal different class")
         void shouldNotEqualDifferentClass() {
             var group = createValidGroup();
-            assertNotEquals(group, "Not a GroupJsr385");
+            assertNotEquals(group, "Not a Group");
         }
 
         @Test
         @DisplayName("Should be equal when all fields match except ownerId")
         void shouldBeEqualWhenAllFieldsMatchExceptOwnerId() {
-            var group1 = new GroupJsr385(
+            var group1 = new Group(
                 1L,
                 "user1",
                 LOAD_ID,
@@ -375,7 +375,7 @@ class GroupJsr385Test {
                 getQuantity(0.75, INCH_INTERNATIONAL)
             );
             
-            var group2 = new GroupJsr385(
+            var group2 = new Group(
                 1L,
                 "user2", // different ownerId
                 LOAD_ID,
@@ -393,7 +393,7 @@ class GroupJsr385Test {
         void shouldNotBeEqualWhenPowderChargeDiffers() {
             var group1 = createValidGroup();
             
-            var group2 = new GroupJsr385(
+            var group2 = new Group(
                 1L,
                 OWNER_ID,
                 LOAD_ID,
@@ -411,7 +411,7 @@ class GroupJsr385Test {
         void shouldNotBeEqualWhenTargetRangeDiffers() {
             var group1 = createValidGroup();
             
-            var group2 = new GroupJsr385(
+            var group2 = new Group(
                 1L,
                 OWNER_ID,
                 LOAD_ID,
@@ -429,7 +429,7 @@ class GroupJsr385Test {
         void shouldNotBeEqualWhenDateDiffers() {
             var group1 = createValidGroup();
             
-            var group2 = new GroupJsr385(
+            var group2 = new Group(
                 1L,
                 OWNER_ID,
                 LOAD_ID,
@@ -481,7 +481,7 @@ class GroupJsr385Test {
         @Test
         @DisplayName("Should handle null optional fields")
         void shouldHandleNullOptionalFields() {
-            var group = new GroupJsr385(
+            var group = new Group(
                 null, // null id
                 OWNER_ID,
                 LOAD_ID,
@@ -503,7 +503,7 @@ class GroupJsr385Test {
         @Test
         @DisplayName("Should handle minimum valid powder charge")
         void shouldHandleMinimumValidPowderCharge() {
-            var group = new GroupJsr385(
+            var group = new Group(
                 null,
                 OWNER_ID,
                 LOAD_ID,
@@ -519,7 +519,7 @@ class GroupJsr385Test {
         @Test
         @DisplayName("Should handle maximum valid powder charge")
         void shouldHandleMaximumValidPowderCharge() {
-            var group = new GroupJsr385(
+            var group = new Group(
                 null,
                 OWNER_ID,
                 LOAD_ID,
@@ -535,7 +535,7 @@ class GroupJsr385Test {
         @Test
         @DisplayName("Should handle minimum valid target range")
         void shouldHandleMinimumValidTargetRange() {
-            var group = new GroupJsr385(
+            var group = new Group(
                 null,
                 OWNER_ID,
                 LOAD_ID,
@@ -551,7 +551,7 @@ class GroupJsr385Test {
         @Test
         @DisplayName("Should handle maximum valid target range")
         void shouldHandleMaximumValidTargetRange() {
-            var group = new GroupJsr385(
+            var group = new Group(
                 null,
                 OWNER_ID,
                 LOAD_ID,
@@ -567,7 +567,7 @@ class GroupJsr385Test {
         @Test
         @DisplayName("Should handle very precise group size measurements")
         void shouldHandleVeryPreciseGroupSizeMeasurements() {
-            var group = new GroupJsr385(
+            var group = new Group(
                 null,
                 OWNER_ID,
                 LOAD_ID,
@@ -585,7 +585,7 @@ class GroupJsr385Test {
         void shouldHandlePastDatesCorrectly() {
             var pastDate = LocalDate.of(2020, 1, 1);
             
-            var group = new GroupJsr385(
+            var group = new Group(
                 null,
                 OWNER_ID,
                 LOAD_ID,

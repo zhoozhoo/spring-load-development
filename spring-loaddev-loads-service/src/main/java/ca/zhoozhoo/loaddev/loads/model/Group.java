@@ -5,12 +5,22 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import javax.measure.Quantity;
+import javax.measure.format.QuantityFormat;
+import javax.measure.quantity.Length;
+import javax.measure.quantity.Mass;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import tech.units.indriya.format.SimpleQuantityFormat;
+
+import static systems.uom.ucum.UCUM.GRAIN;
+import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
+import static systems.uom.ucum.UCUM.YARD_INTERNATIONAL;
 
 /**
  * Represents a shooting group for a specific load configuration.
@@ -38,20 +48,23 @@ public record Group(
 
         @NotNull(message = "Powder charge is required")
         @Positive(message = "Powder charge must be positive")
-        @Column("powder_charge") Double powderCharge,
+        @Column("powder_charge") Quantity<Mass> powderCharge,
 
         @NotNull(message = "Target range is required")
         @Positive(message = "Target range must be positive")
-        @Column("target_range") Integer targetRange,
+        @Column("target_range") Quantity<Length> targetRange,
 
         @Positive(message = "Group size must be positive")
-        @Column("group_size") Double groupSize
+        @Column("group_size") Quantity<Length> groupSize
 ) {
+    private static final QuantityFormat QUANTITY_FORMAT = SimpleQuantityFormat.getInstance();
+
     /**
      * Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
      * <p>
      * Validates business rules including reasonable ranges for ballistic measurements
-     * using Java 25 enhanced instanceof pattern matching for cleaner validation code.
+     * using javax.measure Quantity API with proper unit conversions to imperial units
+     * (grains, yards, inches) before validation.
      * </p>
      */
     public Group {
@@ -61,24 +74,36 @@ public record Group(
         }
         
         // Validate reasonable powder charge range (0.1 to 150 grains)
-        if (powderCharge != null && (powderCharge < 0.1 || powderCharge > 150.0)) {
-            throw new IllegalArgumentException(
-                "Powder charge must be between 0.1 and 150.0 grains, got: %.2f".formatted(powderCharge)
-            );
+        // Convert to grains before validation to handle any unit system
+        if (powderCharge != null) {
+            double chargeInGrains = powderCharge.to(GRAIN).getValue().doubleValue();
+            if (chargeInGrains < 0.1 || chargeInGrains > 150.0) {
+                throw new IllegalArgumentException(
+                    "Powder charge must be between 0.1 and 150.0 grains, got: " + QUANTITY_FORMAT.format(powderCharge)
+                );
+            }
         }
         
         // Validate reasonable target range (10 to 2000 yards)
-        if (targetRange != null && (targetRange < 10 || targetRange > 2000)) {
-            throw new IllegalArgumentException(
-                "Target range must be between 10 and 2000 yards, got: %d".formatted(targetRange)
-            );
+        // Convert to yards before validation to handle any unit system
+        if (targetRange != null) {
+            double rangeInYards = targetRange.to(YARD_INTERNATIONAL).getValue().doubleValue();
+            if (rangeInYards < 10 || rangeInYards > 2000) {
+                throw new IllegalArgumentException(
+                    "Target range must be between 10 and 2000 yards, got: " + QUANTITY_FORMAT.format(targetRange)
+                );
+            }
         }
         
         // Validate reasonable group size (0.01 to 50 inches)
-        if (groupSize != null && (groupSize < 0.01 || groupSize > 50.0)) {
-            throw new IllegalArgumentException(
-                "Group size must be between 0.01 and 50.0 inches, got: %.3f".formatted(groupSize)
-            );
+        // Convert to inches before validation to handle any unit system
+        if (groupSize != null) {
+            double sizeInInches = groupSize.to(INCH_INTERNATIONAL).getValue().doubleValue();
+            if (sizeInInches < 0.01 || sizeInInches > 50.0) {
+                throw new IllegalArgumentException(
+                    "Group size must be between 0.01 and 50.0 inches, got: " + QUANTITY_FORMAT.format(groupSize)
+                );
+            }
         }
     }
 

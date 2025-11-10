@@ -19,27 +19,27 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for the {@link ShotJsr385} model class.
+ * Unit tests for the {@link Shot} model class.
  * <p>
- * Tests validation logic, equals/hashCode contracts, and JSR-385 Quantity handling
+ * Tests validation logic, equals/hashCode contracts,
  * for individual shot velocity measurements.
  * </p>
  *
  * @author Zhubin Salehi
  */
-@DisplayName("ShotJsr385 Model Tests")
-class ShotJsr385Test {
+@DisplayName("Shot Model Tests")
+class ShotTest {
 
     // Test data constants
     private static final String OWNER_ID = "user123";
     private static final Long GROUP_ID = 1L;
 
     /**
-     * Creates a valid ShotJsr385 instance for testing with feet per second.
+     * Creates a valid Shot instance for testing with feet per second.
      */
     @SuppressWarnings("unchecked")
-    private ShotJsr385 createValidShot() {
-        return new ShotJsr385(
+    private Shot createValidShot() {
+        return new Shot(
             1L,
             OWNER_ID,
             GROUP_ID,
@@ -48,11 +48,11 @@ class ShotJsr385Test {
     }
 
     /**
-     * Creates a valid ShotJsr385 instance using metric units (meters per second).
+     * Creates a valid Shot instance using metric units (meters per second).
      */
     @SuppressWarnings("unchecked")
-    private ShotJsr385 createValidShotMetric() {
-        return new ShotJsr385(
+    private Shot createValidShotMetric() {
+        return new Shot(
             2L,
             OWNER_ID,
             GROUP_ID,
@@ -83,7 +83,7 @@ class ShotJsr385Test {
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
             var exception = assertThrows(IllegalArgumentException.class, () ->
-                new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(499, feetPerSecond))
+                new Shot(null, OWNER_ID, GROUP_ID, getQuantity(499, feetPerSecond))
             );
             
             assertTrue(exception.getMessage().contains("Velocity must be between 500 and 5000 fps"));
@@ -96,7 +96,7 @@ class ShotJsr385Test {
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
             var exception = assertThrows(IllegalArgumentException.class, () ->
-                new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(5001, feetPerSecond))
+                new Shot(null, OWNER_ID, GROUP_ID, getQuantity(5001, feetPerSecond))
             );
             
             assertTrue(exception.getMessage().contains("Velocity must be between 500 and 5000 fps"));
@@ -108,7 +108,7 @@ class ShotJsr385Test {
             @SuppressWarnings("unchecked")
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
-            assertDoesNotThrow(() -> new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(500, feetPerSecond)));
+            assertDoesNotThrow(() -> new Shot(null, OWNER_ID, GROUP_ID, getQuantity(500, feetPerSecond)));
         }
 
         @Test
@@ -117,7 +117,7 @@ class ShotJsr385Test {
             @SuppressWarnings("unchecked")
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
-            assertDoesNotThrow(() -> new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(5000, feetPerSecond)));
+            assertDoesNotThrow(() -> new Shot(null, OWNER_ID, GROUP_ID, getQuantity(5000, feetPerSecond)));
         }
 
         @Test
@@ -127,10 +127,10 @@ class ShotJsr385Test {
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
             // Test various common rifle velocities
-            assertDoesNotThrow(() -> new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(800, feetPerSecond)));   // .45 ACP
-            assertDoesNotThrow(() -> new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(1200, feetPerSecond)));  // 9mm
-            assertDoesNotThrow(() -> new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(2700, feetPerSecond)));  // .308 Win
-            assertDoesNotThrow(() -> new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(3200, feetPerSecond)));  // .223 Rem
+            assertDoesNotThrow(() -> new Shot(null, OWNER_ID, GROUP_ID, getQuantity(800, feetPerSecond)));   // .45 ACP
+            assertDoesNotThrow(() -> new Shot(null, OWNER_ID, GROUP_ID, getQuantity(1200, feetPerSecond)));  // 9mm
+            assertDoesNotThrow(() -> new Shot(null, OWNER_ID, GROUP_ID, getQuantity(2700, feetPerSecond)));  // .308 Win
+            assertDoesNotThrow(() -> new Shot(null, OWNER_ID, GROUP_ID, getQuantity(3200, feetPerSecond)));  // .223 Rem
         }
 
         @Test
@@ -140,18 +140,18 @@ class ShotJsr385Test {
             var metersPerSecond = (Unit<Speed>) METRE.divide(SECOND);
             
             // 152.4 m/s = 500 fps (minimum)
-            assertDoesNotThrow(() -> new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(152.4, metersPerSecond)));
+            assertDoesNotThrow(() -> new Shot(null, OWNER_ID, GROUP_ID, getQuantity(152.4, metersPerSecond)));
             
             // 1524 m/s = 5000 fps (maximum)
-            assertDoesNotThrow(() -> new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(1524, metersPerSecond)));
+            assertDoesNotThrow(() -> new Shot(null, OWNER_ID, GROUP_ID, getQuantity(1524, metersPerSecond)));
             
             // Below minimum
             assertThrows(IllegalArgumentException.class, () -> 
-                new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(150, metersPerSecond)));
+                new Shot(null, OWNER_ID, GROUP_ID, getQuantity(150, metersPerSecond)));
             
             // Above maximum
             assertThrows(IllegalArgumentException.class, () -> 
-                new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(1530, metersPerSecond)));
+                new Shot(null, OWNER_ID, GROUP_ID, getQuantity(1530, metersPerSecond)));
         }
     }
 
@@ -211,7 +211,7 @@ class ShotJsr385Test {
             @SuppressWarnings("unchecked")
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
-            var shot = new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(2845.67, feetPerSecond));
+            var shot = new Shot(null, OWNER_ID, GROUP_ID, getQuantity(2845.67, feetPerSecond));
             
             assertEquals(2845.67, shot.velocity().getValue().doubleValue(), 0.01);
         }
@@ -239,7 +239,7 @@ class ShotJsr385Test {
         @DisplayName("Should not equal different class")
         void shouldNotEqualDifferentClass() {
             var shot = createValidShot();
-            assertNotEquals(shot, "Not a ShotJsr385");
+            assertNotEquals(shot, "Not a Shot");
         }
 
         @Test
@@ -248,14 +248,14 @@ class ShotJsr385Test {
             @SuppressWarnings("unchecked")
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
-            var shot1 = new ShotJsr385(
+            var shot1 = new Shot(
                 1L,
                 "user1",
                 GROUP_ID,
                 getQuantity(2800, feetPerSecond)
             );
             
-            var shot2 = new ShotJsr385(
+            var shot2 = new Shot(
                 1L,
                 "user2", // different ownerId
                 GROUP_ID,
@@ -273,7 +273,7 @@ class ShotJsr385Test {
             
             var shot1 = createValidShot();
             
-            var shot2 = new ShotJsr385(
+            var shot2 = new Shot(
                 1L,
                 OWNER_ID,
                 GROUP_ID,
@@ -291,7 +291,7 @@ class ShotJsr385Test {
             
             var shot1 = createValidShot();
             
-            var shot2 = new ShotJsr385(
+            var shot2 = new Shot(
                 1L,
                 OWNER_ID,
                 2L, // different group ID
@@ -340,7 +340,7 @@ class ShotJsr385Test {
             @SuppressWarnings("unchecked")
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
-            var shot = new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(2800, feetPerSecond));
+            var shot = new Shot(null, OWNER_ID, GROUP_ID, getQuantity(2800, feetPerSecond));
             
             assertEquals(null, shot.id());
         }
@@ -356,7 +356,7 @@ class ShotJsr385Test {
             @SuppressWarnings("unchecked")
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
-            var shot = new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(500, feetPerSecond));
+            var shot = new Shot(null, OWNER_ID, GROUP_ID, getQuantity(500, feetPerSecond));
             
             assertEquals(500, shot.velocity().to(feetPerSecond).getValue().doubleValue(), 0.001);
         }
@@ -367,7 +367,7 @@ class ShotJsr385Test {
             @SuppressWarnings("unchecked")
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
-            var shot = new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(5000, feetPerSecond));
+            var shot = new Shot(null, OWNER_ID, GROUP_ID, getQuantity(5000, feetPerSecond));
             
             assertEquals(5000, shot.velocity().to(feetPerSecond).getValue().doubleValue(), 0.001);
         }
@@ -378,7 +378,7 @@ class ShotJsr385Test {
             @SuppressWarnings("unchecked")
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
-            var shot = new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(2845.6789, feetPerSecond));
+            var shot = new Shot(null, OWNER_ID, GROUP_ID, getQuantity(2845.6789, feetPerSecond));
             
             assertEquals(2845.6789, shot.velocity().getValue().doubleValue(), 0.0001);
         }
@@ -390,15 +390,15 @@ class ShotJsr385Test {
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
             // .22 LR
-            var shot22lr = new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(1070, feetPerSecond));
+            var shot22lr = new Shot(null, OWNER_ID, GROUP_ID, getQuantity(1070, feetPerSecond));
             assertEquals(1070, shot22lr.velocity().to(feetPerSecond).getValue().doubleValue(), 0.1);
             
             // 9mm
-            var shot9mm = new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(1150, feetPerSecond));
+            var shot9mm = new Shot(null, OWNER_ID, GROUP_ID, getQuantity(1150, feetPerSecond));
             assertEquals(1150, shot9mm.velocity().to(feetPerSecond).getValue().doubleValue(), 0.1);
             
             // .45 ACP
-            var shot45acp = new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(850, feetPerSecond));
+            var shot45acp = new Shot(null, OWNER_ID, GROUP_ID, getQuantity(850, feetPerSecond));
             assertEquals(850, shot45acp.velocity().to(feetPerSecond).getValue().doubleValue(), 0.1);
         }
 
@@ -409,15 +409,15 @@ class ShotJsr385Test {
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
             // .308 Winchester
-            var shot308 = new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(2700, feetPerSecond));
+            var shot308 = new Shot(null, OWNER_ID, GROUP_ID, getQuantity(2700, feetPerSecond));
             assertEquals(2700, shot308.velocity().to(feetPerSecond).getValue().doubleValue(), 0.1);
             
             // .223 Remington
-            var shot223 = new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(3200, feetPerSecond));
+            var shot223 = new Shot(null, OWNER_ID, GROUP_ID, getQuantity(3200, feetPerSecond));
             assertEquals(3200, shot223.velocity().to(feetPerSecond).getValue().doubleValue(), 0.1);
             
             // 6.5 Creedmoor
-            var shot65cm = new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(2800, feetPerSecond));
+            var shot65cm = new Shot(null, OWNER_ID, GROUP_ID, getQuantity(2800, feetPerSecond));
             assertEquals(2800, shot65cm.velocity().to(feetPerSecond).getValue().doubleValue(), 0.1);
         }
 
@@ -428,7 +428,7 @@ class ShotJsr385Test {
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
             assertThrows(IllegalArgumentException.class, () ->
-                new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(0, feetPerSecond))
+                new Shot(null, OWNER_ID, GROUP_ID, getQuantity(0, feetPerSecond))
             );
         }
 
@@ -439,7 +439,7 @@ class ShotJsr385Test {
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
             assertThrows(IllegalArgumentException.class, () ->
-                new ShotJsr385(null, OWNER_ID, GROUP_ID, getQuantity(-100, feetPerSecond))
+                new Shot(null, OWNER_ID, GROUP_ID, getQuantity(-100, feetPerSecond))
             );
         }
     }

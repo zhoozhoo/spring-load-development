@@ -14,7 +14,8 @@ import ca.zhoozhoo.loaddev.loads.model.Shot;
  * This mapper automatically generates implementation code for transforming
  * {@link GroupStatistics} entities into {@link GroupStatisticsDto} objects suitable
  * for API responses. It handles nested object mapping and field extraction from
- * the embedded Group entity.
+ * the embedded Group entity. Since both source and target use javax.measure Quantity
+ * objects, no unit conversion is needed - the Quantity objects are passed through directly.
  * </p>
  *
  * @author Zhubin Salehi
@@ -26,6 +27,10 @@ public interface GroupStatisticsMapper {
     @Mapping(source = "group.powderCharge", target = "powderCharge")
     @Mapping(source = "group.targetRange", target = "targetRange")
     @Mapping(source = "group.groupSize", target = "groupSize")
+    @Mapping(source = "averageVelocity", target = "averageVelocity")
+    @Mapping(source = "standardDeviation", target = "standardDeviation")
+    @Mapping(source = "extremeSpread", target = "extremeSpread")
+    @Mapping(source = "shots", target = "shots")
     GroupStatisticsDto toDto(GroupStatistics statistics);
 
     @Mapping(source = "velocity", target = "velocity")

@@ -47,8 +47,8 @@ import reactor.core.publisher.Mono;
  * <p>
  * This controller provides endpoints for CRUD operations on shot velocity measurements
  * within shooting groups. Each shot represents a single round fired and recorded during
- * load testing. All endpoints are secured with OAuth2 authentication and enforce
- * user-based access control.
+ * load testing. Velocity measurements use type-safe units via javax.measure. All
+ * endpoints are secured with OAuth2 authentication and enforce user-based access control.
  * </p>
  *
  * @author Zhubin Salehi
@@ -101,7 +101,7 @@ public class ShotsController {
     public Mono<ResponseEntity<Shot>> getShotById(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of shot") @PathVariable Long id) {
-        return shotRepository.findById(id)
+        return shotRepository.findByIdAndOwnerId(id, userId)
                 .map(shot -> ok(shot))
                 .defaultIfEmpty(notFound().build());
     }
@@ -124,7 +124,10 @@ public class ShotsController {
                 shot.groupId(),
                 shot.velocity()))
                 .flatMap(shotRepository::save)
-                .map(savedShot -> status(CREATED).body(savedShot));
+                .map(savedShot -> {
+                    log.info("Created new shot with id: {}", savedShot.id());
+                    return status(CREATED).body(savedShot);
+                });
     }
 
     @Operation(summary = "Update an existing shot", description = "Updates the details of a shot by its id.", security = {
@@ -140,7 +143,7 @@ public class ShotsController {
             @Parameter(hidden = true) @CurrentUser String userId, 
             @Parameter(description = "Id of shot") @PathVariable Long id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Shot data to update") @Valid @RequestBody Shot shot) {
-        return shotRepository.findById(id)
+        return shotRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingShot -> {
                     Shot updatedShot = new Shot(
                             existingShot.id(),
@@ -149,7 +152,10 @@ public class ShotsController {
                             shot.velocity());
                     return shotRepository.save(updatedShot);
                 })
-                .map(updatedShot -> ok(updatedShot))
+                .map(updatedShot -> {
+                    log.info("Updated shot with id: {}", updatedShot.id());
+                    return ok(updatedShot);
+                })
                 .defaultIfEmpty(notFound().build());
     }
 
@@ -164,7 +170,7 @@ public class ShotsController {
     public Mono<ResponseEntity<Void>> deleteShot(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of shot") @PathVariable Long id) {
-        return shotRepository.findById(id)
+        return shotRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingShot -> shotRepository.delete(existingShot)
                         .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT)))
                         .doOnSuccess(_ -> log.info("Deleted shot with id: {}", id)))

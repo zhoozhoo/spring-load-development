@@ -2,6 +2,11 @@ package ca.zhoozhoo.loaddev.loads.model;
 
 import java.util.Objects;
 
+import javax.measure.Quantity;
+import javax.measure.Unit;
+import javax.measure.format.QuantityFormat;
+import javax.measure.quantity.Speed;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -10,11 +15,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import tech.units.indriya.format.SimpleQuantityFormat;
+import tech.units.indriya.unit.Units;
+
+import static systems.uom.ucum.UCUM.FOOT_INTERNATIONAL;
 
 /**
  * Represents an individual shot fired as part of a shooting group.
  * <p>
- * A shot records the velocity measurement (in feet per second) of a single round fired.
+ * A shot records the velocity measurement of a single round fired using javax.measure Quantity API.
  * Multiple shots are grouped together to calculate statistical data such as average velocity,
  * standard deviation, and extreme spread for load performance analysis.
  * </p>
@@ -33,21 +42,32 @@ public record Shot(
         @Column("group_id") Long groupId,
 
         @Positive(message = "Velocity must be a positive number")
-        @Column("velocity") Integer velocity) {
+        @Column("velocity") Quantity<Speed> velocity) {
+
+    private static final QuantityFormat QUANTITY_FORMAT = SimpleQuantityFormat.getInstance();
 
     /**
      * Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
      * <p>
      * Validates that velocity is within reasonable ballistic ranges for small arms ammunition.
+     * Converts to feet per second before validation to handle any unit system.
      * </p>
      */
     public Shot {
         // Validate reasonable velocity range (500 to 5000 fps)
         // Most rifle rounds fall between 800-3500 fps
-        if (velocity != null && (velocity < 500 || velocity > 5000)) {
-            throw new IllegalArgumentException(
-                "Velocity must be between 500 and 5000 fps (feet per second), got: %d".formatted(velocity)
-            );
+        // Convert to feet per second before validation to handle any unit system
+        if (velocity != null) {
+            // Create feet per second unit (foot_international/second)
+            @SuppressWarnings("unchecked")
+            Unit<Speed> feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(Units.SECOND);
+            double velocityInFps = velocity.to(feetPerSecond).getValue().doubleValue();
+            
+            if (velocityInFps < 500 || velocityInFps > 5000) {
+                throw new IllegalArgumentException(
+                    "Velocity must be between 500 and 5000 fps (feet per second), got: " + QUANTITY_FORMAT.format(velocity)
+                );
+            }
         }
     }
 

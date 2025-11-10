@@ -26,16 +26,16 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for the {@link GroupStatisticsJsr385} model class.
+ * Unit tests for the {@link GroupStatistics} model class.
  * <p>
- * Tests defensive copying, immutability, equals/hashCode contracts, and JSR-385 Quantity handling
+ * Tests defensive copying, immutability, equals/hashCode contracts
  * for ballistic statistics including average velocity, standard deviation, and extreme spread.
  * </p>
  *
  * @author Zhubin Salehi
  */
-@DisplayName("GroupStatisticsJsr385 Model Tests")
-class GroupStatisticsJsr385Test {
+@DisplayName("GroupStatistics Model Tests")
+class GroupStatisticsTest {
 
     // Test data constants
     private static final String OWNER_ID = "user123";
@@ -44,10 +44,10 @@ class GroupStatisticsJsr385Test {
     private static final LocalDate TEST_DATE = LocalDate.of(2024, 11, 1);
 
     /**
-     * Creates a valid GroupJsr385 instance for testing.
+     * Creates a valid Group instance for testing.
      */
-    private GroupJsr385 createTestGroup() {
-        return new GroupJsr385(
+    private Group createTestGroup() {
+        return new Group(
             GROUP_ID,
             OWNER_ID,
             LOAD_ID,
@@ -59,29 +59,29 @@ class GroupStatisticsJsr385Test {
     }
 
     /**
-     * Creates a list of valid ShotJsr385 instances for testing.
+     * Creates a list of valid Shot instances for testing.
      */
-    private List<ShotJsr385> createTestShots() {
+    private List<Shot> createTestShots() {
         @SuppressWarnings("unchecked")
         Unit<Speed> feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
         
         return List.of(
-            new ShotJsr385(1L, OWNER_ID, GROUP_ID, getQuantity(2800, feetPerSecond)),
-            new ShotJsr385(2L, OWNER_ID, GROUP_ID, getQuantity(2805, feetPerSecond)),
-            new ShotJsr385(3L, OWNER_ID, GROUP_ID, getQuantity(2795, feetPerSecond)),
-            new ShotJsr385(4L, OWNER_ID, GROUP_ID, getQuantity(2810, feetPerSecond)),
-            new ShotJsr385(5L, OWNER_ID, GROUP_ID, getQuantity(2790, feetPerSecond))
+            new Shot(1L, OWNER_ID, GROUP_ID, getQuantity(2800, feetPerSecond)),
+            new Shot(2L, OWNER_ID, GROUP_ID, getQuantity(2805, feetPerSecond)),
+            new Shot(3L, OWNER_ID, GROUP_ID, getQuantity(2795, feetPerSecond)),
+            new Shot(4L, OWNER_ID, GROUP_ID, getQuantity(2810, feetPerSecond)),
+            new Shot(5L, OWNER_ID, GROUP_ID, getQuantity(2790, feetPerSecond))
         );
     }
 
     /**
-     * Creates a valid GroupStatisticsJsr385 instance for testing.
+     * Creates a valid GroupStatistics instance for testing.
      */
-    private GroupStatisticsJsr385 createValidStatistics() {
+    private GroupStatistics createValidStatistics() {
         @SuppressWarnings("unchecked")
         Unit<Speed> feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
         
-        return new GroupStatisticsJsr385(
+        return new GroupStatistics(
             createTestGroup(),
             getQuantity(2800, feetPerSecond),  // average velocity
             getQuantity(7.91, feetPerSecond),  // standard deviation
@@ -105,7 +105,7 @@ class GroupStatisticsJsr385Test {
         void shouldCreateDefensiveCopyOfShotsList() {
             var originalShots = new ArrayList<>(createTestShots());
             
-            var stats = new GroupStatisticsJsr385(
+            var stats = new GroupStatistics(
                 createTestGroup(),
                 getQuantity(2800, getFeetPerSecond()),
                 getQuantity(7.91, getFeetPerSecond()),
@@ -116,7 +116,7 @@ class GroupStatisticsJsr385Test {
             // Modify the original list
             @SuppressWarnings("unchecked")
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
-            originalShots.add(new ShotJsr385(6L, OWNER_ID, GROUP_ID, getQuantity(2815, feetPerSecond)));
+            originalShots.add(new Shot(6L, OWNER_ID, GROUP_ID, getQuantity(2815, feetPerSecond)));
             
             // Verify the stats object's list was not affected
             assertEquals(5, stats.shots().size());
@@ -134,14 +134,14 @@ class GroupStatisticsJsr385Test {
             
             assertThrows(
                 UnsupportedOperationException.class,
-                () -> stats.shots().add(new ShotJsr385(6L, OWNER_ID, GROUP_ID, getQuantity(2815, feetPerSecond)))
+                () -> stats.shots().add(new Shot(6L, OWNER_ID, GROUP_ID, getQuantity(2815, feetPerSecond)))
             );
         }
 
         @Test
         @DisplayName("Should handle null shots list")
         void shouldHandleNullShotsList() {
-            var stats = new GroupStatisticsJsr385(
+            var stats = new GroupStatistics(
                 createTestGroup(),
                 getQuantity(2800, getFeetPerSecond()),
                 getQuantity(7.91, getFeetPerSecond()),
@@ -156,7 +156,7 @@ class GroupStatisticsJsr385Test {
         @Test
         @DisplayName("Should handle empty shots list")
         void shouldHandleEmptyShotsList() {
-            var stats = new GroupStatisticsJsr385(
+            var stats = new GroupStatistics(
                 createTestGroup(),
                 getQuantity(2800, getFeetPerSecond()),
                 getQuantity(7.91, getFeetPerSecond()),
@@ -202,7 +202,7 @@ class GroupStatisticsJsr385Test {
             @SuppressWarnings("unchecked")
             var metersPerSecond = (Unit<Speed>) METRE.divide(SECOND);
             
-            var stats = new GroupStatisticsJsr385(
+            var stats = new GroupStatistics(
                 createTestGroup(),
                 getQuantity(853.44, metersPerSecond),  // ~2800 fps
                 getQuantity(2.41, metersPerSecond),    // ~7.91 fps
@@ -254,7 +254,7 @@ class GroupStatisticsJsr385Test {
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
             // High-quality load with very consistent velocities
-            var stats = new GroupStatisticsJsr385(
+            var stats = new GroupStatistics(
                 createTestGroup(),
                 getQuantity(2800, feetPerSecond),
                 getQuantity(2.5, feetPerSecond),  // excellent SD
@@ -272,7 +272,7 @@ class GroupStatisticsJsr385Test {
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
             // Theoretical perfect consistency (all shots same velocity)
-            var stats = new GroupStatisticsJsr385(
+            var stats = new GroupStatistics(
                 createTestGroup(),
                 getQuantity(2800, feetPerSecond),
                 getQuantity(0, feetPerSecond),
@@ -307,7 +307,7 @@ class GroupStatisticsJsr385Test {
         @DisplayName("Should not equal different class")
         void shouldNotEqualDifferentClass() {
             var stats = createValidStatistics();
-            assertNotEquals(stats, "Not a GroupStatisticsJsr385");
+            assertNotEquals(stats, "Not a GroupStatistics");
         }
 
         @Test
@@ -327,7 +327,7 @@ class GroupStatisticsJsr385Test {
             
             var stats1 = createValidStatistics();
             
-            var stats2 = new GroupStatisticsJsr385(
+            var stats2 = new GroupStatistics(
                 createTestGroup(),
                 getQuantity(2850, fps),  // different average
                 getQuantity(7.91, fps),
@@ -347,11 +347,11 @@ class GroupStatisticsJsr385Test {
             var stats1 = createValidStatistics();
             
             var differentShots = List.of(
-                new ShotJsr385(1L, OWNER_ID, GROUP_ID, getQuantity(2850, fps)),
-                new ShotJsr385(2L, OWNER_ID, GROUP_ID, getQuantity(2855, fps))
+                new Shot(1L, OWNER_ID, GROUP_ID, getQuantity(2850, fps)),
+                new Shot(2L, OWNER_ID, GROUP_ID, getQuantity(2855, fps))
             );
             
-            var stats2 = new GroupStatisticsJsr385(
+            var stats2 = new GroupStatistics(
                 createTestGroup(),
                 getQuantity(2800, fps),
                 getQuantity(7.91, fps),
@@ -432,10 +432,10 @@ class GroupStatisticsJsr385Test {
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
             var singleShot = List.of(
-                new ShotJsr385(1L, OWNER_ID, GROUP_ID, getQuantity(2800, feetPerSecond))
+                new Shot(1L, OWNER_ID, GROUP_ID, getQuantity(2800, feetPerSecond))
             );
             
-            var stats = new GroupStatisticsJsr385(
+            var stats = new GroupStatistics(
                 createTestGroup(),
                 getQuantity(2800, feetPerSecond),
                 getQuantity(0, feetPerSecond),
@@ -454,13 +454,13 @@ class GroupStatisticsJsr385Test {
             @SuppressWarnings("unchecked")
             var fps = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
-            var manyShots = new ArrayList<ShotJsr385>();
+            var manyShots = new ArrayList<Shot>();
             for (int i = 0; i < 100; i++) {
-                manyShots.add(new ShotJsr385((long) i, OWNER_ID, GROUP_ID, 
+                manyShots.add(new Shot((long) i, OWNER_ID, GROUP_ID, 
                     getQuantity(2800 + (i % 20), fps)));
             }
             
-            var stats = new GroupStatisticsJsr385(
+            var stats = new GroupStatistics(
                 createTestGroup(),
                 getQuantity(2810, fps),
                 getQuantity(5.77, fps),
@@ -477,7 +477,7 @@ class GroupStatisticsJsr385Test {
             @SuppressWarnings("unchecked")
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
-            var stats = new GroupStatisticsJsr385(
+            var stats = new GroupStatistics(
                 createTestGroup(),
                 getQuantity(2800, feetPerSecond),
                 getQuantity(50, feetPerSecond),  // poor SD
@@ -495,7 +495,7 @@ class GroupStatisticsJsr385Test {
             @SuppressWarnings("unchecked")
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
-            var stats = new GroupStatisticsJsr385(
+            var stats = new GroupStatistics(
                 createTestGroup(),
                 getQuantity(2800, feetPerSecond),
                 getQuantity(3, feetPerSecond),   // excellent SD
@@ -514,7 +514,7 @@ class GroupStatisticsJsr385Test {
             @SuppressWarnings("unchecked")
             var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
             
-            var stats = new GroupStatisticsJsr385(
+            var stats = new GroupStatistics(
                 createTestGroup(),
                 getQuantity(2800.1234, feetPerSecond),
                 getQuantity(7.9876, feetPerSecond),

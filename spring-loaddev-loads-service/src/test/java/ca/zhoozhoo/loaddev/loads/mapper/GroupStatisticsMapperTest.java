@@ -24,23 +24,23 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import ca.zhoozhoo.loaddev.loads.model.GroupJsr385;
-import ca.zhoozhoo.loaddev.loads.model.GroupStatisticsJsr385;
-import ca.zhoozhoo.loaddev.loads.model.ShotJsr385;
+import ca.zhoozhoo.loaddev.loads.model.Group;
+import ca.zhoozhoo.loaddev.loads.model.GroupStatistics;
+import ca.zhoozhoo.loaddev.loads.model.Shot;
 
 /**
- * Unit tests for the {@link GroupStatisticsJsr385Mapper}.
+ * Unit tests for the {@link GroupStatisticsMapper}.
  * <p>
- * Tests the mapping functionality between JSR-385 domain models and DTOs,
+ * Tests the mapping functionality between domain models and DTOs,
  * including Quantity object handling and nested object mapping.
  * </p>
  *
  * @author Zhubin Salehi
  */
-@DisplayName("GroupStatisticsJsr385Mapper Tests")
-class GroupStatisticsJsr385MapperTest {
+@DisplayName("GroupStatisticsMapper Tests")
+class GroupStatisticsMapperTest {
 
-    private GroupStatisticsJsr385Mapper mapper;
+    private GroupStatisticsMapper mapper;
 
     // Test data constants
     private static final String OWNER_ID = "user123";
@@ -53,14 +53,14 @@ class GroupStatisticsJsr385MapperTest {
 
     @BeforeEach
     void setUp() {
-        mapper = getMapper(GroupStatisticsJsr385Mapper.class);
+        mapper = getMapper(GroupStatisticsMapper.class);
     }
 
     /**
-     * Creates a valid GroupJsr385 instance for testing.
+     * Creates a valid Group instance for testing.
      */
-    private GroupJsr385 createValidGroup() {
-        return new GroupJsr385(
+    private Group createValidGroup() {
+        return new Group(
             GROUP_ID,
             OWNER_ID,
             LOAD_ID,
@@ -72,10 +72,10 @@ class GroupStatisticsJsr385MapperTest {
     }
 
     /**
-     * Creates a valid ShotJsr385 instance for testing.
+     * Creates a valid Shot instance for testing.
      */
-    private ShotJsr385 createValidShot(Long id, double velocity) {
-        return new ShotJsr385(
+    private Shot createValidShot(Long id, double velocity) {
+        return new Shot(
             id,
             OWNER_ID,
             GROUP_ID,
@@ -84,9 +84,9 @@ class GroupStatisticsJsr385MapperTest {
     }
 
     /**
-     * Creates a valid GroupStatisticsJsr385 instance for testing.
+     * Creates a valid GroupStatistics instance for testing.
      */
-    private GroupStatisticsJsr385 createValidGroupStatistics() {
+    private GroupStatistics createValidGroupStatistics() {
         var group = createValidGroup();
         var shots = List.of(
             createValidShot(1L, 2800.0),
@@ -96,7 +96,7 @@ class GroupStatisticsJsr385MapperTest {
             createValidShot(5L, 2795.0)
         );
 
-        return new GroupStatisticsJsr385(
+        return new GroupStatistics(
             group,
             getQuantity(2800.0, FEET_PER_SECOND),    // average velocity
             getQuantity(7.9, FEET_PER_SECOND),        // standard deviation
@@ -110,7 +110,7 @@ class GroupStatisticsJsr385MapperTest {
     class GroupStatisticsMappingTests {
 
         @Test
-        @DisplayName("Should map GroupStatisticsJsr385 to DTO with all fields")
+        @DisplayName("Should map GroupStatistics to DTO with all fields")
         void shouldMapGroupStatisticsToDtoWithAllFields() {
             // When
             var dto = mapper.toDto(createValidGroupStatistics());
@@ -168,7 +168,7 @@ class GroupStatisticsJsr385MapperTest {
         @DisplayName("Should handle empty shots list")
         void shouldHandleEmptyShotsList() {
             // When
-            var dto = mapper.toDto(new GroupStatisticsJsr385(
+            var dto = mapper.toDto(new GroupStatistics(
                 createValidGroup(),
                 getQuantity(0.0, FEET_PER_SECOND),
                 getQuantity(0.0, FEET_PER_SECOND),
@@ -200,8 +200,8 @@ class GroupStatisticsJsr385MapperTest {
             var metresPerSecond = (Unit<Speed>) METRE.divide(SECOND);
             
             // When
-            var dto = mapper.toDto(new GroupStatisticsJsr385(
-                new GroupJsr385(
+            var dto = mapper.toDto(new GroupStatistics(
+                new Group(
                     GROUP_ID,
                     OWNER_ID,
                     LOAD_ID,
@@ -213,7 +213,7 @@ class GroupStatisticsJsr385MapperTest {
                 getQuantity(853.44, metresPerSecond),  // ~2800 fps in m/s
                 getQuantity(2.4, metresPerSecond),     // ~7.9 fps in m/s
                 getQuantity(6.1, metresPerSecond),     // ~20 fps in m/s
-                List.of(new ShotJsr385(1L, OWNER_ID, GROUP_ID, getQuantity(853.44, metresPerSecond)))
+                List.of(new Shot(1L, OWNER_ID, GROUP_ID, getQuantity(853.44, metresPerSecond)))
             ));
 
             // Then
@@ -234,7 +234,7 @@ class GroupStatisticsJsr385MapperTest {
     class ShotMappingTests {
 
         @Test
-        @DisplayName("Should map ShotJsr385 to DTO")
+        @DisplayName("Should map Shot to DTO")
         void shouldMapShotToDto() {
             // When
             var dto = mapper.shotToShotDto(createValidShot(1L, 2800.0));
@@ -279,7 +279,7 @@ class GroupStatisticsJsr385MapperTest {
             var metresPerSecond = (Unit<Speed>) METRE.divide(SECOND);
 
             // When
-            var dto = mapper.shotToShotDto(new ShotJsr385(
+            var dto = mapper.shotToShotDto(new Shot(
                 1L,
                 OWNER_ID,
                 GROUP_ID,
@@ -301,8 +301,8 @@ class GroupStatisticsJsr385MapperTest {
         @DisplayName("Should handle statistics with null optional fields in group")
         void shouldHandleStatisticsWithNullOptionalFieldsInGroup() {
             // When
-            var dto = mapper.toDto(new GroupStatisticsJsr385(
-                new GroupJsr385(
+            var dto = mapper.toDto(new GroupStatistics(
+                new Group(
                     GROUP_ID,
                     OWNER_ID,
                     LOAD_ID,
@@ -350,7 +350,7 @@ class GroupStatisticsJsr385MapperTest {
         @DisplayName("Should handle single shot in statistics")
         void shouldHandleSingleShotInStatistics() {
             // When
-            var dto = mapper.toDto(new GroupStatisticsJsr385(
+            var dto = mapper.toDto(new GroupStatistics(
                 createValidGroup(),
                 getQuantity(2800.0, FEET_PER_SECOND),
                 getQuantity(0.0, FEET_PER_SECOND),

@@ -47,9 +47,10 @@ import reactor.core.publisher.Mono;
 /**
  * REST controller for managing ammunition load configurations.
  * <p>
- * This controller provides endpoints for CRUD operations on load data, including
- * retrieval of group statistics for load performance analysis. All endpoints are
- * secured with OAuth2 authentication and enforce user-based access control.
+ * This controller provides endpoints for CRUD operations on load data with type-safe
+ * unit handling via javax.measure, including retrieval of group statistics for load
+ * performance analysis. All endpoints are secured with OAuth2 authentication and
+ * enforce user-based access control.
  * </p>
  *
  * @author Zhubin Salehi
@@ -140,7 +141,6 @@ public class LoadsController {
                 userId,
                 load.name(),
                 load.description(),
-                load.measurementUnits(),
                 load.powderManufacturer(),
                 load.powderType(),
                 load.bulletManufacturer(),
@@ -178,7 +178,6 @@ public class LoadsController {
                             existingLoad.ownerId(),
                             load.name(),
                             load.description(),
-                            load.measurementUnits(),
                             load.powderManufacturer(),
                             load.powderType(),
                             load.bulletManufacturer(),

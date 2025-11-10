@@ -2,6 +2,9 @@ package ca.zhoozhoo.loaddev.loads.service;
 
 import java.util.List;
 
+import javax.measure.Unit;
+import javax.measure.quantity.Speed;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,18 +18,25 @@ import ca.zhoozhoo.loaddev.loads.model.Shot;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import static systems.uom.ucum.UCUM.FOOT_INTERNATIONAL;
+import static tech.units.indriya.unit.Units.SECOND;
+
 /**
  * Service class for handling operations related to Loads, Groups, and Shots.
  * <p>
- * This service provides business logic for calculating ballistic statistics from shooting data,
- * including average velocity, standard deviation, and extreme spread. It coordinates between
- * repository layers and mappers to transform domain models into DTOs for API responses.
+ * This service provides business logic for calculating ballistic statistics from shooting data
+ * with type-safe unit handling. It computes average velocity, standard deviation, and extreme spread
+ * using {@link javax.measure.Quantity} types. The service coordinates between repository layers and 
+ * mappers to transform domain models into DTOs for API responses.
  * </p>
  *
  * @author Zhubin Salehi
  */
 @Service
 public class LoadsService {
+
+    @SuppressWarnings("unchecked")
+    private static final Unit<Speed> DEFAULT_VELOCITY_UNIT = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
 
     @Autowired
     private GroupRepository groupRepository;
@@ -42,7 +52,7 @@ public class LoadsService {
      *
      * @param groupId the ID of the group
      * @param userId  the ID of the user (owner)
-     * @return a Mono emitting the GroupStatistics, or empty if not found
+     * @return a Mono emitting the GroupStatisticsDto, or empty if not found
      */
     public Mono<GroupStatisticsDto> getGroupStatistics(Long groupId, String userId) {
         return groupRepository.findByIdAndOwnerId(groupId, userId)
@@ -57,7 +67,7 @@ public class LoadsService {
      *
      * @param loadId the ID of the load
      * @param userId the ID of the user (owner)
-     * @return a Flux emitting GroupStatistics for each group
+     * @return a Flux emitting GroupStatisticsDto for each group
      */
     public Flux<GroupStatisticsDto> getGroupStatisticsForLoad(Long loadId, String userId) {
         return groupRepository.findAllByLoadIdAndOwnerId(loadId, userId)
@@ -71,8 +81,7 @@ public class LoadsService {
      * Builds GroupStatistics from a group and its list of shots.
      * <p>
      * This method uses a single-pass algorithm to compute all statistics efficiently,
-     * replacing the original implementation that made 4 separate stream passes.
-     * This is a performance optimization enabled by Java 25 best practices.
+     * replacing implementations that make multiple separate stream passes.
      * </p>
      *
      * @param group the group entity
@@ -80,9 +89,15 @@ public class LoadsService {
      * @return the computed GroupStatistics
      */
     private GroupStatistics buildGroupStatistics(Group group, List<Shot> shots) {
-        // Single-pass statistics computation - much more efficient than 4 separate stream operations
+        // Determine the unit from the first shot, or use default if no shots
+        var velocityUnit = shots.isEmpty() 
+            ? DEFAULT_VELOCITY_UNIT 
+            : shots.get(0).velocity().getUnit().asType(Speed.class);
+
+        // Single-pass statistics computation - much more efficient than multiple separate stream operations
         var stats = VelocityStatisticsGatherer.compute(
-                shots.stream().map(Shot::velocity).toList()
+                shots.stream().map(Shot::velocity).toList(),
+                velocityUnit
         );
 
         return new GroupStatistics(
