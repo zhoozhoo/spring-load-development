@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import systems.uom.ucum.internal.format.TokenException;
 
 /**
  * Custom Jackson deserializer for JSR-385 {@link Quantity} objects.
@@ -88,11 +89,11 @@ public class QuantityDeserializer extends StdDeserializer<Quantity<?>> {
             throw new JsonParseException(jp, "Invalid numeric value for 'value' field: null");
         }
 
-        // Validate and convert unit (broaden catch to include parser runtime exceptions)
+        // Validate and convert unit (catch specific exceptions that can arise from parsing)
         Unit<?> unit;
         try {
             unit = codec.treeToValue(unitNode, Unit.class);
-        } catch (Exception ex) {
+        } catch (JsonProcessingException | TokenException ex) {
             throw new JsonParseException(jp, "Invalid unit value: " + unitNode.toString(), ex);
         }
         if (unit == null) {
