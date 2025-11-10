@@ -24,22 +24,29 @@ grant_type=urn:ietf:params:oauth:grant-type:uma-ticket&client_id={{client_id}}&c
 GET {{api_gateway_host}}/api/rifles
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
-### Create a new rifle
+### Create a new rifle (Imperial units - inches)
 # @name CreateRifle
 POST {{api_gateway_host}}/api/rifles
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 {
-  "name": "Savage 110 Elite Precision",
-  "description": "Long range precision rifle with MDT chassis",
-  "measurementUnits": "Imperial",
-  "caliber": ".308 Winchester",
-  "barrelLength": 24.0,
-  "barrelContour": "Medium Palma",
-  "twistRate": "1:10",
-  "freeBore": 0.160,
-  "rifling": "6 Groove"
+  "name": "Long Range Precision Rifle",
+  "description": "6.5 Creedmoor bolt action rifle with precision barrel",
+  "caliber": "6.5 Creedmoor",
+  "barrelLength": {
+    "value": 24.0,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  },
+  "barrelContour": "Heavy Varmint",
+  "twistRate": "1:8",
+  "rifling": "5R",
+  "freeBore": {
+    "value": 0.160,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  }
 }
 
 ### Get created rifle by ID
@@ -47,7 +54,7 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 GET {{api_gateway_host}}/api/rifles/{{CreateRifle.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
-### Update created rifle
+### Update created rifle (Imperial units - inches)
 # @name UpdateCreatedRifle
 PUT {{api_gateway_host}}/api/rifles/{{CreateRifle.response.body.id}}
 Content-Type: application/json
@@ -56,16 +63,56 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 {
   "name": "Tikka T3x Custom",
   "description": "Tikka T3x with Bartlein barrel and MDT chassis",
-  "measurementUnits": "Imperial",
   "caliber": "6mm Creedmoor",
-  "barrelLength": 26.0,
+  "barrelLength": {
+    "value": 26.0,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  },
   "barrelContour": "M24",
   "twistRate": "1:7.5",
-  "freeBore": 0.153,
+  "freeBore": {
+    "value": 0.153,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  },
   "rifling": "6 Groove"
 }
 
 ### Delete created rifle
 # @name DeleteCreatedRifle
 DELETE {{api_gateway_host}}/api/rifles/{{CreateRifle.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a rifle with metric units (centimeters and millimeters)
+# @name CreateRifleMetric
+POST {{api_gateway_host}}/api/rifles
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "European Hunting Rifle",
+  "description": "7x64mm Brenneke hunting rifle with metric specifications",
+  "caliber": "7x64mm Brenneke",
+  "barrelLength": {
+    "value": 61.0,
+    "unit": "cm",
+    "scale": "ABSOLUTE"
+  },
+  "barrelContour": "Medium Sporter",
+  "twistRate": "1:9",
+  "rifling": "4 Groove",
+  "freeBore": {
+    "value": 4.06,
+    "unit": "mm",
+    "scale": "ABSOLUTE"
+  }
+}
+
+### Get the metric rifle
+GET {{api_gateway_host}}/api/rifles/{{CreateRifleMetric.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Delete metric rifle
+DELETE {{api_gateway_host}}/api/rifles/{{CreateRifleMetric.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
