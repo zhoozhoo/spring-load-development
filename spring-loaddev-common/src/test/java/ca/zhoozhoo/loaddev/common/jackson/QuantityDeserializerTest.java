@@ -3,8 +3,10 @@ package ca.zhoozhoo.loaddev.common.jackson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 import javax.measure.Quantity;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 /**
  * Unit tests for QuantityDeserializer.
@@ -64,7 +67,7 @@ class QuantityDeserializerTest {
 
         @Test
         void deserialize_withInvalidScale_shouldThrowWithFriendlyMessage() {
-            var ex = assertThrows(com.fasterxml.jackson.core.JsonParseException.class, () ->
+            var ex = assertThrows(JsonParseException.class, () ->
                 mapper.readValue("{" +
                     "\"value\":1," +
                     "\"unit\":\"m\"," +
@@ -72,14 +75,46 @@ class QuantityDeserializerTest {
             );
 
             // message should indicate invalid scale
-            org.junit.jupiter.api.Assertions.assertTrue(ex.getOriginalMessage().contains("Invalid scale"));
+            assertTrue(ex.getOriginalMessage().contains("Invalid scale"));
         }
 
         @Test
         void deserialize_withNonNumericValue_shouldThrow() {
-            assertThrows(com.fasterxml.jackson.core.JsonParseException.class, () ->
+            assertThrows(JsonParseException.class, () ->
                 mapper.readValue("{\"value\":\"abc\",\"unit\":\"m\",\"scale\":\"ABSOLUTE\"}", Quantity.class)
             );
+        }
+
+        @Test
+        void deserialize_withNullValue_shouldThrowFriendlyMessage() {
+            var ex = assertThrows(JsonParseException.class, () ->
+                mapper.readValue("{\"value\":null,\"unit\":\"m\",\"scale\":\"ABSOLUTE\"}", Quantity.class)
+            );
+            assertTrue(ex.getOriginalMessage().contains("Invalid numeric value"));
+        }
+
+        @Test
+        void deserialize_withNullUnit_shouldThrowFriendlyMessage() {
+            var ex = assertThrows(JsonParseException.class, () ->
+                mapper.readValue("{\"value\":1,\"unit\":null,\"scale\":\"ABSOLUTE\"}", Quantity.class)
+            );
+            assertTrue(ex.getOriginalMessage().contains("Invalid unit value"));
+        }
+
+        @Test
+        void deserialize_withInvalidUnitString_shouldThrowFromQuantityDeserializer() {
+            var ex = assertThrows(JsonParseException.class, () ->
+                mapper.readValue("{\"value\":1,\"unit\":\"BAD\",\"scale\":\"ABSOLUTE\"}", Quantity.class)
+            );
+            assertTrue(ex.getOriginalMessage().contains("Invalid unit value"));
+        }
+
+        @Test
+        void deserialize_withNullScale_shouldThrowFriendlyMessage() {
+            var ex = assertThrows(JsonParseException.class, () ->
+                mapper.readValue("{\"value\":1,\"unit\":\"m\",\"scale\":null}", Quantity.class)
+            );
+            assertTrue(ex.getOriginalMessage().contains("Invalid scale"));
         }
     }
 
@@ -134,13 +169,13 @@ class QuantityDeserializerTest {
 
         @Test
         void deserializer_shouldExtendStdDeserializer() {
-            assertInstanceOf(com.fasterxml.jackson.databind.deser.std.StdDeserializer.class, 
+            assertInstanceOf(StdDeserializer.class, 
                     new QuantityDeserializer());
         }
 
         @Test
         void deserializer_shouldBeSerializable() {
-            assertInstanceOf(java.io.Serializable.class, new QuantityDeserializer());
+            assertInstanceOf(Serializable.class, new QuantityDeserializer());
         }
     }
 }

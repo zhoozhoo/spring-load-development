@@ -52,6 +52,20 @@ class MonetaryAmountDeserializerTest {
                     () -> mapper.readValue("{\"amount\":10}", MonetaryAmount.class));
             assertTrue(ex.getMessage().contains("currency"));
         }
+
+        @Test
+        void deserialize_nullAmount_shouldThrowIllegalArgument() {
+            var ex = assertThrows(IllegalArgumentException.class,
+                    () -> mapper.readValue("{\"amount\":null,\"currency\":\"USD\"}", MonetaryAmount.class));
+            assertTrue(ex.getMessage().contains("amount"));
+        }
+
+        @Test
+        void deserialize_nullCurrency_shouldThrowIllegalArgument() {
+            var ex = assertThrows(IllegalArgumentException.class,
+                    () -> mapper.readValue("{\"amount\":10,\"currency\":null}", MonetaryAmount.class));
+            assertTrue(ex.getMessage().contains("currency"));
+        }
     }
 
     @Nested

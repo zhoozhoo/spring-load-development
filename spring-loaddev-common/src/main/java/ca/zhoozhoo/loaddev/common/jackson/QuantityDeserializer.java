@@ -88,11 +88,11 @@ public class QuantityDeserializer extends StdDeserializer<Quantity<?>> {
             throw new JsonParseException(jp, "Invalid numeric value for 'value' field: null");
         }
 
-        // Validate and convert unit (narrow catch to JsonProcessingException for SpotBugs)
+        // Validate and convert unit (broaden catch to include parser runtime exceptions)
         Unit<?> unit;
         try {
             unit = codec.treeToValue(unitNode, Unit.class);
-        } catch (JsonProcessingException ex) {
+        } catch (Exception ex) {
             throw new JsonParseException(jp, "Invalid unit value: " + unitNode.toString(), ex);
         }
         if (unit == null) {

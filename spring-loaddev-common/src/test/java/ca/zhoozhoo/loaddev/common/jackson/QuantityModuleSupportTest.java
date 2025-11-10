@@ -20,19 +20,24 @@ class QuantityModuleSupportTest {
 
         @Test
         void newObjectMapperWithQuantityModule_shouldSerializeUnit() throws Exception {
-            ObjectMapper mapper = QuantityModuleSupport.newObjectMapperWithQuantityModule();
+            var w = new StringWriter();
+            QuantityModuleSupport.newObjectMapperWithQuantityModule().writeValue(w, METER);
+            assertEquals("\"m\"", w.toString());
+        }
+
+        @Test
+        void registerOnExistingMapper_shouldSerializeUnit() throws Exception {
+            var mapper = new ObjectMapper();
+            QuantityModuleSupport.register(mapper);
             var w = new StringWriter();
             mapper.writeValue(w, METER);
             assertEquals("\"m\"", w.toString());
         }
 
         @Test
-        void registerOnExistingMapper_shouldSerializeUnit() throws Exception {
-            ObjectMapper mapper = new ObjectMapper();
-            QuantityModuleSupport.register(mapper);
-            var w = new StringWriter();
-            mapper.writeValue(w, METER);
-            assertEquals("\"m\"", w.toString());
+        void register_withNullMapper_shouldBeNoOp() {
+            // Ensures the false branch in QuantityModuleSupport.register is covered
+            QuantityModuleSupport.register(null);
         }
     }
 

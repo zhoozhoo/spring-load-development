@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
 import static systems.uom.ucum.UCUM.KELVIN;
 import static systems.uom.ucum.UCUM.METER;
+import static tech.units.indriya.unit.Units.SECOND;
 
+import java.io.Serializable;
 import java.io.StringWriter;
 
 import javax.measure.Unit;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.std.StdScalarSerializer;
 
 /**
  * Unit tests for UnitSerializer.
@@ -52,7 +55,7 @@ class UnitSerializerTest {
         @Test
         void serialize_withComplexUnit_shouldSucceed() throws Exception {
             var writer = new StringWriter();
-            mapper.writeValue(writer, METER.divide(tech.units.indriya.unit.Units.SECOND));
+            mapper.writeValue(writer, METER.divide(SECOND));
             assertEquals("\"m/s\"", writer.toString());
         }
 
@@ -60,6 +63,16 @@ class UnitSerializerTest {
         void serialize_withNullUnit_shouldWriteNull() throws Exception {
             var writer = new StringWriter();
             mapper.writeValue(writer, (Unit<?>) null);
+            assertEquals("null", writer.toString());
+        }
+
+        @Test
+        void serialize_directSerializerWithNull_shouldWriteNull() throws Exception {
+            var writer = new StringWriter();
+            var generator = mapper.getFactory().createGenerator(writer);
+            // Call serializer directly to exercise the null branch inside serialize()
+            new UnitSerializer().serialize(null, generator, null);
+            generator.flush();
             assertEquals("null", writer.toString());
         }
     }
@@ -71,7 +84,7 @@ class UnitSerializerTest {
         void serializer_shouldExtendStdScalarSerializer() {
             try {
                 Class<?> cls = Class.forName("ca.zhoozhoo.loaddev.common.jackson.UnitSerializer");
-                assertTrue(com.fasterxml.jackson.databind.ser.std.StdScalarSerializer.class.isAssignableFrom(cls));
+                assertTrue(StdScalarSerializer.class.isAssignableFrom(cls));
             } catch (ClassNotFoundException e) {
                 throw new AssertionError("UnitSerializer class not found", e);
             }
@@ -81,7 +94,7 @@ class UnitSerializerTest {
         void serializer_shouldBeSerializable() {
             try {
                 Class<?> cls = Class.forName("ca.zhoozhoo.loaddev.common.jackson.UnitSerializer");
-                assertTrue(java.io.Serializable.class.isAssignableFrom(cls));
+                assertTrue(Serializable.class.isAssignableFrom(cls));
             } catch (ClassNotFoundException e) {
                 throw new AssertionError("UnitSerializer class not found", e);
             }
