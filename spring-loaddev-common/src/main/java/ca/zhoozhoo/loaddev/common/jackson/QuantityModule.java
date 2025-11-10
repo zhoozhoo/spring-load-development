@@ -2,6 +2,7 @@ package ca.zhoozhoo.loaddev.common.jackson;
 
 import javax.measure.Quantity;
 import javax.measure.Unit;
+import javax.money.MonetaryAmount;
 
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -38,5 +39,8 @@ public class QuantityModule extends SimpleModule {
         addSerializer((Class) Unit.class, new UnitSerializer());
         addDeserializer((Class) Unit.class, new UnitDeserializer());
         addDeserializer((Class) Quantity.class, new QuantityDeserializer());
+        // MonetaryAmount (JSR-354) support
+        addSerializer((Class) MonetaryAmount.class, new MonetaryAmountSerializer());
+        addDeserializer((Class) MonetaryAmount.class, new MonetaryAmountDeserializer());
     }
 }

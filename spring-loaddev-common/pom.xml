@@ -49,6 +49,16 @@
             <artifactId>systems-unicode</artifactId>
             <version>${systems.uom.version}</version>
         </dependency>
+        <dependency>
+            <groupId>javax.money</groupId>
+            <artifactId>money-api</artifactId>
+            <version>${javax.money.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.javamoney.moneta</groupId>
+            <artifactId>moneta-core</artifactId>
+            <version>${org.javamoney.version}</version>
+        </dependency>
         
         <!-- Test dependencies -->
         <dependency>

@@ -106,15 +106,13 @@ class QuantityDeserializerTest {
                     ).getOriginalMessage());
         }
 
-        @Test
-        void deserialize_withMissingScaleField_shouldThrow() {
-            assertEquals("scale not found for quantity type.", 
-                    assertThrows(JsonParseException.class, () -> 
-                        mapper.readValue("""
-                                {"value":26.0,"unit":"[in_i]"}
-                                """, Quantity.class)
-                    ).getOriginalMessage());
-        }
+    @Test
+    void deserialize_withMissingScaleField_shouldDefaultToAbsolute() throws Exception {
+        var quantity = mapper.readValue("""
+            {"value":26.0,"unit":"[in_i]"}
+            """, Quantity.class);
+        assertEquals(Scale.ABSOLUTE, quantity.getScale());
+    }
     }
 
     @Nested

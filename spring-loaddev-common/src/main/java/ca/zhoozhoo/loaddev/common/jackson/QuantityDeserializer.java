@@ -24,18 +24,19 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
  * {
  *   "value": 26.0,
  *   "unit": "[in_i]",
- *   "scale": "ABSOLUTE"
+ *   "scale": "ABSOLUTE"   // optional; defaults to ABSOLUTE when omitted
  * }
  * </pre>
  * Required fields:
  * <ul>
  *   <li><b>value</b> – numeric (mapped to {@link BigDecimal})</li>
  *   <li><b>unit</b> – UCUM string (see {@link UnitDeserializer})</li>
- *   <li><b>scale</b> – one of {@code ABSOLUTE} or {@code RELATIVE}</li>
+ *   <li><b>scale</b> – (optional) one of {@code ABSOLUTE} or {@code RELATIVE}; defaults to {@code ABSOLUTE} if missing</li>
  * </ul>
  * Validation & error behavior:
  * <ul>
- *   <li>Missing field → {@code "<field> not found for quantity type."}</li>
+ *   <li>Missing required field (<b>value</b>, <b>unit</b>) → {@code "<field> not found for quantity type."}</li>
+ *   <li>Missing optional field (<b>scale</b>) → defaults to {@code ABSOLUTE}</li>
  *   <li>Non-numeric value → {@code Invalid numeric value for 'value' field: ...}</li>
  *   <li>Invalid unit string → {@code Invalid unit value: ...}</li>
  *   <li>Invalid scale enum → {@code Invalid scale '<value>'. Expected ABSOLUTE or RELATIVE}</li>
@@ -62,11 +63,17 @@ public class QuantityDeserializer extends StdDeserializer<Quantity<?>> {
 
     @Override
     public Quantity<?> deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
-    JsonNode root = jp.getCodec().readTree(jp);
+        JsonNode root = jp.getCodec().readTree(jp);
 
         var valueNode = requireField(jp, root, "value");
+        if (valueNode.isNull()) {
+            throw new JsonParseException(jp, "Invalid numeric value for 'value' field: null");
+        }
         var unitNode = requireField(jp, root, "unit");
-        var scaleNode = requireField(jp, root, "scale");
+        if (unitNode.isNull()) {
+            throw new JsonParseException(jp, "Invalid unit value: null");
+        }
+        var scaleNode = root.get("scale");
 
         var codec = jp.getCodec();
 
@@ -77,6 +84,9 @@ public class QuantityDeserializer extends StdDeserializer<Quantity<?>> {
         } catch (JsonProcessingException ex) {
             throw new JsonParseException(jp, "Invalid numeric value for 'value' field: " + valueNode.toString(), ex);
         }
+        if (value == null) {
+            throw new JsonParseException(jp, "Invalid numeric value for 'value' field: null");
+        }
 
         // Validate and convert unit (narrow catch to JsonProcessingException for SpotBugs)
         Unit<?> unit;
@@ -85,14 +95,22 @@ public class QuantityDeserializer extends StdDeserializer<Quantity<?>> {
         } catch (JsonProcessingException ex) {
             throw new JsonParseException(jp, "Invalid unit value: " + unitNode.toString(), ex);
         }
+        if (unit == null) {
+            throw new JsonParseException(jp, "Invalid unit value: null");
+        }
 
-        // Validate and convert scale with friendly message on failure
-        Scale scale;
-        try {
-            String scaleText = codec.treeToValue(scaleNode, String.class);
-            scale = Scale.valueOf(scaleText);
-        } catch (IllegalArgumentException ex) {
-            throw new JsonParseException(jp, "Invalid scale '" + scaleNode.asText() + "'. Expected ABSOLUTE or RELATIVE", ex);
+        // Validate and convert scale with friendly message on failure; default ABSOLUTE if absent
+        Scale scale = Scale.ABSOLUTE;
+        if (scaleNode != null && !scaleNode.isMissingNode()) {
+            try {
+                String scaleText = codec.treeToValue(scaleNode, String.class);
+                if (scaleText == null) {
+                    throw new JsonParseException(jp, "Invalid scale 'null'. Expected ABSOLUTE or RELATIVE");
+                }
+                scale = Scale.valueOf(scaleText);
+            } catch (IllegalArgumentException ex) {
+                throw new JsonParseException(jp, "Invalid scale '" + scaleNode.asText() + "'. Expected ABSOLUTE or RELATIVE", ex);
+            }
         }
 
         return getQuantity(value, unit, scale);
