@@ -170,6 +170,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     void getLoadById() {
         var loadResult = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L))).block();
 
+        System.out.println(loadResult);
         assertThat(loadResult).isNotNull();
         assertThat(loadResult.isError()).isFalse();
     }

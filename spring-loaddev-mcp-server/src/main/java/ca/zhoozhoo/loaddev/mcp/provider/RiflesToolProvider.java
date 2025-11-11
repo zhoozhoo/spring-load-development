@@ -1,120 +1,107 @@
 package ca.zhoozhoo.loaddev.mcp.provider;
 
+import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_PARAMS;
+
 import org.springaicommunity.mcp.annotation.McpTool;
 import org.springaicommunity.mcp.annotation.McpToolParam;
 import org.springframework.ai.model.tool.internal.ToolCallReactiveContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ca.zhoozhoo.loaddev.mcp.dto.RifleDto;
 import ca.zhoozhoo.loaddev.mcp.service.RiflesService;
+import io.modelcontextprotocol.json.McpJsonMapper;
+import io.modelcontextprotocol.spec.McpError;
+import io.modelcontextprotocol.spec.McpSchema.JSONRPCResponse.JSONRPCError;
 import lombok.extern.log4j.Log4j2;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
  * MCP tool provider for rifle-related operations.
  * <p>
- * Exposes rifle management functionality through Model Context Protocol (MCP) tools.
- * All tools support reactive return types (Flux/Mono) and automatic authentication
- * context propagation via ReactiveSecurityContextHolder.
+ * Mirrors {@link LoadsToolProvider}'s pre-serialization workaround to ensure
+ * reliable MCP envelope serialization when {@link RifleDto} contains JSR-385
+ * Quantity fields (e.g., barrelLength, freeBore). Direct reactive return of
+ * typed DTOs was causing the framework to mark results as errors despite
+ * successful service calls.
  * <p>
- * Tools are automatically discovered and registered by the MCP framework through
- * the {@code @McpTool} annotation. Authentication is handled transparently using
- * JWT tokens from the security context.
- * 
- * @author Zhubin Salehi
- * @see org.springaicommunity.mcp.annotation.McpTool
- * @see org.springframework.ai.model.tool.internal.ToolCallReactiveContextHolder
+ * Strategy: Serialize each emitted {@link RifleDto} to a JSON string early and
+ * return JSON string(s) to the MCP layer, avoiding Jackson re-serialization of
+ * Quantity graphs inside the framework's generic envelope conversion.
+ *
+ * Tools:
+ * <ul>
+ *   <li>getRifles - Streams all rifles as a JSON array string</li>
+ *   <li>getRifleById - Returns a single rifle as a JSON string</li>
+ * </ul>
  */
-@Service
+@Component
 @Log4j2
 public class RiflesToolProvider {
 
     @Autowired
     private RiflesService riflesService;
 
+    @Autowired
+    private McpJsonMapper mcpJsonMapper;
+
     /**
-     * Retrieves all rifles accessible to the current user.
+     * Retrieve all rifles accessible to the current user.
      * <p>
-     * Streams rifles as they become available for better performance with reactive execution.
-     * Authentication is automatically propagated from the security context.
+     * Emits rifles from the backend service, pre-serializing each to JSON, then
+     * aggregates them into a single JSON array string. This minimizes the
+     * framework's need to serialize complex Quantity fields.
      *
-     * @return Flux stream of RifleDto objects
-     * @throws McpError with INTERNAL_ERROR if service discovery fails
-     * @throws McpError with INVALID_REQUEST if authentication fails
+     * @return Mono emitting JSON array string of rifle objects.
      */
     @McpTool(description = "Retrieve all available rifles in the system", name = "getRifles")
-    public Flux<RifleDto> getRifles() {
-        log.debug("Retrieving all rifles");
+    public Mono<String> getRifles() {
+        log.debug("RiflesToolProvider.getRifles() invoked");
+        log.debug("ToolCallReactiveContextHolder.getContext(): {}", ToolCallReactiveContextHolder.getContext());
 
-        return withReactiveContext(
-                riflesService.getRifles()
-                    .doOnNext(rifle -> log.debug("Streaming rifle: {}", rifle))
-                    .doOnComplete(() -> log.debug("Completed streaming all rifles"))
-                    .doOnError(e -> log.error("Error retrieving rifles: {}", e.getMessage()))
+        return ToolReactiveContext.applyTo(
+            riflesService.getRifles()
+                .map(rifle -> PreSerializationUtils.serialize(mcpJsonMapper, rifle, "rifle", rifle.id()))
+                .collectList()
+                .map(list -> {
+                    String arrayJson = "[" + String.join(",", list) + "]";
+                    log.debug("Returning rifles JSON array: {}", arrayJson);
+                    return arrayJson;
+                })
+                .doOnError(e -> log.error("Error retrieving rifles: {}", e.getMessage(), e))
         );
     }
 
     /**
-     * Retrieves a specific rifle by its unique identifier.
+     * Retrieve a specific rifle by ID.
      * <p>
-     * Returns detailed information about a single rifle including all its properties.
-     * Authentication is automatically propagated from the security context.
+     * Pre-serializes the resulting {@link RifleDto} into JSON for reliable MCP
+     * envelope transport when Quantity fields are present.
      *
-     * @param id the unique identifier of the rifle to retrieve (must be positive)
-     * @return Mono emitting the requested RifleDto
-     * @throws McpError with INTERNAL_ERROR if service discovery fails
-     * @throws McpError with INVALID_REQUEST if authentication fails
-     * @throws McpError with INVALID_PARAMS if rifle not found
+     * @param id numeric rifle identifier (must be positive)
+     * @return Mono emitting JSON string of the rifle
      */
-        @McpTool(description = "Find a specific rifle by its unique identifier", name = "getRifleById")
-    public Mono<RifleDto> getRifleById(
-            @McpToolParam(description = "Numeric ID of the rifle to retrieve", required = true) Long id) {
-        log.debug("Retrieving rifle with ID: {}", id);
+    @McpTool(description = "Find a specific rifle by its unique identifier", name = "getRifleById")
+    public Mono<String> getRifleById(
+        @McpToolParam(description = "Numeric ID of the rifle to retrieve", required = true) Long id) {
+        log.debug("RiflesToolProvider.getRifleById({}) invoked", id);
+        log.debug("ToolCallReactiveContextHolder.getContext(): {}", ToolCallReactiveContextHolder.getContext());
 
-        return withReactiveContext(
-                riflesService.getRifleById(id)
-                    .doOnSuccess(rifle -> log.debug("Successfully retrieved rifle: {}", rifle))
-                    .doOnError(e -> log.error("Error retrieving rifle {}: {}", id, e.getMessage()))
+        if (id == null || id <= 0) {
+            log.error("Invalid rifle ID: {}", id);
+            return Mono.error(new McpError(new JSONRPCError(
+                INVALID_PARAMS,
+                "Rifle ID must be a positive number",
+                null)));
+        }
+
+        return ToolReactiveContext.applyTo(
+            riflesService.getRifleById(id)
+                .map(rifle -> {
+                    log.debug("Successfully retrieved rifle: {}", rifle);
+                    return PreSerializationUtils.serialize(mcpJsonMapper, rifle, "rifle", id);
+                })
+                .doOnError(e -> log.error("Error retrieving rifle {}: {}", id, e.getMessage(), e))
         );
-    }
-
-    /**
-     * Wraps a Mono with reactive context propagation.
-     * <p>
-     * Applies the security context and other contextual information from
-     * {@link ToolCallReactiveContextHolder} to the reactive chain. This ensures
-     * authentication tokens and other request context are available throughout
-     * the reactive execution pipeline.
-     * <p>
-     * The MCP framework automatically populates the ToolCallReactiveContextHolder
-     * with the necessary context before tool execution.
-     *
-     * @param <T> the type of elements emitted by the Mono
-     * @param mono the Mono to wrap with context
-     * @return a Mono with reactive context applied
-     */
-    private <T> Mono<T> withReactiveContext(Mono<T> mono) {
-        return mono.contextWrite(ctx -> ctx.putAll(ToolCallReactiveContextHolder.getContext()));
-    }
-
-    /**
-     * Wraps a Flux with reactive context propagation.
-     * <p>
-     * Applies the security context and other contextual information from
-     * {@link ToolCallReactiveContextHolder} to the reactive chain. This ensures
-     * authentication tokens and other request context are available throughout
-     * the reactive execution pipeline.
-     * <p>
-     * The MCP framework automatically populates the ToolCallReactiveContextHolder
-     * with the necessary context before tool execution.
-     *
-     * @param <T> the type of elements emitted by the Flux
-     * @param flux the Flux to wrap with context
-     * @return a Flux with reactive context applied
-     */
-    private <T> Flux<T> withReactiveContext(Flux<T> flux) {
-        return flux.contextWrite(ctx -> ctx.putAll(ToolCallReactiveContextHolder.getContext()));
     }
 }

@@ -1,14 +1,16 @@
 package ca.zhoozhoo.loaddev.mcp.dto;
 
+import javax.measure.Quantity;
+import javax.measure.quantity.Length;
+
 /**
- * Data Transfer Object representing a rifle.
+ * Data Transfer Object representing a rifle aligned with JSR-385.
  * <p>
- * Contains comprehensive information about a rifle including caliber, barrel
- * specifications, twist rate, and scope details.
- * <p>
- * This record is used for transferring rifle data between the MCP server and
- * backend microservices.
- * 
+ * Mirrors the rifles microservice record replacing primitive numeric and string length
+ * representations with {@link Quantity} types (barrelLength, freeBore). The previous
+ * measurementUnits field is removed; units are embedded in each Quantity instance.
+ * </p>
+ *
  * @author Zhubin Salehi
  */
 public record RifleDto(
@@ -19,11 +21,9 @@ public record RifleDto(
 
         String description,
 
-        String measurementUnits,
-
         String caliber,
 
-        Double barrelLength,
+        Quantity<Length> barrelLength,
 
         String barrelContour,
 
@@ -31,5 +31,5 @@ public record RifleDto(
 
         String rifling,
 
-        String freeBore) {
+        Quantity<Length> freeBore) {
 }

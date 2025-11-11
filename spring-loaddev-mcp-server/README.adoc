@@ -7,6 +7,30 @@
 
 An MCP server for Spring Load Development project.
 
+== Quantity JSON serialization
+
+The DTOs in this module use JSR-385 (tech.units.indriya) `javax.measure.Quantity` types for physical measurements
+such as lengths, masses, and speeds. To ensure consistent JSON across services and MCP, a custom Jackson module
+is registered that serializes quantities using the following shape:
+
+- {"value": <number>, "unit": "<symbol>"}
+
+Examples:
+
+- bulletWeight -> {"value": 140, "unit": "g"}
+- barrelLength -> {"value": 61, "unit": "cm"}
+
+Note: While the server’s ObjectMapper understands `Quantity` directly, the MCP protocol envelope can intermittently
+struggle with complex generic types inside tool results. To avoid transport-level serialization pitfalls, MCP tools
+that return DTOs with `Quantity` fields pre-serialize their responses to JSON strings and return those strings to the
+client. This approach keeps the on-the-wire format stable without changing the DTOs or their public API.
+
+== Development notes
+
+- The server registers a single MCP JSON mapper backed by Spring’s ObjectMapper with the custom Quantity/Unit module.
+- Tool providers apply reactive context where available and return pre-serialized JSON for DTOs that include `Quantity`.
+- Integration tests cover both happy paths and common error scenarios (service not discovered, auth failures, not found).
+
 == Configuring Copilot Connection
 
 To connect GitHub Copilot to this server, you need to configure the `.vscode/mcp.json` file in your project directory.

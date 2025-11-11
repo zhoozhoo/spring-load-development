@@ -50,6 +50,15 @@ import okhttp3.mockwebserver.MockWebServer;
 public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
 
     private static MockWebServer mockRiflesServer;
+    private static final String RIFLE_WITH_QUANTITIES_JSON = """
+            {
+                \"id\": 1,
+                \"name\": \"Test Rifle\",
+                \"caliber\": \"6.5 Creedmoor\",
+                \"barrelLength\": { \"value\": 61.0, \"unit\": \"cm\" },
+                \"freeBore\": { \"value\": 0.25, \"unit\": \"cm\" }
+            }
+            """;
 
     /**
      * Sets up the rifles-service mock server.
@@ -119,6 +128,66 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
 
         assertThat(rifleResult).isNotNull();
         assertThat(rifleResult.isError()).isFalse();
+    }
+
+    /**
+     * Positive-path test with non-null Quantity fields (barrelLength, freeBore).
+     * <p>
+     * Reconfigures the mock rifles-service dispatcher to return a rifle JSON payload
+     * containing embedded quantity objects in the shape {"value": X, "unit": "cm"}.
+     * This validates that:
+     * <ul>
+     *   <li>Inbound deserialization into {@link RifleDto} succeeds via QuantityModule.</li>
+     *   <li>MCP envelope serialization of the resulting {@code Mono<RifleDto>} does not fail when Quantity fields are non-null.</li>
+     *   <li>The JSON response surface includes the expected nested quantity structure.</li>
+     * </ul>
+     * If this test were to fail with a generic conversion error, we would adopt the same
+     * pre-serialization workaround used for loads. Success here allows rifles to remain
+     * strongly typed.
+     */
+    @Test
+    void getRifleById_WithQuantities() {
+        // Override dispatcher to return rifle JSON including Quantity fields
+        mockRiflesServer.setDispatcher(new okhttp3.mockwebserver.Dispatcher() {
+            @Override
+            public okhttp3.mockwebserver.MockResponse dispatch(okhttp3.mockwebserver.RecordedRequest request) {
+                String path = request.getPath();
+                if (path == null) {
+                    return new okhttp3.mockwebserver.MockResponse().setResponseCode(404);
+                }
+                if (path.equals("/rifles")) {
+                    return new okhttp3.mockwebserver.MockResponse()
+                            .setResponseCode(200)
+                            .setHeader("Content-Type", "application/json")
+                            .setBody("[" + RIFLE_WITH_QUANTITIES_JSON + "]");
+                }
+                if (path.startsWith("/rifles/")) {
+                    return new okhttp3.mockwebserver.MockResponse()
+                            .setResponseCode(200)
+                            .setHeader("Content-Type", "application/json")
+                            .setBody(RIFLE_WITH_QUANTITIES_JSON);
+                }
+                return new okhttp3.mockwebserver.MockResponse().setResponseCode(404);
+            }
+        });
+
+        var rifleResult = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
+
+        assertThat(rifleResult).isNotNull();
+        assertThat(rifleResult.isError()).isFalse();
+        assertThat(rifleResult.content()).isNotEmpty();
+        var content = rifleResult.content().get(0);
+        assertThat(content).isInstanceOf(TextContent.class);
+        var textContent = (TextContent) content;
+        // Accept either 61 or 61.0 depending on Jackson numeric formatting
+        assertThat(textContent.text())
+            .satisfies(s -> assertThat(s).containsAnyOf(
+                "\"barrelLength\":{\"value\":61.0,\"unit\":\"cm\"}",
+                "\"barrelLength\":{\"value\":61,\"unit\":\"cm\"}"));
+        assertThat(textContent.text()).contains("\"freeBore\":{\"value\":0.25,\"unit\":\"cm\"}");
+
+        // Restore original dispatcher for other tests
+        mockRiflesServer.setDispatcher(createRiflesDispatcher());
     }
 
     // ========================================

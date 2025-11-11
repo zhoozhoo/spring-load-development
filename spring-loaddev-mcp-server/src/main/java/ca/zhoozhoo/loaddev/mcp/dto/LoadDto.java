@@ -1,15 +1,18 @@
 package ca.zhoozhoo.loaddev.mcp.dto;
 
+import javax.measure.Quantity;
+import javax.measure.quantity.Length;
+import javax.measure.quantity.Mass;
+
 /**
- * Data Transfer Object representing a reloading load.
+ * Data Transfer Object representing a reloading load aligned with JSR-385.
  * <p>
- * Contains comprehensive information about a specific ammunition load including
- * powder details, bullet specifications, cartridge information, and associated
- * rifle reference.
- * <p>
- * This record is used for transferring load data between the MCP server and
- * backend microservices.
- * 
+ * Mirrors the load microservice record structure using {@link Quantity} types for
+ * bullet weight and cartridge measurements (distance from lands, case overall length,
+ * neck tension). Units are embedded in each Quantity instance for type-safe handling
+ * without a separate measurementUnits field (removed during JSR-385 migration).
+ * </p>
+ *
  * @author Zhubin Salehi
  */
 public record LoadDto(
@@ -20,8 +23,6 @@ public record LoadDto(
 
         String description,
 
-        String measurementUnits,
-
         String powderManufacturer,
 
         String powderType,
@@ -30,17 +31,17 @@ public record LoadDto(
 
         String bulletType,
 
-        Double bulletWeight,
+        Quantity<Mass> bulletWeight,
 
         String primerManufacturer,
 
         String primerType,
 
-        Double distanceFromLands,
+        Quantity<Length> distanceFromLands,
 
-        Double caseOverallLength,
+        Quantity<Length> caseOverallLength,
 
-        Double neckTension,
+        Quantity<Length> neckTension,
 
         Long rifleId) {
 }

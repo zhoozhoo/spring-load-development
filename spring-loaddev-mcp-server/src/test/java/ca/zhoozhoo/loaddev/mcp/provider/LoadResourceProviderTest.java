@@ -161,12 +161,11 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
         assertThat(text).contains("ID: 1");
         assertThat(text).contains("Name: Test Load 1");
         assertThat(text).contains("Description: Test description");
-        assertThat(text).contains("Units: METRIC");
         assertThat(text).contains("Powder Manufacturer: Hodgdon");
         assertThat(text).contains("Powder Type: H4350");
         assertThat(text).contains("Bullet Manufacturer: Hornady");
         assertThat(text).contains("Bullet Type: ELD-M");
-        assertThat(text).contains("Bullet Weight: 140.0 grams");
+        assertThat(text).contains("Bullet Weight: 140 g");
         assertThat(text).contains("Primer Manufacturer: CCI");
         assertThat(text).contains("Primer Type: BR2");
         assertThat(text).contains("Distance from Lands: 0.02 mm");

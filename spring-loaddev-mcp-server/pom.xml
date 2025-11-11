@@ -112,6 +112,28 @@
             <version>${testcontainers-keycloak.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- JSR-385 Units of Measurement support (align with loads & rifles services) -->
+        <dependency>
+            <groupId>javax.measure</groupId>
+            <artifactId>unit-api</artifactId>
+            <version>${javax.measure.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>tech.units</groupId>
+            <artifactId>indriya</artifactId>
+            <version>${tech.units.indriya.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>systems.uom</groupId>
+            <artifactId>systems-quantity</artifactId>
+            <version>${systems.uom.version}</version>
+        </dependency>
+        <!-- Common module providing Quantity Jackson serializers -->
+        <dependency>
+            <groupId>ca.zhoozhoo.load-development</groupId>
+            <artifactId>spring-loaddev-common</artifactId>
+            <version>0.0.8-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>

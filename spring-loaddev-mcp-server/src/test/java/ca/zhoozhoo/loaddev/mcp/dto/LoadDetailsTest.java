@@ -1,6 +1,9 @@
 package ca.zhoozhoo.loaddev.mcp.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static tech.units.indriya.quantity.Quantities.getQuantity;
+import static tech.units.indriya.unit.Units.GRAM;
+import static tech.units.indriya.unit.Units.METRE;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -24,14 +27,14 @@ class LoadDetailsTest {
     @Test
     void constructor_WithAllFields_ShouldCreateInstance() {
         // Given
-        LoadDto load = new LoadDto(1L, "308 Win Load", "Test load", "imperial", 
-                "Hodgdon", "Varget", "Hornady", "BTHP", 168.0, 
-                "CCI", "BR-2", 0.020, 2.800, 0.002, 1L);
-        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle", "imperial",
-                "308 Winchester", 24.0, "Heavy", "1:10", "Button", "SAAMI");
+        LoadDto load = new LoadDto(1L, "308 Win Load", "Test load",
+                "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
+                "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L);
+        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle",
+                "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE));
         List<GroupDto> groups = List.of(
-                new GroupDto(LocalDate.now(), 42.5, 100, 0.75, 2850.5, 15.2, 45.0, List.of()),
-                new GroupDto(LocalDate.now(), 42.5, 200, 1.25, 2845.0, 18.5, 52.0, List.of())
+                new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), null, null, null, List.of()),
+                new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(200.0, METRE), getQuantity(1.25, METRE), null, null, null, List.of())
         );
 
         // When
@@ -50,14 +53,14 @@ class LoadDetailsTest {
     @Test
     void constructor_WithMutableList_ShouldCreateDefensiveCopy() {
         // Given
-        LoadDto load = new LoadDto(1L, "308 Win Load", "Test load", "imperial", 
-                "Hodgdon", "Varget", "Hornady", "BTHP", 168.0, 
-                "CCI", "BR-2", 0.020, 2.800, 0.002, 1L);
-        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle", "imperial",
-                "308 Winchester", 24.0, "Heavy", "1:10", "Button", "SAAMI");
+        LoadDto load = new LoadDto(1L, "308 Win Load", "Test load",
+                "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
+                "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L);
+        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle",
+                "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE));
         
         List<GroupDto> originalGroups = new ArrayList<>();
-        originalGroups.add(new GroupDto(LocalDate.now(), 42.5, 100, 0.75, 2850.5, 15.2, 45.0, List.of()));
+        originalGroups.add(new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), null, null, null, List.of()));
 
         // When
         LoadDetails loadDetails = new LoadDetails(load, rifle, originalGroups);
@@ -66,7 +69,7 @@ class LoadDetailsTest {
         assertThat(loadDetails.groups()).hasSize(1);
         
         // Modify original list
-        originalGroups.add(new GroupDto(LocalDate.now(), 42.5, 200, 1.25, 2845.0, 18.5, 52.0, List.of()));
+        originalGroups.add(new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(200.0, METRE), getQuantity(1.25, METRE), null, null, null, List.of()));
         
         // LoadDetails should still have 1 group (defensive copy)
         assertThat(loadDetails.groups()).hasSize(1);
@@ -78,11 +81,11 @@ class LoadDetailsTest {
     @Test
     void constructor_WithNullGroups_ShouldUseEmptyList() {
         // Given
-        LoadDto load = new LoadDto(1L, "308 Win Load", "Test load", "imperial", 
-                "Hodgdon", "Varget", "Hornady", "BTHP", 168.0, 
-                "CCI", "BR-2", 0.020, 2.800, 0.002, 1L);
-        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle", "imperial",
-                "308 Winchester", 24.0, "Heavy", "1:10", "Button", "SAAMI");
+        LoadDto load = new LoadDto(1L, "308 Win Load", "Test load",
+                "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
+                "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L);
+        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle",
+                "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE));
 
         // When
         LoadDetails loadDetails = new LoadDetails(load, rifle, null);
@@ -98,19 +101,19 @@ class LoadDetailsTest {
     @Test
     void groups_ShouldBeImmutable() {
         // Given
-        LoadDto load = new LoadDto(1L, "308 Win Load", "Test load", "imperial", 
-                "Hodgdon", "Varget", "Hornady", "BTHP", 168.0, 
-                "CCI", "BR-2", 0.020, 2.800, 0.002, 1L);
-        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle", "imperial",
-                "308 Winchester", 24.0, "Heavy", "1:10", "Button", "SAAMI");
-        LoadDetails loadDetails = new LoadDetails(load, rifle, 
-                List.of(new GroupDto(LocalDate.now(), 42.5, 100, 0.75, 2850.5, 15.2, 45.0, List.of())));
+        LoadDto load = new LoadDto(1L, "308 Win Load", "Test load",
+                "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
+                "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L);
+        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle",
+                "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE));
+        LoadDetails loadDetails = new LoadDetails(load, rifle,
+                List.of(new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), null, null, null, List.of())));
 
         // When/Then
         assertThat(loadDetails.groups()).hasSize(1);
         
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> 
-                loadDetails.groups().add(new GroupDto(LocalDate.now(), 42.5, 200, 1.25, 2845.0, 18.5, 52.0, List.of())))
+                loadDetails.groups().add(new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(200.0, METRE), getQuantity(1.25, METRE), null, null, null, List.of())))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
@@ -134,11 +137,11 @@ class LoadDetailsTest {
     @Test
     void constructor_WithEmptyGroups_ShouldCreateInstance() {
         // Given
-        LoadDto load = new LoadDto(1L, "308 Win Load", "Test load", "imperial", 
-                "Hodgdon", "Varget", "Hornady", "BTHP", 168.0, 
-                "CCI", "BR-2", 0.020, 2.800, 0.002, 1L);
-        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle", "imperial",
-                "308 Winchester", 24.0, "Heavy", "1:10", "Button", "SAAMI");
+        LoadDto load = new LoadDto(1L, "308 Win Load", "Test load",
+                "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
+                "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L);
+        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle",
+                "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE));
 
         // When
         LoadDetails loadDetails = new LoadDetails(load, rifle, List.of());
@@ -155,13 +158,13 @@ class LoadDetailsTest {
     @Test
     void equals_WithSameValues_ShouldBeEqual() {
         // Given
-        LoadDto load = new LoadDto(1L, "308 Win Load", "Test load", "imperial", 
-                "Hodgdon", "Varget", "Hornady", "BTHP", 168.0, 
-                "CCI", "BR-2", 0.020, 2.800, 0.002, 1L);
-        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle", "imperial",
-                "308 Winchester", 24.0, "Heavy", "1:10", "Button", "SAAMI");
+        LoadDto load = new LoadDto(1L, "308 Win Load", "Test load",
+                "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
+                "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L);
+        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle",
+                "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE));
         List<GroupDto> groups = List.of(
-                new GroupDto(LocalDate.now(), 42.5, 100, 0.75, 2850.5, 15.2, 45.0, List.of())
+                new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), null, null, null, List.of())
         );
         
         LoadDetails loadDetails1 = new LoadDetails(load, rifle, groups);
@@ -178,14 +181,14 @@ class LoadDetailsTest {
     @Test
     void equals_WithDifferentValues_ShouldNotBeEqual() {
         // Given
-        LoadDto load1 = new LoadDto(1L, "308 Win Load", "Test load", "imperial", 
-                "Hodgdon", "Varget", "Hornady", "BTHP", 168.0, 
-                "CCI", "BR-2", 0.020, 2.800, 0.002, 1L);
-        LoadDto load2 = new LoadDto(2L, "308 Win Load", "Test load", "imperial", 
-                "Hodgdon", "Varget", "Hornady", "BTHP", 168.0, 
-                "CCI", "BR-2", 0.020, 2.800, 0.002, 1L);
-        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle", "imperial",
-                "308 Winchester", 24.0, "Heavy", "1:10", "Button", "SAAMI");
+        LoadDto load1 = new LoadDto(1L, "308 Win Load", "Test load",
+                "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
+                "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L);
+        LoadDto load2 = new LoadDto(2L, "308 Win Load", "Test load",
+                "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
+                "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L);
+        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle",
+                "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE));
         List<GroupDto> groups = List.of();
         
         LoadDetails loadDetails1 = new LoadDetails(load1, rifle, groups);
@@ -201,11 +204,11 @@ class LoadDetailsTest {
     @Test
     void toString_ShouldIncludeAllFields() {
         // Given
-        LoadDto load = new LoadDto(1L, "308 Win Load", "Test load", "imperial", 
-                "Hodgdon", "Varget", "Hornady", "BTHP", 168.0, 
-                "CCI", "BR-2", 0.020, 2.800, 0.002, 1L);
-        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle", "imperial",
-                "308 Winchester", 24.0, "Heavy", "1:10", "Button", "SAAMI");
+        LoadDto load = new LoadDto(1L, "308 Win Load", "Test load",
+                "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
+                "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L);
+        RifleDto rifle = new RifleDto(1L, "Remington 700", "Precision rifle",
+                "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE));
         LoadDetails loadDetails = new LoadDetails(load, rifle, List.of());
 
         // When
