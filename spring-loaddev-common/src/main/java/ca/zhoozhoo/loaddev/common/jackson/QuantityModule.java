@@ -39,6 +39,7 @@ public class QuantityModule extends SimpleModule {
         addSerializer((Class) Unit.class, new UnitSerializer());
         addDeserializer((Class) Unit.class, new UnitDeserializer());
         addDeserializer((Class) Quantity.class, new QuantityDeserializer());
+        addSerializer((Class) Quantity.class, new QuantitySerializer());
         // MonetaryAmount (JSR-354) support
         addSerializer((Class) MonetaryAmount.class, new MonetaryAmountSerializer());
         addDeserializer((Class) MonetaryAmount.class, new MonetaryAmountDeserializer());
