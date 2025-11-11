@@ -29,9 +29,9 @@ class R2dbcConvertersTest {
     @Test
     void quantityToJson_shouldConvertCorrectly() {
         var jsonString = toJsonConverter.convert(getQuantity(26.0, INCH_INTERNATIONAL)).asString();
-        // The JSON format may serialize as 26 or 26.0 depending on the value type
-        assert jsonString.equals("{\"value\":26,\"unit\":\"[in_i]\"}") 
-                || jsonString.equals("{\"value\":26.0,\"unit\":\"[in_i]\"}");
+        // Expect scale field now; value may be rendered as 26 or 26.0
+        assert jsonString.equals("{\"value\":26,\"unit\":\"[in_i]\",\"scale\":\"ABSOLUTE\"}")
+                || jsonString.equals("{\"value\":26.0,\"unit\":\"[in_i]\",\"scale\":\"ABSOLUTE\"}");
     }
 
     @Test
@@ -43,17 +43,16 @@ class R2dbcConvertersTest {
 
     @Test
     void jsonToQuantity_withMissingValueField_shouldThrow() {
-        assertEquals("Missing 'value' field in Quantity JSON: {\"unit\":\"[in_i]\"}",
-                assertThrows(IllegalArgumentException.class,
-                        () -> fromJsonConverter.convert(Json.of("{\"unit\":\"[in_i]\"}"))).getMessage());
+        var ex = assertThrows(IllegalArgumentException.class,
+                () -> fromJsonConverter.convert(Json.of("{\"unit\":\"[in_i]\"}")));
+        assertEquals("Failed to parse Quantity JSON: {\"unit\":\"[in_i]\"}", ex.getMessage());
     }
 
     @Test
     void jsonToQuantity_withMissingUnitField_shouldThrow() {
-        assertEquals("Missing 'unit' field in Quantity JSON: {\"value\":26.0}",
-                assertThrows(IllegalArgumentException.class, () -> 
-                    fromJsonConverter.convert(Json.of("{\"value\":26.0}"))
-                ).getMessage());
+        var ex = assertThrows(IllegalArgumentException.class, () ->
+                fromJsonConverter.convert(Json.of("{\"value\":26.0}")));
+        assertEquals("Failed to parse Quantity JSON: {\"value\":26.0}", ex.getMessage());
     }
 
     @Test
@@ -74,17 +73,14 @@ class R2dbcConvertersTest {
 
     @Test
     void jsonToQuantity_withEmptyJson_shouldThrow() {
-        assertEquals("Missing 'value' field in Quantity JSON: {}",
-                assertThrows(IllegalArgumentException.class, () -> 
-                    fromJsonConverter.convert(Json.of("{}"))
-                ).getMessage());
+        var ex = assertThrows(IllegalArgumentException.class, () -> fromJsonConverter.convert(Json.of("{}")));
+        assertEquals("Failed to parse Quantity JSON: {}", ex.getMessage());
     }
 
     @Test
-    void jsonToQuantity_withNullValue_shouldConvertWithNullNumber() {
-        // When value is null, Jackson's decimalValue returns null, which then gets passed to Quantities.getQuantity
-        // This doesn't necessarily throw an exception - it may return null or a Quantity with null value
-        fromJsonConverter.convert(Json.of("{\"value\":null,\"unit\":\"[in_i]\"}"));
+    void jsonToQuantity_withNullValue_shouldThrow() {
+        assertThrows(IllegalArgumentException.class,
+                () -> fromJsonConverter.convert(Json.of("{\"value\":null,\"unit\":\"[in_i]\"}")));
     }
 
     @Test
@@ -96,7 +92,7 @@ class R2dbcConvertersTest {
 
     @Test
     void quantityToJson_withDecimalValue_shouldConvertCorrectly() {
-        assertEquals("{\"value\":0.157,\"unit\":\"[in_i]\"}", 
+        assertEquals("{\"value\":0.157,\"unit\":\"[in_i]\",\"scale\":\"ABSOLUTE\"}",
                 toJsonConverter.convert(getQuantity(0.157, INCH_INTERNATIONAL)).asString());
     }
 }

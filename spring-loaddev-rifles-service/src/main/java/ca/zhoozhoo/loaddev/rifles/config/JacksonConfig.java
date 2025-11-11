@@ -24,7 +24,7 @@ import ca.zhoozhoo.loaddev.common.jackson.QuantityModule;
 public class JacksonConfig {
 
     @Bean
-    public Module unitJacksonModule() {
+    public Module quantityModule() {
         return new QuantityModule();
     }
 }
