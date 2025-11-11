@@ -26,6 +26,11 @@ grant_type=urn:ietf:params:oauth:grant-type:uma-ticket&client_id={{client_id}}&c
 GET {{api_gateway_host}}/api/cases
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
+### Search cases (full-text)
+# @name SearchCases
+GET {{api_gateway_host}}/api/cases/search?query=Creedmoor
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
 ### Create a new case
 # @name CreateCase
 POST {{api_gateway_host}}/api/cases
@@ -35,12 +40,16 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 {
   "manufacturer": "Lapua",
   "caliber": "6.5 Creedmoor",
-  "type": "Small Rifle",
-  "measurementUnits": "Imperial",
-  "cost": 89.99,
-  "currency": "CAD",
-  "quantityPerBox": 100,
-  "primerSize": "SMALL_RIFLE"
+  "primerSize": "SMALL_RIFLE",
+  "cost": {
+    "amount": 89.99,
+    "currency": "CAD"
+  },
+  "quantityPerBox": {
+    "value": 100,
+    "unit": "1",
+    "scale": "ABSOLUTE"
+  }
 }
 
 ### Get the created case by ID
@@ -57,12 +66,16 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 {
   "manufacturer": "Hornady",
   "caliber": "308 Winchester",
-  "type": "Large Rifle",
-  "measurementUnits": "Imperial",
-  "cost": 69.99,
-  "currency": "CAD",
-  "quantityPerBox": 50,
-  "primerSize": "LARGE_RIFLE"
+  "primerSize": "LARGE_RIFLE",
+  "cost": {
+    "amount": 69.99,
+    "currency": "CAD"
+  },
+  "quantityPerBox": {
+    "value": 50,
+    "unit": "1",
+    "scale": "ABSOLUTE"
+  }
 }
 
 ### Delete the created case
@@ -70,51 +83,66 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 DELETE {{api_gateway_host}}/api/cases/{{CreateCase.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
-// ==================== POWDERS ====================
+// ==================== PROPELLANTS ====================
 
-### Get list of all powders
-# @name GetPowders
-GET {{api_gateway_host}}/api/powders
+### Get list of all propellants
+# @name GetPropellants
+GET {{api_gateway_host}}/api/propellants
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
-### Create a new powder
-# @name CreatePowder
-POST {{api_gateway_host}}/api/powders
+### Search propellants (full-text)
+# @name SearchPropellants
+GET {{api_gateway_host}}/api/propellants/search?query=H4350
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new propellant (Imperial units - pounds)
+# @name CreatePropellant
+POST {{api_gateway_host}}/api/propellants
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 {
   "manufacturer": "Hodgdon",
   "type": "H4350",
-  "measurementUnits": "Imperial",
-  "cost": 45.99,
-  "currency": "CAD",
-  "weightPerContainer": 1.0
+  "cost": {
+    "amount": 45.99,
+    "currency": "CAD"
+  },
+  "weightPerContainer": {
+    "value": 1.0,
+    "unit": "[lb_av]",
+    "scale": "ABSOLUTE"
+  }
 }
 
-### Get the created powder by ID
-# @name GetPowderById
-GET {{api_gateway_host}}/api/powders/{{CreatePowder.response.body.id}}
+### Get the created propellant by ID
+# @name GetPropellantById
+GET {{api_gateway_host}}/api/propellants/{{CreatePropellant.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
-### Update the created powder
-# @name UpdatePowder
-PUT {{api_gateway_host}}/api/powders/{{CreatePowder.response.body.id}}
+### Update the created propellant (Metric units - kilograms)
+# @name UpdatePropellant
+PUT {{api_gateway_host}}/api/propellants/{{CreatePropellant.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 {
   "manufacturer": "IMR",
   "type": "4895",
-  "measurementUnits": "Metric",
-  "cost": 49.99,
-  "currency": "CAD",
-  "weightPerContainer": 0.5
+  "cost": {
+    "amount": 49.99,
+    "currency": "CAD"
+  },
+  "weightPerContainer": {
+    "value": 0.5,
+    "unit": "kg",
+    "scale": "ABSOLUTE"
+  }
 }
 
-### Delete the created powder
-# @name DeletePowder
-DELETE {{api_gateway_host}}/api/powders/{{CreatePowder.response.body.id}}
+### Delete the created propellant
+# @name DeletePropellant
+DELETE {{api_gateway_host}}/api/propellants/{{CreatePropellant.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 // ==================== PRIMERS ====================
@@ -122,6 +150,11 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 ### Get list of all primers
 # @name GetPrimers
 GET {{api_gateway_host}}/api/primers
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Search primers (full-text)
+# @name SearchPrimers
+GET {{api_gateway_host}}/api/primers/search?query=CCI
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Create a new primer
@@ -134,9 +167,15 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
   "manufacturer": "CCI",
   "type": "BR-4",
   "primerSize": "SMALL_RIFLE",
-  "cost": 89.99,
-  "currency": "CAD",
-  "quantityPerBox": 1000
+  "cost": {
+    "amount": 89.99,
+    "currency": "CAD"
+  },
+  "quantityPerBox": {
+    "value": 1000,
+    "unit": "1",
+    "scale": "ABSOLUTE"
+  }
 }
 
 ### Get the created primer by ID
@@ -154,9 +193,15 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
   "manufacturer": "Federal",
   "type": "205M",
   "primerSize": "SMALL_RIFLE",
-  "cost": 99.99,
-  "currency": "CAD",
-  "quantityPerBox": 1000
+  "cost": {
+    "amount": 99.99,
+    "currency": "CAD"
+  },
+  "quantityPerBox": {
+    "value": 1000,
+    "unit": "1",
+    "scale": "ABSOLUTE"
+  }
 }
 
 ### Delete the created primer
@@ -164,51 +209,66 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 DELETE {{api_gateway_host}}/api/primers/{{CreatePrimer.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
-// ==================== BULLETS ====================
+// ==================== PROJECTILES ====================
 
-### Get list of all bullets
-# @name GetBullets
-GET {{api_gateway_host}}/api/bullets
+### Get list of all projectiles
+# @name GetProjectiles
+GET {{api_gateway_host}}/api/projectiles
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
-### Create a new bullet
-# @name CreateBullet
-POST {{api_gateway_host}}/api/bullets
+### Search projectiles (full-text)
+# @name SearchProjectiles
+GET {{api_gateway_host}}/api/projectiles/search?query=ELD
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new projectile (Imperial units - grains)
+# @name CreateProjectile
+POST {{api_gateway_host}}/api/projectiles
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 {
   "manufacturer": "Hornady",
-  "weight": 140.0,
+  "weight": {
+    "value": 140.0,
+    "unit": "[gr]",
+    "scale": "ABSOLUTE"
+  },
   "type": "ELD-Match",
-  "measurementUnits": "Imperial",
-  "cost": 45.99,
-  "currency": "CAD",
+  "cost": {
+    "amount": 45.99,
+    "currency": "CAD"
+  },
   "quantityPerBox": 100
 }
 
-### Get the created bullet by ID
-# @name GetBulletById
-GET {{api_gateway_host}}/api/bullets/{{CreateBullet.response.body.id}}
+### Get the created projectile by ID
+# @name GetProjectileById
+GET {{api_gateway_host}}/api/projectiles/{{CreateProjectile.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
-### Update the created bullet
-# @name UpdateBullet
-PUT {{api_gateway_host}}/api/bullets/{{CreateBullet.response.body.id}}
+### Update the created projectile (Metric units - grams)
+# @name UpdateProjectile
+PUT {{api_gateway_host}}/api/projectiles/{{CreateProjectile.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 {
   "manufacturer": "Sierra",
-  "weight": 150.0,
+  "weight": {
+    "value": 9.72,
+    "unit": "g",
+    "scale": "ABSOLUTE"
+  },
   "type": "MatchKing",
-  "measurementUnits": "Imperial",
-  "cost": 49.99,
-  "currency": "CAD",
+  "cost": {
+    "amount": 49.99,
+    "currency": "CAD"
+  },
   "quantityPerBox": 50
 }
 
-### Delete the created bullet
-# @name DeleteBullet
-DELETE {{api_gateway_host}}/api/bullets/{{CreateBullet.response.body.id}}
+### Delete the created projectile
+# @name DeleteProjectile
+DELETE {{api_gateway_host}}/api/projectiles/{{CreateProjectile.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}

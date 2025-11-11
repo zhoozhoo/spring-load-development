@@ -13,24 +13,49 @@ This directory contains comprehensive testing resources for the Spring Load Deve
 
 The test files cover authentication and full CRUD operations for all API services including rifles, loads, groups, shots, and components (cases, powders, primers, bullets).
 
+=== Data shapes used in requests
+
+All quantity-like values use JSR-385 (Units of Measurement) with a consistent JSON shape:
+
+* Quantity: {"value": number, "unit": string, "scale": "ABSOLUTE" | "RELATIVE"}
+    - Examples:
+        - Bullet weight: {"value": 140, "unit": "[gr]", "scale": "ABSOLUTE"}
+        - Range: {"value": 100, "unit": "[yd_i]", "scale": "ABSOLUTE"}
+        - Velocity: {"value": 2800, "unit": "[ft_i]/s", "scale": "ABSOLUTE"}
+    * HTTP request files for testing API endpoints using VS Code's REST Client extension
+    * A shell script for automated test data loading
+    * Configuration files for environment variables
+    * Full-text search examples for component resources (cases, propellants, primers, projectiles)
+* MonetaryAmount: {"amount": number, "currency": "ISO-4217 code"}
+    - Example: {"amount": 89.99, "currency": "CAD"}
+    The test files cover authentication and full CRUD operations for all API services including rifles, loads, groups, shots, and components (cases, propellants, primers, projectiles), plus search endpoints.
+
+Notes:
+* The scale field is optional and defaults to ABSOLUTE when omitted.
+* Units use UCUM formatting (e.g., "[in_i]", "mm", "m/s").
+* Dimensionless quantities (counts) must use the UCUM symbol "1" rather than descriptive words like "one". Example: {"value": 100, "unit": "1"}
+* For mass in imperial units, use UCUM avoirdupois symbols: pounds "[lb_av]", ounces "[oz_av]", grains "[gr]".
+
 == Prerequisites
 
-=== For HTTP Request Testing
-
-* Visual Studio Code installed
-* REST Client extension installed (`humao.rest-client`)
-
-=== For Automated Data Loading
+    * Authentication with Keycloak
+    * CRUD operations for cases, propellants, primers, and projectiles
+        - Cases: create, get, update, delete, search (`/api/cases/search?query=...`)
+        - Propellants: create, get, update, delete, search (`/api/propellants/search?query=...`)
+        - Primers: create, get, update, delete, search (`/api/primers/search?query=...`)
+        - Projectiles: create, get, update, delete, search (`/api/projectiles/search?query=...`)
 
 * Bash shell (Linux/macOS/WSL)
 * `curl` command-line tool
-* `jq` JSON command-line processor
+    * Creates a load development dataset with multiple powder charges (using [gr])
 
+    NOTE: Load validation requires at least one of `distanceFromLands` or `caseOverallLength` to be provided. The script sets both along with `neckTension`.
 === Required Running Services
 
 * PostgreSQL database (default: localhost:5432)
-* Keycloak server (default: localhost:7080)
-* Config server (default: localhost:8888)
+    * Run `load_test_data.sh` to quickly populate the system with test data (includes required distanceFromLands and caseOverallLength for loads)
+    * Check the script output for any errors or issues during data loading
+    * Use the new search endpoints to validate full-text indexing, e.g. `GET /api/cases/search?query=Lapua`
 * Discovery server (default: localhost:8761)
 * API Gateway service (default: localhost:8080)
 * Rifles service (default: localhost:8081)
@@ -92,12 +117,12 @@ Environment configuration file containing:
 
 ==== load_test_data.sh
 
-A bash script that automatically loads test data into the system via REST API calls. This script:
+A bash script that automatically loads test data into the system via REST API calls using the JSON shapes above. This script:
 
 * Authenticates with Keycloak to obtain access tokens
 * Creates a test rifle (Tikka T3x CTR)
-* Creates a load development dataset with multiple powder charges
-* Creates shooting groups with various group sizes and velocities
+* Creates a load development dataset with multiple powder charges (using [gr])
+* Creates shooting groups with group size ([in_i]), range ([yd_i]), and velocities ([ft_i]/s)
 * Provides comprehensive error handling and colored output
 * Validates that all required services are running before execution
 
