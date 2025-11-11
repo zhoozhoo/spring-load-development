@@ -49,12 +49,12 @@ public class GlobalExceptionHandler {
     public Mono<ResponseEntity<String>> handleServerWebInputException(ServerWebInputException ex) {
         log.error("HTTP message decoding error", ex);
         
-        Throwable cause = ex.getCause();
+        var cause = ex.getCause();
         if (cause != null) {
             log.error("Caused by: {}", cause.getClass().getName(), cause);
         }
         
-        String errorMessage = "Failed to read HTTP message: " + ex.getReason();
+        var errorMessage = "Failed to read HTTP message: " + ex.getReason();
         if (cause != null) {
             errorMessage += " - " + cause.getMessage();
         }
@@ -66,8 +66,8 @@ public class GlobalExceptionHandler {
     public Mono<ResponseEntity<String>> handleDecodingException(DecodingException ex) {
         log.error("Decoding error occurred", ex);
         
-        Throwable cause = ex.getCause();
-        String errorMessage = "Failed to decode request body";
+        var cause = ex.getCause();
+        var errorMessage = "Failed to decode request body";
         
         if (cause != null) {
             log.error("Root cause: {}", cause.getClass().getName(), cause);
@@ -81,10 +81,10 @@ public class GlobalExceptionHandler {
     public Mono<ResponseEntity<String>> handleJacksonException(JsonMappingException ex) {
         log.error("JSON mapping error occurred", ex);
         
-        StringBuilder errorMessage = new StringBuilder("JSON deserialization error");
+        var errorMessage = new StringBuilder("JSON deserialization error");
         
         if (!ex.getPath().isEmpty()) {
-            String path = ex.getPath().stream()
+            var path = ex.getPath().stream()
                     .map(ref -> ref.getFieldName())
                     .reduce((a, b) -> a + "." + b)
                     .orElse("unknown");
@@ -108,7 +108,7 @@ public class GlobalExceptionHandler {
     public Mono<ResponseEntity<String>> handleValidationException(WebExchangeBindException ex) {
         log.error("Validation error occurred", ex);
         
-        String error = ex.getBindingResult()
+        var error = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(err -> "%s: %s (rejected value: %s)".formatted(
@@ -119,24 +119,28 @@ public class GlobalExceptionHandler {
                 .orElse("Validation failed");
         
         log.error("Validation errors: {}", error);
+        
         return just(ResponseEntity.status(BAD_REQUEST).body(error));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public Mono<ResponseEntity<String>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
         log.error("Data integrity violation occurred", ex);
+
         return just(ResponseEntity.status(CONFLICT).body("Database error: " + ex.getMessage()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public Mono<ResponseEntity<String>> handleAccessDenied(AccessDeniedException ex) {
         log.warn("Access denied: {}", ex.getMessage());
+
         return just(ResponseEntity.status(FORBIDDEN).body("Access denied"));
     }
 
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<String>> handleGenericException(Exception ex) {
         log.error("Unexpected error: ", ex);
+
         return just(ResponseEntity.status(INTERNAL_SERVER_ERROR).body("An unexpected error occurred"));
     }
 
@@ -144,6 +148,7 @@ public class GlobalExceptionHandler {
     public Mono<ResponseEntity<String>> handleResponseStatusException(ResponseStatusException ex) {
         log.error("ResponseStatusException [status={}, reason={}]: {}", 
                 ex.getStatusCode(), ex.getReason(), ex.getMessage(), ex);
+
         return just(ResponseEntity.status(ex.getStatusCode())
                 .body(ex.getReason() != null ? ex.getReason() : ex.getMessage()));
     }
