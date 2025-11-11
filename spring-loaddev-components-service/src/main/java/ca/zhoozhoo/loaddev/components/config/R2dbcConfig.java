@@ -43,7 +43,6 @@ public class R2dbcConfig {
      */
     @Bean
     public R2dbcCustomConversions r2dbcCustomConversions(ConnectionFactory connectionFactory) {
-        var converters = R2dbcConverters.getConverters();
-        return R2dbcCustomConversions.of(DialectResolver.getDialect(connectionFactory), converters);
+        return R2dbcCustomConversions.of(DialectResolver.getDialect(connectionFactory), R2dbcConverters.getConverters());
     }
 }

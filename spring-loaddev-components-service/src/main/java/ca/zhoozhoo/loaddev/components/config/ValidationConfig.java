@@ -40,10 +40,8 @@ public class ValidationConfig {
                 .validatedBy(PositiveQuantityValidator.class);
 
         configuration.addMapping(constraintMapping);
-        validatorFactoryBean.setConfigurationInitializer(cfg -> {
-            var hvConfig = (HibernateValidatorConfiguration) cfg;
-            hvConfig.addMapping(constraintMapping);
-        });
+        validatorFactoryBean.setConfigurationInitializer(
+                cfg -> ((HibernateValidatorConfiguration) cfg).addMapping(constraintMapping));
 
         return validatorFactoryBean;
     }

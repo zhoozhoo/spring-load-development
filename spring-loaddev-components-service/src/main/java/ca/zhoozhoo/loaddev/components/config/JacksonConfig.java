@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.fasterxml.jackson.databind.Module;
 
-import ca.zhoozhoo.loaddev.components.converter.Jsr385Jsr354Module;
+import ca.zhoozhoo.loaddev.common.jackson.QuantityModule;
 
 /**
  * Jackson configuration for custom serialization/deserialization.
@@ -20,7 +20,7 @@ import ca.zhoozhoo.loaddev.components.converter.Jsr385Jsr354Module;
 public class JacksonConfig {
 
     @Bean
-    public Module jsr385Jsr354Module() {
-        return new Jsr385Jsr354Module();
+    public Module quantityModule() {
+        return new QuantityModule();
     }
 }
