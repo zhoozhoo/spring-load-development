@@ -12,7 +12,7 @@ import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.lang.NonNull;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.zhoozhoo.loaddev.common.jackson.QuantityModuleSupport;
@@ -75,7 +75,7 @@ public class R2dbcConverters {
         public Quantity<?> convert(@NonNull Json source) {
             try {
                 return OBJECT_MAPPER.readValue(source.asString(), Quantity.class);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new IllegalArgumentException("Failed to parse Quantity JSON: " + source.asString(), e);
             }
         }
