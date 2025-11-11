@@ -19,17 +19,8 @@ import ca.zhoozhoo.loaddev.common.jackson.QuantityModule;
 @Configuration
 public class JacksonConfig {
 
-    /**
-     * Registers the Quantity module for Jackson.
-     * <p>
-     * This module provides custom serializers and deserializers for {@link javax.measure.Quantity}
-     * objects, allowing them to be properly converted to and from JSON format.
-     * </p>
-     *
-     * @return the configured QuantityModule
-     */
     @Bean
-    public Module unitJacksonModule() {
+    public Module quantityModule() {
         return new QuantityModule();
     }
 }

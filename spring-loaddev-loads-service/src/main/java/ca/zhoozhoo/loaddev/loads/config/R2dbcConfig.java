@@ -51,7 +51,7 @@ public class R2dbcConfig {
     @Bean
     public R2dbcCustomConversions r2dbcCustomConversions(ConnectionFactory connectionFactory) {
         var converters = new ArrayList<>();
-        converters.addAll(QuantityConverters.getConverters());
+        converters.addAll(R2dbcConverters.getConverters());
         
         return R2dbcCustomConversions.of(DialectResolver.getDialect(connectionFactory), converters);
     }

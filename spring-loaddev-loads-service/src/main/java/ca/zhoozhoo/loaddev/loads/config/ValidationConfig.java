@@ -2,7 +2,6 @@ package ca.zhoozhoo.loaddev.loads.config;
 
 import org.hibernate.validator.HibernateValidator;
 import org.hibernate.validator.HibernateValidatorConfiguration;
-import org.hibernate.validator.cfg.ConstraintMapping;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
@@ -26,33 +25,31 @@ public class ValidationConfig {
 
     @Bean
     public LocalValidatorFactoryBean validator() {
-        LocalValidatorFactoryBean validatorFactoryBean = new LocalValidatorFactoryBean();
+        var validatorFactoryBean = new LocalValidatorFactoryBean();
         validatorFactoryBean.setProviderClass(HibernateValidator.class);
-        
-        HibernateValidatorConfiguration configuration = Validation
+
+        var configuration = Validation
                 .byProvider(HibernateValidator.class)
                 .configure();
 
-        ConstraintMapping constraintMapping = configuration.createConstraintMapping();
+        var constraintMapping = configuration.createConstraintMapping();
 
         // Register PositiveQuantityValidator for Quantity types
         constraintMapping
-            .constraintDefinition(jakarta.validation.constraints.Positive.class)
-            .includeExistingValidators(true)
-            .validatedBy(PositiveQuantityValidator.class);
+                .constraintDefinition(jakarta.validation.constraints.Positive.class)
+                .includeExistingValidators(true)
+                .validatedBy(PositiveQuantityValidator.class);
 
-        // Register NotNullQuantityValidator for Quantity types  
+        // Register NotNullQuantityValidator for Quantity types
         constraintMapping
-            .constraintDefinition(jakarta.validation.constraints.NotNull.class)
-            .includeExistingValidators(true)
-            .validatedBy(NotNullQuantityValidator.class);
+                .constraintDefinition(jakarta.validation.constraints.NotNull.class)
+                .includeExistingValidators(true)
+                .validatedBy(NotNullQuantityValidator.class);
 
         configuration.addMapping(constraintMapping);
-        validatorFactoryBean.setConfigurationInitializer(cfg -> {
-            HibernateValidatorConfiguration hvConfig = (HibernateValidatorConfiguration) cfg;
-            hvConfig.addMapping(constraintMapping);
-        });
-        
+        validatorFactoryBean.setConfigurationInitializer(
+                cfg -> ((HibernateValidatorConfiguration) cfg).addMapping(constraintMapping));
+
         return validatorFactoryBean;
     }
 }
