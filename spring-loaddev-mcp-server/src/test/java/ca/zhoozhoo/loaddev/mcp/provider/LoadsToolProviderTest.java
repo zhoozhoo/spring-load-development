@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.annotation.Import;
 
@@ -95,13 +94,10 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
      */
     @Override
     protected void mockServiceDiscovery() {
-        ServiceInstance loadsInstance = createServiceInstance(
-                "loads-service-1", "loads-service", mockLoadsServer);
-        ServiceInstance riflesInstance = createServiceInstance(
-                "rifles-service-1", "rifles-service", mockRiflesServer);
-        
-        mockService("loads-service", loadsInstance);
-        mockService("rifles-service", riflesInstance);
+        mockService("loads-service", createServiceInstance(
+                "loads-service-1", "loads-service", mockLoadsServer));
+        mockService("rifles-service", createServiceInstance(
+                "rifles-service-1", "rifles-service", mockRiflesServer));
     }
 
     // ========================================
@@ -237,10 +233,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Load ID must be a positive number");
+        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
+        assertThat(((TextContent) result.content().get(0)).text()).contains("Load ID must be a positive number");
     }
 
     /**
@@ -259,10 +253,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Load ID must be a positive number");
+        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
+        assertThat(((TextContent) result.content().get(0)).text()).contains("Load ID must be a positive number");
     }
 
     /**
@@ -281,10 +273,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Error invoking method");
+        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
+        assertThat(((TextContent) result.content().get(0)).text()).contains("Error invoking method");
     }
 
     /**
@@ -303,10 +293,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Load ID must be a positive number");
+        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
+        assertThat(((TextContent) result.content().get(0)).text()).contains("Load ID must be a positive number");
     }
 
     /**
@@ -325,10 +313,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Load ID must be a positive number");
+        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
+        assertThat(((TextContent) result.content().get(0)).text()).contains("Load ID must be a positive number");
     }
 
     /**
@@ -347,10 +333,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Load ID must be a positive number");
+        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
+        assertThat(((TextContent) result.content().get(0)).text()).contains("Load ID must be a positive number");
     }
 
     /**
@@ -369,10 +353,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Error invoking method");
+        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
+        assertThat(((TextContent) result.content().get(0)).text()).contains("Error invoking method");
     }
 
     /**
@@ -401,10 +383,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Authentication failed");
+        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
+        assertThat(((TextContent) result.content().get(0)).text()).contains("Authentication failed");
 
         // Restore original dispatcher for other tests
         mockLoadsServer.setDispatcher(createLoadsDispatcher());
@@ -436,10 +416,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Authentication failed");
+        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
+        assertThat(((TextContent) result.content().get(0)).text()).contains("Authentication failed");
 
         // Restore original dispatcher for other tests
         mockLoadsServer.setDispatcher(createLoadsDispatcher());
@@ -471,10 +449,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Authentication failed");
+        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
+        assertThat(((TextContent) result.content().get(0)).text()).contains("Authentication failed");
 
         // Restore original dispatcher for other tests
         mockLoadsServer.setDispatcher(createLoadsDispatcher());
@@ -555,10 +531,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Error invoking method");
+        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
+        assertThat(((TextContent) result.content().get(0)).text()).contains("Error invoking method");
 
         // Restore original mock for other tests
         mockServiceDiscovery();
@@ -583,10 +557,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Error invoking method");
+        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
+        assertThat(((TextContent) result.content().get(0)).text()).contains("Error invoking method");
 
         // Restore original mock for other tests
         mockServiceDiscovery();
@@ -611,10 +583,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Error invoking method");
+        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
+        assertThat(((TextContent) result.content().get(0)).text()).contains("Error invoking method");
 
         // Restore original mock for other tests
         mockServiceDiscovery();
@@ -639,10 +609,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Error invoking method");
+        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
+        assertThat(((TextContent) result.content().get(0)).text()).contains("Error invoking method");
 
         // Restore original mock for other tests
         mockServiceDiscovery();

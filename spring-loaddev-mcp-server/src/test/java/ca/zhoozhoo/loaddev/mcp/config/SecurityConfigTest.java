@@ -46,7 +46,7 @@ class SecurityConfigTest {
     @Test
     void securityWebFilterChain_ShouldCreateFilterChain() {
         // When
-        SecurityWebFilterChain result = securityConfig.securityWebFilterChain(http);
+        var result = securityConfig.securityWebFilterChain(http);
 
         // Then
         assertThat(result).isNotNull();
@@ -66,8 +66,7 @@ class SecurityConfigTest {
                 .hasAnnotation(org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity.class)
                 .hasAnnotation(org.springframework.context.annotation.Profile.class);
         
-        org.springframework.context.annotation.Profile profileAnnotation = 
-                SecurityConfig.class.getAnnotation(org.springframework.context.annotation.Profile.class);
-        assertThat(profileAnnotation.value()).containsExactly("!test");
+        assertThat(SecurityConfig.class.getAnnotation(org.springframework.context.annotation.Profile.class)
+                .value()).containsExactly("!test");
     }
 }

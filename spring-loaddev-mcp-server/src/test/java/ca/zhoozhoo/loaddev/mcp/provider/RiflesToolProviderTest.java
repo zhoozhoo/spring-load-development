@@ -6,11 +6,11 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.annotation.Import;
 
 import ca.zhoozhoo.loaddev.mcp.config.TestSecurityConfig;
+import ca.zhoozhoo.loaddev.mcp.dto.RifleDto;
 import io.modelcontextprotocol.client.McpAsyncClient;
 import io.modelcontextprotocol.spec.McpSchema.CallToolRequest;
 import io.modelcontextprotocol.spec.McpSchema.TextContent;
@@ -88,10 +88,8 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
      */
     @Override
     protected void mockServiceDiscovery() {
-        ServiceInstance riflesInstance = createServiceInstance(
-                "rifles-service-1", "rifles-service", mockRiflesServer);
-        
-        mockService("rifles-service", riflesInstance);
+        mockService("rifles-service", createServiceInstance(
+                "rifles-service-1", "rifles-service", mockRiflesServer));
     }
 
     /**

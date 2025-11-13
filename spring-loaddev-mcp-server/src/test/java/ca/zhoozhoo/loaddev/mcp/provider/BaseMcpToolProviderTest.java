@@ -96,17 +96,15 @@ public abstract class BaseMcpToolProviderTest {
         @Primary
         public WebClient webClient(ObjectMapper objectMapper) {
             // Ensure WebClient uses the application's ObjectMapper with custom modules (e.g., QuantityModule)
-            var strategies = ExchangeStrategies.builder()
-                .codecs(configurer -> {
-                configurer.defaultCodecs()
-                    .jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
-                configurer.defaultCodecs()
-                    .jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
-                })
-                .build();
-
             return WebClient.builder()
-                .exchangeStrategies(strategies)
+                .exchangeStrategies(ExchangeStrategies.builder()
+                    .codecs(configurer -> {
+                    configurer.defaultCodecs()
+                        .jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
+                    configurer.defaultCodecs()
+                        .jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
+                    })
+                    .build())
                 .build();
         }
     }
@@ -194,9 +192,9 @@ public abstract class BaseMcpToolProviderTest {
      * then initializes it for use in tests.
      */
     protected void initializeMcpClient() {
-    transport = new WebFluxSseClientTransport(
-        WebClient.builder().baseUrl("http://localhost:" + port),
-        mcpJsonMapper);
+        transport = new WebFluxSseClientTransport(
+            WebClient.builder().baseUrl("http://localhost:" + port),
+            mcpJsonMapper);
 
         client = McpClient.async(transport).build();
         client.initialize();

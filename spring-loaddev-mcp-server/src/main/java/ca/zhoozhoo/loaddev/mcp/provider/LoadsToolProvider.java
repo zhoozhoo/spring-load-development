@@ -1,8 +1,7 @@
 package ca.zhoozhoo.loaddev.mcp.provider;
 
+import static ca.zhoozhoo.loaddev.mcp.provider.PreSerializationUtils.serialize;
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_PARAMS;
-
-import java.util.List;
 
 import org.springaicommunity.mcp.annotation.McpTool;
 import org.springaicommunity.mcp.annotation.McpToolParam;
@@ -10,9 +9,7 @@ import org.springframework.ai.model.tool.internal.ToolCallReactiveContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ca.zhoozhoo.loaddev.mcp.dto.GroupDto;
 import ca.zhoozhoo.loaddev.mcp.dto.LoadDetails;
-import ca.zhoozhoo.loaddev.mcp.dto.RifleDto;
 import ca.zhoozhoo.loaddev.mcp.service.LoadsService;
 import ca.zhoozhoo.loaddev.mcp.service.RiflesService;
 import io.modelcontextprotocol.json.McpJsonMapper;
@@ -24,17 +21,9 @@ import reactor.core.publisher.Mono;
 /**
  * MCP tool provider for load-related operations.
  * <p>
- * Exposes load management functionality through Model Context Protocol (MCP) tools.
- * All tools support reactive return types (Flux/Mono) and automatic authentication
- * context propagation via ReactiveSecurityContextHolder.
- * <p>
- * Tools are automatically discovered and registered by the MCP framework through
- * the {@code @McpTool} annotation. Authentication is handled transparently using
- * JWT tokens from the security context.
- * 
- * @author Zhubin Salehi
- * @see org.springaicommunity.mcp.annotation.McpTool
- * @see org.springframework.ai.model.tool.internal.ToolCallReactiveContextHolder
+ * Provides tools for retrieving and searching loads in the system.
+ * All operations use reactive programming for efficient execution.
+ * </p>
  */
 @Component
 @Log4j2
@@ -42,10 +31,8 @@ public class LoadsToolProvider {
 
     @Autowired
     private LoadsService loadsService;
-
     @Autowired
     private RiflesService riflesService;
-
     @Autowired
     private McpJsonMapper mcpJsonMapper;
 
@@ -67,11 +54,10 @@ public class LoadsToolProvider {
         // Serialize each LoadDto to JSON then aggregate to a JSON array string to minimize framework-side serialization
         return ToolReactiveContext.applyTo(
             loadsService.getLoads()
-                .map(load -> PreSerializationUtils.serialize(mcpJsonMapper, load, "load", load.id()))
+                .map(load -> serialize(mcpJsonMapper, load, "load", load.id()))
                 .collectList()
                 .map(list -> {
-                    String joined = String.join(",", list);
-                    String arrayJson = "[" + joined + "]";
+                    var arrayJson = "[" + String.join(",", list) + "]";
                     log.debug("Returning JSON array for loads: {}", arrayJson);
                     return arrayJson;
                 })
@@ -109,7 +95,7 @@ public class LoadsToolProvider {
             loadsService.getLoadById(id)
                 .map(load -> {
                     log.debug("Successfully retrieved load: {}", load);
-                    return PreSerializationUtils.serialize(mcpJsonMapper, load, "load", id);
+                    return serialize(mcpJsonMapper, load, "load", id);
                 })
                 .doOnError(e -> log.error("Error retrieving load {}: {}", id, e.getMessage(), e))
         );
@@ -151,13 +137,13 @@ public class LoadsToolProvider {
             ).flatMap(load -> {
                 // Now fetch rifle and statistics in parallel (Structured Concurrency pattern)
                 // Both operations must complete successfully, or the whole operation fails
-                Mono<RifleDto> rifleMono = ToolReactiveContext.applyTo(
+                var rifleMono = ToolReactiveContext.applyTo(
                     riflesService.getRifleById(load.rifleId())
                         .doOnSuccess(r -> log.debug("Retrieved rifle: {}", r))
                         .doOnError(e -> log.error("Error retrieving rifle for load {}: {}", id, e.getMessage()))
                 );
                 
-                Mono<List<GroupDto>> groupsMono = ToolReactiveContext.applyTo(
+                var groupsMono = ToolReactiveContext.applyTo(
                     loadsService.getGroupsByLoadId(id)
                         .collectList()
                         .doOnSuccess(stats -> log.debug("Retrieved {} statistics for load {}", stats.size(), id))
@@ -169,7 +155,7 @@ public class LoadsToolProvider {
                     .map(tuple -> new LoadDetails(load, tuple.getT1(), tuple.getT2()))
                     .map(details -> {
                         log.debug("Successfully assembled LoadDetails for load {}", id);
-                        return PreSerializationUtils.serialize(mcpJsonMapper, details, "loadDetails", id);
+                        return serialize(mcpJsonMapper, details, "loadDetails", id);
                     });
             });
     }

@@ -37,10 +37,10 @@ class GroupDtoTest {
 
     @Test
     void defensiveCopy_shots() {
-        var shots = new ArrayList<ShotDto>();
-        shots.add(new ShotDto(speed(2845)));
-        var dto = new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), speed(2850.5), speed(15.2), speed(45.0), shots);
-        shots.add(new ShotDto(speed(2860)));
+        var mutableShots = new ArrayList<ShotDto>();
+        mutableShots.add(new ShotDto(speed(2845)));
+        var dto = new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), speed(2850.5), speed(15.2), speed(45.0), mutableShots);
+        mutableShots.add(new ShotDto(speed(2860)));
         assertThat(dto.shots()).hasSize(1);
     }
 
@@ -52,11 +52,10 @@ class GroupDtoTest {
 
     @Test
     void equality() {
-        var shots = List.of(new ShotDto(speed(2845)));
-        var a = new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), speed(2850.5), speed(15.2), speed(45.0), shots);
-        var b = new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), speed(2850.5), speed(15.2), speed(45.0), shots);
+        var a = new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), speed(2850.5), speed(15.2), speed(45.0), List.of(new ShotDto(speed(2845))));
+        var b = new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), speed(2850.5), speed(15.2), speed(45.0), List.of(new ShotDto(speed(2845))));
         assertThat(a).isEqualTo(b);
-        var c = new GroupDto(LocalDate.now(), getQuantity(43.0, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), speed(2850.5), speed(15.2), speed(45.0), shots);
+        var c = new GroupDto(LocalDate.now(), getQuantity(43.0, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), speed(2850.5), speed(15.2), speed(45.0), List.of(new ShotDto(speed(2845))));
         assertThat(a).isNotEqualTo(c);
     }
 }

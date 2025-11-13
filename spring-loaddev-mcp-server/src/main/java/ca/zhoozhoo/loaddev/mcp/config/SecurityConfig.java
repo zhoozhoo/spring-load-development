@@ -18,10 +18,10 @@ import lombok.extern.log4j.Log4j2;
  * <p>
  * Key features:
  * <ul>
- * <li>OAuth2 resource server with JWT validation</li>
- * <li>Public access to actuator endpoints for monitoring</li>
- * <li>Protected access to MCP and SSE endpoints</li>
- * <li>Authentication required for all other endpoints</li>
+ *   <li>OAuth2 resource server with JWT validation</li>
+ *   <li>Public access to actuator endpoints for monitoring</li>
+ *   <li>Protected access to MCP and SSE endpoints (requires authentication)</li>
+ *   <li>All other endpoints require authentication</li>
  * </ul>
  * <p>
  * Note: This configuration is not active in test profile.
