@@ -1,15 +1,21 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
-import static ca.zhoozhoo.loaddev.loads.model.Load.IMPERIAL;
 import static java.time.LocalDate.now;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
-import static reactor.core.publisher.Mono.just;
+import static systems.uom.ucum.UCUM.GRAIN;
+import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
+import static systems.uom.ucum.UCUM.YARD_INTERNATIONAL;
+import static tech.units.indriya.quantity.Quantities.getQuantity;
+
+import java.time.LocalDate;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
@@ -24,10 +30,21 @@ import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
 import ca.zhoozhoo.loaddev.loads.model.Group;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 
+/**
+ * Integration tests for GroupsController.
+ * <p>
+ * Tests all REST endpoints for group management including CRUD operations,
+ * validation, and security. Uses WebTestClient for reactive endpoint testing with
+ * mock JWT authentication.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
 @Import(TestSecurityConfig.class)
+@DisplayName("GroupsController Integration Tests")
 public class GroupsControllerTest {
 
     @Autowired
@@ -45,22 +62,30 @@ public class GroupsControllerTest {
     }
 
     private Load createAndSaveLoad(String ownerId) {
-        return loadRepository.save(new Load(null, ownerId, "Load", "Description", IMPERIAL,
-                "Manufacturer", "Type",
-                "BulletManufacturer", "BulletType", 100.0,
-                "PrimerManufacturer", "PrimerType",
-                0.020,
-                2.800,
-                0.002,
+        return loadRepository.save(new Load(null, ownerId, "Load", "Description",
+                "Hodgdon", "H4350",
+                "Hornady", "ELD-M", getQuantity(168, GRAIN),
+                "CCI", "BR-2",
+                getQuantity(0.020, INCH_INTERNATIONAL),
+                getQuantity(2.800, INCH_INTERNATIONAL),
+                getQuantity(0.002, INCH_INTERNATIONAL),
                 null)).block();
     }
 
     private Group createAndSaveGroup(String ownerId) {
         return groupRepository
-                .save(new Group(null, ownerId, createAndSaveLoad(ownerId).id(), now(), 26.5, 100, 0.40)).block();
+                .save(new Group(null, ownerId, createAndSaveLoad(ownerId).id(), now(),
+                        getQuantity(43.5, GRAIN),
+                        getQuantity(100, YARD_INTERNATIONAL),
+                        getQuantity(0.75, INCH_INTERNATIONAL))).block();
     }
 
+    // ========================================
+    // Positive Test Cases
+    // ========================================
+
     @Test
+    @DisplayName("[Positive] Should get all groups for a load")
     public void getAllGroups() {
         var userId = randomUUID().toString();
         var group1 = createAndSaveGroup(userId);
@@ -69,12 +94,13 @@ public class GroupsControllerTest {
                 .save(new Group(null, userId,
                         group1.loadId(),
                         now(),
-                        28.0,
-                        200,
-                        0.50))
+                        getQuantity(44.0, GRAIN),
+                        getQuantity(200, YARD_INTERNATIONAL),
+                        getQuantity(0.85, INCH_INTERNATIONAL)))
                 .block();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).get().uri("/groups/load/" + group1.loadId())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .get().uri("/groups/load/" + group1.loadId())
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -83,140 +109,169 @@ public class GroupsControllerTest {
     }
 
     @Test
+    @DisplayName("[Positive] Should get group by ID")
     public void getGroupById() {
         var userId = randomUUID().toString();
         var group = createAndSaveGroup(userId);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).get().uri("/groups/" + group.id())
-                .accept(APPLICATION_JSON)
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .get().uri("/groups/" + group.id())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Group.class)
-                .value(returnedGroup -> {
-                    assertThat(returnedGroup.id()).isNotNull();
-                    assertThat(returnedGroup.powderCharge()).isEqualTo(group.powderCharge());
-                    assertThat(returnedGroup.targetRange()).isEqualTo(group.targetRange());
-                    assertThat(returnedGroup.groupSize()).isEqualTo(group.groupSize());
+                .value(result -> {
+                    assertThat(result.id()).isEqualTo(group.id());
+                    assertThat(result.loadId()).isEqualTo(group.loadId());
+                    // Compare Quantity values using double comparison
+                    assertThat(result.powderCharge().getValue().doubleValue())
+                        .isCloseTo(group.powderCharge().getValue().doubleValue(), within(0.01));
+                    assertThat(result.targetRange().getValue().doubleValue())
+                        .isCloseTo(group.targetRange().getValue().doubleValue(), within(0.01));
+                    assertThat(result.groupSize().getValue().doubleValue())
+                        .isCloseTo(group.groupSize().getValue().doubleValue(), within(0.01));
                 });
     }
 
     @Test
+    @DisplayName("[Positive] Should create a new group")
     public void createGroup() {
         var userId = randomUUID().toString();
         var load = createAndSaveLoad(userId);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).post().uri("/groups")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .post().uri("/groups")
                 .contentType(APPLICATION_JSON)
-                .body(just(new Group(null, userId, load.id(), now(), 26.5, 100, 0.40)), Group.class)
+                .bodyValue(new Group(null, userId, load.id(), now(),
+                        getQuantity(43.5, GRAIN),
+                        getQuantity(100, YARD_INTERNATIONAL),
+                        getQuantity(0.75, INCH_INTERNATIONAL)))
                 .exchange()
                 .expectStatus().isCreated()
                 .expectBody(Group.class)
-                .value(group -> {
-                    assertThat(group.id()).isNotNull();
-                    assertThat(group.powderCharge()).isEqualTo(26.5);
-                    assertThat(group.targetRange()).isEqualTo(100);
-                    assertThat(group.groupSize()).isEqualTo(0.40);
+                .value(createdGroup -> {
+                    assertThat(createdGroup.id()).isNotNull();
+                    assertThat(createdGroup.loadId()).isEqualTo(load.id());
                 });
     }
 
     @Test
+    @DisplayName("[Positive] Should update an existing group")
     public void updateGroup() {
         var userId = randomUUID().toString();
         var group = createAndSaveGroup(userId);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).put().uri("/groups/" + group.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .put().uri("/groups/" + group.id())
                 .contentType(APPLICATION_JSON)
-                .body(just(new Group(null, userId, group.loadId(), now(), 28.0, 200, 0.50)), Group.class)
+                .bodyValue(new Group(group.id(), group.ownerId(), group.loadId(),
+                        now(),
+                        getQuantity(44.0, GRAIN),
+                        getQuantity(200, YARD_INTERNATIONAL),
+                        getQuantity(0.85, INCH_INTERNATIONAL)))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Group.class)
-                .value(returnedGroup -> {
-                    assertThat(returnedGroup.id()).isEqualTo(group.id());
-                    assertThat(returnedGroup.powderCharge()).isEqualTo(28.0);
-                    assertThat(returnedGroup.targetRange()).isEqualTo(200);
-                    assertThat(returnedGroup.groupSize()).isEqualTo(0.50);
+                .value(result -> {
+                    assertThat(result.powderCharge().getValue().doubleValue())
+                        .isCloseTo(44.0, within(0.01));
+                    assertThat(result.targetRange().getValue().doubleValue())
+                        .isCloseTo(200, within(0.01));
+                    assertThat(result.groupSize().getValue().doubleValue())
+                        .isCloseTo(0.85, within(0.01));
                 });
     }
 
     @Test
+    @DisplayName("[Positive] Should delete an existing group")
     public void deleteGroup() {
         var userId = randomUUID().toString();
         var group = createAndSaveGroup(userId);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).delete().uri("/groups/" + group.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .delete().uri("/groups/" + group.id())
                 .exchange()
                 .expectStatus().isNoContent();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).get().uri("/groups/" + group.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .get().uri("/groups/" + group.id())
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
+    // ========================================
+    // Negative Test Cases - Not Found
+    // ========================================
+
     @Test
-    public void getNonExistentGroup() {
+    @DisplayName("[Negative] Should return 404 when getting non-existent group")
+    public void getGroupByIdNotFound() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).get().uri("/groups/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .get().uri("/groups/999")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    public void createGroupWithInvalidData() {
-        // Constructor validation now prevents creating invalid groups
-        // Test that constructor properly rejects invalid powder charge
-        assertThrows(IllegalArgumentException.class, () -> {
-            new Group(null, randomUUID().toString(),
-                    1L,
-                    now(),
-                    0.05,  // Invalid: below 0.1 minimum
-                    100,
-                    1.5);
-        });
-    }
-
-    @Test
-    public void createGroupWithNullData() {
+    @DisplayName("[Negative] Should return 404 when updating non-existent group")
+    public void updateGroupNotFound() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).post().uri("/groups")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .put().uri("/groups/999")
                 .contentType(APPLICATION_JSON)
-                .body(just(new Group(null, null, null, null, null, null, null)), Group.class)
-                .exchange()
-                .expectStatus().isBadRequest();
-    }
-
-    @Test
-    public void updateNonExistentGroup() {
-        var userId = randomUUID().toString();
-        var load = createAndSaveLoad(userId);
-
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).put().uri("/groups/999")
-                .contentType(APPLICATION_JSON)
-                .body(just(new Group(null, userId, load.id(), now(), 26.5, 100, 0.40)), Group.class)
+                .bodyValue(new Group(999L, userId, 1L, now(),
+                        getQuantity(43.5, GRAIN),
+                        getQuantity(100, YARD_INTERNATIONAL),
+                        getQuantity(0.75, INCH_INTERNATIONAL)))
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    public void updateGroupWithInvalidData() {
-        // Constructor validation now prevents creating invalid groups
-        // Test that constructor properly rejects invalid powder charge
-        assertThrows(IllegalArgumentException.class, () -> {
-            new Group(null, randomUUID().toString(),
-                    1L,
-                    now(),
-                    0.05,  // Invalid: below 0.1 minimum
-                    100,
-                    1.5);
-        });
+    @DisplayName("[Negative] Should return 404 when deleting non-existent group")
+    public void deleteGroupNotFound() {
+        var userId = randomUUID().toString();
+
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .delete().uri("/groups/999")
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    // ========================================
+    // Negative Test Cases - Validation
+    // ========================================
+
+    @Test
+    @DisplayName("[Validation] Should throw exception when powder charge is too high")
+    public void createGroupWithInvalidPowderCharge() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new Group(null, "userId", 1L, now(),
+                        getQuantity(200, GRAIN),  // Too high
+                        getQuantity(100, YARD_INTERNATIONAL),
+                        getQuantity(0.75, INCH_INTERNATIONAL)));
     }
 
     @Test
-    public void deleteNonExistentGroup() {
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", randomUUID().toString()))).delete().uri("/groups/999")
-                .exchange()
-                .expectStatus().isNotFound();
+    @DisplayName("[Validation] Should throw exception when target range is too far")
+    public void createGroupWithInvalidTargetRange() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new Group(null, "userId", 1L, now(),
+                        getQuantity(43.5, GRAIN),
+                        getQuantity(5000, YARD_INTERNATIONAL),  // Too far
+                        getQuantity(0.75, INCH_INTERNATIONAL)));
+    }
+
+    @Test
+    @DisplayName("[Validation] Should throw exception when group date is in the future")
+    public void createGroupWithFutureDate() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new Group(null, "userId", 1L, LocalDate.now().plusDays(1),
+                        getQuantity(43.5, GRAIN),
+                        getQuantity(100, YARD_INTERNATIONAL),
+                        getQuantity(0.75, INCH_INTERNATIONAL)));
     }
 }

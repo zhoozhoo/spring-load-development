@@ -11,7 +11,7 @@ import org.springframework.security.oauth2.server.resource.web.reactive.function
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import ca.zhoozhoo.loaddev.api.testcontainers.KeycloakTest;
+import ca.zhoozhoo.loaddev.test.testcontainers.KeycloakTest;
 import io.micrometer.observation.ObservationRegistry;
 
 /**
@@ -75,23 +75,18 @@ class SecurityConfigurationIntegrationTest extends KeycloakTest {
     @DisplayName("Should have client registration repository configured")
     void shouldHaveClientRegistrationRepository() {
         assertThat(clientRegistrationRepository).isNotNull();
-        
-        clientRegistrationRepository.findByRegistrationId("api-gateway")
-                .subscribe(registration -> {
-                    assertThat(registration).isNotNull();
-                    assertThat(registration.getClientId()).isEqualTo("reloading-client");
-                    assertThat(registration.getClientSecret()).isEqualTo("2EvQuluZfxaaRms8V4NhzBDWzVCSXtty");
-                });
+        var registration = clientRegistrationRepository.findByRegistrationId("api-gateway").block();
+        assertThat(registration).isNotNull();
+        assertThat(registration.getClientId()).isEqualTo("reloading-client");
+        assertThat(registration.getClientSecret()).isEqualTo("2EvQuluZfxaaRms8V4NhzBDWzVCSXtty");
     }
 
     @Test
     @DisplayName("Should configure Keycloak provider correctly")
     void shouldConfigureKeycloakProvider() {
-        clientRegistrationRepository.findByRegistrationId("api-gateway")
-                .subscribe(registration -> 
-                    assertThat(registration.getProviderDetails().getIssuerUri())
-                            .contains("reloading")
-                );
+        var registration = clientRegistrationRepository.findByRegistrationId("api-gateway").block();
+        assertThat(registration).isNotNull();
+        assertThat(registration.getProviderDetails().getIssuerUri()).contains("reloading");
     }
 
     @Test
@@ -107,14 +102,12 @@ class SecurityConfigurationIntegrationTest extends KeycloakTest {
     @DisplayName("Should verify Keycloak realm is accessible")
     void shouldVerifyKeycloakRealmIsAccessible() {
         var realmUrl = keycloak.getAuthServerUrl() + "/realms/reloading";
-
-        keycloakWebClient.get()
+        var response = keycloakWebClient.get()
                 .uri(realmUrl)
                 .retrieve()
                 .bodyToMono(String.class)
-                .subscribe(response -> {
-                    assertThat(response).isNotNull();
-                    assertThat(response).contains("reloading");
-                });
+                .block();
+        assertThat(response).isNotNull();
+        assertThat(response).contains("reloading");
     }
 }

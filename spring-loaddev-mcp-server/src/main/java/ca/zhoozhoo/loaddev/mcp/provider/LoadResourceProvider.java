@@ -1,7 +1,5 @@
 package ca.zhoozhoo.loaddev.mcp.provider;
 
-import static java.util.Locale.ROOT;
-
 import java.util.List;
 
 import org.springaicommunity.mcp.annotation.McpResource;
@@ -53,11 +51,8 @@ public class LoadResourceProvider {
     @McpResource(uri = "load://{id}", name = "Load", description = "Provides load information for a given ID")
     public Mono<ReadResourceResult> getLoadById(ReadResourceRequest request, String id) {
         return loadsService.getLoadById(Long.parseLong(id))
-                .map(load -> {
-                    String loadInfo = formatLoadInfo(load);
-                    return new ReadResourceResult(
-                            List.of(new TextResourceContents(request.uri(), "text/plain", loadInfo)));
-                });
+                .map(load -> new ReadResourceResult(
+                        List.of(new TextResourceContents(request.uri(), "text/plain", formatLoadInfo(load)))));
     }
 
     /**
@@ -75,42 +70,39 @@ public class LoadResourceProvider {
             return "Load not found";
         }
 
-        // Determine units based on measurement system
-        // Use toUpperCase with ROOT locale to avoid locale-specific Unicode issues (SpotBugs IMPROPER_UNICODE)
-        boolean isMetric = "METRIC".equals(load.measurementUnits() != null ? 
-            load.measurementUnits().toUpperCase(ROOT) : "");
-        String weightUnit = isMetric ? "grams" : "grains";
-        String lengthUnit = isMetric ? "mm" : "inches";
-
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
 
         sb.append("ID: ").append(load.id()).append("\n");
         sb.append("Name: ").append(load.name()).append("\n");
         if (load.description() != null && !load.description().isEmpty()) {
             sb.append("Description: ").append(load.description()).append("\n");
         }
-        sb.append("Units: ").append(load.measurementUnits()).append("\n\n");
+        sb.append("\n");
 
         sb.append("Powder Manufacturer: ").append(load.powderManufacturer()).append("\n");
         sb.append("Powder Type: ").append(load.powderType()).append("\n\n");
 
         sb.append("Bullet Manufacturer: ").append(load.bulletManufacturer()).append("\n");
         sb.append("Bullet Type: ").append(load.bulletType()).append("\n");
-        sb.append("Bullet Weight: ").append(load.bulletWeight()).append(" ").append(weightUnit).append("\n\n");
+        if (load.bulletWeight() != null) {
+            sb.append("Bullet Weight: ").append(load.bulletWeight().getValue())
+                .append(" ").append(load.bulletWeight().getUnit()).append("\n\n");
+        }
 
         sb.append("Primer Manufacturer: ").append(load.primerManufacturer()).append("\n");
         sb.append("Primer Type: ").append(load.primerType()).append("\n\n");
 
         if (load.distanceFromLands() != null) {
-            sb.append("Distance from Lands: ").append(load.distanceFromLands()).append(" ").append(lengthUnit)
-                    .append("\n");
+            sb.append("Distance from Lands: ").append(load.distanceFromLands().getValue())
+                .append(" ").append(load.distanceFromLands().getUnit()).append("\n");
         }
         if (load.caseOverallLength() != null) {
-            sb.append("Case Overall Length: ").append(load.caseOverallLength()).append(" ").append(lengthUnit)
-                    .append("\n");
+            sb.append("Case Overall Length: ").append(load.caseOverallLength().getValue())
+                .append(" ").append(load.caseOverallLength().getUnit()).append("\n");
         }
         if (load.neckTension() != null) {
-            sb.append("Neck Tension: ").append(load.neckTension()).append(" ").append(lengthUnit).append("\n");
+            sb.append("Neck Tension: ").append(load.neckTension().getValue())
+                .append(" ").append(load.neckTension().getUnit()).append("\n");
         }
 
         if (load.rifleId() != null) {

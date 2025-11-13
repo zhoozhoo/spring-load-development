@@ -1,4 +1,12 @@
 spring:
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      enabled: false
+  threads:
+    virtual:
+      enabled: true
   r2dbc:
     url: "r2dbc:tc:postgresql:///databasename?TC_IMAGE_TAG=18.0"
     name: "sa"

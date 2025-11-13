@@ -1,19 +1,24 @@
 package ca.zhoozhoo.loaddev.rifles.model;
 
+import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
+
+import javax.measure.Quantity;
+import javax.measure.quantity.Length;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 
 /**
- * Represents a rifle firearm for ammunition load development.
+ * Represents a rifle firearm for ammunition load development using JSR-385 units.
  * <p>
  * A rifle defines the firearm specifications including name, description, caliber,
- * barrel length, twist rate, and measurement units. These specifications are critical
+ * barrel length, twist rate. These specifications are critical
  * for load development as they affect bullet selection, powder charge, and overall
  * ballistic performance. Each rifle is owned by a specific user for multi-tenant data isolation.
+ * Barrel length and free bore use JSR-385 Quantity&lt;Length&gt; for type-safe measurements with embedded units.
  * </p>
  *
  * @author Zhubin Salehi
@@ -30,14 +35,10 @@ public record Rifle(
 
         @Column("description") String description,
 
-        @NotBlank(message = "Measurement Units is required")
-        @Column("measurement_units") String measurementUnits,
-
         @NotBlank(message = "Caliber is required")
         @Column("caliber") String caliber,
 
-        @Positive(message = "Barrel length must be positive")
-        @Column("barrel_length") Double barrelLength,
+        @Column("barrel_length") Quantity<Length> barrelLength,
 
         @Column("barrel_contour") String barrelContour,
 
@@ -45,8 +46,7 @@ public record Rifle(
 
         @Column("rifling") String rifling,
 
-        @Positive(message = "Free bore must be positive")
-        @Column("free_bore") Double freeBore) {
+        @Column("free_bore") Quantity<Length> freeBore) {
 
     public static final String METRIC = "Metric";
 
@@ -55,30 +55,29 @@ public record Rifle(
     /**
      * Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
      * <p>
-     * Validates measurement units and reasonable ranges for rifle specifications.
+     * Validates reasonable ranges for rifle specifications using JSR-385 Quantity types.
      * Uses enhanced pattern matching for improved readability and maintainability.
      * </p>
      */
     public Rifle {
-        // Validate measurement units
-        if (measurementUnits != null && !METRIC.equals(measurementUnits) && !IMPERIAL.equals(measurementUnits)) {
-            throw new IllegalArgumentException(
-                "Measurement units must be either '%s' or '%s'".formatted(METRIC, IMPERIAL)
-            );
+        // Validate reasonable barrel length (4 to 50 inches equivalent)
+        if (barrelLength != null) {
+            double lengthInInches = barrelLength.to(INCH_INTERNATIONAL).getValue().doubleValue();
+            if (lengthInInches < 4.0 || lengthInInches > 50.0) {
+                throw new IllegalArgumentException(
+                    "Barrel length must be between 4.0 and 50.0 inches, got: %.2f".formatted(lengthInInches)
+                );
+            }
         }
         
-        // Validate reasonable barrel length (4 to 50 inches)
-        if (barrelLength != null && (barrelLength < 4.0 || barrelLength > 50.0)) {
-            throw new IllegalArgumentException(
-                "Barrel length must be between 4.0 and 50.0 inches, got: %.2f".formatted(barrelLength)
-            );
-        }
-        
-        // Validate reasonable free bore (0.001 to 0.5 inches)
-        if (freeBore != null && (freeBore < 0.001 || freeBore > 0.5)) {
-            throw new IllegalArgumentException(
-                "Free bore must be between 0.001 and 0.5 inches, got: %.4f".formatted(freeBore)
-            );
+        // Validate reasonable free bore (0.001 to 0.5 inches equivalent)
+        if (freeBore != null) {
+            double freeBoreInInches = freeBore.to(INCH_INTERNATIONAL).getValue().doubleValue();
+            if (freeBoreInInches < 0.001 || freeBoreInInches > 0.5) {
+                throw new IllegalArgumentException(
+                    "Free bore must be between 0.001 and 0.5 inches, got: %.4f".formatted(freeBoreInInches)
+                );
+            }
         }
     }
 }

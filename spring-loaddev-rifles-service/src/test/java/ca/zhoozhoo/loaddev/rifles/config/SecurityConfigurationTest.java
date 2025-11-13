@@ -4,12 +4,12 @@ import static java.util.Collections.emptyList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.oauth2.jwt.Jwt.withTokenValue;
 
 import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.security.oauth2.jwt.Jwt;
 
 import ca.zhoozhoo.loaddev.rifles.config.SecurityConfiguration.KeycloakPermissionsConverter;
 
@@ -25,20 +25,16 @@ class SecurityConfigurationTest {
 
     @Test
     void convert_withValidPermissions_shouldExtractAuthorities() {
-        var permissions = List.of(
-                Map.of(
-                        "rsname", "resource1",
-                        "scopes", List.of("read", "write")),
-                Map.of(
-                        "rsname", "resource2",
-                        "scopes", List.of("delete")));
-
-        var jwt = Jwt.withTokenValue("token")
+        var authorities = converter.convert(withTokenValue("token")
                 .header("alg", "none")
-                .claim("authorization", Map.of("permissions", permissions))
-                .build();
-
-        var authorities = converter.convert(jwt);
+                .claim("authorization", Map.of("permissions", List.of(
+                        Map.of(
+                                "rsname", "resource1",
+                                "scopes", List.of("read", "write")),
+                        Map.of(
+                                "rsname", "resource2",
+                                "scopes", List.of("delete")))))
+                .build());
 
         assertNotNull(authorities);
         assertEquals(3, authorities.size());
@@ -49,12 +45,10 @@ class SecurityConfigurationTest {
 
     @Test
     void convert_withNoAuthorizationClaim_shouldReturnEmptyList() {
-        var jwt = Jwt.withTokenValue("token")
+        var authorities = converter.convert(withTokenValue("token")
                 .header("alg", "none")
                 .claim("sub", "user123")
-                .build();
-
-        var authorities = converter.convert(jwt);
+                .build());
 
         assertNotNull(authorities);
         assertEquals(0, authorities.size());
@@ -62,12 +56,10 @@ class SecurityConfigurationTest {
 
     @Test
     void convert_withNullPermissions_shouldReturnEmptyList() {
-        var jwt = Jwt.withTokenValue("token")
+        var authorities = converter.convert(withTokenValue("token")
                 .header("alg", "none")
                 .claim("authorization", Map.of("permissions", "not-a-list"))
-                .build();
-
-        var authorities = converter.convert(jwt);
+                .build());
 
         assertNotNull(authorities);
         assertEquals(0, authorities.size());
@@ -75,12 +67,10 @@ class SecurityConfigurationTest {
 
     @Test
     void convert_withEmptyPermissions_shouldReturnEmptyList() {
-        var jwt = Jwt.withTokenValue("token")
+        var authorities = converter.convert(withTokenValue("token")
                 .header("alg", "none")
                 .claim("authorization", Map.of("permissions", emptyList()))
-                .build();
-
-        var authorities = converter.convert(jwt);
+                .build());
 
         assertNotNull(authorities);
         assertEquals(0, authorities.size());
@@ -88,16 +78,12 @@ class SecurityConfigurationTest {
 
     @Test
     void convert_withPermissionMissingRsname_shouldSkipPermission() {
-        var permissions = List.of(
-                Map.of("scopes", List.of("read")),
-                Map.of("rsname", "resource1", "scopes", List.of("write")));
-
-        var jwt = Jwt.withTokenValue("token")
+        var authorities = converter.convert(withTokenValue("token")
                 .header("alg", "none")
-                .claim("authorization", Map.of("permissions", permissions))
-                .build();
-
-        var authorities = converter.convert(jwt);
+                .claim("authorization", Map.of("permissions", List.of(
+                        Map.of("scopes", List.of("read")),
+                        Map.of("rsname", "resource1", "scopes", List.of("write")))))
+                .build());
 
         assertNotNull(authorities);
         assertEquals(1, authorities.size());
@@ -106,15 +92,11 @@ class SecurityConfigurationTest {
 
     @Test
     void convert_withNullScopes_shouldSkipPermission() {
-        var permissions = List.of(
-                Map.of("rsname", "resource1"));
-
-        var jwt = Jwt.withTokenValue("token")
+        var authorities = converter.convert(withTokenValue("token")
                 .header("alg", "none")
-                .claim("authorization", Map.of("permissions", permissions))
-                .build();
-
-        var authorities = converter.convert(jwt);
+                .claim("authorization", Map.of("permissions", List.of(
+                        Map.of("rsname", "resource1"))))
+                .build());
 
         assertNotNull(authorities);
         assertEquals(0, authorities.size());
@@ -122,15 +104,11 @@ class SecurityConfigurationTest {
 
     @Test
     void convert_withNonListScopes_shouldSkipPermission() {
-        var permissions = List.of(
-                Map.of("rsname", "resource1", "scopes", "not-a-list"));
-
-        var jwt = Jwt.withTokenValue("token")
+        var authorities = converter.convert(withTokenValue("token")
                 .header("alg", "none")
-                .claim("authorization", Map.of("permissions", permissions))
-                .build();
-
-        var authorities = converter.convert(jwt);
+                .claim("authorization", Map.of("permissions", List.of(
+                        Map.of("rsname", "resource1", "scopes", "not-a-list"))))
+                .build());
 
         assertNotNull(authorities);
         assertEquals(0, authorities.size());
@@ -138,15 +116,11 @@ class SecurityConfigurationTest {
 
     @Test
     void convert_withNonStringScope_shouldSkipScope() {
-        var permissions = List.of(
-                Map.of("rsname", "resource1", "scopes", List.of("read", 123, "write")));
-
-        var jwt = Jwt.withTokenValue("token")
+        var authorities = converter.convert(withTokenValue("token")
                 .header("alg", "none")
-                .claim("authorization", Map.of("permissions", permissions))
-                .build();
-
-        var authorities = converter.convert(jwt);
+                .claim("authorization", Map.of("permissions", List.of(
+                        Map.of("rsname", "resource1", "scopes", List.of("read", 123, "write")))))
+                .build());
 
         assertNotNull(authorities);
         assertEquals(2, authorities.size());
@@ -156,16 +130,12 @@ class SecurityConfigurationTest {
 
     @Test
     void convert_withNonMapPermission_shouldSkipPermission() {
-        var permissions = List.of(
-                "not-a-map",
-                Map.of("rsname", "resource1", "scopes", List.of("read")));
-
-        var jwt = Jwt.withTokenValue("token")
+        var authorities = converter.convert(withTokenValue("token")
                 .header("alg", "none")
-                .claim("authorization", Map.of("permissions", permissions))
-                .build();
-
-        var authorities = converter.convert(jwt);
+                .claim("authorization", Map.of("permissions", List.of(
+                        "not-a-map",
+                        Map.of("rsname", "resource1", "scopes", List.of("read")))))
+                .build());
 
         assertNotNull(authorities);
         assertEquals(1, authorities.size());

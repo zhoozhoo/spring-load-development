@@ -1,13 +1,15 @@
 package ca.zhoozhoo.loaddev.loads.web;
 
-import static ca.zhoozhoo.loaddev.loads.model.Load.IMPERIAL;
 import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 import static reactor.core.publisher.Mono.just;
+import static systems.uom.ucum.UCUM.GRAIN;
+import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
@@ -22,11 +24,23 @@ import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
 import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 import reactor.core.publisher.Flux;
+import tech.units.indriya.quantity.Quantities;
 
+/**
+ * Integration tests for LoadsController.
+ * <p>
+ * Tests all REST endpoints for load management including CRUD operations,
+ * validation, and security. Uses WebTestClient for reactive endpoint testing with
+ * mock JWT authentication.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
 @Import(TestSecurityConfig.class)
+@DisplayName("LoadsController Integration Tests")
 class LoadsControllerTest {
 
     @Autowired
@@ -49,23 +63,37 @@ class LoadsControllerTest {
     }
 
     private Load createLoad(String ownerId, String name) {
-        return new Load(null, ownerId, name, name + " Description", IMPERIAL,
-                "Manufacturer", "Type",
-                "BulletManufacturer", "BulletType", 100.0,
-                "PrimerManufacturer", "PrimerType",
-                0.020,
-                2.800,
-                0.002,
+        var bulletWeight = Quantities.getQuantity(168, GRAIN);
+        var distanceFromLands = Quantities.getQuantity(0.020, INCH_INTERNATIONAL);
+        var caseOverallLength = Quantities.getQuantity(2.800, INCH_INTERNATIONAL);
+        var neckTension = Quantities.getQuantity(0.002, INCH_INTERNATIONAL);
+
+        return new Load(null, ownerId, name, name + " Description",
+                "Hodgdon", "H4350",
+                "Hornady", "ELD-M", bulletWeight,
+                "CCI", "BR-2",
+                distanceFromLands,
+                caseOverallLength,
+                neckTension,
                 null);
     }
 
+    // ========================================
+    // Positive Test Cases
+    // ========================================
+
     @Test
+    @DisplayName("[Positive] Should get all loads for a user")
     void getAllLoads() {
         var userId = randomUUID().toString();
 
-        loadRepository.saveAll(Flux.just(createLoad(userId, "Load1"), createLoad(userId, "Load2"))).blockLast();
+        loadRepository.saveAll(Flux.just(
+                createLoad(userId, "Load1"), 
+                createLoad(userId, "Load2")
+        )).blockLast();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).get().uri("/loads")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .get().uri("/loads")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -76,11 +104,13 @@ class LoadsControllerTest {
     }
 
     @Test
+    @DisplayName("[Positive] Should get load by ID")
     void getLoadById() {
         var userId = randomUUID().toString();
-        var load = loadRepository.save(createLoad(userId, "Load1")).block();
+        var loadId = loadRepository.save(createLoad(userId, "Load1")).block().id();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).get().uri("/loads/{id}", load.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .get().uri("/loads/{id}", loadId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -90,10 +120,12 @@ class LoadsControllerTest {
     }
 
     @Test
+    @DisplayName("[Positive] Should create a new load")
     void createLoad() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).post().uri("/loads")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .post().uri("/loads")
                 .contentType(APPLICATION_JSON)
                 .body(just(createLoad(userId, "Load1")), Load.class)
                 .exchange()
@@ -105,19 +137,21 @@ class LoadsControllerTest {
     }
 
     @Test
+    @DisplayName("[Positive] Should update an existing load")
     void updateLoad() {
         var userId = randomUUID().toString();
-        var load = loadRepository.save(createLoad(userId, "Load1")).block();
+        var loadId = loadRepository.save(createLoad(userId, "Load1")).block().id();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).put().uri("/loads/{id}", load.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .put().uri("/loads/{id}", loadId)
                 .contentType(APPLICATION_JSON)
-                .body(just(new Load(load.id(), userId, "UpdatedLoad", "UpdatedDescription", IMPERIAL,
-                        "UpdatedManufacturer", "UpdatedType",
-                        "UpdatedBulletManufacturer", "UpdatedBulletType", 150.0,
-                        "UpdatedPrimerManufacturer", "UpdatedPrimerType",
-                        0.025,
-                        2.850,
-                        0.003,
+                .body(just(new Load(loadId, userId, "UpdatedLoad", "UpdatedDescription",
+                        "Alliant", "Reloder 16",
+                        "Berger", "Hybrid Target", Quantities.getQuantity(175, GRAIN),
+                        "Federal", "210M",
+                        Quantities.getQuantity(0.025, INCH_INTERNATIONAL),
+                        Quantities.getQuantity(2.850, INCH_INTERNATIONAL),
+                        Quantities.getQuantity(0.003, INCH_INTERNATIONAL),
                         1L)), Load.class)
                 .exchange()
                 .expectStatus().isOk()
@@ -127,66 +161,45 @@ class LoadsControllerTest {
     }
 
     @Test
+    @DisplayName("[Positive] Should delete an existing load")
     void deleteLoad() {
         var userId = randomUUID().toString();
-        var load = loadRepository.save(createLoad(userId, "Load1")).block();
+        var loadId = loadRepository.save(createLoad(userId, "Load1")).block().id();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).delete().uri("/loads/{id}", load.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .delete().uri("/loads/{id}", loadId)
                 .exchange()
                 .expectStatus().isNoContent();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).get().uri("/loads/{id}", load.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .get().uri("/loads/{id}", loadId)
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
+    // ========================================
+    // Negative Test Cases - Not Found
+    // ========================================
+
     @Test
+    @DisplayName("[Negative] Should return 404 when getting non-existent load")
     void getNonExistentLoad() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).get().uri("/loads/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .get().uri("/loads/999")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
     }
 
     @Test
-    void createLoadWithInvalidData() {
-        // Constructor validation now prevents creating invalid loads
-        // Test that constructor properly rejects invalid measurement units
-        assertThrows(IllegalArgumentException.class, () -> {
-            new Load(null, randomUUID().toString(), "", "", "",
-                    "", "",
-                    "", "InvalidUnits", -1.0,  // Invalid measurement units
-                    null, "",
-                    -1.0,
-                    -1.0,
-                    -1.0,
-                    -1L);
-        });
-    }
-
-    @Test
-    void createLoadWithNullData() {
-        // Constructor validation now prevents creating invalid loads
-        // Test that constructor properly requires either coal or distanceFromLands
-        assertThrows(IllegalArgumentException.class, () -> {
-            new Load(null, null, null, null,
-                    null, null,
-                    null, null, "Metric", null,  // Valid measurementUnits but no coal/distanceFromLands
-                    null, null,
-                    null,
-                    null,
-                    null,
-                    null);
-        });
-    }
-
-    @Test
+    @DisplayName("[Negative] Should return 404 when updating non-existent load")
     void updateNonExistentLoad() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).put().uri("/loads/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .put().uri("/loads/999")
                 .contentType(APPLICATION_JSON)
                 .body(just(createLoad(userId, "TestLoad")), Load.class)
                 .exchange()
@@ -194,27 +207,51 @@ class LoadsControllerTest {
     }
 
     @Test
-    void updateLoadWithInvalidData() {
-        // Constructor validation now prevents creating invalid loads
-        // Test that constructor properly rejects invalid measurement units
-        assertThrows(IllegalArgumentException.class, () -> {
-            new Load(1L, randomUUID().toString(), "", "",
-                    "", "",
-                    "", "", "InvalidUnits", -1.0,  // Invalid measurement units
-                    "", "",
-                    -1.0,
-                    -1.0,
-                    -1.0,
-                    null);
-        });
-    }
-
-    @Test
+    @DisplayName("[Negative] Should return 404 when deleting non-existent load")
     void deleteNonExistentLoad() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))).delete().uri("/loads/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .delete().uri("/loads/999")
                 .exchange()
                 .expectStatus().isNotFound();
+    }
+
+    // ========================================
+    // Negative Test Cases - Validation
+    // ========================================
+
+    @Test
+    @DisplayName("[Validation] Should throw exception when creating load with invalid data")
+    void createLoadWithInvalidData() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new Load(null, null, "Test", "Description",
+                        "Manufacturer", "Type",
+                        "BulletManufacturer", "BulletType", Quantities.getQuantity(168, GRAIN),
+                        "PrimerManufacturer", "PrimerType",
+                        null,  // No distanceFromLands
+                        null,  // No caseOverallLength - violates constraint
+                        null,
+                        null));
+    }
+
+    @Test
+    @DisplayName("[Validation] Should return 4xx when creating load with null bullet weight")
+    void createLoadWithNullBulletWeight() {
+        var userId = randomUUID().toString();
+
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
+                .post().uri("/loads")
+                .contentType(APPLICATION_JSON)
+                .body(just(new Load(null, userId, "Test", "Description",
+                        "Manufacturer", "Type",
+                        "BulletManufacturer", "BulletType", null,  // null bullet weight
+                        "PrimerManufacturer", "PrimerType",
+                        Quantities.getQuantity(0.020, INCH_INTERNATIONAL),
+                        null,
+                        null,
+                        null)), Load.class)
+                .exchange()
+                .expectStatus().is4xxClientError();
     }
 }

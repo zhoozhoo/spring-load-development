@@ -1,13 +1,23 @@
 package ca.zhoozhoo.loaddev.loads.service;
 
-import static ca.zhoozhoo.loaddev.loads.model.Load.IMPERIAL;
 import static java.time.LocalDate.now;
 import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static reactor.test.StepVerifier.create;
+import static systems.uom.ucum.UCUM.FOOT_INTERNATIONAL;
+import static systems.uom.ucum.UCUM.GRAIN;
+import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
+import static systems.uom.ucum.UCUM.YARD_INTERNATIONAL;
+import static tech.units.indriya.quantity.Quantities.getQuantity;
+import static tech.units.indriya.unit.Units.METRE;
+import static tech.units.indriya.unit.Units.SECOND;
+
+import javax.measure.Unit;
+import javax.measure.quantity.Speed;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,9 +32,20 @@ import ca.zhoozhoo.loaddev.loads.model.Group;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
 
+/**
+ * Integration tests for {@link LoadsService}.
+ * <p>
+ * Tests the service layer integration repositories,
+ * verifying correct handling of Quantity types, unit conversions,
+ * and reactive data flows.
+ * </p>
+ *
+ * @author Zhubin Salehi
+ */
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
+@DisplayName("LoadsService Integration Tests")
 class LoadsServiceTest {
 
     @Autowired
@@ -39,6 +60,12 @@ class LoadsServiceTest {
     @Autowired
     private LoadsService loadsService;
 
+    @SuppressWarnings("unchecked")
+    private static final Unit<Speed> FEET_PER_SECOND = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
+    
+    @SuppressWarnings("unchecked")
+    private static final Unit<Speed> METRES_PER_SECOND = (Unit<Speed>) METRE.divide(SECOND);
+
     private static final String USER_ID = randomUUID().toString();
     private Load testLoad;
     private Group testGroup;
@@ -49,92 +76,368 @@ class LoadsServiceTest {
         groupRepository.deleteAll().block();
         loadRepository.deleteAll().block();
 
-        testLoad = loadRepository.save(new Load(
-                null,
-                USER_ID,
-                "Test Load",
-                "Test Description",
-                IMPERIAL,
-                "Hodgdon",
-                "H335",
-                "Hornady",
-                "FMJ",
-                55.0,
-                "CCI",
-                "Small Rifle",
-                0.02,
-                2.260,
-                0.002,
-                1L)).block();
+        testLoad = createTestLoad("Test Load", "Test Description");
 
         testGroup = groupRepository.save(new Group(
                 null,
                 USER_ID,
                 testLoad.id(),
                 now(),
-                24.0,
-                100,
-                1.0)).block();
+                getQuantity(24.0, GRAIN),
+                getQuantity(100, YARD_INTERNATIONAL),
+                getQuantity(1.0, INCH_INTERNATIONAL))).block();
     }
 
-    private Shot createShot(int velocity) {
-        return new Shot(null, USER_ID, testGroup.id(), velocity);
+    private Load createTestLoad(String name, String description) {
+        return loadRepository.save(new Load(
+                null,
+                USER_ID,
+                name,
+                description,
+                "Hodgdon",
+                "H335",
+                "Hornady",
+                "FMJ",
+                getQuantity(55.0, GRAIN),
+                "CCI",
+                "Small Rifle",
+                getQuantity(0.02, INCH_INTERNATIONAL),
+                getQuantity(2.260, INCH_INTERNATIONAL),
+                getQuantity(0.002, INCH_INTERNATIONAL),
+                1L)).block();
     }
 
-    @Test
-    void getGroupStatistics() {
-        // Create shots with known velocities
-        shotRepository.save(createShot(2800)).block();
-        shotRepository.save(createShot(2820)).block();
-        shotRepository.save(createShot(2810)).block();
-
-       create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
-                .assertNext(stats -> {
-                    assertNotNull(stats);
-                    assertEquals(testGroup.date(), stats.date());
-                    assertEquals(24.0, stats.powderCharge(), 0.0);
-                    assertEquals(100, stats.targetRange());
-                    assertEquals(1.0, stats.groupSize(), 0.0);
-                    assertEquals(2810.0, stats.averageVelocity(), 0.01);
-                    assertEquals(8.16, stats.standardDeviation(), 0.1);
-                    assertEquals(20.0, stats.extremeSpread(), 0.0);
-                    assertEquals(3, stats.shots().size());
-                })
-                .verifyComplete();
+    private Shot createShot(double velocity, Unit<Speed> unit) {
+        return new Shot(null, USER_ID, testGroup.id(), getQuantity(velocity, unit));
     }
 
-    @Test
-    void getGroupStatisticsWithNoShots() {
-       create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
-                .assertNext(stats -> {
-                    assertNotNull(stats);
-                    assertEquals(testGroup.date(), stats.date());
-                    assertEquals(0.0, stats.averageVelocity(), 0.0);
-                    assertEquals(0.0, stats.standardDeviation(), 0.0);
-                    assertEquals(0.0, stats.extremeSpread(), 0.0);
-                    assertEquals(0, stats.shots().size());
-                })
-                .verifyComplete();
+    @Nested
+    @DisplayName("Get Group Statistics Tests")
+    class GetGroupStatisticsTests {
+
+        @Test
+        @DisplayName("Should compute statistics for group with multiple shots")
+        void shouldComputeStatisticsForGroupWithMultipleShots() {
+            // Given
+            shotRepository.save(createShot(2800.0, FEET_PER_SECOND)).block();
+            shotRepository.save(createShot(2820.0, FEET_PER_SECOND)).block();
+            shotRepository.save(createShot(2810.0, FEET_PER_SECOND)).block();
+
+            // When/Then
+            create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
+                    .assertNext(stats -> {
+                        assertEquals(testGroup.date(), stats.date());
+                        assertEquals(24.0, stats.powderCharge().getValue().doubleValue(), 0.0);
+                        assertEquals(GRAIN, stats.powderCharge().getUnit());
+                        assertEquals(100.0, stats.targetRange().getValue().doubleValue(), 0.0);
+                        assertEquals(YARD_INTERNATIONAL, stats.targetRange().getUnit());
+                        assertEquals(1.0, stats.groupSize().getValue().doubleValue(), 0.0);
+                        assertEquals(INCH_INTERNATIONAL, stats.groupSize().getUnit());
+                        assertEquals(2810.0, stats.averageVelocity().getValue().doubleValue(), 0.01);
+                        assertEquals(FEET_PER_SECOND, stats.averageVelocity().getUnit());
+                        assertEquals(8.16, stats.standardDeviation().getValue().doubleValue(), 0.1);
+                        assertEquals(20.0, stats.extremeSpread().getValue().doubleValue(), 0.0);
+                        assertEquals(3, stats.shots().size());
+                    })
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Should handle group with no shots")
+        void shouldHandleGroupWithNoShots() {
+            // When/Then
+            create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
+                    .assertNext(stats -> {
+                        assertEquals(testGroup.date(), stats.date());
+                        assertEquals(0.0, stats.averageVelocity().getValue().doubleValue());
+                        assertEquals(0.0, stats.standardDeviation().getValue().doubleValue());
+                        assertEquals(0.0, stats.extremeSpread().getValue().doubleValue());
+                        assertEquals(0, stats.shots().size());
+                    })
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Should handle group with single shot")
+        void shouldHandleGroupWithSingleShot() {
+            // Given
+            shotRepository.save(createShot(2800.0, FEET_PER_SECOND)).block();
+
+            // When/Then
+            create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
+                    .assertNext(stats -> {
+                        assertEquals(2800.0, stats.averageVelocity().getValue().doubleValue());
+                        assertEquals(0.0, stats.standardDeviation().getValue().doubleValue());
+                        assertEquals(0.0, stats.extremeSpread().getValue().doubleValue());
+                        assertEquals(1, stats.shots().size());
+                    })
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Should return empty for non-existent group")
+        void shouldReturnEmptyForNonExistentGroup() {
+            // When/Then
+            create(loadsService.getGroupStatistics(999L, USER_ID))
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Should handle shots with mixed units")
+        void shouldHandleShotsWithMixedUnits() {
+            // Given - first shot determines unit
+            shotRepository.save(createShot(2800.0, FEET_PER_SECOND)).block();
+            shotRepository.save(createShot(853.44, METRES_PER_SECOND)).block();  // ~2800 fps
+
+            // When/Then
+            create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
+                    .assertNext(stats -> {
+                        // Should use fps since first shot was in fps
+                        assertEquals(FEET_PER_SECOND, stats.averageVelocity().getUnit());
+                        assertEquals(2800.0, stats.averageVelocity().getValue().doubleValue(), 0.1);
+                        assertEquals(2, stats.shots().size());
+                    })
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Should isolate by user ID")
+        void shouldIsolateByUserId() {
+            // Given
+            var otherUserId = randomUUID().toString();
+            shotRepository.save(createShot(2800.0, FEET_PER_SECOND)).block();
+            
+            // Create shot for different user
+            shotRepository.save(new Shot(
+                    null, 
+                    otherUserId, 
+                    testGroup.id(), 
+                    getQuantity(3000.0, FEET_PER_SECOND))).block();
+
+            // When/Then - should only see shot for USER_ID
+            create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
+                    .assertNext(stats -> {
+                        assertEquals(1, stats.shots().size());
+                        assertEquals(2800.0, stats.averageVelocity().getValue().doubleValue(), 0.0);
+                    })
+                    .verifyComplete();
+        }
     }
 
-    @Test
-    void getGroupStatisticsForNonExistentGroup() {
-       create(loadsService.getGroupStatistics(999L, USER_ID))
-                .verifyComplete();
+    @Nested
+    @DisplayName("Get Group Statistics For Load Tests")
+    class GetGroupStatisticsForLoadTests {
+
+        @Test
+        @DisplayName("Should retrieve statistics for all groups in load")
+        void shouldRetrieveStatisticsForAllGroupsInLoad() {
+            // Given - create second group
+            var secondGroup = groupRepository.save(new Group(
+                    null,
+                    USER_ID,
+                    testLoad.id(),
+                    now(),
+                    getQuantity(24.5, GRAIN),
+                    getQuantity(100, YARD_INTERNATIONAL),
+                    getQuantity(0.8, INCH_INTERNATIONAL))).block();
+
+            // Add shots to both groups
+            shotRepository.save(createShot(2800.0, FEET_PER_SECOND)).block();
+            shotRepository.save(new Shot(
+                    null, 
+                    USER_ID, 
+                    secondGroup.id(), 
+                    getQuantity(2810.0, FEET_PER_SECOND))).block();
+
+            // When/Then
+            create(loadsService.getGroupStatisticsForLoad(testLoad.id(), USER_ID))
+                    .expectNextCount(2)
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Should return empty flux for load with no groups")
+        void shouldReturnEmptyFluxForLoadWithNoGroups() {
+            // Given - create load with no groups
+            var emptyLoad = createTestLoad("Empty Load", "No groups");
+
+            // When/Then
+            create(loadsService.getGroupStatisticsForLoad(emptyLoad.id(), USER_ID))
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Should isolate groups by user ID")
+        void shouldIsolateGroupsByUserId() {
+            // Given - create group for different user with same loadId
+            var otherUserId = randomUUID().toString();
+            
+            groupRepository.save(new Group(
+                    null,
+                    otherUserId,
+                    testLoad.id(),
+                    now(),
+                    getQuantity(25.0, GRAIN),
+                    getQuantity(100, YARD_INTERNATIONAL),
+                    getQuantity(1.5, INCH_INTERNATIONAL))).block();
+
+            // When/Then - should only see groups for USER_ID
+            create(loadsService.getGroupStatisticsForLoad(testLoad.id(), USER_ID))
+                    .expectNextCount(1)
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Should compute correct statistics for each group")
+        void shouldComputeCorrectStatisticsForEachGroup() {
+            // Given
+            var secondGroup = groupRepository.save(new Group(
+                    null,
+                    USER_ID,
+                    testLoad.id(),
+                    now(),
+                    getQuantity(24.5, GRAIN),
+                    getQuantity(100, YARD_INTERNATIONAL),
+                    getQuantity(0.8, INCH_INTERNATIONAL))).block();
+
+            // Add different velocities to each group
+            shotRepository.save(createShot(2800.0, FEET_PER_SECOND)).block();
+            shotRepository.save(createShot(2810.0, FEET_PER_SECOND)).block();
+            
+            shotRepository.save(new Shot(
+                    null, 
+                    USER_ID, 
+                    secondGroup.id(), 
+                    getQuantity(2900.0, FEET_PER_SECOND))).block();
+            shotRepository.save(new Shot(
+                    null, 
+                    USER_ID, 
+                    secondGroup.id(), 
+                    getQuantity(2910.0, FEET_PER_SECOND))).block();
+
+            // When/Then
+            create(loadsService.getGroupStatisticsForLoad(testLoad.id(), USER_ID))
+                    .expectNextMatches(stats -> 
+                        stats.averageVelocity().getValue().doubleValue() > 2804 
+                        && stats.averageVelocity().getValue().doubleValue() < 2806
+                        || stats.averageVelocity().getValue().doubleValue() > 2904 
+                        && stats.averageVelocity().getValue().doubleValue() < 2906)
+                    .expectNextMatches(stats -> 
+                        stats.averageVelocity().getValue().doubleValue() > 2804 
+                        && stats.averageVelocity().getValue().doubleValue() < 2806
+                        || stats.averageVelocity().getValue().doubleValue() > 2904 
+                        && stats.averageVelocity().getValue().doubleValue() < 2906)
+                    .verifyComplete();
+        }
     }
 
-    @Test
-    void getGroupStatisticsWithSingleShot() {
-        shotRepository.save(createShot(2800)).block();
+    @Nested
+    @DisplayName("Unit Handling Tests")
+    class UnitHandlingTests {
 
-       create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
-                .assertNext(stats -> {
-                    assertNotNull(stats);
-                    assertEquals(2800.0, stats.averageVelocity(), 0.0);
-                    assertEquals(0.0, stats.standardDeviation(), 0.0);
-                    assertEquals(0.0, stats.extremeSpread(), 0.0);
-                    assertEquals(1, stats.shots().size());
-                })
-                .verifyComplete();
+        @Test
+        @DisplayName("Should preserve unit from first shot in group")
+        void shouldPreserveUnitFromFirstShotInGroup() {
+            // Given - first shot in meters per second
+            shotRepository.save(createShot(853.44, METRES_PER_SECOND)).block();
+            shotRepository.save(createShot(856.49, METRES_PER_SECOND)).block();
+
+            // When/Then
+            create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
+                    .assertNext(stats -> {
+                        assertEquals(METRES_PER_SECOND, stats.averageVelocity().getUnit());
+                        assertEquals(854.965, stats.averageVelocity().getValue().doubleValue(), 2.0);
+                    })
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Should use default unit when no shots present")
+        void shouldUseDefaultUnitWhenNoShotsPresent() {
+            // When/Then
+            create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
+                    .assertNext(stats -> {
+                        // Should use DEFAULT_VELOCITY_UNIT (feet per second)
+                        assertEquals(FEET_PER_SECOND, stats.averageVelocity().getUnit());
+                    })
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Should correctly convert mixed units to first shot unit")
+        void shouldCorrectlyConvertMixedUnitsToFirstShotUnit() {
+            // Given - first in fps, second in mps
+            shotRepository.save(createShot(2800.0, FEET_PER_SECOND)).block();
+            shotRepository.save(createShot(856.49, METRES_PER_SECOND)).block();  // ~2810 fps
+
+            // When/Then
+            create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
+                    .assertNext(stats -> {
+                        assertEquals(FEET_PER_SECOND, stats.averageVelocity().getUnit());
+                        // Average should be ~2805 fps
+                        assertEquals(2805.0, stats.averageVelocity().getValue().doubleValue(), 0.5);
+                    })
+                    .verifyComplete();
+        }
+    }
+
+    @Nested
+    @DisplayName("Edge Cases Tests")
+    class EdgeCasesTests {
+
+        @Test
+        @DisplayName("Should handle group with very similar velocities")
+        void shouldHandleGroupWithVerySimilarVelocities() {
+            // Given
+            shotRepository.save(createShot(2800.1, FEET_PER_SECOND)).block();
+            shotRepository.save(createShot(2800.2, FEET_PER_SECOND)).block();
+            shotRepository.save(createShot(2800.3, FEET_PER_SECOND)).block();
+
+            // When/Then
+            create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
+                    .assertNext(stats -> {
+                        assertEquals(2800.2, stats.averageVelocity().getValue().doubleValue(), 0.05);
+                        assertEquals(0.2, stats.extremeSpread().getValue().doubleValue(), 0.05);
+                        // Standard deviation should be very small but positive
+                        assertEquals(0.0816, stats.standardDeviation().getValue().doubleValue(), 0.01);
+                    })
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Should handle large number of shots")
+        void shouldHandleLargeNumberOfShots() {
+            // Given - 50 shots around 2800 fps
+            for (int i = 0; i < 50; i++) {
+                shotRepository.save(createShot(2800.0 + (i % 10), FEET_PER_SECOND)).block();
+            }
+
+            // When/Then
+            create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
+                    .assertNext(stats -> {
+                        assertEquals(50, stats.shots().size());
+                        assertEquals(2804.5, stats.averageVelocity().getValue().doubleValue(), 0.1);
+                    })
+                    .verifyComplete();
+        }
+
+        @Test
+        @DisplayName("Should handle extreme velocity outliers")
+        void shouldHandleExtremeVelocityOutliers() {
+            // Given - one outlier
+            shotRepository.save(createShot(2800.0, FEET_PER_SECOND)).block();
+            shotRepository.save(createShot(2810.0, FEET_PER_SECOND)).block();
+            shotRepository.save(createShot(3000.0, FEET_PER_SECOND)).block();  // outlier
+
+            // When/Then
+            create(loadsService.getGroupStatistics(testGroup.id(), USER_ID))
+                    .assertNext(stats -> {
+                        assertEquals(3, stats.shots().size());
+                        assertEquals(200.0, stats.extremeSpread().getValue().doubleValue(), 0.0);
+                        // Standard deviation should be large
+                        assertEquals(92.01449161228342, stats.standardDeviation().getValue().doubleValue(), 2.5);
+                    })
+                    .verifyComplete();
+        }
     }
 }

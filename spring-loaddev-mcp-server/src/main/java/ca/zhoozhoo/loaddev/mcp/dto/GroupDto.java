@@ -3,36 +3,35 @@ package ca.zhoozhoo.loaddev.mcp.dto;
 import java.time.LocalDate;
 import java.util.List;
 
+import javax.measure.Quantity;
+import javax.measure.quantity.Length;
+import javax.measure.quantity.Mass;
+import javax.measure.quantity.Speed;
+
 /**
  * Data Transfer Object representing a shooting group with ballistic statistics.
- *
- * <p>A group represents multiple shots fired at a target under consistent conditions.
- * This record captures both the shooting conditions (date, powder charge, target range)
- * and the resulting ballistic performance metrics (group size, velocity statistics).
- *
- * @author Zhubin Salehi
+ * <p>
+ * Updated to use JSR-385 {@link Quantity} types for powder charge, target range,
+ * group size, and velocity statistics, matching loads-service GroupStatisticsDto.
  */
 public record GroupDto(
 
         LocalDate date,
 
-        Double powderCharge,
+        Quantity<Mass> powderCharge,
 
-        Integer targetRange,
+        Quantity<Length> targetRange,
 
-        Double groupSize,
+        Quantity<Length> groupSize,
 
-        double averageVelocity,
+        Quantity<Speed> averageVelocity,
 
-        double standardDeviation,
+        Quantity<Speed> standardDeviation,
 
-        double extremeSpread,
+        Quantity<Speed> extremeSpread,
 
         List<ShotDto> shots) {
 
-    /**
-     * Compact constructor that creates defensive copies of mutable collections.
-     */
     public GroupDto {
         shots = shots != null ? List.copyOf(shots) : List.of();
     }

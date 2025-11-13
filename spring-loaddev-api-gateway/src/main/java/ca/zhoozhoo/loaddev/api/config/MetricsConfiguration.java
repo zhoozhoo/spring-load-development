@@ -77,7 +77,7 @@ public class MetricsConfiguration {
      */
     @PostConstruct
     public void setupOpenTelemetryRegistry() {
-        log.info("Setting up OpenTelemetry MeterRegistry");
+        log.debug("Setting up OpenTelemetry MeterRegistry");
         
         // Check if OpenTelemetry SDK is available
         if (openTelemetry == null) {
@@ -92,19 +92,19 @@ public class MetricsConfiguration {
         }
         
         // Create the OpenTelemetry MeterRegistry with the Micrometer clock
-        log.info("Creating OpenTelemetryMeterRegistry");
+        log.debug("Creating OpenTelemetryMeterRegistry");
         var otelRegistry = OpenTelemetryMeterRegistry.builder(openTelemetry)
                 .setClock(clock)
                 .build();
         
         // Add the registry to the composite so all metrics are exported to OpenTelemetry
-        log.info("Adding OpenTelemetryMeterRegistry to CompositeMeterRegistry");
+        log.debug("Adding OpenTelemetryMeterRegistry to CompositeMeterRegistry");
         composite.add(otelRegistry);
         
         // Log the final composition for verification
-        log.info("CompositeMeterRegistry now contains {} registries", composite.getRegistries().size());
+        log.debug("CompositeMeterRegistry now contains {} registries", composite.getRegistries().size());
         composite.getRegistries().forEach(registry -> 
-            log.info("  - Registry: {}", registry.getClass().getName())
+            log.debug("  - Registry: {}", registry.getClass().getName())
         );
     }
 }

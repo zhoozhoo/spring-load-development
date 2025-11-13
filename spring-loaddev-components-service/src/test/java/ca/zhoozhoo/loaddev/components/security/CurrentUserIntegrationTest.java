@@ -12,7 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import ca.zhoozhoo.loaddev.components.testcontainers.KeycloakTest;
+import ca.zhoozhoo.loaddev.test.testcontainers.KeycloakTest;
 
 /**
  * Integration tests for {@link CurrentUser} annotation and {@link CurrentUserMethodArgumentResolver}.

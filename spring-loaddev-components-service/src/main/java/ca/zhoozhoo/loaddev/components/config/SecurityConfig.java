@@ -79,6 +79,7 @@ public class SecurityConfig {
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(
                 new ReactiveJwtGrantedAuthoritiesConverterAdapter(new KeycloakPermissionsConverter()));
         jwtAuthenticationConverter.setPrincipalClaimName("sub"); // Ensure subject claim is used for principal
+        
         return jwtAuthenticationConverter;
     }
 
@@ -96,14 +97,12 @@ public class SecurityConfig {
         @Override
         public Collection<GrantedAuthority> convert(@NonNull Jwt jwt) {
             // Use pattern matching to safely extract and validate authorization claim
-            Object authorizationObj = jwt.getClaims().get("authorization");
-            if (!(authorizationObj instanceof Map<?, ?> authorization)) {
+            if (!(jwt.getClaims().get("authorization") instanceof Map<?, ?> authorization)) {
                 return emptyList();
             }
 
             // Use pattern matching for permissions extraction
-            Object permissionsObj = authorization.get("permissions");
-            if (!(permissionsObj instanceof List<?> permissions)) {
+            if (!(authorization.get("permissions") instanceof List<?> permissions)) {
                 return emptyList();
             }
 
@@ -113,17 +112,14 @@ public class SecurityConfig {
                     .map(permission -> (Map<?, ?>) permission)
                     .filter(permission -> permission.get("rsname") instanceof String)
                     .flatMap(permission -> {
-                        String resourceName = (String) permission.get("rsname");
-                        Object scopesObj = permission.get("scopes");
-                        
                         // Pattern match for scopes collection
-                        if (!(scopesObj instanceof Collection<?> scopes)) {
+                        if (!(permission.get("scopes") instanceof Collection<?> scopes)) {
                             return Stream.empty();
                         }
 
                         return scopes.stream()
                                 .filter(scope -> scope instanceof String)
-                                .map(scope -> "%s:%s".formatted(resourceName, scope))
+                                .map(scope -> "%s:%s".formatted(permission.get("rsname"), scope))
                                 .map(SimpleGrantedAuthority::new);
                     })
                     .collect(toList());

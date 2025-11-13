@@ -1,6 +1,6 @@
 // ==================== VARIABLES ====================
-// Set the rifle ID to use for load operations
-@rifle_id = 
+// Set the rifle ID to use for load operations (use null if no rifle assigned)
+@rifle_id = null
 
 ### Get OpenID configuration from Keycloak
 GET {{authorization_host}}/realms/{{realm}}/.well-known/openid-configuration
@@ -23,12 +23,14 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 grant_type=urn:ietf:params:oauth:grant-type:uma-ticket&client_id={{client_id}}&client_secret={{client_secret}}&audience={{client_id}}&scope=openid
 
+// ==================== LOADS ====================
+
 ### Get list of all loads
 # @name GetLoads
 GET {{api_gateway_host}}/api/loads
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
-### Create a new load
+### Create a new load (223 Remington)
 # @name CreateLoad
 POST {{api_gateway_host}}/api/loads
 Content-Type: application/json
@@ -37,19 +39,109 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 {
   "name": "223 Remington Varmint Load",
   "description": "Accurate varmint load for 223 Remington using Hodgdon H335 and Hornady 55gr FMJ",
-  "measurementUnits": "Imperial",
   "powderManufacturer": "Hodgdon",
   "powderType": "H335",
-  "powderCharge": 25.0,
   "bulletManufacturer": "Hornady",
   "bulletType": "FMJ",
-  "bulletWeight": 55,
+  "bulletWeight": {
+    "value": 55,
+    "unit": "[gr]",
+    "scale": "ABSOLUTE"
+  },
   "primerManufacturer": "CCI",
   "primerType": "Small Rifle",
-  "distanceFromLands": 0.02,
-  "caseOverallLength": 2.260,
-  "neckTension": 0.002,
-  "rifleId": "{{rifle_id}}"
+  "distanceFromLands": {
+    "value": 0.02,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  },
+  "caseOverallLength": {
+    "value": 2.260,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  },
+  "neckTension": {
+    "value": 0.002,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  },
+  "rifleId": {{rifle_id}}
+}
+
+### Create a new load (308 Winchester)
+# @name CreateLoad308
+POST {{api_gateway_host}}/api/loads
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "308 Winchester Match Load",
+  "description": "Match load for 308 Win using IMR 4064 and Sierra 168gr HPBT",
+  "powderManufacturer": "IMR",
+  "powderType": "4064",
+  "bulletManufacturer": "Sierra",
+  "bulletType": "HPBT",
+  "bulletWeight": {
+    "value": 168,
+    "unit": "[gr]",
+    "scale": "ABSOLUTE"
+  },
+  "primerManufacturer": "Federal",
+  "primerType": "Large Rifle",
+  "distanceFromLands": {
+    "value": 0.03,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  },
+  "caseOverallLength": {
+    "value": 2.800,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  },
+  "neckTension": {
+    "value": 0.003,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  },
+  "rifleId": {{rifle_id}}
+}
+
+### Create a new load (6.5 Creedmoor with metric units)
+# @name CreateLoadMetric
+POST {{api_gateway_host}}/api/loads
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "name": "6.5 Creedmoor Match Load",
+  "description": "Precision load for 6.5 Creedmoor using H4350 and Hornady 140gr ELD-M",
+  "powderManufacturer": "Hodgdon",
+  "powderType": "H4350",
+  "bulletManufacturer": "Hornady",
+  "bulletType": "ELD-M",
+  "bulletWeight": {
+    "value": 9.07,
+    "unit": "g",
+    "scale": "ABSOLUTE"
+  },
+  "primerManufacturer": "CCI",
+  "primerType": "BR-2",
+  "distanceFromLands": {
+    "value": 0.508,
+    "unit": "mm",
+    "scale": "ABSOLUTE"
+  },
+  "caseOverallLength": {
+    "value": 71.12,
+    "unit": "mm",
+    "scale": "ABSOLUTE"
+  },
+  "neckTension": {
+    "value": 0.0508,
+    "unit": "mm",
+    "scale": "ABSOLUTE"
+  },
+  "rifleId": {{rifle_id}}
 }
 
 ### Get the created load by ID
@@ -69,24 +161,201 @@ Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 {
-  "name": "308 Winchester Match Load",
-  "description": "Match load for 308 Win using IMR 4064 and Sierra 168gr HPBT",
-  "measurementUnits": "Imperial",
-  "powderManufacturer": "IMR",
-  "powderType": "4064",
-  "powderCharge": 42.0,
-  "bulletManufacturer": "Sierra",
-  "bulletType": "HPBT",
-  "bulletWeight": 168,
+  "id": {{CreateLoad.response.body.id}},
+  "name": "308 Winchester Match Load - Updated",
+  "description": "Updated match load for 308 Win using Hodgdon H4350 and Berger 175gr Hybrid Target",
+  "powderManufacturer": "Hodgdon",
+  "powderType": "H4350",
+  "bulletManufacturer": "Berger",
+  "bulletType": "Hybrid Target",
+  "bulletWeight": {
+    "value": 175,
+    "unit": "[gr]",
+    "scale": "ABSOLUTE"
+  },
   "primerManufacturer": "Federal",
-  "primerType": "Large Rifle",
-  "distanceFromLands": 0.03,
-  "caseOverallLength": 2.800,
-  "neckTension": 0.003,
-  "rifleId": 2
+  "primerType": "210M",
+  "distanceFromLands": {
+    "value": 0.025,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  },
+  "caseOverallLength": {
+    "value": 2.850,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  },
+  "neckTension": {
+    "value": 0.003,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  },
+  "rifleId": {{rifle_id}}
 }
 
 ### Delete the created load
 # @name DeleteLoad
 DELETE {{api_gateway_host}}/api/loads/{{CreateLoad.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+// ==================== GROUPS ====================
+
+### Get list of all groups for a load
+# @name GetGroups
+GET {{api_gateway_host}}/api/groups/load/{{CreateLoad.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new group with imperial units
+# @name CreateGroup
+POST {{api_gateway_host}}/api/groups
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "date": "2024-01-15",
+  "loadId": {{CreateLoad.response.body.id}},
+  "powderCharge": {
+    "value": 26.5,
+    "unit": "[gr]",
+    "scale": "ABSOLUTE"
+  },
+  "targetRange": {
+    "value": 100,
+    "unit": "[yd_i]",
+    "scale": "ABSOLUTE"
+  },
+  "groupSize": {
+    "value": 0.40,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  }
+}
+
+### Get group by ID
+# @name GetGroupById
+GET {{api_gateway_host}}/api/groups/{{CreateGroup.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Get group statistics
+# @name GetGroupStats
+GET {{api_gateway_host}}/api/groups/{{CreateGroup.response.body.id}}/statistics
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Update group with different measurements
+# @name UpdateGroup
+PUT {{api_gateway_host}}/api/groups/{{CreateGroup.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "date": "2024-01-15",
+  "loadId": {{CreateLoad.response.body.id}},
+  "powderCharge": {
+    "value": 28.0,
+    "unit": "[gr]",
+    "scale": "ABSOLUTE"
+  },
+  "targetRange": {
+    "value": 200,
+    "unit": "[yd_i]",
+    "scale": "ABSOLUTE"
+  },
+  "groupSize": {
+    "value": 0.50,
+    "unit": "[in_i]",
+    "scale": "ABSOLUTE"
+  }
+}
+
+### Create a group with metric units
+# @name CreateGroupMetric
+POST {{api_gateway_host}}/api/groups
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "date": "2024-01-15",
+  "loadId": {{CreateLoad.response.body.id}},
+  "powderCharge": {
+    "value": 1.72,
+    "unit": "g",
+    "scale": "ABSOLUTE"
+  },
+  "targetRange": {
+    "value": 91.44,
+    "unit": "m",
+    "scale": "ABSOLUTE"
+  },
+  "groupSize": {
+    "value": 10.16,
+    "unit": "mm",
+    "scale": "ABSOLUTE"
+  }
+}
+
+### Delete group
+# @name DeleteGroup
+DELETE {{api_gateway_host}}/api/groups/{{CreateGroup.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+// ==================== SHOTS ====================
+
+### Get all shots for a group
+# @name GetShots
+GET {{api_gateway_host}}/api/shots/group/{{CreateGroup.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Create a new shot with imperial units (feet per second)
+# @name CreateShot
+POST {{api_gateway_host}}/api/shots
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "groupId": {{CreateGroup.response.body.id}},
+  "velocity": {
+    "value": 2800,
+    "unit": "[ft_i]/s",
+    "scale": "ABSOLUTE"
+  }
+}
+
+### Get shot by ID
+# @name GetShotById
+GET {{api_gateway_host}}/api/shots/{{CreateShot.response.body.id}}
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+### Update shot with different velocity
+# @name UpdateShot
+PUT {{api_gateway_host}}/api/shots/{{CreateShot.response.body.id}}
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "groupId": {{CreateGroup.response.body.id}},
+  "velocity": {
+    "value": 2850,
+    "unit": "[ft_i]/s",
+    "scale": "ABSOLUTE"
+  }
+}
+
+### Create a shot with metric units (meters per second)
+# @name CreateShotMetric
+POST {{api_gateway_host}}/api/shots
+Content-Type: application/json
+Authorization: Bearer {{Authenticate.response.body.access_token}}
+
+{
+  "groupId": {{CreateGroup.response.body.id}},
+  "velocity": {
+    "value": 853.44,
+    "unit": "m/s",
+    "scale": "ABSOLUTE"
+  }
+}
+
+### Delete shot
+# @name DeleteShot  
+DELETE {{api_gateway_host}}/api/shots/{{CreateShot.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}

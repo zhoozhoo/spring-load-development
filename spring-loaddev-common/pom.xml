@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 http://maven.apache.org/xsd/maven-4.1.0.xsd">
+    <modelVersion>4.1.0</modelVersion>
+    <parent>
+        <groupId>ca.zhoozhoo.load-development</groupId>
+        <artifactId>spring-load-development-parent</artifactId>
+        <version>0.0.8-SNAPSHOT</version>
+    </parent>
+
+    <groupId>ca.zhoozhoo.load-development</groupId>
+    <artifactId>spring-loaddev-common</artifactId>
+    <name>Spring Load Development Common</name>
+    <description>Spring Load Development Common</description>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.measure</groupId>
+            <artifactId>unit-api</artifactId>
+            <version>${javax.measure.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>tech.units</groupId>
+            <artifactId>indriya</artifactId>
+            <version>${tech.units.indriya.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>systems.uom</groupId>
+            <artifactId>systems-quantity</artifactId>
+            <version>${systems.uom.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>systems.uom</groupId>
+            <artifactId>systems-ucum</artifactId>
+            <version>${systems.uom.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>systems.uom</groupId>
+            <artifactId>systems-unicode</artifactId>
+            <version>${systems.uom.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.money</groupId>
+            <artifactId>money-api</artifactId>
+            <version>${javax.money.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.javamoney.moneta</groupId>
+            <artifactId>moneta-core</artifactId>
+            <version>${org.javamoney.version}</version>
+        </dependency>
+        
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

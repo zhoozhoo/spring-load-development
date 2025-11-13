@@ -1,116 +1,70 @@
 package ca.zhoozhoo.loaddev.mcp.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static tech.units.indriya.quantity.Quantities.getQuantity;
+import static tech.units.indriya.unit.Units.METRE;
+import static tech.units.indriya.unit.Units.SECOND;
+
+import javax.measure.Quantity;
+import javax.measure.quantity.Speed;
 
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for ShotDto record.
- * <p>
- * Tests the data transfer object representing a single shot measurement.
- * 
- * @author Zhubin Salehi
- */
 class ShotDtoTest {
 
-    /**
-     * Tests creating a ShotDto with a velocity value.
-     */
-    @Test
-    void constructor_WithVelocity_ShouldCreateInstance() {
-        // Given
-        Integer velocity = 2850;
-
-        // When
-        ShotDto shotDto = new ShotDto(velocity);
-
-        // Then
-        assertThat(shotDto.velocity()).isEqualTo(velocity);
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private static Quantity<Speed> speed(double v) {
+        return (Quantity) getQuantity(v, METRE.divide(SECOND));
     }
 
-    /**
-     * Tests creating a ShotDto with null velocity.
-     */
+    @Test
+    void constructor_WithVelocity_ShouldCreateInstance() {
+        var shotDto = new ShotDto(speed(2850.0));
+        assertThat(shotDto.velocity()).isEqualTo(speed(2850.0));
+    }
+
     @Test
     void constructor_WithNullVelocity_ShouldCreateInstance() {
-        // When
-        ShotDto shotDto = new ShotDto(null);
-
-        // Then
+        var shotDto = new ShotDto(null);
         assertThat(shotDto.velocity()).isNull();
     }
 
-    /**
-     * Tests creating a ShotDto with zero velocity.
-     */
     @Test
     void constructor_WithZeroVelocity_ShouldCreateInstance() {
-        // When
-        ShotDto shotDto = new ShotDto(0);
-
-        // Then
-        assertThat(shotDto.velocity()).isEqualTo(0);
+        var shotDto = new ShotDto(speed(0.0));
+        assertThat(shotDto.velocity().getValue().doubleValue()).isEqualTo(0.0);
     }
 
-    /**
-     * Tests record equality based on velocity.
-     */
     @Test
     void equals_WithSameVelocity_ShouldBeEqual() {
-        // Given
-        ShotDto shotDto1 = new ShotDto(2850);
-        ShotDto shotDto2 = new ShotDto(2850);
-
-        // Then
-        assertThat(shotDto1).isEqualTo(shotDto2);
-        assertThat(shotDto1.hashCode()).isEqualTo(shotDto2.hashCode());
+        var a = new ShotDto(speed(2850.0));
+        var b = new ShotDto(speed(2850.0));
+        assertThat(a).isEqualTo(b);
+        assertThat(a.hashCode()).isEqualTo(b.hashCode());
     }
 
-    /**
-     * Tests record inequality when velocities differ.
-     */
     @Test
     void equals_WithDifferentVelocities_ShouldNotBeEqual() {
-        // Given
-        ShotDto shotDto1 = new ShotDto(2850);
-        ShotDto shotDto2 = new ShotDto(2860);
-
-        // Then
-        assertThat(shotDto1).isNotEqualTo(shotDto2);
+        var a = new ShotDto(speed(2850.0));
+        var b = new ShotDto(speed(2860.0));
+        assertThat(a).isNotEqualTo(b);
     }
 
-    /**
-     * Tests toString includes velocity value.
-     */
     @Test
     void toString_ShouldIncludeVelocity() {
-        // Given
-        ShotDto shotDto = new ShotDto(2850);
-
-        // When
-        String result = shotDto.toString();
-
-        // Then
-        assertThat(result)
-                .contains("ShotDto")
-                .contains("2850");
+        var shotDto = new ShotDto(speed(2850.0));
+        assertThat(shotDto.toString()).contains("ShotDto").contains("2850 m/s");
     }
 
-    /**
-     * Tests multiple shots with different velocities.
-     */
     @Test
     void multipleShots_WithDifferentVelocities_ShouldBeDistinct() {
-        // Given
-        ShotDto shot1 = new ShotDto(2845);
-        ShotDto shot2 = new ShotDto(2850);
-        ShotDto shot3 = new ShotDto(2855);
-
-        // Then
+        var shot1 = new ShotDto(speed(2845.0));
+        var shot2 = new ShotDto(speed(2850.0));
+        var shot3 = new ShotDto(speed(2855.0));
         assertThat(shot1).isNotEqualTo(shot2);
         assertThat(shot2).isNotEqualTo(shot3);
         assertThat(shot1).isNotEqualTo(shot3);
-        assertThat(shot1.velocity()).isLessThan(shot2.velocity());
-        assertThat(shot2.velocity()).isLessThan(shot3.velocity());
+        assertThat(shot1.velocity().getValue().doubleValue()).isLessThan(shot2.velocity().getValue().doubleValue());
+        assertThat(shot2.velocity().getValue().doubleValue()).isLessThan(shot3.velocity().getValue().doubleValue());
     }
 }

@@ -2,6 +2,11 @@ package ca.zhoozhoo.loaddev.loads.model;
 
 import java.util.Objects;
 
+import javax.measure.Quantity;
+import javax.measure.format.QuantityFormat;
+import javax.measure.quantity.Length;
+import javax.measure.quantity.Mass;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
@@ -11,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import tech.units.indriya.format.SimpleQuantityFormat;
 
 /**
  * Represents an ammunition load configuration.
@@ -35,9 +41,6 @@ public record Load(
 
         @Column("description") String description,
 
-        @NotBlank(message = "Measurement Units is required")
-        @Column("measurement_units") String measurementUnits,
-
         @NotBlank(message = "Powder manufacturer is required")
         @Column("powder_manufacturer") String powderManufacturer,
 
@@ -52,7 +55,7 @@ public record Load(
 
         @NotNull(message = "Bullet weight is required")
         @Positive(message = "Bullet weight must be positive")
-        @Column("bullet_weight") Double bulletWeight,
+        @Column("bullet_weight") Quantity<Mass> bulletWeight,
 
         @NotBlank(message = "Primer manufacturer is required")
         @Column("primer_manufacturer") String primerManufacturer,
@@ -61,19 +64,21 @@ public record Load(
         @Column("primer_type") String primerType,
 
         @Positive(message = "Distance from lands must be positive")
-        @Column("distance_from_lands") Double distanceFromLands,
+        @Column("distance_from_lands") Quantity<Length> distanceFromLands,
 
         @Positive(message = "Case overall length must be positive")
-        @Column("case_overall_length") Double caseOverallLength,
+        @Column("case_overall_length") Quantity<Length> caseOverallLength,
 
         @Positive(message = "Neck tension must be positive")
-        @Column("neck_tension") Double neckTension,
-        
+        @Column("neck_tension") Quantity<Length> neckTension,
+
         @Column("rifle_id") Long rifleId) {
 
     public static final String METRIC = "Metric";
 
     public static final String IMPERIAL = "Imperial";
+
+    private static final QuantityFormat QUANTITY_FORMAT = SimpleQuantityFormat.getInstance();
 
     /**
      * Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
@@ -83,14 +88,7 @@ public record Load(
      * enhanced pattern matching.
      * </p>
      */
-    public Load {
-        // Validate measurement units
-        if (measurementUnits != null && !METRIC.equals(measurementUnits) && !IMPERIAL.equals(measurementUnits)) {
-            throw new IllegalArgumentException(
-                "Measurement units must be either '%s' or '%s'".formatted(METRIC, IMPERIAL)
-            );
-        }
-        
+    public Load {        
         // At least one cartridge measurement must be specified
         if (distanceFromLands == null && caseOverallLength == null) {
             throw new IllegalArgumentException(
@@ -99,9 +97,9 @@ public record Load(
         }
         
         // Validate neck tension
-        if (neckTension != null && neckTension <= 0) {
+        if (neckTension != null && neckTension.getValue().doubleValue() <= 0) {
             throw new IllegalArgumentException(
-                "Neck tension must be positive, got: %.4f".formatted(neckTension)
+                "Neck tension must be positive, got: " + QUANTITY_FORMAT.format(neckTension)
             );
         }
     }
@@ -119,7 +117,6 @@ public record Load(
         return Objects.equals(id, load.id) &&
                 Objects.equals(name, load.name) &&
                 Objects.equals(description, load.description) &&
-                Objects.equals(measurementUnits, load.measurementUnits) &&
                 Objects.equals(powderManufacturer, load.powderManufacturer) &&
                 Objects.equals(powderType, load.powderType) &&
                 Objects.equals(bulletManufacturer, load.bulletManufacturer) &&
@@ -135,7 +132,7 @@ public record Load(
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, measurementUnits, 
+        return Objects.hash(id, name, description, 
                 powderManufacturer, powderType, bulletManufacturer, bulletType,
                 bulletWeight, primerManufacturer, primerType, distanceFromLands,
                 caseOverallLength, neckTension, rifleId);

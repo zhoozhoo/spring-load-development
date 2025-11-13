@@ -79,6 +79,7 @@ public class SecurityConfiguration {
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(
                 new ReactiveJwtGrantedAuthoritiesConverterAdapter(new KeycloakPermissionsConverter()));
         jwtAuthenticationConverter.setPrincipalClaimName("sub"); // Ensure subject claim is used for principal
+        
         return jwtAuthenticationConverter;
     }
 
@@ -106,13 +107,11 @@ public class SecurityConfiguration {
                     .filter(perm -> perm instanceof Map<?, ?>)
                     .map(perm -> (Map<?, ?>) perm)
                     .filter(permission -> permission.get("rsname") != null)
-                    .flatMap(permission -> {
-                        var resourceName = permission.get("rsname").toString();
-                        
+                    .flatMap(permission -> {                        
                         return switch (permission.get("scopes")) {
                             case Collection<?> rawScopes -> rawScopes.stream()
                                     .filter(scope -> scope instanceof String)
-                                    .map(scope -> "%s:%s".formatted(resourceName, scope))
+                                    .map(scope -> "%s:%s".formatted(permission.get("rsname").toString(), scope))
                                     .map(SimpleGrantedAuthority::new);
                             case null, default -> Stream.empty();
                         };

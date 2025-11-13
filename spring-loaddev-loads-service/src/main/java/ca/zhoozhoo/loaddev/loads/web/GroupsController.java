@@ -50,8 +50,9 @@ import reactor.core.publisher.Mono;
  * <p>
  * This controller provides endpoints for CRUD operations on shooting group data,
  * including retrieval of ballistic statistics for each group. Groups represent
- * collections of shots fired with specific load configurations. All endpoints are
- * secured with OAuth2 authentication and enforce user-based access control.
+ * collections of shots fired with specific load configurations. All measurements
+ * use type-safe units via javax.measure. All endpoints are secured with OAuth2
+ * authentication and enforce user-based access control.
  * </p>
  *
  * @author Zhubin Salehi
@@ -109,7 +110,9 @@ public class GroupsController {
     public Mono<ResponseEntity<Group>> getGroupById(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id) {
-        return groupRepository.findById(id).map(group -> ok(group)).defaultIfEmpty(notFound().build());
+        return groupRepository.findByIdAndOwnerId(id, userId)
+                .map(group -> ok(group))
+                .defaultIfEmpty(notFound().build());
     }
 
     @Operation(summary = "Get statistics for a group", description = "Retrieves statistical information about a specific group's performance.")
@@ -122,7 +125,9 @@ public class GroupsController {
     public Mono<ResponseEntity<GroupStatisticsDto>> getGroupStatistics(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id) {
-        return loadsService.getGroupStatistics(id, userId).map(stats -> ok(stats)).defaultIfEmpty(notFound().build());
+        return loadsService.getGroupStatistics(id, userId)
+                .map(stats -> ok(stats))
+                .defaultIfEmpty(notFound().build());
     }
 
     @Operation(summary = "Create a new group", description = "Creates a new group for the authenticated user.")
@@ -147,7 +152,10 @@ public class GroupsController {
                             group.groupSize());
                     return groupRepository.save(newGroup);
                 })
-                .map(savedGroup -> status(CREATED).body(savedGroup));
+                .map(savedGroup -> {
+                    log.info("Created new group with id: {}", savedGroup.id());
+                    return status(CREATED).body(savedGroup);
+                });
     }
 
     @Operation(summary = "Update an existing group", description = "Updates the details of a group by its id.")
@@ -161,8 +169,8 @@ public class GroupsController {
     @PreAuthorize("hasAuthority('groups:edit')")
     public Mono<ResponseEntity<Group>> updateGroup(@Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Group to create") @Valid @RequestBody Group group) {
-        return groupRepository.findById(id)
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Group to update") @Valid @RequestBody Group group) {
+        return groupRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingGroup -> {
                     var updatedGroup = new Group(
                             existingGroup.id(),
@@ -174,7 +182,10 @@ public class GroupsController {
                             group.groupSize());
                     return groupRepository.save(updatedGroup);
                 })
-                .map(updatedGroup -> ok(updatedGroup))
+                .map(updatedGroup -> {
+                    log.info("Updated group with id: {}", updatedGroup.id());
+                    return ok(updatedGroup);
+                })
                 .defaultIfEmpty(notFound().build());
     }
 
@@ -189,7 +200,7 @@ public class GroupsController {
     public Mono<ResponseEntity<Void>> deleteGroup(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id) {
-        return groupRepository.findById(id)
+        return groupRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingGroup -> groupRepository.delete(existingGroup)
                         .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT)))
                         .doOnSuccess(_ -> log.info("Deleted group with id: {}", id)))

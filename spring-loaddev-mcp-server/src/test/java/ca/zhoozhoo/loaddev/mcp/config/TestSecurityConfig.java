@@ -96,16 +96,15 @@ public class TestSecurityConfig {
         return new WebFilter() {
             @Override
             public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-                // Create a mock JWT with required claims
-                Jwt jwt = Jwt.withTokenValue("mock-token-value")
+                // Create a mock JWT with required claims and wrap in authentication token
+                var authentication = new JwtAuthenticationToken(
+                    Jwt.withTokenValue("mock-token-value")
                         .header("alg", "none")
                         .claim("sub", "test-user")
                         .claim("scope", "read write")
                         .issuedAt(Instant.now())
                         .expiresAt(Instant.now().plusSeconds(3600))
-                        .build();
-
-                JwtAuthenticationToken authentication = new JwtAuthenticationToken(jwt);
+                        .build());
 
                 // Continue the filter chain with the mock authentication in the context
                 return chain.filter(exchange)

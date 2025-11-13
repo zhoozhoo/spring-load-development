@@ -20,10 +20,9 @@ jobs:
       with:
         java-version: '25'
         distribution: 'temurin'
-        cache: 'maven'
 
     - name: Run tests with coverage
-      run: ./mvnw -B clean test jacoco:report jacoco:check
+      run: ./mvnw -B clean compile test-compile test jacoco:report jacoco:check
       env:
         MAVEN_OPTS: "-Dmaven.mainClass=org.apache.maven.cling.MavenCling"
 
@@ -38,7 +37,6 @@ jobs:
       with:
         java-version: '25'
         distribution: 'temurin'
-        cache: 'maven'
 
     - name: Run SpotBugs
       run: ./mvnw -B compile spotbugs:check
@@ -57,7 +55,6 @@ jobs:
       with:
         java-version: '25'
         distribution: 'temurin'
-        cache: 'maven'
 
     - name: Package application
       run: ./mvnw -B package -DskipTests

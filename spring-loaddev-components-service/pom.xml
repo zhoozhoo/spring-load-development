@@ -13,6 +13,12 @@
     <description>Spring Load Development Components Service</description>
 
     <dependencies>
+        <!-- Shared common module with Quantity & Monetary Jackson support -->
+        <dependency>
+            <groupId>ca.zhoozhoo.load-development</groupId>
+            <artifactId>spring-loaddev-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- Spring Boot -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -89,8 +95,49 @@
             <groupId>io.opentelemetry.instrumentation</groupId>
             <artifactId>opentelemetry-spring-boot-starter</artifactId>
         </dependency>
+        <dependency>
+            <groupId>javax.measure</groupId>
+            <artifactId>unit-api</artifactId>
+            <version>${javax.measure.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>tech.units</groupId>
+            <artifactId>indriya</artifactId>
+            <version>${tech.units.indriya.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>systems.uom</groupId>
+            <artifactId>systems-quantity</artifactId>
+            <version>${systems.uom.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>systems.uom</groupId>
+            <artifactId>systems-ucum</artifactId>
+            <version>${systems.uom.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>systems.uom</groupId>
+            <artifactId>systems-unicode</artifactId>
+            <version>${systems.uom.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.money</groupId>
+            <artifactId>money-api</artifactId>
+            <version>${javax.money.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.javamoney.moneta</groupId>
+            <artifactId>moneta-core</artifactId>
+            <version>${org.javamoney.version}</version>
+        </dependency>
 
         <!-- Test dependencies -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>spring-loaddev-integration-tests</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -134,12 +181,6 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.dasniko</groupId>
-            <artifactId>testcontainers-keycloak</artifactId>
-            <version>${testcontainers-keycloak.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

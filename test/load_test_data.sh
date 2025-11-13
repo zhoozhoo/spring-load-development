@@ -8,7 +8,8 @@ set -e  # Exit on any error
 
 # Configuration file path
 HTTP_CLIENT_ENV_FILE="http-client.env.json"
-API_BASE="http://localhost:8080/api"
+# Will be derived from http-client.env.json (local.api_gateway_host)
+API_BASE=""
 
 # Function to load configuration from http-client.env.json
 load_config() {
@@ -27,20 +28,26 @@ load_config() {
     CLIENT_SECRET=$(jq -r '.local.client_secret' "$HTTP_CLIENT_ENV_FILE")
     USERNAME=$(jq -r '.local.username' "$HTTP_CLIENT_ENV_FILE")
     PASSWORD=$(jq -r '.local.password' "$HTTP_CLIENT_ENV_FILE")
+    API_GATEWAY_HOST=$(jq -r '.local.api_gateway_host' "$HTTP_CLIENT_ENV_FILE")
     
     # Validate that all required values were extracted
-    if [ "$AUTHORIZATION_HOST" = "null" ] || [ "$REALM" = "null" ] || [ "$CLIENT_ID" = "null" ] || \
-       [ "$CLIENT_SECRET" = "null" ] || [ "$USERNAME" = "null" ] || [ "$PASSWORD" = "null" ]; then
+     if [ "$AUTHORIZATION_HOST" = "null" ] || [ "$REALM" = "null" ] || [ "$CLIENT_ID" = "null" ] || \
+         [ "$CLIENT_SECRET" = "null" ] || [ "$USERNAME" = "null" ] || [ "$PASSWORD" = "null" ] || \
+         [ "$API_GATEWAY_HOST" = "null" ]; then
         print_error "Failed to extract configuration from ${HTTP_CLIENT_ENV_FILE}"
         print_info "Please ensure the file contains valid JSON with local environment configuration"
         exit 1
     fi
+    
+     # Derive API base from API gateway host
+     API_BASE="${API_GATEWAY_HOST%/}/api"
     
     print_success "Configuration loaded successfully"
     print_info "Authorization Host: ${AUTHORIZATION_HOST}"
     print_info "Realm: ${REALM}"
     print_info "Client ID: ${CLIENT_ID}"
     print_info "Username: ${USERNAME}"
+    print_info "API Gateway Host: ${API_GATEWAY_HOST}"
 }
 
 # Colors for output
@@ -100,7 +107,6 @@ create_rifle() {
     local rifle_payload='{
         "name": "Tikka T3x CTR",
         "description": "6.5mm Creedmoor Tikka T3x CTR",
-        "measurementUnits": "Imperial",
         "caliber": "6.5 Creedmoor"
     }'
     
@@ -133,15 +139,16 @@ create_load() {
     local load_payload='{
         "name": "H4350 Load Development",
         "description": "Initial load development",
-        "measurementUnits": "Imperial",
         "powderManufacturer": "Hodgdon",
         "powderType": "H4350",
         "bulletManufacturer": "Berger",
         "bulletType": "Hybrid Target",
-        "bulletWeight": 140,
+        "bulletWeight": { "value": 140, "unit": "[gr]", "scale": "ABSOLUTE" },
         "primerManufacturer": "CCI",
         "primerType": "BR2",
-        "caseOverallLength": 2.303,
+        "distanceFromLands": { "value": 0.020, "unit": "[in_i]", "scale": "ABSOLUTE" },
+        "caseOverallLength": { "value": 2.303, "unit": "[in_i]", "scale": "ABSOLUTE" },
+        "neckTension": { "value": 0.003, "unit": "[in_i]", "scale": "ABSOLUTE" },
         "rifleId": "'$RIFLE_ID'"
     }'
     
@@ -182,9 +189,9 @@ create_group_with_shots() {
     local group_payload='{
         "date": "'$current_date'",
         "loadId": "'$LOAD_ID'",
-        "powderCharge": '$powder_charge',
-        "targetRange": 100,
-        "groupSize": '$group_size'
+        "powderCharge": { "value": '$powder_charge', "unit": "[gr]", "scale": "ABSOLUTE" },
+        "targetRange": { "value": 100, "unit": "[yd_i]", "scale": "ABSOLUTE" },
+        "groupSize": { "value": '$group_size', "unit": "[in_i]", "scale": "ABSOLUTE" }
     }'
     
     local response=$(curl -s -X POST \
@@ -214,7 +221,7 @@ create_group_with_shots() {
         
         local shot_payload='{
             "groupId": "'$group_id'",
-            "velocity": '$velocity'
+            "velocity": { "value": '$velocity', "unit": "[ft_i]/s", "scale": "ABSOLUTE" }
         }'
         
         local shot_response=$(curl -s -X POST \

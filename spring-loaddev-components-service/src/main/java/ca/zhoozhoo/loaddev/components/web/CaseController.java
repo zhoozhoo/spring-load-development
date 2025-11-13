@@ -2,8 +2,6 @@ package ca.zhoozhoo.loaddev.components.web;
 
 import static io.swagger.v3.oas.annotations.enums.SecuritySchemeType.OAUTH2;
 import static org.springframework.http.HttpStatus.CREATED;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.ResponseEntity.notFound;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
@@ -45,10 +43,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * REST controller for managing cartridge case components.
+ * REST controller for managing cartridge case components using JSR-385 and JSR-354 units.
  * <p>
- * This controller provides endpoints for CRUD operations on case data, including
- * full-text search capabilities. All endpoints are secured with OAuth2 authentication
+ * This controller provides endpoints for CRUD operations on case data with JSR-385 Units of
+ * Measurement for quantity per box and JSR-354 Money and Currency API for cost handling.
+ * All endpoints include full-text search capabilities, are secured with OAuth2 authentication,
  * and enforce user-based access control for multi-tenant data isolation.
  * </p>
  *
@@ -102,10 +101,8 @@ public class CaseController {
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of case") @PathVariable Long id) {
         return caseRepository.findByIdAndOwnerId(id, userId)
-                .map(casing -> {
-                    log.debug("Found case: {}", casing);
-                    return ok(casing);
-                })
+                .doOnNext(casing -> log.debug("Found case: {}", casing))
+                .map(casing -> ok(casing))
                 .defaultIfEmpty(notFound().build());
     }
 
@@ -128,13 +125,10 @@ public class CaseController {
                         c.caliber(),
                         c.primerSize(),
                         c.cost(),
-                        c.currency(),
                         c.quantityPerBox()))
                 .flatMap(caseRepository::save)
-                .map(savedCase -> {
-                    log.info("Created new case with id: {}", savedCase.id());
-                    return status(CREATED).body(savedCase);
-                });
+                .doOnNext(savedCase -> log.debug("Created new case with id: {}", savedCase.id()))
+                .map(savedCase -> status(CREATED).body(savedCase));
     }
 
     @Operation(summary = "Update an existing case", security = {
@@ -150,22 +144,16 @@ public class CaseController {
             @Parameter(description = "Id of case") @PathVariable Long id,
             @Valid @RequestBody Case casing) {
         return caseRepository.findByIdAndOwnerId(id, userId)
-                .flatMap(existingCase -> {
-                    Case updatedCase = new Case(
-                            existingCase.id(),
-                            existingCase.ownerId(),
-                            casing.manufacturer(),
-                            casing.caliber(),
-                            casing.primerSize(),
-                            casing.cost(),
-                            casing.currency(),
-                            casing.quantityPerBox());
-                    return caseRepository.save(updatedCase);
-                })
-                .map(updatedCase -> {
-                    log.info("Updated case with id: {}", updatedCase.id());
-                    return ok(updatedCase);
-                })
+                .flatMap(existingCase -> caseRepository.save(new Case(
+                        existingCase.id(),
+                        existingCase.ownerId(),
+                        casing.manufacturer(),
+                        casing.caliber(),
+                        casing.primerSize(),
+                        casing.cost(),
+                        casing.quantityPerBox())))
+                .doOnNext(updatedCase -> log.debug("Updated case with id: {}", updatedCase.id()))
+                .map(updatedCase -> ok(updatedCase))
                 .defaultIfEmpty(notFound().build());
     }
 
@@ -181,8 +169,8 @@ public class CaseController {
             @Parameter(description = "Id of case") @PathVariable Long id) {
         return caseRepository.findByIdAndOwnerId(id, userId)
                 .flatMap(existingCase -> caseRepository.delete(existingCase)
-                        .then(just(new ResponseEntity<Void>(NO_CONTENT)))
-                        .doOnSuccess(_ -> log.info("Deleted case with id: {}", id)))
-                .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
+                        .thenReturn(ResponseEntity.noContent().<Void>build())
+                        .doOnSuccess(_ -> log.debug("Deleted case with id: {}", id)))
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }

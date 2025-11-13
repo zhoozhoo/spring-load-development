@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import ca.zhoozhoo.loaddev.mcp.dto.RifleDto;
@@ -90,11 +91,14 @@ public class RiflesService {
                             .headers(h -> h.setBearerAuth(token))
                             .retrieve()
                             .bodyToFlux(RifleDto.class)
-                            .onErrorMap(WebClientResponseException.class, _ -> {
-                                return new McpError(new JSONRPCError(
-                                        INVALID_REQUEST,
-                                        "Authentication failed",
-                                        null));
+                            .onErrorMap(WebClientResponseException.class, e -> {
+                                if (HttpStatus.UNAUTHORIZED.equals(e.getStatusCode())) {
+                                    return new McpError(new JSONRPCError(
+                                            INVALID_REQUEST,
+                                            "Authentication failed",
+                                            null));
+                                }
+                                return e;
                             });
                 });
     }
@@ -143,11 +147,14 @@ public class RiflesService {
                             .headers(h -> h.setBearerAuth(token))
                             .retrieve()
                             .bodyToMono(RifleDto.class)
-                            .onErrorMap(WebClientResponseException.class, _ -> {
-                                return new McpError(new JSONRPCError(
-                                        INVALID_REQUEST,
-                                        "Authentication failed",
-                                        null));
+                            .onErrorMap(WebClientResponseException.class, e -> {
+                                if (HttpStatus.UNAUTHORIZED.equals(e.getStatusCode())) {
+                                    return new McpError(new JSONRPCError(
+                                            INVALID_REQUEST,
+                                            "Authentication failed",
+                                            null));
+                                }
+                                return e;
                             });
                 });
     }

@@ -6,12 +6,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.context.annotation.Import;
 
 import ca.zhoozhoo.loaddev.mcp.config.TestSecurityConfig;
 import io.modelcontextprotocol.spec.McpSchema.ReadResourceRequest;
-import io.modelcontextprotocol.spec.McpSchema.ResourceContents;
 import io.modelcontextprotocol.spec.McpSchema.TextResourceContents;
 import okhttp3.mockwebserver.MockWebServer;
 
@@ -84,10 +82,8 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
      */
     @Override
     protected void mockServiceDiscovery() {
-        ServiceInstance loadsInstance = createServiceInstance(
-                "loads-service-1", "loads-service", mockLoadsServer);
-        
-        mockService("loads-service", loadsInstance);
+        mockService("loads-service", createServiceInstance(
+                "loads-service-1", "loads-service", mockLoadsServer));
     }
 
     /**
@@ -142,37 +138,32 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
      */
     @Test
     void getLoadById() {
-        var readRequest = new ReadResourceRequest("load://1");
-        var resourceResult = client.readResource(readRequest).block();
+        var resourceResult = client.readResource(new ReadResourceRequest("load://1")).block();
 
         assertThat(resourceResult).isNotNull();
         assertThat(resourceResult.contents()).isNotEmpty();
         assertThat(resourceResult.contents()).hasSize(1);
         
-        ResourceContents content = resourceResult.contents().get(0);
-        assertThat(content).isInstanceOf(TextResourceContents.class);
-        
-        TextResourceContents textContent = (TextResourceContents) content;
+        assertThat(resourceResult.contents().get(0)).isInstanceOf(TextResourceContents.class);
+        var textContent = (TextResourceContents) resourceResult.contents().get(0);
         assertThat(textContent.uri()).isEqualTo("load://1");
         assertThat(textContent.mimeType()).isEqualTo("text/plain");
         
         // Verify the formatted content contains expected fields
-        String text = textContent.text();
-        assertThat(text).contains("ID: 1");
-        assertThat(text).contains("Name: Test Load 1");
-        assertThat(text).contains("Description: Test description");
-        assertThat(text).contains("Units: METRIC");
-        assertThat(text).contains("Powder Manufacturer: Hodgdon");
-        assertThat(text).contains("Powder Type: H4350");
-        assertThat(text).contains("Bullet Manufacturer: Hornady");
-        assertThat(text).contains("Bullet Type: ELD-M");
-        assertThat(text).contains("Bullet Weight: 140.0 grams");
-        assertThat(text).contains("Primer Manufacturer: CCI");
-        assertThat(text).contains("Primer Type: BR2");
-        assertThat(text).contains("Distance from Lands: 0.02 mm");
-        assertThat(text).contains("Case Overall Length: 2.8 mm");
-        assertThat(text).contains("Neck Tension: 0.002 mm");
-        assertThat(text).contains("Associated Rifle ID: 1");
+        assertThat(textContent.text()).contains("ID: 1");
+        assertThat(textContent.text()).contains("Name: Test Load 1");
+        assertThat(textContent.text()).contains("Description: Test description");
+        assertThat(textContent.text()).contains("Powder Manufacturer: Hodgdon");
+        assertThat(textContent.text()).contains("Powder Type: H4350");
+        assertThat(textContent.text()).contains("Bullet Manufacturer: Hornady");
+        assertThat(textContent.text()).contains("Bullet Type: ELD-M");
+        assertThat(textContent.text()).contains("Bullet Weight: 140 g");
+        assertThat(textContent.text()).contains("Primer Manufacturer: CCI");
+        assertThat(textContent.text()).contains("Primer Type: BR2");
+        assertThat(textContent.text()).contains("Distance from Lands: 0.02 mm");
+        assertThat(textContent.text()).contains("Case Overall Length: 2.8 mm");
+        assertThat(textContent.text()).contains("Neck Tension: 0.002 mm");
+        assertThat(textContent.text()).contains("Associated Rifle ID: 1");
     }
 
     /**
@@ -186,10 +177,8 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
      */
     @Test
     void getLoadById_NotFound() {
-        var readRequest = new ReadResourceRequest("load://999");
-        
         // The MCP framework throws an McpError when a resource is not found
-        assertThatThrownBy(() -> client.readResource(readRequest).block())
+        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://999")).block())
                 .isInstanceOf(io.modelcontextprotocol.spec.McpError.class)
                 .hasMessageContaining("Load not found with ID: 999");
     }
@@ -203,23 +192,19 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
      */
     @Test
     void getLoadById_DifferentId() {
-        var readRequest = new ReadResourceRequest("load://2");
-        var resourceResult = client.readResource(readRequest).block();
+        var resourceResult = client.readResource(new ReadResourceRequest("load://2")).block();
 
         assertThat(resourceResult).isNotNull();
         assertThat(resourceResult.contents()).isNotEmpty();
         assertThat(resourceResult.contents()).hasSize(1);
         
-        ResourceContents content = resourceResult.contents().get(0);
-        assertThat(content).isInstanceOf(TextResourceContents.class);
-        
-        TextResourceContents textContent = (TextResourceContents) content;
+        assertThat(resourceResult.contents().get(0)).isInstanceOf(TextResourceContents.class);
+        var textContent = (TextResourceContents) resourceResult.contents().get(0);
         assertThat(textContent.uri()).isEqualTo("load://2");
         assertThat(textContent.mimeType()).isEqualTo("text/plain");
         
         // The mock returns the same load data but we verify it's processed correctly
-        String text = textContent.text();
-        assertThat(text).contains("ID: 1"); // Mock returns same data for any valid ID
+        assertThat(textContent.text()).contains("ID: 1"); // Mock returns same data for any valid ID
     }
 
     /**
@@ -243,10 +228,8 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
             }
         });
 
-        var readRequest = new ReadResourceRequest("load://1");
-        
         // The MCP framework should throw an McpError when authentication fails
-        assertThatThrownBy(() -> client.readResource(readRequest).block())
+        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://1")).block())
                 .isInstanceOf(io.modelcontextprotocol.spec.McpError.class)
                 .hasMessageContaining("Authentication failed");
 
@@ -264,10 +247,8 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
      */
     @Test
     void getLoadById_NullId() {
-        var readRequest = new ReadResourceRequest("load://");
-        
         // The MCP framework should throw an McpError when ID is missing/empty
-        assertThatThrownBy(() -> client.readResource(readRequest).block())
+        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://")).block())
                 .isInstanceOf(io.modelcontextprotocol.spec.McpError.class);
     }
 
@@ -281,12 +262,8 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
      */
     @Test
     void getLoadById_ZeroId() {
-        var readRequest = new ReadResourceRequest("load://0");
-        
         // This test documents current behavior - may return error or mock response
-        var result = client.readResource(readRequest).block();
-        
-        assertThat(result).isNotNull();
+        assertThat(client.readResource(new ReadResourceRequest("load://0")).block()).isNotNull();
         // The result depends on mock implementation - we just verify it doesn't crash
     }
 
@@ -300,12 +277,8 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
      */
     @Test
     void getLoadById_NegativeId() {
-        var readRequest = new ReadResourceRequest("load://-1");
-        
         // This test documents current behavior - may return error or mock response
-        var result = client.readResource(readRequest).block();
-        
-        assertThat(result).isNotNull();
+        assertThat(client.readResource(new ReadResourceRequest("load://-1")).block()).isNotNull();
         // The result depends on mock implementation - we just verify it doesn't crash
     }
 
@@ -319,10 +292,8 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
      */
     @Test
     void getLoadById_InvalidIdFormat() {
-        var readRequest = new ReadResourceRequest("load://invalid");
-        
         // The MCP framework should throw an McpError when ID is not a valid number
-        assertThatThrownBy(() -> client.readResource(readRequest).block())
+        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://invalid")).block())
                 .isInstanceOf(io.modelcontextprotocol.spec.McpError.class);
     }
 
@@ -340,10 +311,8 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
                 .thenReturn(null);
 
-        var readRequest = new ReadResourceRequest("load://1");
-        
         // The MCP framework should throw an McpError when service discovery fails
-        assertThatThrownBy(() -> client.readResource(readRequest).block())
+        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://1")).block())
                 .isInstanceOf(io.modelcontextprotocol.spec.McpError.class);
 
         // Restore original mock for other tests
@@ -364,10 +333,8 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
                 .thenReturn(java.util.List.of());
 
-        var readRequest = new ReadResourceRequest("load://1");
-        
         // The MCP framework should throw an McpError when service discovery fails
-        assertThatThrownBy(() -> client.readResource(readRequest).block())
+        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://1")).block())
                 .isInstanceOf(io.modelcontextprotocol.spec.McpError.class);
 
         // Restore original mock for other tests

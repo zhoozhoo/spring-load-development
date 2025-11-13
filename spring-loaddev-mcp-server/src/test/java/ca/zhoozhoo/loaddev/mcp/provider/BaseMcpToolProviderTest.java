@@ -16,15 +16,21 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.codec.json.Jackson2JsonDecoder;
+import org.springframework.http.codec.json.Jackson2JsonEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.zhoozhoo.loaddev.mcp.config.TestSecurityConfig;
 import io.modelcontextprotocol.client.McpAsyncClient;
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.transport.WebFluxSseClientTransport;
 import io.modelcontextprotocol.json.McpJsonMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import io.modelcontextprotocol.spec.McpClientTransport;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
@@ -70,7 +76,11 @@ public abstract class BaseMcpToolProviderTest {
     protected DiscoveryClient discoveryClient;
 
     protected McpClientTransport transport;
+
     protected McpAsyncClient client;
+    
+    @Autowired
+    protected McpJsonMapper mcpJsonMapper;
 
     /**
      * Test configuration that provides a custom WebClient bean for testing.
@@ -84,8 +94,18 @@ public abstract class BaseMcpToolProviderTest {
         
         @Bean
         @Primary
-        public WebClient webClient() {
-            return WebClient.builder().build();
+        public WebClient webClient(ObjectMapper objectMapper) {
+            // Ensure WebClient uses the application's ObjectMapper with custom modules (e.g., QuantityModule)
+            return WebClient.builder()
+                .exchangeStrategies(ExchangeStrategies.builder()
+                    .codecs(configurer -> {
+                    configurer.defaultCodecs()
+                        .jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
+                    configurer.defaultCodecs()
+                        .jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
+                    })
+                    .build())
+                .build();
         }
     }
 
@@ -173,8 +193,8 @@ public abstract class BaseMcpToolProviderTest {
      */
     protected void initializeMcpClient() {
         transport = new WebFluxSseClientTransport(
-                WebClient.builder().baseUrl("http://localhost:" + port),
-                McpJsonMapper.createDefault());
+            WebClient.builder().baseUrl("http://localhost:" + port),
+            mcpJsonMapper);
 
         client = McpClient.async(transport).build();
         client.initialize();
@@ -284,17 +304,16 @@ public abstract class BaseMcpToolProviderTest {
                 "id": 1,
                 "name": "Test Load 1",
                 "description": "Test description",
-                "measurementUnits": "METRIC",
                 "powderManufacturer": "Hodgdon",
                 "powderType": "H4350",
                 "bulletManufacturer": "Hornady",
                 "bulletType": "ELD-M",
-                "bulletWeight": 140.0,
+                "bulletWeight": { "value": 140.0, "unit": "g" },
                 "primerManufacturer": "CCI",
                 "primerType": "BR2",
-                "distanceFromLands": 0.020,
-                "caseOverallLength": 2.800,
-                "neckTension": 0.002,
+                "distanceFromLands": { "value": 0.02, "unit": "mm" },
+                "caseOverallLength": { "value": 2.8, "unit": "mm" },
+                "neckTension": { "value": 0.002, "unit": "mm" },
                 "rifleId": 1
             }
             """;
@@ -306,10 +325,20 @@ public abstract class BaseMcpToolProviderTest {
     protected static final String LOAD_STATISTICS_JSON = """
             [
                 {
-                    "id": 1,
-                    "groupSize": 0.5,
-                    "shots": 5,
-                    "date": "2025-10-10"
+                    "date": "2025-10-10",
+                    "powderCharge": { "value": 40.5, "unit": "g" },
+                    "targetRange": { "value": 100, "unit": "m" },
+                    "groupSize": { "value": 12.7, "unit": "mm" },
+                    "averageVelocity": { "value": 820, "unit": "m/s" },
+                    "standardDeviation": { "value": 7.5, "unit": "m/s" },
+                    "extremeSpread": { "value": 21.3, "unit": "m/s" },
+                    "shots": [
+                        { "velocity": { "value": 818, "unit": "m/s" } },
+                        { "velocity": { "value": 822, "unit": "m/s" } },
+                        { "velocity": { "value": 819, "unit": "m/s" } },
+                        { "velocity": { "value": 827, "unit": "m/s" } },
+                        { "velocity": { "value": 814, "unit": "m/s" } }
+                    ]
                 }
             ]
             """;

@@ -1,16 +1,17 @@
 package ca.zhoozhoo.loaddev.loads.model;
 
-import static java.lang.Math.round;
-
 import java.util.List;
+
+import javax.measure.Quantity;
+import javax.measure.quantity.Speed;
 
 /**
  * Represents calculated ballistic statistics for a shooting group.
  * <p>
  * This record encapsulates the statistical analysis of shot velocity data for a group,
- * including average velocity, standard deviation, and extreme spread (ES). These metrics
- * are essential for evaluating load consistency and performance. All numeric values are
- * automatically rounded to one decimal place for presentation.
+ * including average velocity, standard deviation, and extreme spread (ES) using javax.measure
+ * Quantity API. These metrics are essential for evaluating load consistency and performance.
+ * Velocity values are stored as Quantity&lt;Speed&gt; to support multiple unit systems.
  * </p>
  *
  * @author Zhubin Salehi
@@ -18,21 +19,22 @@ import java.util.List;
 public record GroupStatistics(
         Group group,
 
-        double averageVelocity,
+        Quantity<Speed> averageVelocity,
 
-        double standardDeviation,
+        Quantity<Speed> standardDeviation,
 
-        double extremeSpread,
+        Quantity<Speed> extremeSpread,
 
         List<Shot> shots) {
 
     /**
-     * Compact constructor that rounds double values and creates defensive copies of mutable collections.
+     * Compact constructor that creates defensive copies of mutable collections.
+     * <p>
+     * Note: Quantity objects are immutable, so they don't need defensive copying.
+     * The shots list is copied to prevent external modification.
+     * </p>
      */
     public GroupStatistics {
-        averageVelocity = round(averageVelocity * 10.0) / 10.0;
-        standardDeviation = round(standardDeviation * 10.0) / 10.0;
-        extremeSpread = round(extremeSpread * 10.0) / 10.0;
         shots = shots != null ? List.copyOf(shots) : List.of();
     }
 }

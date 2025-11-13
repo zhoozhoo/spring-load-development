@@ -1,17 +1,19 @@
 package ca.zhoozhoo.loaddev.components.model;
 
-import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-
 import static ca.zhoozhoo.loaddev.components.model.PrimerSize.LARGE_RIFLE;
 import static ca.zhoozhoo.loaddev.components.model.PrimerSize.LARGE_RIFLE_MAGNUM;
 import static ca.zhoozhoo.loaddev.components.model.PrimerSize.SMALL_RIFLE;
+import static javax.money.Monetary.getCurrency;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.javamoney.moneta.Money.of;
+import static tech.units.indriya.AbstractUnit.ONE;
+import static tech.units.indriya.quantity.Quantities.getQuantity;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link Primer} model class.
- * Tests record construction, equality, hashCode, and business logic.
+ * Tests record construction, equality, hashCode, and business logic with JSR-385 and JSR-354 support.
  *
  * @author Zhubin Salehi
  */
@@ -21,7 +23,7 @@ class PrimerTest {
     void shouldCreatePrimerWithAllFields() {
         // given & when
         var primer = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                               new BigDecimal("65.99"), "USD", 1000);
+                               of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
 
         // then
         assertThat(primer.id()).isEqualTo(1L);
@@ -29,16 +31,15 @@ class PrimerTest {
         assertThat(primer.manufacturer()).isEqualTo("CCI");
         assertThat(primer.type()).isEqualTo("BR2");
         assertThat(primer.primerSize()).isEqualTo(LARGE_RIFLE);
-        assertThat(primer.cost()).isEqualByComparingTo(new BigDecimal("65.99"));
-        assertThat(primer.currency()).isEqualTo("USD");
-        assertThat(primer.quantityPerBox()).isEqualTo(1000);
+        assertThat(primer.cost()).isEqualTo(of(65.99, getCurrency("USD")));
+        assertThat(primer.quantityPerBox()).isEqualTo(getQuantity(1000, ONE));
     }
 
     @Test
     void shouldCreatePrimerWithSmallRiflePrimer() {
         // given & when
         var primer = new Primer(1L, "user123", "Federal", "205M", SMALL_RIFLE,
-                               new BigDecimal("60.00"), "USD", 1000);
+                               of(60.00, getCurrency("USD")), getQuantity(1000, ONE));
 
         // then
         assertThat(primer.primerSize()).isEqualTo(SMALL_RIFLE);
@@ -48,7 +49,7 @@ class PrimerTest {
     void shouldCreatePrimerWithMagnumPrimer() {
         // given & when
         var primer = new Primer(1L, "user123", "Winchester", "WLR-M", LARGE_RIFLE_MAGNUM,
-                               new BigDecimal("70.00"), "CAD", 1000);
+                               of(70.00, getCurrency("CAD")), getQuantity(1000, ONE));
 
         // then
         assertThat(primer.primerSize()).isEqualTo(LARGE_RIFLE_MAGNUM);
@@ -58,7 +59,7 @@ class PrimerTest {
     void shouldCreatePrimerWithNullId() {
         // given & when
         var primer = new Primer(null, "user123", "Remington", "7 1/2",
-                               SMALL_RIFLE, new BigDecimal("55.00"), "USD", 1000);
+                               SMALL_RIFLE, of(55.00, getCurrency("USD")), getQuantity(1000, ONE));
 
         // then
         assertThat(primer.id()).isNull();
@@ -68,9 +69,9 @@ class PrimerTest {
     void equalsAndHashCode_shouldBeEqualForSameBusinessData() {
         // given
         var primer1 = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
         var primer2 = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
 
         // then
         assertThat(primer1).isEqualTo(primer2);
@@ -81,9 +82,9 @@ class PrimerTest {
     void equalsAndHashCode_shouldBeEqualWithDifferentOwnerId() {
         // given - same business data but different ownerId
         var primer1 = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
         var primer2 = new Primer(1L, "user999", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
 
         // then - should be equal because ownerId is excluded from equals
         assertThat(primer1).isEqualTo(primer2);
@@ -94,7 +95,7 @@ class PrimerTest {
     void equals_shouldHandleStandardContracts() {
         // given
         var primer = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                               new BigDecimal("65.99"), "USD", 1000);
+                               of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
 
         // then - reflexive, null safety, and type safety
         assertThat(primer).isEqualTo(primer);
@@ -106,9 +107,9 @@ class PrimerTest {
     void equals_shouldReturnFalseForDifferentId() {
         // given
         var primer1 = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
         var primer2 = new Primer(2L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
 
         // then
         assertThat(primer1).isNotEqualTo(primer2);
@@ -118,9 +119,9 @@ class PrimerTest {
     void equals_shouldReturnFalseForDifferentManufacturer() {
         // given
         var primer1 = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
         var primer2 = new Primer(1L, "user123", "Federal", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
 
         // then
         assertThat(primer1).isNotEqualTo(primer2);
@@ -130,9 +131,9 @@ class PrimerTest {
     void equals_shouldReturnFalseForDifferentType() {
         // given
         var primer1 = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
-        var primer2 = new Primer(1L, "user123", "CCI", "BR4", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
+        var primer2 = new Primer(1L, "user123", "CCI", "450", LARGE_RIFLE,
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
 
         // then
         assertThat(primer1).isNotEqualTo(primer2);
@@ -142,9 +143,9 @@ class PrimerTest {
     void equals_shouldReturnFalseForDifferentPrimerSize() {
         // given
         var primer1 = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
         var primer2 = new Primer(1L, "user123", "CCI", "BR2", SMALL_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
 
         // then
         assertThat(primer1).isNotEqualTo(primer2);
@@ -154,9 +155,9 @@ class PrimerTest {
     void equals_shouldReturnFalseForDifferentCost() {
         // given
         var primer1 = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
         var primer2 = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("70.00"), "USD", 1000);
+                                of(70.00, getCurrency("USD")), getQuantity(1000, ONE));
 
         // then
         assertThat(primer1).isNotEqualTo(primer2);
@@ -166,9 +167,9 @@ class PrimerTest {
     void equals_shouldReturnFalseForDifferentCurrency() {
         // given
         var primer1 = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
         var primer2 = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "CAD", 1000);
+                                of(65.99, getCurrency("CAD")), getQuantity(1000, ONE));
 
         // then
         assertThat(primer1).isNotEqualTo(primer2);
@@ -178,9 +179,9 @@ class PrimerTest {
     void equals_shouldReturnFalseForDifferentQuantityPerBox() {
         // given
         var primer1 = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
         var primer2 = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 5000);
+                                of(65.99, getCurrency("USD")), getQuantity(500, ONE));
 
         // then
         assertThat(primer1).isNotEqualTo(primer2);
@@ -190,9 +191,9 @@ class PrimerTest {
     void hashCode_shouldBeDifferentForDifferentBusinessData() {
         // given
         var primer1 = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                                new BigDecimal("65.99"), "USD", 1000);
+                                of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
         var primer2 = new Primer(2L, "user123", "Federal", "205M", SMALL_RIFLE,
-                                new BigDecimal("60.00"), "CAD", 5000);
+                                of(60.00, getCurrency("CAD")), getQuantity(500, ONE));
 
         // then
         assertThat(primer1.hashCode()).isNotEqualTo(primer2.hashCode());
@@ -202,7 +203,7 @@ class PrimerTest {
     void toString_shouldContainAllFields() {
         // given & when
         var primer = new Primer(1L, "user123", "CCI", "BR2", LARGE_RIFLE,
-                               new BigDecimal("65.99"), "USD", 1000);
+                               of(65.99, getCurrency("USD")), getQuantity(1000, ONE));
 
         // then
         assertThat(primer.toString()).contains("1", "user123", "CCI", "BR2", "LARGE_RIFLE", "65.99", "USD", "1000");

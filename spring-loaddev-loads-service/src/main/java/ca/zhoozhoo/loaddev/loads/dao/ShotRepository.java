@@ -9,9 +9,9 @@ import reactor.core.publisher.Mono;
 /**
  * Reactive repository interface for {@link Shot} entity operations.
  * <p>
- * Provides CRUD operations and custom query methods for individual shot data,
- * including velocity measurements. Supports owner-based and group-based filtering
- * for secure multi-tenant data access.
+ * Provides CRUD operations and custom query methods for individual shot data
+ * using javax.measure Quantity API for velocity measurements. Supports owner-based
+ * and group-based filtering for secure multi-tenant data access.
  * </p>
  *
  * @author Zhubin Salehi

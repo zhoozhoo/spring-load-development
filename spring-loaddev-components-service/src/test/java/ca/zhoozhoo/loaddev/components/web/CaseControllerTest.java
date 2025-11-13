@@ -1,12 +1,14 @@
 package ca.zhoozhoo.loaddev.components.web;
 
 import static java.util.UUID.randomUUID;
+import static javax.money.Monetary.getCurrency;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.javamoney.moneta.Money.of;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 import static reactor.core.publisher.Mono.just;
-
-import java.math.BigDecimal;
+import static tech.units.indriya.AbstractUnit.ONE;
+import static tech.units.indriya.quantity.Quantities.getQuantity;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -116,9 +118,9 @@ public class CaseControllerTest {
                     assertThat(c.manufacturer()).isEqualTo("Lapua");
                     assertThat(c.caliber()).isEqualTo("6.5 Creedmoor");
                     assertThat(c.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
-                    assertThat(c.cost()).isEqualTo(new BigDecimal("89.99"));
-                    assertThat(c.currency()).isEqualTo("CAD");
-                    assertThat(c.quantityPerBox()).isEqualTo(100);
+                    assertThat(c.cost()).isEqualTo(of(89.99, getCurrency("CAD")));
+                    assertThat(c.quantityPerBox().getValue().doubleValue()).isEqualTo(100.0);
+                    assertThat(c.quantityPerBox().getUnit()).isEqualTo(ONE);
                 });
     }
 
@@ -128,7 +130,8 @@ public class CaseControllerTest {
         var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var invalidCase = new Case(null, userId, "", "", null, 
-                new BigDecimal("-1"), "", -1);
+                of(-1, getCurrency("CAD")), 
+                getQuantity(-1, ONE));
 
         webTestClient.mutateWith(jwt).post().uri("/cases")
                 .contentType(APPLICATION_JSON)
@@ -140,9 +143,8 @@ public class CaseControllerTest {
                     assertThat(errorMessage).contains("Manufacturer is required");
                     assertThat(errorMessage).contains("Caliber is required");
                     assertThat(errorMessage).contains("Primer size is required");
-                    assertThat(errorMessage).contains("Cost must be greater than or equal to 0");
-                    assertThat(errorMessage).contains("Currency is required");
-                    assertThat(errorMessage).contains("Quantity per box must be greater than 0");
+                    assertThat(errorMessage).contains("Cost must be non-negative");
+                    assertThat(errorMessage).contains("Quantity per box must be positive");
                 });
     }
 
@@ -159,9 +161,8 @@ public class CaseControllerTest {
                 "Peterson",
                 "308 Winchester",
                 PrimerSize.LARGE_RIFLE,
-                new BigDecimal("99.99"),
-                "CAD",
-                50);
+                of(99.99, getCurrency("CAD")),
+                getQuantity(50, ONE));
 
         webTestClient.mutateWith(jwt).put().uri("/cases/{id}", savedCase.id())
                 .contentType(APPLICATION_JSON)
@@ -174,9 +175,9 @@ public class CaseControllerTest {
                     assertThat(c.manufacturer()).isEqualTo("Peterson");
                     assertThat(c.caliber()).isEqualTo("308 Winchester");
                     assertThat(c.primerSize()).isEqualTo(PrimerSize.LARGE_RIFLE);
-                    assertThat(c.cost()).isEqualTo(new BigDecimal("99.99"));
-                    assertThat(c.currency()).isEqualTo("CAD");
-                    assertThat(c.quantityPerBox()).isEqualTo(50);
+                    assertThat(c.cost()).isEqualTo(of(99.99, getCurrency("CAD")));
+                    assertThat(c.quantityPerBox().getValue().doubleValue()).isEqualTo(50.0);
+                    assertThat(c.quantityPerBox().getUnit()).isEqualTo(ONE);
                 });
     }
 
@@ -229,8 +230,7 @@ public class CaseControllerTest {
                 "Lapua",
                 "6.5 Creedmoor",
                 PrimerSize.LARGE_RIFLE,
-                new BigDecimal("89.99"),
-                "CAD",
-                100);
+                of(89.99, getCurrency("CAD")),
+                getQuantity(100, ONE));
     }
 }
