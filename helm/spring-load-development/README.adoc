@@ -18,6 +18,61 @@ The Helm chart deploys and manages:
 * *Spring Boot Microservices* - API Gateway, Loads Service, Components Service, Rifles Service, and MCP Server
 * *All networking and storage* - Services, persistent volumes, and NodePort access
 
+=== Excluded Core Services
+
+This chart intentionally omits Spring Cloud *Config Server*, *Discovery (Eureka) Server*, and *Spring Boot Admin* for simplicity and faster local cluster startup. In production you may:
+
+* Deploy Config Server separately (or migrate to native Kubernetes ConfigMaps/Secrets)
+* Use service discovery via Kubernetes DNS (rendering Eureka optional)
+* Run Spring Boot Admin externally or rely on Grafana + Actuator endpoints
+
+To add these, extend `values.yaml` and duplicate a microservice stanza in `microservices.yaml` using the existing helper templates.
+
+=== Externalized Configuration
+
+Application configuration (profiles, ports, Keycloak, logging) is sourced from the separate Git repository:
+
+https://github.com/zhoozhoo/spring-load-development-config
+
+Key files in that repository map directly to services:
+
+* `application.yml` – shared defaults consumed by all services via Config Server
+* `api-gateway.yml`, `loads-service.yml`, `rifles-service.yml`, `components-service.yml`, `mcp-server.yml` – service‑specific overrides
+* `discovery-server.yml`, `admin-server.yml` – infrastructure service settings
+* `log4j2.xml` / `log4j2.yaml` – centralized logging configuration
+
+When deploying with this Helm chart (which excludes Config Server/Eureka), you can either:
+
+1. Bake required properties into container images (environment variables / Spring Boot `SPRING_` bindings)
+2. Create ConfigMaps & Secrets from the above YAMLs and mount/translate them to env vars
+3. Add a lightweight Spring Cloud Config Server Deployment referencing the config repo (recommended if frequent changes)
+
+Example (create ConfigMap from `api-gateway.yml`):
+
+[source,bash]
+----
+kubectl create configmap api-gateway-config \
+  --from-file=api-gateway.yml=../spring-load-development-config/api-gateway.yml \
+  -n reloading
+----
+
+Then reference in `values.yaml` via an env var section:
+
+[source,yaml]
+----
+apiGateway:
+  extraEnv:
+    - name: SPRING_CONFIG_IMPORT
+      value: optional:file:/config/api-gateway.yml
+  extraVolumeMounts:
+    - name: app-config
+      mountPath: /config
+  extraVolumes:
+    - name: app-config
+      configMap:
+        name: api-gateway-config
+----
+
 === Application Services
 
 The chart includes the following Spring Boot microservices:
@@ -32,84 +87,60 @@ The chart includes the following Spring Boot microservices:
 
 [source,mermaid]
 ....
-graph TB
-    subgraph "Database Layer"
-        PG1[PostgreSQL<br/>loadsdb<br/>postgres namespace]
-        PG2[Keycloak-PostgreSQL<br/>keycloak<br/>keycloak namespace]
-    end
-    
-    subgraph "Authentication"
-        KC[Keycloak<br/>Auth Server<br/>keycloak namespace]
-    end
-    
-    subgraph "Microservices - reloading namespace"
-        GW[API Gateway<br/>Port 30090<br/>spring-loaddev-api-gateway]
-        LS[Loads Service<br/>spring-loaddev-loads-service]
-        CS[Components Service<br/>spring-loaddev-components-service]
-        RS[Rifles Service<br/>spring-loaddev-rifles-service]
-        MCP[MCP Server<br/>spring-loaddev-mcp-server]
-    end
-    
-    subgraph "Observability Stack"
-        OTEL[OpenTelemetry Collector<br/>metrics/traces/logs<br/>observability namespace]
-        LOKI[Loki<br/>Log Aggregation<br/>observability namespace]
-        TEMPO[Tempo<br/>Distributed Tracing<br/>observability namespace]
-        PROM[Prometheus<br/>Metrics Storage<br/>observability namespace]
-        GRAF[Grafana<br/>Visualization<br/>observability namespace]
-    end
-    
-    %% Database connections
-    PG1 --> LS
-    PG1 --> CS  
-    PG1 --> RS
-    PG1 --> MCP
-    PG2 --> KC
-    
-    %% Service routing
-    GW --> LS
-    GW --> CS
-    GW --> RS
-    GW --> MCP
-    
-    %% Telemetry flow
-    GW --> OTEL
-    LS --> OTEL
-    CS --> OTEL
-    RS --> OTEL
-    MCP --> OTEL
-    KC --> OTEL
-    OTEL --> LOKI
-    OTEL --> TEMPO
-    OTEL --> PROM
-    
-    %% Grafana datasources
-    LOKI --> GRAF
-    TEMPO --> GRAF
-    PROM --> GRAF
-    
-    %% Authentication flow
-    GW --> KC
-    LS --> KC
-    CS --> KC
-    RS --> KC
-    MCP --> KC
-    
-    %% External access
-    GRAF -.-> |NodePort 30000| USER[User Browser]
-    KC -.-> |NodePort 30080| USER
-    GW -.-> |NodePort 30090| USER
-    
-    classDef database fill:#e1f5fe,stroke:#388e3c,stroke-width:2px,color:#000000
-    classDef auth fill:#fff3e0,stroke:#388e3c,stroke-width:2px,color:#000000
-    classDef observability fill:#f3e5f5,stroke:#388e3c,stroke-width:2px,color:#000000
-    classDef microservice fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
-    classDef external fill:#ffebee,stroke:#388e3c,stroke-width:2px,color:#000000
-    
-    class PG1,PG2 database
-    class KC auth
-    class OTEL,LOKI,TEMPO,PROM,GRAF observability
-    class GW,LS,CS,RS,MCP microservice
-    class USER external
+flowchart LR
+  subgraph Databases
+    PG1[(PostgreSQL loadsdb)]
+    PG2[(PostgreSQL keycloak)]
+  end
+  subgraph Auth
+    KC[Keycloak]
+  end
+  subgraph Microservices
+    GW[API Gateway\nNodePort 30090]
+    LS[Loads Service]
+    CS[Components Service]
+    RS[Rifles Service]
+    MCP[MCP Server]
+  end
+  subgraph Observability
+    OTEL[OTel Collector]
+    LOKI[Loki]
+    TEMPO[Tempo]
+    PROM[Prometheus]
+    GRAF[Grafana\nNodePort 30000]
+  end
+  USER[User]
+  GW --> LS & CS & RS & MCP
+  PG1 --> LS & CS & RS & MCP
+  PG2 --> KC
+  GW --> KC
+  LS --> KC
+  CS --> KC
+  RS --> KC
+  MCP --> KC
+  GW --> OTEL
+  LS --> OTEL
+  CS --> OTEL
+  RS --> OTEL
+  MCP --> OTEL
+  KC --> OTEL
+  OTEL --> LOKI & TEMPO & PROM
+  PROM --> GRAF
+  LOKI --> GRAF
+  TEMPO --> GRAF
+  USER --> GW
+  USER --> KC
+  USER --> GRAF
+  classDef db fill:#e1f5fe,stroke:#388e3c,stroke-width:2px
+  classDef auth fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+  classDef svc fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+  classDef obs fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+  classDef user fill:#ffebee,stroke:#c62828,stroke-width:2px
+  class PG1,PG2 db
+  class KC auth
+  class GW,LS,CS,RS,MCP svc
+  class OTEL,LOKI,TEMPO,PROM,GRAF obs
+  class USER user
 ....
 
 == Quick Start
@@ -225,7 +256,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 === Keycloak Authentication Server
 
-* *Version*: 26.3
+* *Version*: 26.4
 * *Namespace*: `keycloak`
 * *Admin Console*: http://localhost:30080
 * *Admin Credentials*: `admin` / `admin`
@@ -263,7 +294,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 * *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-components-service:0.0.8-SNAPSHOT`
 * *Namespace*: `reloading`
 * *Service*: `components-service.reloading.svc.cluster.local:8080`
-* *Purpose*: Manages reloading components (bullets, powder, primers, cases)
+* *Purpose*: Manages reloading components (cases, propellants/powders, primers, projectiles/bullets) with full-text search
 * *Resources*: CPU 250m-500m, Memory 256Mi-512Mi
 
 ==== Rifles Service
@@ -286,7 +317,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Loki (Log Aggregation)
 
-* *Version*: 3.5.5
+* *Version*: 3.5.8
 * *Namespace*: `observability`
 * *Port*: 30100
 * *Storage*: Filesystem with 10Gi persistent volume
@@ -295,14 +326,14 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Tempo (Distributed Tracing)
 
-* *Version*: 2.8.2
+* *Version*: 2.9.0
 * *Port*: 30200
 * *Storage*: Local filesystem with 10Gi persistent volume
 * *Features*: OTLP receivers, metrics generation, trace querying
 
 ==== Prometheus (Metrics)
 
-* *Version*: v3.6.0
+* *Version*: v3.7.3
 * *Namespace*: `observability`
 * *Port*: 30091
 * *Storage*: 10Gi persistent volume
@@ -311,7 +342,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Grafana (Visualization)
 
-* *Version*: 12.1.1
+* *Version*: 12.2.1
 * *Port*: 30000
 * *Authentication*: Anonymous access enabled (Admin role)
 * *Datasources*: Pre-configured Loki, Tempo, and Prometheus
@@ -322,7 +353,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== OpenTelemetry Collector
 
-* *Version*: 0.135.0
+* *Version*: 0.138.0
 * *Namespace*: `observability`
 * *GRPC Port*: 30317
 * *Metrics Port*: 30889

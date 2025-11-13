@@ -13,6 +13,11 @@ data:
     server:
       shutdown: graceful
 
+    spring:
+      threads:
+        virtual:
+          enabled: true
+
     eureka:
       client:
         enabled: false
@@ -161,7 +166,7 @@ data:
                 - id: components-service
                   uri: http://components-service.{{ .Values.apiGateway.namespace | default "default" }}.svc.cluster.local:8080
                   predicates:
-                    - Path=/api/bullets/**,/api/cases/**,/api/powders/**,/api/primers/**,/components-service/v3/api-docs
+                    - Path=/api/projectiles/**,/api/cases/**,/api/propellants/**,/api/primers/**,/components-service/v3/api-docs
                   filters:
                     - StripPrefix=1
                     - TokenForwarding

@@ -31,6 +31,28 @@ Spring Load Development is a project that demonstrates the integration of variou
 All technologies are open source and widely adopted in cloud-native Java ecosystems. Version details can be found in the respective `pom.xml` files.
 ====
 
+=== Current Versions
+
+This project uses the following key versions:
+
+* *Java*: 25
+* *Spring Boot*: 3.5.7
+* *Spring Boot Admin*: 3.5.6
+* *Spring Cloud*: 2025.0.0
+* *Spring AI*: 1.1.0-RC1
+* *SpringDoc OpenAPI*: 2.8.14
+* *MapStruct*: 1.6.3
+* *OpenTelemetry API/SDK*: 1.56.0
+* *OpenTelemetry Instrumentation*: 2.21.0 (+ alpha)
+* *Maven*: 4.0.0-rc-4 or later
+* *PostgreSQL*: 18.0
+* *Keycloak*: 26.4
+* *Grafana*: 12.2.1
+* *Loki*: 3.5.8
+* *Tempo*: 2.9.0
+* *Prometheus*: v3.7.3
+* *OpenTelemetry Collector*: 0.138.0
+
 == Getting Started
 
 === Prerequisites
@@ -84,10 +106,14 @@ This will start all infrastructure services (PostgreSQL, Keycloak, Grafana, etc.
 # Add and update helm repo (if using a helm repository)
 helm repo update
 
+# Create required namespaces first
+cd helm/spring-load-development
+./create-namespaces.sh
+
 # Install the application
-helm install spring-load-development ./helm/spring-load-development \
-  --create-namespace \
-  --namespace spring-load-development
+helm install spring-load-development . \
+  --values values.yaml \
+  --timeout 300s
 ----
 
 ===== Access services:
@@ -116,24 +142,28 @@ docker-compose --env-file .env up -d postgres keycloak grafana loki tempo promet
 
 [source,bash]
 ----
-# 1. Start Config Server (required by other services)
-java -jar spring-loaddev-config-server/target/spring-loaddev-config-server-*.jar
+# IMPORTANT: All services default to port 8080. To run them side-by-side locally, supply a distinct port with -Dserver.port.
 
-# 2. Start Discovery Server (in a new terminal)
-java -jar spring-loaddev-discovery-server/target/spring-loaddev-discovery-server-*.jar
+# 1. Start Config Server (required) on 8888
+java -Dserver.port=8888 -jar spring-loaddev-config-server/target/spring-loaddev-config-server-*.jar
 
-# 3. Start API Gateway (in a new terminal)
+# 2. Start Discovery Server on 8761
+java -Dserver.port=8761 -jar spring-loaddev-discovery-server/target/spring-loaddev-discovery-server-*.jar
+
+# 3. Start API Gateway on 8080 (external entrypoint)
 java -jar spring-loaddev-api-gateway/target/spring-loaddev-api-gateway-*.jar
 
-# 4. Start microservices (each in a new terminal)
-java -jar spring-loaddev-loads-service/target/spring-loaddev-loads-service-*.jar
-java -jar spring-loaddev-rifles-service/target/spring-loaddev-rifles-service-*.jar
-java -jar spring-loaddev-components-service/target/spring-loaddev-components-service-*.jar
-java -jar spring-loaddev-mcp-server/target/spring-loaddev-mcp-server-*.jar
+# 4. Start microservices (distinct ports)
+java -Dserver.port=8081 -jar spring-loaddev-loads-service/target/spring-loaddev-loads-service-*.jar
+java -Dserver.port=8082 -jar spring-loaddev-rifles-service/target/spring-loaddev-rifles-service-*.jar
+java -Dserver.port=8083 -jar spring-loaddev-components-service/target/spring-loaddev-components-service-*.jar
+java -Dserver.port=8084 -jar spring-loaddev-mcp-server/target/spring-loaddev-mcp-server-*.jar
 
-# 5. Start Admin Server (optional, for monitoring)
-java -jar spring-loaddev-admin-server/target/spring-loaddev-admin-server-*.jar
+# 5. Start Admin Server (optional) on 9090
+java -Dserver.port=9090 -jar spring-loaddev-admin-server/target/spring-loaddev-admin-server-*.jar
 ----
+
+TIP: You can also override ports via environment variable `SERVER_PORT` or an `application-local.yml` profile.
 
 === Accessing Services
 
@@ -153,13 +183,13 @@ For Kubernetes deployment, services are accessible via NodePort or port-forwardi
 [source,bash]
 ----
 # Port-forward API Gateway
-kubectl port-forward -n spring-load-development service/spring-loaddev-api-gateway 8080:8080
+kubectl port-forward -n reloading service/api-gateway 8080:8080
 
 # Port-forward Grafana
-kubectl port-forward -n observability service/grafana 3000:3000
+kubectl port-forward -n observability service/grafana-service 3000:3000
 
 # Port-forward Keycloak
-kubectl port-forward -n keycloak service/keycloak 7080:8080
+kubectl port-forward -n keycloak service/keycloak-service 7080:8080
 ----
 
 Alternatively, if using NodePort services, check the assigned ports:
@@ -209,9 +239,11 @@ The application is composed of the following services:
 * *API Gateway*: Routes and filters requests to appropriate services
 * *Rifles Service*: Manages rifle data and configurations
 * *Loads Service*: Handles load development data including groups and shots 
-* *Components Service*: Manages reloading components (cases, powders, primers, bullets) for load development
+* *Components Service*: Manages reloading components (cases, propellants/powders, primers, projectiles/bullets) with full-text search capabilities
 * *MCP Server*: Provides AI-assisted tools via Model Context Protocol for loads and rifles management (link:spring-loaddev-mcp-server/README.adoc[MCP Server Guide])
 * *Admin Server*: Monitoring and management of all services
+* *Common Library*: Shared DTOs, mappers, utilities (not a runtime service)
+* *Integration Tests Module*: End‑to‑end verification (build-time only)
 
 === Configuration Repository
 
@@ -297,72 +329,272 @@ flowchart LR
 
 This observability architecture shows how all telemetry data (traces, logs, and metrics) is centrally collected by the OpenTelemetry Collector and distributed to specialized backends: Tempo for traces, Loki for logs, and Prometheus for metrics. Grafana provides unified dashboards combining all three data types for comprehensive observability. Spring Boot Admin remains available for quick actuator inspection and service management.
 
-== High-Level Architecture
+== Deployment Architecture Comparison
+
+The Spring Load Development application supports two primary deployment models: Docker Compose for local development and Kubernetes with Helm for production deployments.
+
+=== Docker Compose Architecture
 
 [source,mermaid]
 ....
 flowchart TB
-    subgraph Client[Clients]
+    subgraph "Docker Compose - Local Development"
+        subgraph "Application Services"
+            DC_GW[API Gateway<br/>:8080]
+            DC_CONFIG[Config Server]
+            DC_DISC[Discovery Server]
+            DC_ADMIN[Admin Server<br/>:9090]
+            DC_LOADS[Loads Service]
+            DC_RIFLES[Rifles Service]
+            DC_COMP[Components Service]
+            DC_MCP[MCP Server]
+        end
+        
+        subgraph "Infrastructure"
+            DC_PG[(PostgreSQL<br/>:5432)]
+            DC_KC[Keycloak<br/>:7080]
+        end
+        
+        subgraph "Observability"
+            DC_GRAF[Grafana<br/>:3000]
+            DC_LOKI[Loki]
+            DC_TEMPO[Tempo]
+            DC_PROM[Prometheus]
+            DC_OTEL[OTEL Collector]
+        end
+    end
+    
+    DC_GW --> DC_LOADS
+    DC_GW --> DC_RIFLES
+    DC_GW --> DC_COMP
+    DC_GW --> DC_MCP
+    
+    DC_LOADS --> DC_PG
+    DC_RIFLES --> DC_PG
+    DC_COMP --> DC_PG
+    DC_MCP --> DC_PG
+    
+    DC_GW --> DC_KC
+    DC_LOADS --> DC_OTEL
+    DC_RIFLES --> DC_OTEL
+    DC_COMP --> DC_OTEL
+    DC_MCP --> DC_OTEL
+    
+    DC_OTEL --> DC_LOKI
+    DC_OTEL --> DC_TEMPO
+    DC_OTEL --> DC_PROM
+    
+    DC_LOKI --> DC_GRAF
+    DC_TEMPO --> DC_GRAF
+    DC_PROM --> DC_GRAF
+    
+    classDef appStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
+    classDef infraStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
+    classDef obsStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000000
+    
+    class DC_GW,DC_CONFIG,DC_DISC,DC_ADMIN,DC_LOADS,DC_RIFLES,DC_COMP,DC_MCP appStyle
+    class DC_PG,DC_KC infraStyle
+    class DC_GRAF,DC_LOKI,DC_TEMPO,DC_PROM,DC_OTEL obsStyle
+....
+
+*Docker Compose Benefits:*
+
+* Single command deployment: `docker-compose up -d`
+* Automatic service networking and discovery
+* Easy local debugging with port mapping
+* Fast iteration during development
+* Minimal resource requirements
+* Simple configuration via `.env` file
+
+=== Kubernetes Architecture
+
+[source,mermaid]
+....
+flowchart TB
+    subgraph "Kubernetes Cluster"
+        subgraph "Namespace: reloading"
+            K8S_GW[API Gateway<br/>NodePort: 30090]
+            K8S_LOADS[Loads Service]
+            K8S_RIFLES[Rifles Service]
+            K8S_COMP[Components Service]
+            K8S_MCP[MCP Server]
+        end
+        
+        subgraph "Namespace: postgres"
+            K8S_PG[(PostgreSQL StatefulSet<br/>8Gi PVC)]
+        end
+        
+        subgraph "Namespace: keycloak"
+            K8S_KC_PG[(Keycloak PostgreSQL<br/>StatefulSet<br/>8Gi PVC)]
+            K8S_KC[Keycloak<br/>NodePort: 30080]
+        end
+        
+        subgraph "Namespace: observability"
+            K8S_GRAF[Grafana<br/>NodePort: 30000<br/>5Gi PVC]
+            K8S_LOKI[Loki<br/>10Gi PVC]
+            K8S_TEMPO[Tempo<br/>10Gi PVC]
+            K8S_PROM[Prometheus<br/>10Gi PVC]
+            K8S_OTEL[OTEL Collector<br/>NodePort: 30317]
+        end
+    end
+    
+    K8S_GW --> K8S_LOADS
+    K8S_GW --> K8S_RIFLES
+    K8S_GW --> K8S_COMP
+    K8S_GW --> K8S_MCP
+    
+    K8S_LOADS --> K8S_PG
+    K8S_RIFLES --> K8S_PG
+    K8S_COMP --> K8S_PG
+    K8S_MCP --> K8S_PG
+    
+    K8S_KC --> K8S_KC_PG
+    
+    K8S_GW --> K8S_KC
+    K8S_LOADS --> K8S_OTEL
+    K8S_RIFLES --> K8S_OTEL
+    K8S_COMP --> K8S_OTEL
+    K8S_MCP --> K8S_OTEL
+    
+    K8S_OTEL --> K8S_LOKI
+    K8S_OTEL --> K8S_TEMPO
+    K8S_OTEL --> K8S_PROM
+    
+    K8S_LOKI --> K8S_GRAF
+    K8S_TEMPO --> K8S_GRAF
+    K8S_PROM --> K8S_GRAF
+    
+    classDef appStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
+    classDef infraStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
+    classDef obsStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000000
+    
+    class K8S_GW,K8S_LOADS,K8S_RIFLES,K8S_COMP,K8S_MCP appStyle
+    class K8S_PG,K8S_KC_PG,K8S_KC infraStyle
+    class K8S_GRAF,K8S_LOKI,K8S_TEMPO,K8S_PROM,K8S_OTEL obsStyle
+....
+
+*Kubernetes Benefits:*
+
+* Production-ready with high availability support
+* Automatic scaling and self-healing
+* Persistent storage with StatefulSets
+* Namespace isolation for security
+* ConfigMaps and Secrets management
+* Rolling updates and rollbacks
+* Resource limits and health checks
+* Helm chart for easy management
+
+=== Comparison Summary
+
+[cols="1,2,2"]
+|===
+|Aspect |Docker Compose |Kubernetes
+
+|*Deployment*
+|Single file, one command
+|Helm chart with multiple resources
+
+|*Scaling*
+|Manual container scaling
+|Horizontal pod autoscaling
+
+|*Networking*
+|Simple port mapping
+|Services, NodePorts, Ingress
+
+|*Storage*
+|Docker volumes
+|PersistentVolumeClaims, StatefulSets
+
+|*Configuration*
+|Environment variables, .env files
+|ConfigMaps, Secrets
+
+|*Use Case*
+|Local development, testing
+|Production, staging, multi-node
+
+|*Resource Overhead*
+|Minimal
+|Requires cluster infrastructure
+
+|*Service Discovery*
+|Docker DNS
+|Kubernetes DNS, Service discovery
+
+|*Updates*
+|Manual restart
+|Rolling updates, zero downtime
+|===
+
+== High-Level Architecture
+
+[source,mermaid]
+....
+flowchart LR
+    subgraph Clients
         User[User]
         Copilot[GitHub Copilot]
     end
 
-    subgraph Gateway[API Gateway]
-        APIGateway[API Gateway<br/>Port: 8080]
-    end
+    APIGateway[API Gateway\n:8080]
 
-    subgraph Services["Microservices"]
+    subgraph Microservices
         LoadsService[Loads Service]
         RiflesService[Rifles Service]
         ComponentsService[Components Service]
-        MCPServer[MCP Server<br/>AI Integration]
+        MCPServer[MCP Server]
     end
 
-    Postgres[(PostgreSQL<br/>Database)]
-
-    subgraph Infrastructure["Infrastructure"]
-        Keycloak[Keycloak<br/>Authentication]
-        ConfigServer[Config Server<br/>Centralized Config]
-        DiscoveryServer[Discovery Server<br/>Service Registry]
+    subgraph Infrastructure
+        ConfigServer[Config Server\n:8888]
+        DiscoveryServer[Discovery Server\n:8761]
+        Keycloak[Keycloak Auth\n:7080]
+        AdminServer[Admin Server\n:9090]
     end
 
-    %% Client connections
-    User -->|REST API| APIGateway
-    User -->|Login| Keycloak
-    Copilot -->|MCP Protocol| APIGateway
+    subgraph Observability
+        OTEL[OTel Collector]
+        Prom[Prometheus]
+        Loki[Loki]
+        Tempo[Tempo]
+        Graf[Grafana]
+    end
 
-    %% Gateway to services
-    APIGateway --> LoadsService
-    APIGateway --> RiflesService
-    APIGateway --> ComponentsService
-    APIGateway --> MCPServer
+    Postgres[(PostgreSQL 18)]
 
-    %% AI service integration
-    MCPServer -.-> LoadsService
-    MCPServer -.-> RiflesService
-    MCPServer -.-> ComponentsService
+    User -->|REST| APIGateway
+    Copilot -->|MCP SSE| APIGateway
+    APIGateway --> LoadsService & RiflesService & ComponentsService & MCPServer
+    LoadsService --> Postgres
+    RiflesService --> Postgres
+    ComponentsService --> Postgres
+    MCPServer --> Postgres
+    Microservices -->|Config| ConfigServer
+    Microservices -->|Register| DiscoveryServer
+    Microservices -->|Auth| Keycloak
+    Microservices -->|Telemetry| OTEL
+    OTEL --> Prom & Loki & Tempo
+    Prom --> Graf
+    Loki --> Graf
+    Tempo --> Graf
+    AdminServer --> Microservices
 
-
-    %% Infrastructure connections (simplified)
-    Services -.->|Register| DiscoveryServer
-    Services -.->|Configuration| ConfigServer
-    Services -.->|Auth| Keycloak
-    Services -.->Postgres
-
-    classDef clientStyle fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000000
-    classDef gatewayStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000000
-    classDef serviceStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
-    classDef dataStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
-    classDef infraStyle fill:#fafafa,stroke:#616161,stroke-width:2px,color:#000000
-
+    classDef clientStyle fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef serviceStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef infraStyle fill:#fafafa,stroke:#616161,stroke-width:2px
+    classDef dataStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef obsStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
     class User,Copilot clientStyle
-    class APIGateway gatewayStyle
     class LoadsService,RiflesService,ComponentsService,MCPServer serviceStyle
+    class ConfigServer,DiscoveryServer,Keycloak,AdminServer infraStyle
     class Postgres dataStyle
-    class ConfigServer,DiscoveryServer,Keycloak infraStyle
+    class OTEL,Prom,Loki,Tempo,Graf obsStyle
 ....
 
 == Database Schema
+
+The application uses PostgreSQL 18.0 with the following schema design. The schema includes full-text search capabilities for component tables (bullets, powders, primers, cases) using PostgreSQL's `tsvector` type, enabling efficient natural language searches across manufacturer names, types, and other attributes.
 
 [source,mermaid]
 ....
@@ -464,13 +696,35 @@ erDiagram
     RIFLES ||--o{ LOADS : "uses"
 ....
 
+=== Component Search Capabilities
+
+The Components Service provides full-text search functionality for all component types (cases, powders, primers, bullets). Each component table includes a `search_vector` column of type `tsvector` that is automatically maintained and indexed for fast searching.
+
+*Search Features:*
+
+* Natural language queries across manufacturer names, types, and attributes
+* Fuzzy matching and relevance ranking
+* Case-insensitive searches
+* Support for partial word matching
+* PostgreSQL GIN indexes for optimal performance
+
+*Example Search Queries:*
+
+* Find all Lapua cases: `GET /api/cases/search?query=Lapua`
+* Search for H4350 powder: `GET /api/propellants/search?query=H4350`
+* Find 140 grain bullets: `GET /api/projectiles/search?query=140`
+* Search for CCI primers: `GET /api/primers/search?query=CCI`
+
+For more details on search functionality and API usage, refer to the link:test/README.adoc[API Testing Guide].
+
 == TODO
 
-* [ ] Upgrade to Spring AI 1.1.0
 * [ ] Update MCP server to support resources and prompts
 * [ ] Add brass case attributes such as neck tension, headspace, etc.
 * [ ] Implement load comparison and analysis tools
 * [ ] Add shooting session tracking and analytics
+* [ ] Enhance full-text search capabilities for loads and rifles
+* [ ] Add ballistic coefficient calculations and external ballistics
 
 == License
 
