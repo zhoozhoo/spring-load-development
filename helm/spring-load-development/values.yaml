@@ -6,7 +6,7 @@ global:
   imageRegistry: "zhoozhoo.ca"
   imagePullSecrets: []
   storageClass: ""
-  imageTag: "0.0.8"
+  imageTag: "0.0.8-SNAPSHOT"
 
 # Microservices configuration
 microservices:
