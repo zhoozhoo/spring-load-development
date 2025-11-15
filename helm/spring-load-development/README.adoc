@@ -274,7 +274,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== API Gateway
 
-* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:0.0.8-SNAPSHOT`
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:0.0.8`
 * *Namespace*: `reloading`
 * *Service*: `api-gateway.reloading.svc.cluster.local:8080`
 * *NodePort*: 30090
@@ -283,7 +283,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Loads Service
 
-* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:0.0.8-SNAPSHOT`
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:0.0.8`
 * *Namespace*: `reloading`
 * *Service*: `loads-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Manages load data and calculations
@@ -291,7 +291,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Components Service
 
-* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-components-service:0.0.8-SNAPSHOT`
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-components-service:0.0.8`
 * *Namespace*: `reloading`
 * *Service*: `components-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Manages reloading components (cases, propellants/powders, primers, projectiles/bullets) with full-text search
@@ -299,7 +299,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Rifles Service
 
-* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:0.0.8-SNAPSHOT`
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:0.0.8`
 * *Namespace*: `reloading`
 * *Service*: `rifles-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Manages rifle and firearm data
@@ -307,7 +307,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== MCP Server
 
-* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-mcp-server:0.0.8-SNAPSHOT`
+* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-mcp-server:0.0.8`
 * *Namespace*: `reloading`
 * *Service*: `mcp-server-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Model Context Protocol server for AI integrations
@@ -376,7 +376,7 @@ All application and infrastructure configuration is managed through a single `va
 # Global settings
 global:
   imageRegistry: "zhoozhoo.ca"
-  imageTag: "0.0.8-SNAPSHOT"
+  imageTag: "0.0.8"
 
 # Microservices configuration  
 microservices:
@@ -981,8 +981,8 @@ kubectl get configmap keycloak-realm-config -n keycloak -o yaml > keycloak-realm
 
 == Chart Information
 
-* *Chart Version*: 0.0.8-SNAPSHOT
-* *App Version*: 0.0.8-SNAPSHOT
+* *Chart Version*: 0.0.8
+* *App Version*: 0.0.8
 * *Maintainer*: Zhubin Salehi (zhoozhoo@yahoo.com)
 * *Kubernetes Version*: 1.24+
 * *Helm Version*: 3.x
@@ -1074,7 +1074,7 @@ newService:
   replicas: 1
   image:
     repository: zhoozhoo.ca/spring-load-development/new-service
-    tag: "0.0.8-SNAPSHOT"
+    tag: "0.0.8"
   service:
     type: ClusterIP
     port: 8080

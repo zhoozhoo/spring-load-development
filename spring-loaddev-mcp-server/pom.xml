@@ -4,7 +4,7 @@
     <parent>
         <groupId>ca.zhoozhoo.load-development</groupId>
         <artifactId>spring-load-development-parent</artifactId>
-        <version>0.0.8-SNAPSHOT</version>
+        <version>0.0.8</version>
     </parent>
 
     <groupId>ca.zhoozhoo.load-development</groupId>
@@ -132,7 +132,7 @@
         <dependency>
             <groupId>ca.zhoozhoo.load-development</groupId>
             <artifactId>spring-loaddev-common</artifactId>
-            <version>0.0.8-SNAPSHOT</version>
+            <version>0.0.8</version>
         </dependency>
         <!-- SpotBugs annotations for @SuppressFBWarnings -->
         <dependency>
