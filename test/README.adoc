@@ -11,7 +11,9 @@ This directory contains comprehensive testing resources for the Spring Load Deve
 * A shell script for automated test data loading
 * Configuration files for environment variables
 
-The test files cover authentication and full CRUD operations for all API services including rifles, loads, groups, shots, and components (cases, powders, primers, bullets).
+The test files cover authentication and full CRUD operations for all API services including rifles, loads, groups, shots, and components (cases, propellants, primers, projectiles).
+
+Configuration values (ports, Keycloak realm, OTEL endpoint) originate from the shared config repository `spring-load-development-config`. If you modify any of the YAML files there (e.g. `api-gateway.yml`), refresh your locally running services or re-run docker-compose to pick up changes.
 
 === Data shapes used in requests
 
@@ -37,30 +39,31 @@ Notes:
 * For mass in imperial units, use UCUM avoirdupois symbols: pounds "[lb_av]", ounces "[oz_av]", grains "[gr]".
 
 == Prerequisites
-
-    * Authentication with Keycloak
-    * CRUD operations for cases, propellants, primers, and projectiles
-        - Cases: create, get, update, delete, search (`/api/cases/search?query=...`)
-        - Propellants: create, get, update, delete, search (`/api/propellants/search?query=...`)
-        - Primers: create, get, update, delete, search (`/api/primers/search?query=...`)
-        - Projectiles: create, get, update, delete, search (`/api/projectiles/search?query=...`)
-
+* Running local stack (Docker Compose or manual) including:
+** Keycloak (auth) – realm `reloading`, user `reloader1`
+** API Gateway (`localhost:8080`)
+** Loads, Rifles, Components services behind gateway
+** PostgreSQL with required schemas
 * Bash shell (Linux/macOS/WSL)
 * `curl` command-line tool
-    * Creates a load development dataset with multiple powder charges (using [gr])
+* VS Code REST Client extension (recommended)
+* CRUD and search endpoints implemented for components:
+** Cases: `/api/cases`, search `/api/cases/search?query=Lapua`
+** Propellants: `/api/propellants`
+** Primers: `/api/primers`
+** Projectiles: `/api/projectiles`
 
-    NOTE: Load validation requires at least one of `distanceFromLands` or `caseOverallLength` to be provided. The script sets both along with `neckTension`.
-=== Required Running Services
+NOTE: Load validation requires at least one of `distanceFromLands` or `caseOverallLength`. The sample data loader sets both plus `neckTension`.
+
+== Required Running Services
 
 * PostgreSQL database (default: localhost:5432)
-    * Run `load_test_data.sh` to quickly populate the system with test data (includes required distanceFromLands and caseOverallLength for loads)
-    * Check the script output for any errors or issues during data loading
-    * Use the new search endpoints to validate full-text indexing, e.g. `GET /api/cases/search?query=Lapua`
-* Discovery server (default: localhost:8761)
-* API Gateway service (default: localhost:8080)
-* Rifles service (default: localhost:8081)
-* Loads service (default: localhost:8082)
-* Components service
+* Discovery server (default: localhost:8761) – for service registration in non-K8s local dev
+* API Gateway (default: localhost:8080)
+* Rifles service (through gateway)
+* Loads service (through gateway)
+* Components service (through gateway)
+* (Optional) MCP Server
 
 == Configuration
 
@@ -97,11 +100,11 @@ Containing requests for testing Loads, Groups, and Shots API endpoints:
 Contains requests for testing the Components API endpoints:
 
 * Authentication with Keycloak
-* CRUD operations for cases, powders, primers, and bullets
-  - Cases: create, get, update, delete
-  - Powders: create, get, update, delete
-  - Primers: create, get, update, delete
-  - Bullets: create, get, update, delete
+* CRUD operations for cases, propellants, primers, and projectiles
+  - Cases: create, get, update, delete, search
+  - Propellants: create, get, update, delete, search
+  - Primers: create, get, update, delete, search
+  - Projectiles: create, get, update, delete, search
 
 === Configuration Files
 
@@ -169,6 +172,26 @@ The script will:
 1. First, run the "Authenticate" request to get an access token
 2. The token is automatically used in subsequent requests
 3. Test individual endpoints as needed
+
+[source,mermaid]
+....
+flowchart LR
+    KC[Keycloak] -->|Token| Client[REST Client]
+    Client -->|Bearer| APIGW[API Gateway]
+    APIGW --> Loads[Loads]
+    APIGW --> Rifles[Rifles]
+    APIGW --> Components[Components]
+    APIGW --> MCP[MCP Server]
+    Components -->|Search| Components
+    classDef auth fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef gw fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef svc fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef client fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    class KC auth
+    class APIGW gw
+    class Loads,Rifles,Components,MCP svc
+    class Client client
+....
 
 == VS Code Settings Configuration
 

@@ -13,6 +13,11 @@ data:
     server:
       shutdown: graceful
 
+    spring:
+      threads:
+        virtual:
+          enabled: true
+
     eureka:
       client:
         enabled: false
@@ -80,7 +85,7 @@ data:
         attributes:
           service:
             name: ${spring.application.name}
-            version: ${project.version:0.0.8-SNAPSHOT}
+            version: ${project.version}
       service:
         name: ${spring.application.name}
 
@@ -161,7 +166,7 @@ data:
                 - id: components-service
                   uri: http://components-service.{{ .Values.apiGateway.namespace | default "default" }}.svc.cluster.local:8080
                   predicates:
-                    - Path=/api/bullets/**,/api/cases/**,/api/powders/**,/api/primers/**,/components-service/v3/api-docs
+                    - Path=/api/projectiles/**,/api/cases/**,/api/propellants/**,/api/primers/**,/components-service/v3/api-docs
                   filters:
                     - StripPrefix=1
                     - TokenForwarding
@@ -386,7 +391,7 @@ data:
         mcp:
           server:
             name: reloading-mcp-server
-            version: 0.0.8-SNAPSHOT
+            version: {{ .Values.global.imageTag | quote }}
             type: ASYNC
             sse-endpoint: /sse
             sse-message-endpoint: /mcp/messages
