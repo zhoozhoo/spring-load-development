@@ -85,7 +85,7 @@ data:
         attributes:
           service:
             name: ${spring.application.name}
-            version: ${project.version:0.0.8-SNAPSHOT}
+            version: ${project.version}
       service:
         name: ${spring.application.name}
 
@@ -391,7 +391,7 @@ data:
         mcp:
           server:
             name: reloading-mcp-server
-            version: 0.0.8-SNAPSHOT
+            version: {{ .Values.global.imageTag | quote }}
             type: ASYNC
             sse-endpoint: /sse
             sse-message-endpoint: /mcp/messages

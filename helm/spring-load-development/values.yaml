@@ -631,7 +631,7 @@ apiGateway:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway
-    tag: "0.0.8-SNAPSHOT"
+    tag: "{{ .Values.global.imageTag }}"
     pullPolicy: IfNotPresent
   
   service:
@@ -679,7 +679,7 @@ loadsService:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service
-    tag: "0.0.8-SNAPSHOT"
+    tag: "{{ .Values.global.imageTag }}"
     pullPolicy: IfNotPresent
   
   service:
@@ -712,7 +712,7 @@ componentsService:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/spring-loaddev-components-service
-    tag: "0.0.8-SNAPSHOT"
+    tag: "{{ .Values.global.imageTag }}"
     pullPolicy: IfNotPresent
   
   service:
@@ -745,7 +745,7 @@ riflesService:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service
-    tag: "0.0.8-SNAPSHOT"
+    tag: "{{ .Values.global.imageTag }}"
     pullPolicy: IfNotPresent
   
   service:
@@ -778,7 +778,7 @@ mcpServer:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/spring-loaddev-mcp-server
-    tag: "0.0.8-SNAPSHOT"
+    tag: "{{ .Values.global.imageTag }}"
     pullPolicy: IfNotPresent
   
   service:
