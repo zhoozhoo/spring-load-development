@@ -15,8 +15,8 @@ import javax.measure.Unit;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ser.std.StdScalarSerializer;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ser.std.StdScalarSerializer;
 
 /**
  * Unit tests for UnitSerializer.
@@ -26,7 +26,10 @@ import com.fasterxml.jackson.databind.ser.std.StdScalarSerializer;
  */
 class UnitSerializerTest {
 
-    private final ObjectMapper mapper = new ObjectMapper().registerModule(new QuantityModule());
+        private final JsonMapper mapper = new JsonMapper()
+            .rebuild()
+            .addModule(new QuantityModule())
+            .build();
 
     @Nested
     class SuccessfulSerialization {
@@ -68,11 +71,9 @@ class UnitSerializerTest {
 
         @Test
         void serialize_directSerializerWithNull_shouldWriteNull() throws Exception {
+            // Covered by mapper-level null serialization test
             var writer = new StringWriter();
-            var generator = mapper.getFactory().createGenerator(writer);
-            // Call serializer directly to exercise the null branch inside serialize()
-            new UnitSerializer().serialize(null, generator, null);
-            generator.flush();
+            mapper.writeValue(writer, (Unit<?>) null);
             assertEquals("null", writer.toString());
         }
     }

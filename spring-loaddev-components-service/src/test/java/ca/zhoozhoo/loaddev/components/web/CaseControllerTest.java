@@ -13,9 +13,10 @@ import static tech.units.indriya.quantity.Quantities.getQuantity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -44,9 +45,13 @@ public class CaseControllerTest {
     @Test
     void getAllCases() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/cases")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/cases")
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -57,11 +62,15 @@ public class CaseControllerTest {
     @Test
     void searchCases() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedCase = caseRepository.save(createTestCase(userId)).block();
 
-        webTestClient.mutateWith(jwt).get().uri(uriBuilder -> uriBuilder.path("/cases/search").queryParam("query", "Lapua 6.5 Creedmoor").build())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri(uriBuilder -> uriBuilder.path("/cases/search").queryParam("query", "Lapua 6.5 Creedmoor").build())
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -76,11 +85,15 @@ public class CaseControllerTest {
     @Test
     void getCaseById() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedCase = caseRepository.save(createTestCase(userId)).block();
 
-        webTestClient.mutateWith(jwt).get().uri("/cases/{id}", savedCase.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/cases/{id}", savedCase.id())
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -92,9 +105,13 @@ public class CaseControllerTest {
     @Test
     void getCaseByIdNotFound() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/cases/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/cases/999")
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -103,11 +120,15 @@ public class CaseControllerTest {
     @Test
     void createCase() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var casing = createTestCase(userId);
 
-        webTestClient.mutateWith(jwt).post().uri("/cases")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .post()
+                .uri("/cases")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(casing), Case.class)
                 .exchange()
@@ -127,14 +148,17 @@ public class CaseControllerTest {
     @Test
     void createCaseInvalidInput() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidCase = new Case(null, userId, "", "", null, 
-                of(-1, getCurrency("CAD")), 
+        var invalidCase = new Case(null, userId, "", "", null,
+                of(-1, getCurrency("CAD")),
                 getQuantity(-1, ONE));
 
-        webTestClient.mutateWith(jwt).post().uri("/cases")
-                .contentType(APPLICATION_JSON)
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .post()
+                .uri("/cases")
+                .header("Authorization", "Bearer " + userId)
                 .body(just(invalidCase), Case.class)
                 .exchange()
                 .expectStatus().isBadRequest()
@@ -151,7 +175,6 @@ public class CaseControllerTest {
     @Test
     void updateCase() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedCase = caseRepository.save(createTestCase(userId)).block();
 
@@ -164,7 +187,12 @@ public class CaseControllerTest {
                 of(99.99, getCurrency("CAD")),
                 getQuantity(50, ONE));
 
-        webTestClient.mutateWith(jwt).put().uri("/cases/{id}", savedCase.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .put()
+                .uri("/cases/{id}", savedCase.id())
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(updatedCase), Case.class)
                 .exchange()
@@ -184,11 +212,15 @@ public class CaseControllerTest {
     @Test
     void updateCaseNotFound() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var casing = createTestCase(userId);
 
-        webTestClient.mutateWith(jwt).put().uri("/cases/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .put()
+                .uri("/cases/999")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(casing), Case.class)
                 .exchange()
@@ -198,17 +230,24 @@ public class CaseControllerTest {
     @Test
     void deleteCase() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedCase = caseRepository.save(createTestCase(userId)).block();
 
-        webTestClient.mutateWith(jwt)
-                .delete().uri("/cases/{id}", savedCase.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:delete")))
+                .delete()
+                .uri("/cases/{id}", savedCase.id())
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNoContent();
 
-        webTestClient.mutateWith(jwt)
-                .get().uri("/cases/{id}", savedCase.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/cases/{id}", savedCase.id())
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -216,9 +255,13 @@ public class CaseControllerTest {
     @Test
     void deleteCaseNotFound() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).delete().uri("/cases/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:delete")))
+                .delete()
+                .uri("/cases/999")
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
     }

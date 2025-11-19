@@ -7,29 +7,21 @@ import java.util.List;
 
 import javax.measure.Quantity;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
-import org.springframework.lang.NonNull;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.zhoozhoo.loaddev.common.jackson.QuantityModuleSupport;
 import io.r2dbc.postgresql.codec.Json;
 import systems.uom.ucum.format.UCUMFormat;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
- * R2DBC converters for {@link Quantity} types.
+ * R2DBC converters for {@link Quantity} types to/from PostgreSQL JSONB.
  * <p>
- * Provides bidirectional conversion between {@link Quantity} objects and PostgreSQL JSONB columns.
- * Standard JSON format (writer) stores the quantity fields explicitly, e.g., {"value":150,"unit":"[gr]","scale":"ABSOLUTE"}.
- * Backward compatibility: legacy records shaped as {"quantity":"150 gr"} are still readable via a fallback parser.
- * </p>
- * <p>
- * Example JSON format (new): {@code {"value": 150, "unit": "[gr]", "scale": "ABSOLUTE"}}
- * Example JSON format (legacy): {@code {"quantity": "150 gr"}}
- * </p>
+ * Format: {@code {"value": 150, "unit": "[gr]", "scale": "ABSOLUTE"}}
  *
  * @author Zhubin Salehi
  */
@@ -39,9 +31,9 @@ public class R2dbcConverters {
     private static final ObjectMapper OBJECT_MAPPER = QuantityModuleSupport.newObjectMapperWithQuantityModule();
 
     /**
-     * Provides all quantity converters for R2DBC configuration.
+     * Quantity converters for R2DBC configuration.
      *
-     * @return list of converters for reading and writing Quantity objects
+     * @return list of converters
      */
     public static List<Object> getConverters() {
         var converters = new ArrayList<>();
@@ -52,11 +44,7 @@ public class R2dbcConverters {
     }
 
     /**
-     * Converts a {@link Quantity} to PostgreSQL JSONB format for database storage.
-     * <p>
-     * The Quantity is serialized to a simple JSON object containing the formatted
-     * quantity string (e.g., {"quantity": "150 gr"}).
-     * </p>
+     * Converts {@link Quantity} to PostgreSQL JSONB.
      */
     @WritingConverter
     public static class QuantityToJsonConverter implements Converter<Quantity<?>, Json> {
@@ -69,10 +57,7 @@ public class R2dbcConverters {
     }
 
     /**
-     * Converts PostgreSQL JSONB to a {@link Quantity} object.
-     * <p>
-     * Example input: {@code {"value": 150, "unit": "[gr]"}}
-     * </p>
+     * Converts PostgreSQL JSONB to {@link Quantity}.
      */
     @ReadingConverter
     public static class JsonToQuantityConverter implements Converter<Json, Quantity<?>> {
@@ -81,7 +66,7 @@ public class R2dbcConverters {
         public Quantity<?> convert(@NonNull Json source) {
             try {
                 return OBJECT_MAPPER.readValue(source.asString(), Quantity.class);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new IllegalArgumentException("Failed to parse Quantity JSON: " + source.asString(), e);
             }
         }

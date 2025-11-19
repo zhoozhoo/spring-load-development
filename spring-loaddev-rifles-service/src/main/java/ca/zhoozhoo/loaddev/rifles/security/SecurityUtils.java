@@ -7,13 +7,9 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 /**
- * Utility class for security-related operations in the rifles service.
+ * Security utility for extracting user information from JWT tokens.
  * <p>
- * Provides helper methods for extracting security context information, particularly
- * the current authenticated user's ID from JWT tokens. This utility supports reactive
- * security context access for non-blocking operations using Java 25 enhanced pattern
- * matching for cleaner code.
- * </p>
+ * Provides reactive access to security context for non-blocking operations.
  *
  * @author Zhubin Salehi
  */
@@ -21,13 +17,9 @@ import reactor.core.publisher.Mono;
 public class SecurityUtils {
 
     /**
-     * Retrieves the current authenticated user's ID from the reactive security context.
-     * <p>
-     * Uses Java 25 enhanced instanceof pattern matching for cleaner type checking
-     * and variable extraction from JWT principals.
-     * </p>
+     * Retrieves the current authenticated user's ID from JWT subject claim.
      *
-     * @return Mono containing the user ID from the JWT subject claim
+     * @return Mono containing the user ID
      */
     public Mono<String> getCurrentUserId() {
         return ReactiveSecurityContextHolder.getContext()

@@ -13,12 +13,7 @@ import org.springframework.transaction.ReactiveTransactionManager;
 import io.r2dbc.spi.ConnectionFactory;
 
 /**
- * Configuration class for R2DBC (Reactive Relational Database Connectivity).
- * <p>
- * This configuration enables R2DBC repositories and provides a reactive transaction manager
- * for managing database transactions in a non-blocking, reactive manner with PostgreSQL.
- * It also registers custom converters for handling {@link javax.measure.Quantity} types.
- * </p>
+ * R2DBC configuration for reactive PostgreSQL with {@link javax.measure.Quantity} converters.
  *
  * @author Zhubin Salehi
  */
@@ -27,10 +22,10 @@ import io.r2dbc.spi.ConnectionFactory;
 public class R2dbcConfig {
 
     /**
-     * Configures a reactive transaction manager for R2DBC.
+     * Reactive transaction manager for R2DBC.
      *
      * @param connectionFactory the R2DBC connection factory
-     * @return a reactive transaction manager
+     * @return reactive transaction manager
      */
     @Bean
     public ReactiveTransactionManager transactionManager(ConnectionFactory connectionFactory) {
@@ -38,14 +33,9 @@ public class R2dbcConfig {
     }
 
     /**
-     * Registers custom converters for R2DBC.
-     * <p>
-     * This includes converters for {@link javax.measure.Quantity} types to/from
-     * PostgreSQL JSONB columns, enabling seamless storage and retrieval of
-     * measurement objects with their units.
-     * </p>
+     * Custom converters for {@link javax.measure.Quantity} types to/from PostgreSQL JSONB.
      *
-     * @param connectionFactory the R2DBC connection factory to determine the dialect
+     * @param connectionFactory the R2DBC connection factory
      * @return custom conversions configuration
      */
     @Bean

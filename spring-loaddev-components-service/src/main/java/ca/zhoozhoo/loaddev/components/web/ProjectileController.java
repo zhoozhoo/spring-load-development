@@ -43,12 +43,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * REST controller for managing projectile (bullet) components using JSR-385 and JSR-354 units.
+ * REST controller for projectile components with JSR-385/JSR-354.
  * <p>
- * This controller provides endpoints for CRUD operations on projectile data, including
- * full-text search capabilities. All endpoints are secured with OAuth2 authentication
- * and enforce user-based access control for multi-tenant data isolation.
- * Projectile data uses JSR-385 for type-safe mass measurements and JSR-354 for currency handling.
+ * OAuth2-secured CRUD operations with full-text search and multi-tenant isolation.
  * </p>
  *
  * @author Zhubin Salehi

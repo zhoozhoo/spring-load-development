@@ -180,9 +180,9 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
         // Accept either 61 or 61.0 depending on Jackson numeric formatting
         assertThat(textContent.text())
             .satisfies(s -> assertThat(s).containsAnyOf(
-                "\"barrelLength\":{\"value\":61.0,\"unit\":\"cm\"}",
-                "\"barrelLength\":{\"value\":61,\"unit\":\"cm\"}"));
-        assertThat(textContent.text()).contains("\"freeBore\":{\"value\":0.25,\"unit\":\"cm\"}");
+                "\"barrelLength\":{\"value\":61.0,\"unit\":\"cm\",\"scale\":\"ABSOLUTE\"}",
+                "\"barrelLength\":{\"value\":61,\"unit\":\"cm\",\"scale\":\"ABSOLUTE\"}"));
+        assertThat(textContent.text()).contains("\"freeBore\":{\"value\":0.25,\"unit\":\"cm\",\"scale\":\"ABSOLUTE\"}");
 
         // Restore original dispatcher for other tests
         mockRiflesServer.setDispatcher(createRiflesDispatcher());

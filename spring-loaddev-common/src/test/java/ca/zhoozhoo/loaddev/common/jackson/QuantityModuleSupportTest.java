@@ -8,7 +8,7 @@ import java.io.StringWriter;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Tests for {@link QuantityModuleSupport} and auto-discovery registration path.
@@ -27,8 +27,7 @@ class QuantityModuleSupportTest {
 
         @Test
         void registerOnExistingMapper_shouldSerializeUnit() throws Exception {
-            var mapper = new ObjectMapper();
-            QuantityModuleSupport.register(mapper);
+            var mapper = QuantityModuleSupport.register(new JsonMapper());
             var w = new StringWriter();
             mapper.writeValue(w, METER);
             assertEquals("\"m\"", w.toString());
@@ -46,9 +45,12 @@ class QuantityModuleSupportTest {
 
         @Test
         void findAndRegisterModules_shouldDiscoverQuantityModule() throws Exception {
-            ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+                var mapper = new JsonMapper()
+                    .rebuild()
+                    .findAndAddModules()
+                    .build();
             // Some environments may load additional modules that precede ours; explicitly re-register to ensure override.
-            mapper.registerModule(new QuantityModule());
+            mapper = mapper.rebuild().addModule(new QuantityModule()).build();
             assertEquals("\"m\"", mapper.writeValueAsString(METER));
         }
     }

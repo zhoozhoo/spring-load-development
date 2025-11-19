@@ -1,4 +1,4 @@
-package ca.zhoozhoo.loaddev.components.validation;
+package ca.zhoozhoo.loaddev.common.validation;
 
 import javax.measure.Quantity;
 
@@ -24,6 +24,12 @@ public class PositiveQuantityValidator implements ConstraintValidator<Positive, 
 
     @Override
     public boolean isValid(Quantity<?> value, ConstraintValidatorContext context) {
-        return value == null ? true : value.getValue().doubleValue() > 0.0;
+        // null values are valid - use @NotNull for null checking
+        if (value == null) {
+            return true;
+        }
+
+        // Check if the quantity value is positive
+        return value.getValue().doubleValue() > 0.0;
     }
 }

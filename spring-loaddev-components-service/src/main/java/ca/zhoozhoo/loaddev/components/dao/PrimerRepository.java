@@ -9,12 +9,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Reactive repository for managing {@link Primer} entities.
- * <p>
- * Provides reactive data access operations for primer components including
- * multi-tenant filtering by owner ID and full-text search capabilities using
- * PostgreSQL's text search features.
- * </p>
+ * Reactive repository for Primer entities with multi-tenant filtering and PostgreSQL full-text search.
  *
  * @author Zhubin Salehi
  */

@@ -1,18 +1,17 @@
 package ca.zhoozhoo.loaddev.loads.config;
 
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -27,9 +26,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import reactor.core.publisher.Mono;
 
 /**
- * Security configuration for the loads service.
- * Configures WebFlux security with OAuth2 resource server support.
- * This configuration is active in all profiles except 'test'.
+ * OAuth2 resource server security configuration (active in non-test profiles).
  * 
  * @author Zhubin Salehi
  */
@@ -37,15 +34,13 @@ import reactor.core.publisher.Mono;
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
 @Profile("!test")
-public class SecurityConfiguration {
+public class SecurityConfig {
 
     /**
-     * Configures the security filter chain for the application.
-     * Permits access to actuator endpoints and requires authentication for all
-     * other requests.
+     * Security filter chain with public actuator/swagger access.
      *
      * @param http the ServerHttpSecurity to configure
-     * @return the configured SecurityWebFilterChain
+     * @return configured SecurityWebFilterChain
      */
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
@@ -65,10 +60,9 @@ public class SecurityConfiguration {
     }
 
     /**
-     * Creates a JWT authentication converter that extracts authorities from
-     * Keycloak permissions.
+     * JWT authentication converter extracting authorities from Keycloak permissions.
      *
-     * @return a converter that transforms JWT tokens into authentication objects
+     * @return converter for JWT to authentication
      */
     @Bean
     Converter<Jwt, Mono<AbstractAuthenticationToken>> jwtAuthenticationConverter() {
@@ -81,45 +75,37 @@ public class SecurityConfiguration {
     }
 
     /**
-     * Custom converter to extract granted authorities from Keycloak JWT tokens.
-     * Processes the 'authorization' claim and converts permissions into
-     * GrantedAuthority objects.
-     * The format of the granted authority is "resourceName:scope".
-     * <p>
-     * Uses Java 25 enhanced pattern matching for cleaner type checks and casts.
-     * </p>
+     * Extracts Keycloak permissions as GrantedAuthority objects (format: "resourceName:scope").
      */
     static class KeycloakPermissionsConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
         @Override
         public Collection<GrantedAuthority> convert(@NonNull Jwt jwt) {
-            // Use pattern matching to safely extract and validate authorization claim
-            if (!(jwt.getClaims().get("authorization") instanceof Map<?, ?> authorization)) {
+            var authorization = jwt.getClaimAsMap("authorization");
+            if (authorization == null) {
                 return emptyList();
             }
 
-            // Use pattern matching for permissions extraction
-            if (!(authorization.get("permissions") instanceof List<?> permissions)) {
+            if (!(authorization.get("permissions") instanceof List<?> rawPermissions)) {
                 return emptyList();
             }
 
             // Convert Keycloak permissions to Spring Security GrantedAuthorities with enhanced pattern matching
-            return permissions.stream()
+            return rawPermissions.stream()
                     .filter(permission -> permission instanceof Map<?, ?>)
                     .map(permission -> (Map<?, ?>) permission)
-                    .filter(permission -> permission.get("rsname") instanceof String)
+                    .filter(permission -> permission.get("rsname") != null)
                     .flatMap(permission -> {
-                        // Pattern match for scopes collection
-                        if (!(permission.get("scopes") instanceof Collection<?> scopes)) {
-                            return Stream.empty();
-                        }
-
-                        return scopes.stream()
-                                .filter(scope -> scope instanceof String)
-                                .map(scope -> "%s:%s".formatted(permission.get("rsname"), scope))
-                                .map(SimpleGrantedAuthority::new);
+                        return switch (permission.get("scopes")) {
+                            case Collection<?> rawScopes -> rawScopes.stream()
+                                    .filter(scope -> scope instanceof String)
+                                    .map(scope -> "%s:%s".formatted(permission.get("rsname").toString(), scope))
+                                    .map(SimpleGrantedAuthority::new);
+                            case null, default -> Stream.empty();
+                        };
                     })
-                    .collect(toList());
+                    .map(authority -> (GrantedAuthority) authority)
+                    .toList();
         }
     }
 }

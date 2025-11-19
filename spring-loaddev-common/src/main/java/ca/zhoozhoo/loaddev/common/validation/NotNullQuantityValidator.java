@@ -1,4 +1,4 @@
-package ca.zhoozhoo.loaddev.loads.validation;
+package ca.zhoozhoo.loaddev.common.validation;
 
 import javax.measure.Quantity;
 

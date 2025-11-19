@@ -45,15 +45,15 @@ class CurrentUserMethodArgumentResolverTest {
     @Test
     void resolveArgument_withJwtPrincipal_shouldReturnUserId() throws NoSuchMethodException {
         create(resolver.resolveArgument(
-                        new MethodParameter(TestController.class.getMethod("testMethod", String.class), 0),
-                        null,
-                        from(get("/").build())
-                                .mutate()
-                                .principal(Mono.just(new JwtAuthenticationToken(Jwt.withTokenValue("token")
-                                        .header("alg", "none")
-                                        .subject("user456")
-                                        .build())))
-                                .build()))
+                new MethodParameter(TestController.class.getMethod("testMethod", String.class), 0),
+                null,
+                from(get("/").build())
+                        .mutate()
+                        .principal(Mono.just(new JwtAuthenticationToken(Jwt.withTokenValue("token")
+                                .header("alg", "none")
+                                .subject("user456")
+                                .build())))
+                        .build()))
                 .expectNext("user456")
                 .verifyComplete();
     }
@@ -61,21 +61,21 @@ class CurrentUserMethodArgumentResolverTest {
     @Test
     void resolveArgument_withNonJwtPrincipal_shouldReturnEmpty() throws NoSuchMethodException {
         create(resolver.resolveArgument(
-                        new MethodParameter(TestController.class.getMethod("testMethod", String.class), 0),
-                        null,
-                        from(get("/").build())
-                                .mutate()
-                                .principal(Mono.just(new TestingAuthenticationToken("user", "password")))
-                                .build()))
+                new MethodParameter(TestController.class.getMethod("testMethod", String.class), 0),
+                null,
+                from(get("/").build())
+                        .mutate()
+                        .principal(Mono.just(new TestingAuthenticationToken("user", "password")))
+                        .build()))
                 .verifyComplete();
     }
 
     @Test
     void resolveArgument_withNoPrincipal_shouldReturnEmpty() throws NoSuchMethodException {
         create(resolver.resolveArgument(
-                        new MethodParameter(TestController.class.getMethod("testMethod", String.class), 0),
-                        null,
-                        from(get("/").build())))
+                new MethodParameter(TestController.class.getMethod("testMethod", String.class), 0),
+                null,
+                from(get("/").build())))
                 .verifyComplete();
     }
 

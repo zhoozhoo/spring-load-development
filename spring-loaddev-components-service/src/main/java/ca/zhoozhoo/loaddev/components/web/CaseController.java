@@ -43,12 +43,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * REST controller for managing cartridge case components using JSR-385 and JSR-354 units.
+ * REST controller for cartridge case components with JSR-385/JSR-354.
  * <p>
- * This controller provides endpoints for CRUD operations on case data with JSR-385 Units of
- * Measurement for quantity per box and JSR-354 Money and Currency API for cost handling.
- * All endpoints include full-text search capabilities, are secured with OAuth2 authentication,
- * and enforce user-based access control for multi-tenant data isolation.
+ * OAuth2-secured CRUD operations with full-text search and multi-tenant isolation.
  * </p>
  *
  * @author Zhubin Salehi

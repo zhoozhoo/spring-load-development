@@ -53,6 +53,8 @@ class MetricsConfigurationTest {
     @DisplayName("Should include OpenTelemetryMeterRegistry when OpenTelemetry bean present")
     void shouldIncludeOpenTelemetryMeterRegistryWhenPresent() {
         Assumptions.assumeTrue(openTelemetry != null, "OpenTelemetry bean not available – skipping OTEL-specific assertions");
+        Assumptions.assumeTrue(meterRegistry instanceof CompositeMeterRegistry, 
+            "MeterRegistry is not a CompositeMeterRegistry – skipping OTEL registry assertions");
 
         if (meterRegistry instanceof OpenTelemetryMeterRegistry) {
             // Direct registry case

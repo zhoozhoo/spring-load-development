@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
@@ -28,11 +28,9 @@ import reactor.core.publisher.Mono;
 /**
  * Security configuration for the rifles service.
  * <p>
- * Configures WebFlux security with OAuth2 resource server support, JWT validation,
- * and role-based access control. This configuration extracts roles from Keycloak
- * JWT tokens (both realm roles and client-specific roles) and converts them to
- * Spring Security authorities. It is active in all profiles except 'test'.
- * </p>
+ * Configures OAuth2 resource server with JWT validation and Keycloak permission
+ * extraction. Converts Keycloak permissions to Spring Security authorities.
+ * Active in all profiles except 'test'.
  *
  * @author Zhubin Salehi
  */
@@ -43,9 +41,8 @@ import reactor.core.publisher.Mono;
 public class SecurityConfiguration {
 
     /**
-     * Configures the security filter chain for the application.
-     * Permits access to actuator endpoints and requires authentication for all
-     * other requests.
+     * Configures security filter chain with public actuator/docs access
+     * and authenticated access for all other endpoints.
      *
      * @param http the ServerHttpSecurity to configure
      * @return the configured SecurityWebFilterChain
@@ -53,7 +50,7 @@ public class SecurityConfiguration {
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
-                .authorizeExchange(exchanges -> exchanges
+                .authorizeExchange(authorize -> authorize
                         .pathMatchers(
                                 "/actuator/**",
                                 "/swagger-ui.html",
@@ -68,10 +65,9 @@ public class SecurityConfiguration {
     }
 
     /**
-     * Creates a JWT authentication converter that extracts authorities from
-     * Keycloak permissions.
+     * JWT authentication converter that extracts authorities from Keycloak permissions.
      *
-     * @return a converter that transforms JWT tokens into authentication objects
+     * @return converter that transforms JWT tokens into authentication objects
      */
     @Bean
     Converter<Jwt, Mono<AbstractAuthenticationToken>> jwtAuthenticationConverter() {
@@ -84,10 +80,8 @@ public class SecurityConfiguration {
     }
 
     /**
-     * Custom converter to extract granted authorities from Keycloak JWT tokens.
-     * Processes the 'authorization' claim and converts permissions into
-     * GrantedAuthority objects.
-     * The format of the granted authority is "resourceName:scope".
+     * Extracts granted authorities from Keycloak JWT 'authorization' claim.
+     * Authority format: "resourceName:scope".
      */
     static class KeycloakPermissionsConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
@@ -104,8 +98,8 @@ public class SecurityConfiguration {
 
             // Convert Keycloak permissions to Spring Security GrantedAuthorities
             return rawPermissions.stream()
-                    .filter(perm -> perm instanceof Map<?, ?>)
-                    .map(perm -> (Map<?, ?>) perm)
+                    .filter(permission -> permission instanceof Map<?, ?>)
+                    .map(permission -> (Map<?, ?>) permission)
                     .filter(permission -> permission.get("rsname") != null)
                     .flatMap(permission -> {                        
                         return switch (permission.get("scopes")) {

@@ -5,13 +5,9 @@ import javax.measure.quantity.Length;
 import javax.measure.quantity.Mass;
 
 /**
- * Data Transfer Object representing a reloading load aligned with JSR-385.
+ * Reloading load specifications using JSR-385 {@link Quantity} types.
  * <p>
- * Mirrors the load microservice record structure using {@link Quantity} types for
- * bullet weight and cartridge measurements (distance from lands, case overall length,
- * neck tension). Units are embedded in each Quantity instance for type-safe handling
- * without a separate measurementUnits field (removed during JSR-385 migration).
- * </p>
+ * Units are embedded in Quantity instances for type-safe measurements.
  *
  * @author Zhubin Salehi
  */

@@ -7,12 +7,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Reactive repository interface for {@link Rifle} entity operations.
+ * Reactive repository for {@link Rifle} entity operations.
  * <p>
- * Provides CRUD operations and custom query methods for rifle firearm data,
- * supporting reactive, non-blocking database access with owner-based filtering
- * for multi-tenant data isolation.
- * </p>
+ * Provides CRUD operations with owner-based filtering for multi-tenant data isolation.
  *
  * @author Zhubin Salehi
  */

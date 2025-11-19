@@ -19,13 +19,19 @@ eureka:
     enabled: false
 
 management:
+  logging:
+    export:
+      otlp:
+        enabled: false
   otlp:
     metrics:
       export:
         enabled: false
   tracing:
-    enabled: false
+    export:
+      enabled: false
 
 otel:
-  sdk:
-    disabled: true
+  instrumentation:
+    spring-webflux:
+      enabled: false

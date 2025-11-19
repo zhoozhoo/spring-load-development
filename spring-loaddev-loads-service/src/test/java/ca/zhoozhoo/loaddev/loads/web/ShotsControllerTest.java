@@ -19,9 +19,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -109,8 +110,11 @@ public class ShotsControllerTest {
         createAndSaveShot(group, 2800.0);
         createAndSaveShot(group, 2810.0);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .get().uri("/shots/group/" + group.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("shots:view")))
+                .get()
+                .uri("/shots/group/" + group.id())
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -124,8 +128,11 @@ public class ShotsControllerTest {
         var userId = randomUUID().toString();
         var shot = createAndSaveShot(createAndSaveGroup(userId), 2800.0);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .get().uri("/shots/" + shot.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("shots:view")))
+                .get()
+                .uri("/shots/" + shot.id())
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -145,8 +152,11 @@ public class ShotsControllerTest {
         @SuppressWarnings("unchecked")
         var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(Units.SECOND);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .post().uri("/shots")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("shots:edit")))
+                .post()
+                .uri("/shots")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .bodyValue(new Shot(null, userId, groupId, getQuantity(2800.0, feetPerSecond)))
                 .exchange()
@@ -168,8 +178,11 @@ public class ShotsControllerTest {
         @SuppressWarnings("unchecked")
         var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(Units.SECOND);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .put().uri("/shots/" + shot.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("shots:edit")))
+                .put()
+                .uri("/shots/" + shot.id())
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .bodyValue(new Shot(shot.id(), shot.ownerId(), shot.groupId(), getQuantity(2850.0, feetPerSecond)))
                 .exchange()
@@ -184,13 +197,19 @@ public class ShotsControllerTest {
         var userId = randomUUID().toString();
         var shot = createAndSaveShot(createAndSaveGroup(userId), 2800.0);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .delete().uri("/shots/" + shot.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("shots:delete")))
+                .delete()
+                .uri("/shots/" + shot.id())
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNoContent();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .get().uri("/shots/" + shot.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("shots:view")))
+                .get()
+                .uri("/shots/" + shot.id())
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -200,8 +219,11 @@ public class ShotsControllerTest {
     public void getShotsByNonExistentGroup() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .get().uri("/shots/group/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("shots:view")))
+                .get()
+                .uri("/shots/group/999")
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -219,8 +241,11 @@ public class ShotsControllerTest {
         createAndSaveShot(group, 2810.0);
         createAndSaveShot(group, 2805.0);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .get().uri("/shots/group/" + group.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("shots:view")))
+                .get()
+                .uri("/shots/group/" + group.id())
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -240,8 +265,11 @@ public class ShotsControllerTest {
     public void getShotByIdNotFound() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .get().uri("/shots/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("shots:view")))
+                .get()
+                .uri("/shots/999")
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -255,8 +283,11 @@ public class ShotsControllerTest {
         @SuppressWarnings("unchecked")
         var feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(Units.SECOND);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .put().uri("/shots/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("shots:edit")))
+                .put()
+                .uri("/shots/999")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .bodyValue(new Shot(999L, userId, 1L, getQuantity(2800.0, feetPerSecond)))
                 .exchange()
@@ -268,8 +299,11 @@ public class ShotsControllerTest {
     public void deleteShotNotFound() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .delete().uri("/shots/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("shots:delete")))
+                .delete()
+                .uri("/shots/999")
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
     }

@@ -7,14 +7,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import io.micrometer.observation.ObservationRegistry;
 import io.modelcontextprotocol.json.McpJsonMapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Configuration class for Model Context Protocol (MCP) server.
- * Provides beans for web client configuration and MCP JSON mapper customization.
+ * MCP server configuration for web client and JSON mapper.
  * <p>
- * Note: Tool registration is handled automatically by MCP auto-configuration
- * which discovers {@code @McpTool} annotated methods.
+ * Tool registration is handled automatically by MCP auto-configuration.
  * 
  * @author Zhubin Salehi
  */
@@ -22,10 +20,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class McpServerConfig {
 
     /**
-     * Creates a WebClient for Keycloak authentication server communication.
-     * Configured with observation support for monitoring and metrics.
+     * WebClient for Keycloak authentication with observation support.
      *
-     * @param observationRegistry registry for collecting metrics and traces
+     * @param observationRegistry registry for metrics and traces
      * @return configured WebClient instance
      */
     @Bean
@@ -34,8 +31,7 @@ public class McpServerConfig {
     }
 
     /**
-     * Creates an ObservationRegistry for metrics and tracing.
-     * Used for monitoring WebClient operations and other observable components.
+     * ObservationRegistry for metrics and tracing.
      *
      * @return new ObservationRegistry instance
      */
@@ -45,24 +41,18 @@ public class McpServerConfig {
     }
 
     /**
-     * Customizes the MCP JSON mapper to use the Spring-managed ObjectMapper.
+     * MCP JSON mapper using Spring-managed JsonMapper (Jackson 3).
      * <p>
-     * This is <b>critical</b> for ensuring all registered Jackson modules
-     * (especially {@link ca.zhoozhoo.loaddev.common.jackson.QuantityModule})
-     * are applied during MCP tool/resource serialization and deserialization.
-     * <p>
-     * Without this customization, the default {@code McpJsonMapper.createDefault()}
-     * would create its own ObjectMapper instance that lacks custom modules,
-     * causing serialization failures when handling {@code Quantity<?>} types
-     * in load and rifle DTOs.
+     * Ensures all Jackson modules (especially {@link ca.zhoozhoo.loaddev.common.jackson.QuantityModule})
+     * are applied during MCP serialization/deserialization of {@code Quantity<?>} types.
      *
-     * @param objectMapper the Spring Boot auto-configured ObjectMapper with all modules
-     * @return customized McpJsonMapper wrapping the Spring ObjectMapper
+     * @param jsonMapper the Spring Boot auto-configured JsonMapper with all modules
+     * @return customized McpJsonMapper
      * @see SpringObjectMapperMcpJsonMapper
      */
     @Bean
     @Primary
-    public McpJsonMapper mcpJsonMapper(ObjectMapper objectMapper) {
-        return new SpringObjectMapperMcpJsonMapper(objectMapper);
+    public McpJsonMapper mcpJsonMapper(JsonMapper jsonMapper) {
+        return new SpringObjectMapperMcpJsonMapper(jsonMapper);
     }
 }

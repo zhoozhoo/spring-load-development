@@ -1,7 +1,7 @@
 package ca.zhoozhoo.loaddev.loads.security;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.MethodParameter;
-import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.reactive.BindingContext;
@@ -11,13 +11,9 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
- * Custom method argument resolver for extracting the current user's ID from JWT tokens.
+ * Resolves {@link CurrentUser} annotated parameters by extracting JWT subject claim.
  * <p>
- * This resolver intercepts controller method parameters annotated with {@link CurrentUser}
- * and automatically injects the authenticated user's ID (extracted from the JWT subject claim).
- * It enables clean and declarative access to the current user context in reactive controllers.
- * Uses Java 25 pattern matching for switch to safely handle different principal types.
- * </p>
+ * Uses Java 25 pattern matching for safe principal type handling.
  *
  * @author Zhubin Salehi
  * @see CurrentUser

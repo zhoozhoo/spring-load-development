@@ -9,10 +9,9 @@ import javax.measure.quantity.Mass;
 import javax.measure.quantity.Speed;
 
 /**
- * Data Transfer Object representing a shooting group with ballistic statistics.
- * <p>
- * Updated to use JSR-385 {@link Quantity} types for powder charge, target range,
- * group size, and velocity statistics, matching loads-service GroupStatisticsDto.
+ * Shooting group with ballistic statistics using JSR-385 {@link Quantity} types.
+ *
+ * @author Zhubin Salehi
  */
 public record GroupDto(
 

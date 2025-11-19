@@ -1,5 +1,7 @@
 package ca.zhoozhoo.loaddev.loads.model;
 
+import static systems.uom.ucum.UCUM.FOOT_INTERNATIONAL;
+
 import java.util.Objects;
 
 import javax.measure.Quantity;
@@ -13,12 +15,14 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ca.zhoozhoo.loaddev.common.jackson.QuantityDeserializer;
+import ca.zhoozhoo.loaddev.common.jackson.QuantitySerializer;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import tech.units.indriya.format.SimpleQuantityFormat;
 import tech.units.indriya.unit.Units;
-
-import static systems.uom.ucum.UCUM.FOOT_INTERNATIONAL;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
  * Represents an individual shot fired as part of a shooting group.
@@ -41,6 +45,8 @@ public record Shot(
         @NotNull(message = "Group ID is required")
         @Column("group_id") Long groupId,
 
+        @JsonSerialize(using = QuantitySerializer.class)
+        @JsonDeserialize(using = QuantityDeserializer.class)
         @Positive(message = "Velocity must be a positive number")
         @Column("velocity") Quantity<Speed> velocity) {
 

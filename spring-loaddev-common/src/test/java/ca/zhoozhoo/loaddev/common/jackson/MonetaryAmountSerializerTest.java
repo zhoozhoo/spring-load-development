@@ -10,8 +10,8 @@ import org.javamoney.moneta.Money;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ser.std.StdSerializer;
 
 /**
  * Unit tests for {@link MonetaryAmountSerializer}.
@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
  */
 class MonetaryAmountSerializerTest {
 
-    private final ObjectMapper mapper = QuantityModuleSupport.newObjectMapperWithQuantityModule();
+    private final JsonMapper mapper = QuantityModuleSupport.newObjectMapperWithQuantityModule();
 
     @Nested
     class SuccessfulSerialization {

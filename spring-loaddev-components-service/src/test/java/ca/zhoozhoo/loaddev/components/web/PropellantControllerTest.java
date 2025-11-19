@@ -14,9 +14,10 @@ import static tech.units.indriya.unit.Units.KILOGRAM;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -44,9 +45,13 @@ public class PropellantControllerTest {
     @Test
     void getAllPropellants() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/propellants")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/propellants")
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -57,11 +62,15 @@ public class PropellantControllerTest {
     @Test
     void searchPropellants() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedPropellant = propellantRepository.save(createTestPropellant(userId)).block();
 
-        webTestClient.mutateWith(jwt).get().uri(uriBuilder -> uriBuilder.path("/propellants/search").queryParam("query", "Hodgdon H4350").build())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri(uriBuilder -> uriBuilder.path("/propellants/search").queryParam("query", "Hodgdon H4350").build())
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -76,11 +85,15 @@ public class PropellantControllerTest {
     @Test
     void getPropellantById() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedPropellant = propellantRepository.save(createTestPropellant(userId)).block();
 
-        webTestClient.mutateWith(jwt).get().uri("/propellants/{id}", savedPropellant.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/propellants/{id}", savedPropellant.id())
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -92,9 +105,13 @@ public class PropellantControllerTest {
     @Test
     void getPropellantByIdNotFound() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/propellants/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/propellants/999")
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -103,11 +120,15 @@ public class PropellantControllerTest {
     @Test
     void createPropellant() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var propellant = createTestPropellant(userId);
 
-        webTestClient.mutateWith(jwt).post().uri("/propellants")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .post()
+                .uri("/propellants")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(propellant), Propellant.class)
                 .exchange()
@@ -126,14 +147,17 @@ public class PropellantControllerTest {
     @Test
     void createPropellantInvalidInput() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidPropellant = new Propellant(null, userId, "", "", 
-                of(-1, getCurrency("CAD")), 
+        var invalidPropellant = new Propellant(null, userId, "", "",
+                of(-1, getCurrency("CAD")),
                 getQuantity(-1, KILOGRAM));
 
-        webTestClient.mutateWith(jwt).post().uri("/propellants")
-                .contentType(APPLICATION_JSON)
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .post()
+                .uri("/propellants")
+                .header("Authorization", "Bearer " + userId)
                 .body(just(invalidPropellant), Propellant.class)
                 .exchange()
                 .expectStatus().isBadRequest()
@@ -149,7 +173,6 @@ public class PropellantControllerTest {
     @Test
     void updatePropellant() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedPropellant = propellantRepository.save(createTestPropellant(userId)).block();
 
@@ -161,7 +184,12 @@ public class PropellantControllerTest {
                 of(49.99, getCurrency("CAD")),
                 getQuantity(0.5, KILOGRAM));
 
-        webTestClient.mutateWith(jwt).put().uri("/propellants/{id}", savedPropellant.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .put()
+                .uri("/propellants/{id}", savedPropellant.id())
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(updatedPropellant), Propellant.class)
                 .exchange()
@@ -180,11 +208,15 @@ public class PropellantControllerTest {
     @Test
     void updatePropellantNotFound() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var propellant = createTestPropellant(userId);
 
-        webTestClient.mutateWith(jwt).put().uri("/propellants/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .put()
+                .uri("/propellants/999")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(propellant), Propellant.class)
                 .exchange()
@@ -194,17 +226,24 @@ public class PropellantControllerTest {
     @Test
     void deletePropellant() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedPropellant = propellantRepository.save(createTestPropellant(userId)).block();
 
-        webTestClient.mutateWith(jwt)
-                .delete().uri("/propellants/{id}", savedPropellant.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .delete()
+                .uri("/propellants/{id}", savedPropellant.id())
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNoContent();
 
-        webTestClient.mutateWith(jwt)
-                .get().uri("/propellants/{id}", savedPropellant.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/propellants/{id}", savedPropellant.id())
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -212,9 +251,13 @@ public class PropellantControllerTest {
     @Test
     void deletePropellantNotFound() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).delete().uri("/propellants/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .delete()
+                .uri("/propellants/999")
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
     }

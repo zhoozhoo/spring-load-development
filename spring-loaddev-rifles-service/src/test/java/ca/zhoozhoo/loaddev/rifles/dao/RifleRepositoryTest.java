@@ -3,8 +3,9 @@ package ca.zhoozhoo.loaddev.rifles.dao;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static reactor.test.StepVerifier.create;
-import static tech.units.indriya.quantity.Quantities.getQuantity;
 import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
+import static tech.units.indriya.quantity.Quantities.getQuantity;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -35,18 +36,16 @@ class RifleRepositoryTest {
     @Test
     void saveRifle() {
         var userId = randomUUID().toString();
-        var savedRifle = rifleRepository
-                .save(new Rifle(null, userId,
-                        "Bergara B-14 HMR",
-                        "Precision rifle with molded mini-chassis",
-                        "6.5 Creedmoor",
-                        getQuantity(24.0, INCH_INTERNATIONAL),
-                        "Heavy #5",
-                        "1:8",
-                        "6 Groove",
-                        getQuantity(0.155, INCH_INTERNATIONAL)));
 
-        create(savedRifle)
+        create(rifleRepository.save(new Rifle(null, userId,
+                "Bergara B-14 HMR",
+                "Precision rifle with molded mini-chassis",
+                "6.5 Creedmoor",
+                getQuantity(24.0, INCH_INTERNATIONAL),
+                "Heavy #5",
+                "1:8",
+                "6 Groove",
+                getQuantity(0.155, INCH_INTERNATIONAL))))
                 .assertNext(r -> {
                     assertThat(r.id()).isNotNull();
                     assertThat(r.ownerId()).isEqualTo(userId);
@@ -96,19 +95,17 @@ class RifleRepositoryTest {
     @Test
     void updateRifle() {
         var userId = randomUUID().toString();
-        var savedRifle = rifleRepository
-                .save(new Rifle(null, userId,
-                        "Custom 700",
-                        "Remington 700 action factory configuration",
-                        ".308 Winchester",
-                        getQuantity(24.0, INCH_INTERNATIONAL),
-                        "Sendero",
-                        "1:10",
-                        "6 Groove",
-                        getQuantity(0.157, INCH_INTERNATIONAL)))
-                .block();
+        var savedRifle = rifleRepository.save(new Rifle(null, userId,
+                "Custom 700",
+                "Remington 700 action factory configuration",
+                ".308 Winchester",
+                getQuantity(24.0, INCH_INTERNATIONAL),
+                "Sendero",
+                "1:10",
+                "6 Groove",
+                getQuantity(0.157, INCH_INTERNATIONAL))).block();
 
-        var updatedRifle = rifleRepository.save(new Rifle(savedRifle.id(), userId,
+        create(rifleRepository.save(new Rifle(savedRifle.id(), userId,
                 "Custom 700 PRS",
                 "Remington 700 with Bartlein barrel and MDT ACC chassis",
                 "6mm Creedmoor",
@@ -116,9 +113,7 @@ class RifleRepositoryTest {
                 "Heavy Palma",
                 "1:7.5",
                 "4 Groove",
-                getQuantity(0.153, INCH_INTERNATIONAL)));
-
-        create(updatedRifle)
+                getQuantity(0.153, INCH_INTERNATIONAL))))
                 .assertNext(r -> {
                     assertThat(r.id()).isEqualTo(savedRifle.id());
                     assertThat(r.name()).isEqualTo("Custom 700 PRS");

@@ -11,7 +11,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.Jwt;
 
-import ca.zhoozhoo.loaddev.loads.config.SecurityConfiguration.KeycloakPermissionsConverter;
+import ca.zhoozhoo.loaddev.loads.config.SecurityConfig.KeycloakPermissionsConverter;
 
 /**
  * Unit tests for SecurityConfiguration.KeycloakPermissionsConverter.

@@ -8,23 +8,21 @@ import java.util.List;
 import javax.measure.Quantity;
 import javax.money.MonetaryAmount;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
-import org.springframework.lang.NonNull;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.zhoozhoo.loaddev.common.jackson.QuantityModuleSupport;
 import io.r2dbc.postgresql.codec.Json;
 import systems.uom.ucum.format.UCUMFormat;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
- * R2DBC converters for JSR-385 {@link Quantity} and JSR-354 {@link MonetaryAmount} types.
+ * R2DBC converters for Quantity and MonetaryAmount to/from PostgreSQL JSONB.
  * <p>
- * Provides bidirectional conversion between domain objects and PostgreSQL JSONB columns.
- * Quantity format (writer): {@code {"value": 150, "unit": "[gr]", "scale": "ABSOLUTE"}}
+ * Quantity format: {@code {"value": 150, "unit": "[gr]", "scale": "ABSOLUTE"}}<br>
  * MonetaryAmount format: {@code {"amount": 45.99, "currency": "USD"}}
  * </p>
  *
@@ -36,9 +34,9 @@ public class R2dbcConverters {
     private static final ObjectMapper OBJECT_MAPPER = QuantityModuleSupport.newObjectMapperWithQuantityModule();
 
     /**
-     * Provides all R2DBC converters for JSR-385 and JSR-354 types.
+     * Returns all R2DBC converters for Quantity and MonetaryAmount.
      *
-     * @return list of converters for reading and writing Quantity and MonetaryAmount objects
+     * @return list of converters
      */
     public static List<Object> getConverters() {
         var converters = new ArrayList<>();
@@ -51,9 +49,9 @@ public class R2dbcConverters {
     }
 
     /**
-     * Converts a {@link Quantity} to PostgreSQL JSONB format.
+     * Converts Quantity to PostgreSQL JSONB.
      * <p>
-     * Example output: {@code {"value": 150, "unit": "[gr]"}}
+     * Example: {@code {"value": 150, "unit": "[gr]"}}
      * </p>
      */
     @WritingConverter
@@ -67,9 +65,9 @@ public class R2dbcConverters {
     }
 
     /**
-     * Converts PostgreSQL JSONB to a {@link Quantity} object.
+     * Converts PostgreSQL JSONB to Quantity.
      * <p>
-     * Example input: {@code {"value": 150, "unit": "[gr]"}}
+     * Example: {@code {"value": 150, "unit": "[gr]"}}
      * </p>
      */
     @ReadingConverter
@@ -79,16 +77,16 @@ public class R2dbcConverters {
         public Quantity<?> convert(@NonNull Json source) {
             try {
                 return OBJECT_MAPPER.readValue(source.asString(), Quantity.class);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new IllegalArgumentException("Failed to parse Quantity JSON: " + source.asString(), e);
             }
         }
     }
 
     /**
-     * Converts a {@link MonetaryAmount} to PostgreSQL JSONB format.
+     * Converts MonetaryAmount to PostgreSQL JSONB.
      * <p>
-     * Example output: {@code {"amount": 45.99, "currency": "USD"}}
+     * Example: {@code {"amount": 45.99, "currency": "USD"}}
      * </p>
      */
     @WritingConverter
@@ -98,16 +96,16 @@ public class R2dbcConverters {
         public Json convert(@NonNull MonetaryAmount source) {
             try {
                 return Json.of(OBJECT_MAPPER.writeValueAsString(source));
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new IllegalArgumentException("Failed to write MonetaryAmount JSON", e);
             }
         }
     }
 
     /**
-     * Converts PostgreSQL JSONB to a {@link MonetaryAmount} object.
+     * Converts PostgreSQL JSONB to MonetaryAmount.
      * <p>
-     * Example input: {@code {"amount": 45.99, "currency": "USD"}}
+     * Example: {@code {"amount": 45.99, "currency": "USD"}}
      * </p>
      */
     @ReadingConverter
@@ -117,7 +115,7 @@ public class R2dbcConverters {
         public MonetaryAmount convert(@NonNull Json source) {
             try {
                 return OBJECT_MAPPER.readValue(source.asString(), MonetaryAmount.class);
-            } catch (JsonProcessingException e) {
+            } catch (JacksonException e) {
                 throw new IllegalArgumentException("Failed to parse MonetaryAmount JSON: %s".formatted(source.asString()) , e);
             }
         }

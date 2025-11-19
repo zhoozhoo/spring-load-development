@@ -18,9 +18,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -77,7 +78,8 @@ public class GroupsControllerTest {
                 .save(new Group(null, ownerId, createAndSaveLoad(ownerId).id(), now(),
                         getQuantity(43.5, GRAIN),
                         getQuantity(100, YARD_INTERNATIONAL),
-                        getQuantity(0.75, INCH_INTERNATIONAL))).block();
+                        getQuantity(0.75, INCH_INTERNATIONAL)))
+                .block();
     }
 
     // ========================================
@@ -99,8 +101,11 @@ public class GroupsControllerTest {
                         getQuantity(0.85, INCH_INTERNATIONAL)))
                 .block();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .get().uri("/groups/load/" + group1.loadId())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("groups:view")))
+                .get()
+                .uri("/groups/load/" + group1.loadId())
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -114,8 +119,11 @@ public class GroupsControllerTest {
         var userId = randomUUID().toString();
         var group = createAndSaveGroup(userId);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .get().uri("/groups/" + group.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("groups:view")))
+                .get()
+                .uri("/groups/" + group.id())
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Group.class)
@@ -124,11 +132,11 @@ public class GroupsControllerTest {
                     assertThat(result.loadId()).isEqualTo(group.loadId());
                     // Compare Quantity values using double comparison
                     assertThat(result.powderCharge().getValue().doubleValue())
-                        .isCloseTo(group.powderCharge().getValue().doubleValue(), within(0.01));
+                            .isCloseTo(group.powderCharge().getValue().doubleValue(), within(0.01));
                     assertThat(result.targetRange().getValue().doubleValue())
-                        .isCloseTo(group.targetRange().getValue().doubleValue(), within(0.01));
+                            .isCloseTo(group.targetRange().getValue().doubleValue(), within(0.01));
                     assertThat(result.groupSize().getValue().doubleValue())
-                        .isCloseTo(group.groupSize().getValue().doubleValue(), within(0.01));
+                            .isCloseTo(group.groupSize().getValue().doubleValue(), within(0.01));
                 });
     }
 
@@ -138,8 +146,11 @@ public class GroupsControllerTest {
         var userId = randomUUID().toString();
         var load = createAndSaveLoad(userId);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .post().uri("/groups")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("groups:edit")))
+                .post()
+                .uri("/groups")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .bodyValue(new Group(null, userId, load.id(), now(),
                         getQuantity(43.5, GRAIN),
@@ -160,8 +171,11 @@ public class GroupsControllerTest {
         var userId = randomUUID().toString();
         var group = createAndSaveGroup(userId);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .put().uri("/groups/" + group.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("groups:edit")))
+                .put()
+                .uri("/groups/" + group.id())
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .bodyValue(new Group(group.id(), group.ownerId(), group.loadId(),
                         now(),
@@ -173,11 +187,11 @@ public class GroupsControllerTest {
                 .expectBody(Group.class)
                 .value(result -> {
                     assertThat(result.powderCharge().getValue().doubleValue())
-                        .isCloseTo(44.0, within(0.01));
+                            .isCloseTo(44.0, within(0.01));
                     assertThat(result.targetRange().getValue().doubleValue())
-                        .isCloseTo(200, within(0.01));
+                            .isCloseTo(200, within(0.01));
                     assertThat(result.groupSize().getValue().doubleValue())
-                        .isCloseTo(0.85, within(0.01));
+                            .isCloseTo(0.85, within(0.01));
                 });
     }
 
@@ -187,13 +201,19 @@ public class GroupsControllerTest {
         var userId = randomUUID().toString();
         var group = createAndSaveGroup(userId);
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .delete().uri("/groups/" + group.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("groups:delete")))
+                .delete()
+                .uri("/groups/" + group.id())
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNoContent();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .get().uri("/groups/" + group.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("groups:view")))
+                .get()
+                .uri("/groups/" + group.id())
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -207,8 +227,11 @@ public class GroupsControllerTest {
     public void getGroupByIdNotFound() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .get().uri("/groups/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("groups:view")))
+                .get()
+                .uri("/groups/999")
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -219,8 +242,11 @@ public class GroupsControllerTest {
     public void updateGroupNotFound() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .put().uri("/groups/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("groups:edit")))
+                .put()
+                .uri("/groups/999")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .bodyValue(new Group(999L, userId, 1L, now(),
                         getQuantity(43.5, GRAIN),
@@ -235,8 +261,11 @@ public class GroupsControllerTest {
     public void deleteGroupNotFound() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .delete().uri("/groups/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("groups:delete")))
+                .delete()
+                .uri("/groups/999")
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -248,30 +277,27 @@ public class GroupsControllerTest {
     @Test
     @DisplayName("[Validation] Should throw exception when powder charge is too high")
     public void createGroupWithInvalidPowderCharge() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new Group(null, "userId", 1L, now(),
-                        getQuantity(200, GRAIN),  // Too high
-                        getQuantity(100, YARD_INTERNATIONAL),
-                        getQuantity(0.75, INCH_INTERNATIONAL)));
+        assertThrows(IllegalArgumentException.class, () -> new Group(null, "userId", 1L, now(),
+                getQuantity(200, GRAIN), // Too high
+                getQuantity(100, YARD_INTERNATIONAL),
+                getQuantity(0.75, INCH_INTERNATIONAL)));
     }
 
     @Test
     @DisplayName("[Validation] Should throw exception when target range is too far")
     public void createGroupWithInvalidTargetRange() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new Group(null, "userId", 1L, now(),
-                        getQuantity(43.5, GRAIN),
-                        getQuantity(5000, YARD_INTERNATIONAL),  // Too far
-                        getQuantity(0.75, INCH_INTERNATIONAL)));
+        assertThrows(IllegalArgumentException.class, () -> new Group(null, "userId", 1L, now(),
+                getQuantity(43.5, GRAIN),
+                getQuantity(5000, YARD_INTERNATIONAL), // Too far
+                getQuantity(0.75, INCH_INTERNATIONAL)));
     }
 
     @Test
     @DisplayName("[Validation] Should throw exception when group date is in the future")
     public void createGroupWithFutureDate() {
-        assertThrows(IllegalArgumentException.class, () ->
-                new Group(null, "userId", 1L, LocalDate.now().plusDays(1),
-                        getQuantity(43.5, GRAIN),
-                        getQuantity(100, YARD_INTERNATIONAL),
-                        getQuantity(0.75, INCH_INTERNATIONAL)));
+        assertThrows(IllegalArgumentException.class, () -> new Group(null, "userId", 1L, LocalDate.now().plusDays(1),
+                getQuantity(43.5, GRAIN),
+                getQuantity(100, YARD_INTERNATIONAL),
+                getQuantity(0.75, INCH_INTERNATIONAL)));
     }
 }

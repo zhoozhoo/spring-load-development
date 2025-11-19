@@ -9,17 +9,18 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
+
+import ca.zhoozhoo.loaddev.common.jackson.QuantityDeserializer;
+import ca.zhoozhoo.loaddev.common.jackson.QuantitySerializer;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * Represents a rifle firearm for ammunition load development using JSR-385 units.
+ * Rifle firearm specifications for ammunition load development.
  * <p>
- * A rifle defines the firearm specifications including name, description, caliber,
- * barrel length, twist rate. These specifications are critical
- * for load development as they affect bullet selection, powder charge, and overall
- * ballistic performance. Each rifle is owned by a specific user for multi-tenant data isolation.
- * Barrel length and free bore use JSR-385 Quantity&lt;Length&gt; for type-safe measurements with embedded units.
- * </p>
+ * Includes caliber, barrel length, twist rate, and free bore measurements using
+ * JSR-385 Quantity types. Each rifle is owned by a specific user for multi-tenant isolation.
  *
  * @author Zhubin Salehi
  */
@@ -38,6 +39,8 @@ public record Rifle(
         @NotBlank(message = "Caliber is required")
         @Column("caliber") String caliber,
 
+        @JsonSerialize(using = QuantitySerializer.class)
+        @JsonDeserialize(using = QuantityDeserializer.class)
         @Column("barrel_length") Quantity<Length> barrelLength,
 
         @Column("barrel_contour") String barrelContour,
@@ -46,18 +49,13 @@ public record Rifle(
 
         @Column("rifling") String rifling,
 
+        @JsonSerialize(using = QuantitySerializer.class)
+        @JsonDeserialize(using = QuantityDeserializer.class)
         @Column("free_bore") Quantity<Length> freeBore) {
 
-    public static final String METRIC = "Metric";
-
-    public static final String IMPERIAL = "Imperial";
-
     /**
-     * Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
-     * <p>
-     * Validates reasonable ranges for rifle specifications using JSR-385 Quantity types.
-     * Uses enhanced pattern matching for improved readability and maintainability.
-     * </p>
+     * Validates rifle specifications:
+     * barrel length (4-50 inches) and free bore (0.001-0.5 inches).
      */
     public Rifle {
         // Validate reasonable barrel length (4 to 50 inches equivalent)

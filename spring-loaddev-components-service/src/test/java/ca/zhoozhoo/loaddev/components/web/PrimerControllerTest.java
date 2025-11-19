@@ -13,9 +13,10 @@ import static tech.units.indriya.quantity.Quantities.getQuantity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -44,9 +45,13 @@ public class PrimerControllerTest {
     @Test
     void getAllPrimers() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/primers")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/primers")
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -57,11 +62,15 @@ public class PrimerControllerTest {
     @Test
     void searchPrimers() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedPrimer = primerRepository.save(createTestPrimer(userId)).block();
 
-        webTestClient.mutateWith(jwt).get().uri(uriBuilder -> uriBuilder.path("/primers/search").queryParam("query", "CCI BR-4").build())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri(uriBuilder -> uriBuilder.path("/primers/search").queryParam("query", "CCI BR-4").build())
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -76,11 +85,15 @@ public class PrimerControllerTest {
     @Test
     void getPrimerById() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedPrimer = primerRepository.save(createTestPrimer(userId)).block();
 
-        webTestClient.mutateWith(jwt).get().uri("/primers/{id}", savedPrimer.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/primers/{id}", savedPrimer.id())
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -92,9 +105,13 @@ public class PrimerControllerTest {
     @Test
     void getPrimerByIdNotFound() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/primers/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/primers/999")
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -103,11 +120,15 @@ public class PrimerControllerTest {
     @Test
     void createPrimer() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var primer = createTestPrimer(userId);
 
-        webTestClient.mutateWith(jwt).post().uri("/primers")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .post()
+                .uri("/primers")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(primer), Primer.class)
                 .exchange()
@@ -127,14 +148,17 @@ public class PrimerControllerTest {
     @Test
     void createPrimerInvalidInput() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var invalidPrimer = new Primer(null, userId, "", "", null,
-                of(-1, getCurrency("CAD")), 
+                of(-1, getCurrency("CAD")),
                 getQuantity(-1, ONE));
 
-        webTestClient.mutateWith(jwt).post().uri("/primers")
-                .contentType(APPLICATION_JSON)
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .post()
+                .uri("/primers")
+                .header("Authorization", "Bearer " + userId)
                 .body(just(invalidPrimer), Primer.class)
                 .exchange()
                 .expectStatus().isBadRequest()
@@ -151,7 +175,6 @@ public class PrimerControllerTest {
     @Test
     void updatePrimer() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedPrimer = primerRepository.save(createTestPrimer(userId)).block();
 
@@ -164,7 +187,12 @@ public class PrimerControllerTest {
                 of(99.99, getCurrency("CAD")),
                 getQuantity(500, ONE));
 
-        webTestClient.mutateWith(jwt).put().uri("/primers/{id}", savedPrimer.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .put()
+                .uri("/primers/{id}", savedPrimer.id())
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(updatedPrimer), Primer.class)
                 .exchange()
@@ -184,11 +212,15 @@ public class PrimerControllerTest {
     @Test
     void updatePrimerNotFound() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var primer = createTestPrimer(userId);
 
-        webTestClient.mutateWith(jwt).put().uri("/primers/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .put()
+                .uri("/primers/999")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(primer), Primer.class)
                 .exchange()
@@ -198,17 +230,24 @@ public class PrimerControllerTest {
     @Test
     void deletePrimer() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedPrimer = primerRepository.save(createTestPrimer(userId)).block();
 
-        webTestClient.mutateWith(jwt)
-                .delete().uri("/primers/{id}", savedPrimer.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .delete()
+                .uri("/primers/{id}", savedPrimer.id())
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNoContent();
 
-        webTestClient.mutateWith(jwt)
-                .get().uri("/primers/{id}", savedPrimer.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/primers/{id}", savedPrimer.id())
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -216,9 +255,13 @@ public class PrimerControllerTest {
     @Test
     void deletePrimerNotFound() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).delete().uri("/primers/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .delete()
+                .uri("/primers/999")
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -234,4 +277,3 @@ public class PrimerControllerTest {
                 getQuantity(1000, ONE));
     }
 }
-

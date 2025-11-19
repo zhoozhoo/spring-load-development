@@ -24,13 +24,7 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
 /**
- * Global exception handler for the components service.
- * <p>
- * This class provides centralized exception handling for all REST controllers in the
- * components service. It handles common exceptions like validation errors, data integrity
- * violations, access denied, and general server errors, returning appropriate HTTP status
- * codes and error messages.
- * </p>
+ * Centralized exception handling returning appropriate HTTP status codes.
  *
  * @author Zhubin Salehi
  */

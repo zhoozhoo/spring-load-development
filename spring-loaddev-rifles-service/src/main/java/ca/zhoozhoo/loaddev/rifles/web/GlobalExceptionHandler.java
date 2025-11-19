@@ -12,12 +12,10 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
 /**
- * Global exception handler for the rifles service.
+ * Global exception handler for REST controllers.
  * <p>
- * This class provides centralized exception handling for all REST controllers in the
- * rifles service. It handles common exceptions like validation errors and number format
- * exceptions, returning appropriate HTTP status codes and error messages.
- * </p>
+ * Handles validation errors and number format exceptions, returning appropriate
+ * HTTP status codes and error messages.
  *
  * @author Zhubin Salehi
  */

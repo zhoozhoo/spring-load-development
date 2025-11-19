@@ -12,27 +12,22 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ca.zhoozhoo.loaddev.common.jackson.MonetaryAmountDeserializer;
+import ca.zhoozhoo.loaddev.common.jackson.MonetaryAmountSerializer;
+import ca.zhoozhoo.loaddev.common.jackson.QuantityDeserializer;
+import ca.zhoozhoo.loaddev.common.jackson.QuantitySerializer;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
- * Represents a propellant component for ammunition reloading using JSR-385 and JSR-354 units.
+ * Propellant component with JSR-385 Quantity and JSR-354 MonetaryAmount.
  * <p>
- * Propellant (smokeless powder) is the combustible substance that generates gas pressure to propel
- * the projectile. This record defines propellant specifications including manufacturer, type
- * (e.g., IMR 4064, H4350), container weight as a JSR-385 Quantity, and cost as a JSR-354
- * MonetaryAmount. The weight is stored using the JSR-385 Units of Measurement API, and the
- * cost uses the JSR-354 Money and Currency API, allowing for type-safe unit conversions,
- * calculations, and currency handling. Propellant selection is critical for achieving desired
- * velocities and pressures safely. Each propellant is owned by a specific user for
- * multi-tenant data isolation.
- * </p>
- * <p>
- * The weight per container and cost are stored in the database as JSONB columns.
- * The JSR-385 Quantity type and JSR-354 MonetaryAmount provide compile-time type safety
- * and runtime unit/currency conversions.
+ * Stores weightPerContainer and cost as PostgreSQL JSONB for type-safe calculations.
+ * Multi-tenant by ownerId.
  * </p>
  *
  * @author Zhubin Salehi
@@ -41,15 +36,26 @@ import jakarta.validation.constraints.PositiveOrZero;
 public record Propellant(
         @Id Long id,
 
-        @JsonIgnore @Column("owner_id") String ownerId,
+        @JsonIgnore
+        @Column("owner_id") String ownerId,
 
-        @NotBlank(message = "Manufacturer is required") @Column("manufacturer") String manufacturer,
+        @NotBlank(message = "Manufacturer is required")
+        @Column("manufacturer") String manufacturer,
 
-        @NotBlank(message = "Type is required") @Column("type") String type,
+        @NotBlank(message = "Type is required")
+        @Column("type") String type,
 
-        @NotNull(message = "Cost is required") @PositiveOrZero(message = "Cost must be non-negative") @Column("cost") MonetaryAmount cost,
+        @JsonSerialize(using = MonetaryAmountSerializer.class)
+        @JsonDeserialize(using = MonetaryAmountDeserializer.class)
+        @NotNull(message = "Cost is required")
+        @PositiveOrZero(message = "Cost must be non-negative")
+        @Column("cost") MonetaryAmount cost,
 
-        @NotNull(message = "Weight per container is required") @Positive(message = "Weight per container must be positive") @Column("weight_per_container") Quantity<Mass> weightPerContainer) {
+        @JsonSerialize(using = QuantitySerializer.class)
+        @JsonDeserialize(using = QuantityDeserializer.class)
+        @NotNull(message = "Weight per container is required")
+        @Positive(message = "Weight per container must be positive")
+        @Column("weight_per_container") Quantity<Mass> weightPerContainer) {
 
     /**
      * Custom equals() excluding ownerId to focus on business equality.

@@ -1,20 +1,17 @@
 package ca.zhoozhoo.loaddev.rifles.config;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.NonNull;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 import org.springframework.web.reactive.result.method.annotation.ArgumentResolverConfigurer;
 
 import ca.zhoozhoo.loaddev.rifles.security.CurrentUserMethodArgumentResolver;
 
 /**
- * Web configuration for the rifles service.
+ * WebFlux configuration for custom argument resolvers.
  * <p>
- * Configures WebFlux custom argument resolvers, specifically registering the
- * {@link CurrentUserMethodArgumentResolver} to enable automatic injection of
- * the current authenticated user ID into controller method parameters annotated
- * with {@link ca.zhoozhoo.loaddev.rifles.security.CurrentUser}.
- * </p>
+ * Registers {@link CurrentUserMethodArgumentResolver} to inject authenticated user IDs
+ * into controller method parameters annotated with {@code @CurrentUser}.
  *
  * @author Zhubin Salehi
  */

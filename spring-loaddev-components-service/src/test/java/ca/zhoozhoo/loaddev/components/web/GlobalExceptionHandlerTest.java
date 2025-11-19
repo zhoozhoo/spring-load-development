@@ -78,10 +78,10 @@ class GlobalExceptionHandlerTest {
     @Test
     void handleValidationException_withMultipleErrors_shouldCombineMessages() throws NoSuchMethodException {
         // given
-        var bindingResult = new BeanPropertyBindingResult(new Object(), "bullet");
-        bindingResult.addError(new FieldError("bullet", "manufacturer", "", false, null, null, "Manufacturer is required"));
-        bindingResult.addError(new FieldError("bullet", "weight", -1.0, false, null, null, "Weight must be positive"));
-        bindingResult.addError(new FieldError("bullet", "cost", -1, false, null, null, "Cost must be positive"));
+        var bindingResult = new BeanPropertyBindingResult(new Object(), "projectile");
+        bindingResult.addError(new FieldError("projectile", "manufacturer", "", false, null, null, "Manufacturer is required"));
+        bindingResult.addError(new FieldError("projectile", "weight", -1.0, false, null, null, "Weight must be positive"));
+        bindingResult.addError(new FieldError("projectile", "cost", -1, false, null, null, "Cost must be positive"));
         
         var exception = new WebExchangeBindException(
                 new MethodParameter(this.getClass().getDeclaredMethod("handleValidationException_withMultipleErrors_shouldCombineMessages"), -1),

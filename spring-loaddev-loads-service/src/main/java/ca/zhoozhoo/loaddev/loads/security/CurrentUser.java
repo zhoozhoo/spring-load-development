@@ -6,20 +6,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Parameter-level annotation for injecting the current authenticated user's ID.
+ * Injects current authenticated user's ID from JWT token.
  * <p>
- * When applied to a controller method parameter of type String, this annotation
- * triggers the {@link CurrentUserMethodArgumentResolver} to extract and inject
- * the user ID (subject claim) from the JWT token of the authenticated user.
- * </p>
- * <p>
- * Example usage:
- * <pre>
- * public Mono&lt;ResponseEntity&lt;Load&gt;&gt; getLoad(@CurrentUser String userId) {
- *     // userId is automatically extracted from JWT
- * }
- * </pre>
- * </p>
+ * Example: {@code public Mono<Load> getLoad(@CurrentUser String userId) { ... }}
  *
  * @author Zhubin Salehi
  * @see CurrentUserMethodArgumentResolver

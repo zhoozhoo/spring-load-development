@@ -1,9 +1,11 @@
 package ca.zhoozhoo.loaddev.loads.model;
 
+import static systems.uom.ucum.UCUM.GRAIN;
+import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
+import static systems.uom.ucum.UCUM.YARD_INTERNATIONAL;
+
 import java.time.LocalDate;
 import java.util.Objects;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.measure.Quantity;
 import javax.measure.format.QuantityFormat;
@@ -14,13 +16,15 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import ca.zhoozhoo.loaddev.common.jackson.QuantityDeserializer;
+import ca.zhoozhoo.loaddev.common.jackson.QuantitySerializer;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import tech.units.indriya.format.SimpleQuantityFormat;
-
-import static systems.uom.ucum.UCUM.GRAIN;
-import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
-import static systems.uom.ucum.UCUM.YARD_INTERNATIONAL;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
  * Represents a shooting group for a specific load configuration.
@@ -46,17 +50,23 @@ public record Group(
         @NotNull(message = "Date is required")
         @Column("date") LocalDate date,
 
+        @JsonSerialize(using = QuantitySerializer.class)
+        @JsonDeserialize(using = QuantityDeserializer.class)
         @NotNull(message = "Powder charge is required")
         @Positive(message = "Powder charge must be positive")
         @Column("powder_charge") Quantity<Mass> powderCharge,
 
+        @JsonSerialize(using = QuantitySerializer.class)
+        @JsonDeserialize(using = QuantityDeserializer.class)
         @NotNull(message = "Target range is required")
         @Positive(message = "Target range must be positive")
         @Column("target_range") Quantity<Length> targetRange,
 
+        @JsonSerialize(using = QuantitySerializer.class)
+        @JsonDeserialize(using = QuantityDeserializer.class)
         @Positive(message = "Group size must be positive")
-        @Column("group_size") Quantity<Length> groupSize
-) {
+        @Column("group_size") Quantity<Length> groupSize) {
+            
     private static final QuantityFormat QUANTITY_FORMAT = SimpleQuantityFormat.getInstance();
 
     /**
