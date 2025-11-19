@@ -45,11 +45,11 @@ All services use **Keycloak UMA (User-Managed Access)** for authorization:
 ## Technology Stack
 
 - **Java 25** with modern features (`var`, static imports, records)
-- **Spring Boot 3.5.6** + **Spring Cloud 2025.0.0**
+- **Spring Boot 4.0.0** + **Spring Cloud 2025.1.0**
 - **Spring Cloud Kubernetes** for native Kubernetes integration (ConfigMap access, service discovery)
 - **WebFlux** for reactive REST APIs (no blocking code)
 - **R2DBC** with PostgreSQL for reactive database access
-- **Spring AI 1.1.0-M3** for MCP server
+- **Spring AI 1.1.0** for MCP server
 - **MapStruct 1.6.3** for DTO mapping (see `GroupStatisticsMapper`)
 - **TestContainers** for integration tests with real database instances (PostgreSQL, R2DBC)
 - **Resilience4J** circuit breaker in API Gateway
@@ -222,7 +222,7 @@ Load test data: `test/load_test_data.sh`
 
 ### CI/CD
 GitHub Actions workflow (`.github/workflows/ci.yml`) runs on push/PR:
-- Java 25 + Maven 4.0.0-rc-4
+- Java 25 + Maven 4.0.0-rc-5
 - Full `mvn package` build
 
 ## Project Conventions
