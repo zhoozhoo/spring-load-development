@@ -14,12 +14,15 @@
     <packaging>jar</packaging>
 
     <dependencies>
+        <!-- Annotations -->
         <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs-annotations</artifactId>
             <version>${spotbugs.version}</version>
             <scope>provided</scope>
         </dependency>
+        
+        <!-- Jackson -->
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
@@ -28,6 +31,8 @@
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
+        
+        <!-- JSR-385 Units of Measurement -->
         <dependency>
             <groupId>javax.measure</groupId>
             <artifactId>unit-api</artifactId>
@@ -53,6 +58,8 @@
             <artifactId>systems-unicode</artifactId>
             <version>${systems.uom.version}</version>
         </dependency>
+        
+        <!-- JSR-354 Money -->
         <dependency>
             <groupId>javax.money</groupId>
             <artifactId>money-api</artifactId>
@@ -63,9 +70,24 @@
             <artifactId>moneta-core</artifactId>
             <version>${org.javamoney.version}</version>
         </dependency>
+        
+        <!-- Validation -->
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+        
+        <!-- Spring Data R2DBC (optional - for converters) -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-r2dbc</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>r2dbc-postgresql</artifactId>
+            <version>${r2dbc-postgresql.version}</version>
+            <optional>true</optional>
         </dependency>
         
         <!-- Test dependencies -->

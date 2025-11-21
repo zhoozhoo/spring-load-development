@@ -9,6 +9,7 @@ import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.r2dbc.connection.R2dbcTransactionManager;
 import org.springframework.transaction.ReactiveTransactionManager;
 
+import ca.zhoozhoo.loaddev.common.r2dbc.R2dbcConverters;
 import io.r2dbc.spi.ConnectionFactory;
 
 /**
