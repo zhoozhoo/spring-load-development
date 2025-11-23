@@ -9,6 +9,8 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import ca.zhoozhoo.loaddev.common.validation.NotNullQuantityValidator;
 import ca.zhoozhoo.loaddev.common.validation.PositiveQuantityValidator;
 import jakarta.validation.Validation;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 /**
  * Bean Validation configuration registering custom Quantity validators.
@@ -31,16 +33,16 @@ public class ValidationConfig {
 
         // Register PositiveQuantityValidator for Quantity types
         constraintMapping
-                .constraintDefinition(jakarta.validation.constraints.Positive.class)
+                .constraintDefinition(Positive.class)
                 .includeExistingValidators(true)
                 .validatedBy(PositiveQuantityValidator.class);
 
         // Register NotNullQuantityValidator for Quantity types
         constraintMapping
-                .constraintDefinition(jakarta.validation.constraints.NotNull.class)
+                .constraintDefinition(NotNull.class)
                 .includeExistingValidators(true)
                 .validatedBy(NotNullQuantityValidator.class);
-        
+
         configuration.addMapping(constraintMapping);
 
         validatorFactoryBean.setConfigurationInitializer(

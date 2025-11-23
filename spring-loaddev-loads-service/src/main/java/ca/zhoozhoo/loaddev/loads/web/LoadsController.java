@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
 import ca.zhoozhoo.loaddev.loads.dto.GroupStatisticsDto;
 import ca.zhoozhoo.loaddev.loads.model.Load;
-import ca.zhoozhoo.loaddev.loads.security.CurrentUser;
+import ca.zhoozhoo.loaddev.security.CurrentUser;
 import ca.zhoozhoo.loaddev.loads.service.LoadsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

@@ -25,7 +25,7 @@ import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.components.dao.ProjectileRepository;
 import ca.zhoozhoo.loaddev.components.model.Projectile;
 
-@SpringBootTest
+@SpringBootTest(properties = "spring.autoconfigure.exclude=ca.zhoozhoo.loaddev.security.SecurityAutoConfiguration")
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
 @Import(TestSecurityConfig.class)

@@ -38,7 +38,7 @@ public record Load(
         @Id Long id,
 
         @JsonIgnore
-        @Column String ownerId,
+        @Column("owner_id") String ownerId,
 
         @NotBlank(message = "Name is required")
         @Column("name") String name,

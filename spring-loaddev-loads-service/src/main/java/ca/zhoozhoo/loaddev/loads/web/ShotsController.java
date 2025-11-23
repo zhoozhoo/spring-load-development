@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
-import ca.zhoozhoo.loaddev.loads.security.CurrentUser;
+import ca.zhoozhoo.loaddev.security.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;

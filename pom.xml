@@ -26,6 +26,7 @@
         <subproject>spring-loaddev-components-service</subproject>
         <subproject>spring-loaddev-integration-tests</subproject>
         <subproject>spring-loaddev-common</subproject>
+        <subproject>spring-loaddev-security</subproject>
     </subprojects>
 
     <properties>
@@ -113,6 +114,7 @@
             </dependencies>
         </profile>
     </profiles>
+    
     <build>
         <resources>
             <resource>

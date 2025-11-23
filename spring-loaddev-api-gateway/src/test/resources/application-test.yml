@@ -52,20 +52,20 @@ eureka:
   client:
     enabled: false
 
-management:
-  logging:
-    export:
-      otlp:
-        enabled: false
-  otlp:
-    metrics:
-      export:
-        enabled: false
-  tracing:
-    export:
-      enabled: false
+# management:
+#   logging:
+#     export:
+#       otlp:
+#         enabled: false
+#   otlp:
+#     metrics:
+#       export:
+#         enabled: false
+#   tracing:
+#     export:
+#       enabled: false
 
-otel:
-  instrumentation:
-    spring-webflux:
-      enabled: false
+# otel:
+#   instrumentation:
+#     spring-webflux:
+#       enabled: false

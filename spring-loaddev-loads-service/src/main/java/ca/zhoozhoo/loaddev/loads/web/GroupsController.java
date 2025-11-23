@@ -23,8 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
 import ca.zhoozhoo.loaddev.loads.dto.GroupStatisticsDto;
 import ca.zhoozhoo.loaddev.loads.model.Group;
-import ca.zhoozhoo.loaddev.loads.security.CurrentUser;
-import ca.zhoozhoo.loaddev.loads.security.SecurityUtils;
+import ca.zhoozhoo.loaddev.security.CurrentUser;
 import ca.zhoozhoo.loaddev.loads.service.LoadsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -84,9 +83,6 @@ public class GroupsController {
     private GroupRepository groupRepository;
 
     @Autowired
-    private SecurityUtils securityUtils;
-
-    @Autowired
     private LoadsService loadsService;
 
     @Operation(summary = "Get all groups by load id", description = "Retrieves all groups associated with a specific load for the authenticated user.")
@@ -140,18 +136,15 @@ public class GroupsController {
     @PreAuthorize("hasAuthority('groups:edit')")
     public Mono<ResponseEntity<Group>> createGroup(@Parameter(hidden = true) @CurrentUser String userId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Group to create") @Valid @RequestBody Group group) {
-        return securityUtils.getCurrentUserId()
-                .flatMap(ownerid -> {
-                    var newGroup = new Group(
-                            group.id(),
-                            ownerid,
-                            group.loadId(),
-                            group.date(),
-                            group.powderCharge(),
-                            group.targetRange(),
-                            group.groupSize());
-                    return groupRepository.save(newGroup);
-                })
+        var newGroup = new Group(
+                group.id(),
+                userId,
+                group.loadId(),
+                group.date(),
+                group.powderCharge(),
+                group.targetRange(),
+                group.groupSize());
+        return groupRepository.save(newGroup)
                 .map(savedGroup -> {
                     log.info("Created new group with id: {}", savedGroup.id());
                     return status(CREATED).body(savedGroup);

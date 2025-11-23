@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 import org.springframework.web.reactive.result.method.annotation.ArgumentResolverConfigurer;
 
-import ca.zhoozhoo.loaddev.rifles.security.CurrentUserMethodArgumentResolver;
+import ca.zhoozhoo.loaddev.security.CurrentUserMethodArgumentResolver;
 
 /**
  * WebFlux configuration for custom argument resolvers.

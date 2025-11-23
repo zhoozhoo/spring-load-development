@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
+import ca.zhoozhoo.loaddev.security.CurrentUserMethodArgumentResolver;
 import reactor.core.publisher.Mono;
 
 /**
@@ -40,5 +41,10 @@ public class TestSecurityConfig {
                 Map.of("alg", "none"),
                 Map.of("sub", token)
         ));
+    }
+
+    @Bean
+    public CurrentUserMethodArgumentResolver currentUserMethodArgumentResolver() {
+        return new CurrentUserMethodArgumentResolver();
     }
 }

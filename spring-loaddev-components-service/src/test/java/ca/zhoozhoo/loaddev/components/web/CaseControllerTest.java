@@ -25,7 +25,7 @@ import ca.zhoozhoo.loaddev.components.dao.CaseRepository;
 import ca.zhoozhoo.loaddev.components.model.Case;
 import ca.zhoozhoo.loaddev.components.model.PrimerSize;
 
-@SpringBootTest
+@SpringBootTest(properties = "spring.autoconfigure.exclude=ca.zhoozhoo.loaddev.security.SecurityAutoConfiguration")
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
 @Import(TestSecurityConfig.class)

@@ -33,7 +33,7 @@ import ca.zhoozhoo.loaddev.rifles.model.Rifle;
  *
  * @author Zhubin Salehi
  */
-@SpringBootTest
+@SpringBootTest(properties = "spring.autoconfigure.exclude=ca.zhoozhoo.loaddev.security.SecurityAutoConfiguration")
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
 @Import(TestSecurityConfig.class)
