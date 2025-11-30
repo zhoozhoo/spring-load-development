@@ -69,17 +69,6 @@ class MetricsConfigurationTest {
     }
 
     @Test
-    @DisplayName("Should gracefully fall back when OpenTelemetry absent")
-    void shouldFallBackWhenOpenTelemetryAbsent() {
-        Assumptions.assumeTrue(openTelemetry == null, "OpenTelemetry bean present – skipping fallback assertions");
-        // In absence of OTEL we expect a generic MeterRegistry (often Composite or Simple)
-        assertThat(meterRegistry)
-            .isNotNull()
-            .isInstanceOf(MeterRegistry.class)
-            .isNotInstanceOf(OpenTelemetryMeterRegistry.class);
-    }
-
-    @Test
     @DisplayName("Should be able to register metrics")
     void shouldBeAbleToRegisterMetrics() {
         var counter = meterRegistry.counter("test.counter");

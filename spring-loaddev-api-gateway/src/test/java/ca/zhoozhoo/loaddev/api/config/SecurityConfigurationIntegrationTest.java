@@ -107,7 +107,10 @@ class SecurityConfigurationIntegrationTest extends KeycloakTest {
                 .retrieve()
                 .bodyToMono(String.class)
                 .block();
-        assertThat(response).isNotNull();
-        assertThat(response).contains("reloading");
+        assertThat(response)
+                .isNotNull()
+                .contains("reloading")
+                .contains("realm")
+                .containsAnyOf("public_key", "token-service", "account-service");
     }
 }

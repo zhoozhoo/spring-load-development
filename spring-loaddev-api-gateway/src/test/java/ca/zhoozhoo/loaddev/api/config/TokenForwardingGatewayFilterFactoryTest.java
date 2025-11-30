@@ -28,9 +28,13 @@ import reactor.core.publisher.Mono;
 class TokenForwardingGatewayFilterFactoryTest {
 
     private TokenForwardingGatewayFilterFactory filterFactory;
+
     private TokenForwardingGatewayFilterFactory.Config config;
+
     private ServerWebExchange exchange;
+
     private GatewayFilterChain chain;
+
     private Map<String, Object> attributes;
 
     @BeforeEach
@@ -130,26 +134,7 @@ class TokenForwardingGatewayFilterFactoryTest {
     @DisplayName("Should handle empty token gracefully")
     void shouldHandleEmptyTokenGracefully() {
         attributes.put("permission_token", "");
-
-        var request = mock(ServerHttpRequest.class);
-        var requestBuilder = mock(ServerHttpRequest.Builder.class);
-        var modifiedRequest = mock(ServerHttpRequest.class);
-        var path = mock(org.springframework.http.server.RequestPath.class);
-        var exchangeBuilder = mock(ServerWebExchange.Builder.class);
-        var modifiedExchange = mock(ServerWebExchange.class);
-
-        when(exchange.getRequest()).thenReturn(request);
-        when(request.mutate()).thenReturn(requestBuilder);
-        when(requestBuilder.header(AUTHORIZATION, "Bearer "))
-                .thenReturn(requestBuilder);
-        when(requestBuilder.build()).thenReturn(modifiedRequest);
-        when(modifiedRequest.getPath()).thenReturn(path);
-        when(path.toString()).thenReturn("/test/path");
-        when(exchange.mutate()).thenReturn(exchangeBuilder);
-        when(exchangeBuilder.request(modifiedRequest)).thenReturn(exchangeBuilder);
-        when(exchangeBuilder.build()).thenReturn(modifiedExchange);
-        when(chain.filter(modifiedExchange)).thenReturn(Mono.empty());
-
+        
         create(filterFactory.apply(config).filter(exchange, chain))
                 .verifyComplete();
     }

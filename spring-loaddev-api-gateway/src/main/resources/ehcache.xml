@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  EhCache 3 configuration for API Gateway caching.
+  
+  This configuration defines caches used by the Spring Load Development API Gateway,
+  primarily for caching UMA permission tokens to reduce calls to Keycloak.
+  
+  Configuration follows JSR-107 (JCache) specification with EhCache 3 extensions.
+  
+  @author Zhubin Salehi
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.ehcache.org/v3"
+        xmlns:jsr107="http://www.ehcache.org/v3/jsr107"
+        xsi:schemaLocation="
+            http://www.ehcache.org/v3 http://www.ehcache.org/schema/ehcache-core-3.10.xsd
+            http://www.ehcache.org/v3/jsr107 http://www.ehcache.org/schema/ehcache-107-ext-3.10.xsd">
+
+    <!--
+      JSR-107 Service Configuration
+      
+      Enables statistics and management via JMX for monitoring cache performance.
+      Statistics include hit rates, miss rates, eviction counts, and latency metrics.
+    -->
+    <service>
+        <jsr107:defaults enable-statistics="true" enable-management="true"/>
+    </service>
+
+    <!--
+      Cache Template: Default Settings
+      
+      Provides base configuration that can be inherited by specific caches.
+      This reduces duplication and ensures consistent defaults across all caches.
+    -->
+    <cache-template name="defaultCacheTemplate">
+        <expiry>
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        <resources>
+            <heap unit="entries">1000</heap>
+        </resources>
+    </cache-template>
+
+    <!--
+      UMA Permission Token Cache
+      
+      Caches UMA permission tokens obtained from Keycloak token exchange.
+      This significantly reduces latency and load on the authentication server.
+      
+      Configuration:
+        - Name: umaTokens (matches CacheConfiguration.UMA_TOKEN_CACHE)
+        - Key Type: String (the OAuth2 access token used for exchange)
+        - Value Type: UmaPermissionToken (custom domain object)
+        - TTL: 5 minutes (90% of typical token lifetime for safety margin)
+        - Max Heap Entries: 1000 (LRU eviction when exceeded)
+        - Statistics: Enabled via template inheritance
+      
+      The 5-minute TTL ensures tokens are refreshed before expiry while
+      providing substantial performance benefits for repeated requests.
+    -->
+    <cache alias="umaTokens" uses-template="defaultCacheTemplate">
+        <key-type>java.lang.String</key-type>
+        <value-type>ca.zhoozhoo.loaddev.api.security.UmaPermissionToken</value-type>
+        
+        <expiry>
+            <!-- 
+              Time-to-live: 5 minutes
+              Represents ~90% of typical UMA token lifetime (usually 5-10 minutes)
+              Provides safety margin to prevent serving expired tokens
+            -->
+            <ttl unit="minutes">5</ttl>
+        </expiry>
+        
+        <resources>
+            <!--
+              Heap Storage: 1000 entries maximum
+              Using LRU (Least Recently Used) eviction policy
+              Suitable for API Gateway with moderate concurrent user load
+              
+              Adjust based on your specific requirements:
+              - High traffic: increase to 5000-10000
+              - Memory constrained: decrease to 500
+              - Very high traffic: consider off-heap storage (see below)
+            -->
+            <heap unit="entries">1000</heap>
+            
+            <!--
+              Off-heap Storage (Optional, commented out)
+              
+              For high-traffic scenarios, uncomment to enable off-heap caching.
+              This stores cache entries outside the JVM heap, reducing GC pressure
+              while supporting much larger cache sizes.
+              
+              Example:
+              <offheap unit="MB">100</offheap>
+            -->
+        </resources>
+        
+        <!--
+          Event Listeners (Optional, commented out)
+          
+          EhCache 3 supports event listeners for cache operations.
+          Useful for monitoring, logging, or triggering side effects.
+          
+          Example:
+          <listeners>
+              <listener>
+                  <class>ca.zhoozhoo.loaddev.api.cache.UmaTokenCacheEventListener</class>
+                  <event-firing-mode>ASYNCHRONOUS</event-firing-mode>
+                  <event-ordering-mode>UNORDERED</event-ordering-mode>
+                  <events-to-fire-on>CREATED</events-to-fire-on>
+                  <events-to-fire-on>EXPIRED</events-to-fire-on>
+                  <events-to-fire-on>EVICTED</events-to-fire-on>
+              </listener>
+          </listeners>
+        -->
+    </cache>
+
+    <!--
+      Future Cache Configurations
+      
+      Additional caches can be defined here as the application evolves.
+      Examples might include:
+      - Route configuration cache
+      - Service discovery cache
+      - Rate limiting token buckets
+      - Circuit breaker state cache
+      
+      Example template for future caches:
+      
+      <cache alias="routeCache" uses-template="defaultCacheTemplate">
+          <key-type>java.lang.String</key-type>
+          <value-type>org.springframework.cloud.gateway.route.Route</value-type>
+          <expiry>
+              <ttl unit="minutes">10</ttl>
+          </expiry>
+          <resources>
+              <heap unit="entries">500</heap>
+          </resources>
+      </cache>
+    -->
+
+</config>
