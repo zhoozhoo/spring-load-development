@@ -15,5 +15,5 @@ public record Zeroing(
 
         Quantity<Length> sightHeight,
 
-        Quantity<Length> distance) {
+        Quantity<Length> zeroDistance) {
 }

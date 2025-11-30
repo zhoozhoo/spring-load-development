@@ -13,7 +13,7 @@ import javax.measure.quantity.Length;
  */
 public record Rifling(
 
-        Quantity<Length> riflingStep,
+        Quantity<Length> twistRate,
 
         TwistDirection twistDirection) {
 }
