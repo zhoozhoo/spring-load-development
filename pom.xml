@@ -33,7 +33,7 @@
         <java.version>25</java.version>
         <spring-boot.version>4.0.0</spring-boot.version>
         <spring-boot-admin.version>3.5.6</spring-boot-admin.version>
-        <spring-cloud.version>2025.1.0-RC1</spring-cloud.version>
+        <spring-cloud.version>2025.1.0</spring-cloud.version>
         <spring-ai.version>1.1.0</spring-ai.version>
         <springdoc.version>3.0.0-RC1</springdoc.version>
         <r2dbc-postgresql.version>1.1.0.RELEASE</r2dbc-postgresql.version>
