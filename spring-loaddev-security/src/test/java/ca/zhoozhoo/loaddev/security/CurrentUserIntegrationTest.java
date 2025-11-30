@@ -14,7 +14,10 @@ import org.junit.jupiter.api.Test;
  * @author Zhubin Salehi
  */
 class CurrentUserIntegrationTest {
+
     @Test
     @DisplayName("Placeholder assertion")
-    void placeholder() { assertTrue(true); }
+    void placeholder() {
+        assertTrue(true);
+    }
 }

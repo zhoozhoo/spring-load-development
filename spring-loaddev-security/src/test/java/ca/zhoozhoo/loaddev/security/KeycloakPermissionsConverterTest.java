@@ -1,8 +1,8 @@
 package ca.zhoozhoo.loaddev.security;
 
+import static java.time.Instant.now;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -23,27 +23,22 @@ class KeycloakPermissionsConverterTest {
 
     @Test
     void convertsPermissionsWithScopes() {
-        var jwt = Jwt.withTokenValue("test")
+        assertThat(converter.convert(Jwt.withTokenValue("test")
                 .header("alg", "none")
                 .claim("authorization", Map.of(
                         "permissions", List.of(
                                 Map.of("rsname", "loads", "scopes", List.of("read", "write")),
                                 Map.of("rsname", "rifles", "scopes", List.of("read")))))
-                .issuedAt(Instant.now())
-                .expiresAt(Instant.now().plusSeconds(60))
-                .build();
-
-        var authorities = converter.convert(jwt);
-
-        assertThat(authorities)
+                .issuedAt(now())
+                .expiresAt(now().plusSeconds(60))
+                .build()))
                 .extracting(Object::toString)
                 .containsExactlyInAnyOrder("loads:read", "loads:write", "rifles:read");
     }
 
     @Test
     void emptyWhenAuthorizationMissing() {
-        var jwt = Jwt.withTokenValue("test").header("alg", "none")
-                .issuedAt(Instant.now()).expiresAt(Instant.now().plusSeconds(60)).build();
-        assertThat(converter.convert(jwt)).isEmpty();
+        assertThat(converter.convert(Jwt.withTokenValue("test").header("alg", "none")
+                .issuedAt(now()).expiresAt(now().plusSeconds(60)).build())).isEmpty();
     }
 }

@@ -1,12 +1,9 @@
 package ca.zhoozhoo.loaddev.security;
 
-import java.util.List;
-
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.security.autoconfigure.SecurityProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -41,48 +38,33 @@ import reactor.core.publisher.Mono;
 @ConditionalOnClass(ServerHttpSecurity.class)
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
-@EnableConfigurationProperties(SecurityProperties.class)
 public class SecurityAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public Converter<Jwt, Mono<AbstractAuthenticationToken>> jwtAuthenticationConverter(SecurityProperties props) {
+    public Converter<Jwt, Mono<AbstractAuthenticationToken>> jwtAuthenticationConverter() {
         var jwtAuthConverter = new ReactiveJwtAuthenticationConverter();
         jwtAuthConverter.setJwtGrantedAuthoritiesConverter(
                 new ReactiveJwtGrantedAuthoritiesConverterAdapter(new KeycloakPermissionsConverter()));
-        jwtAuthConverter.setPrincipalClaimName(props.getPrincipalClaim());
+        jwtAuthConverter.setPrincipalClaimName( "sub");
         return jwtAuthConverter;
     }
 
     @Bean
     @ConditionalOnMissingBean
-        public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http,
-            Converter<Jwt, Mono<AbstractAuthenticationToken>> jwtConverter,
-            SecurityProperties props) {
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http,
+            Converter<Jwt, Mono<AbstractAuthenticationToken>> jwtConverter) {
         return http
-            .authorizeExchange(exchanges -> exchanges
-                .pathMatchers(props.getPublicPaths().toArray(String[]::new)).permitAll()
-                .anyExchange().authenticated())
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)))
-            .build();
-        }
-}
-
-@ConfigurationProperties(prefix = "security")
-class SecurityProperties {
-    /** Public (permitAll) path patterns. */
-    private List<String> publicPaths = List.of(
-            "/actuator/**",
-            "/swagger-ui.html",
-            "/swagger-ui/**",
-            "/v3/api-docs",
-            "/v3/api-docs/**");
-
-    /** JWT principal claim name (default 'sub'). */
-    private String principalClaim = "sub";
-
-    public List<String> getPublicPaths() { return publicPaths; }
-    public void setPublicPaths(List<String> publicPaths) { this.publicPaths = publicPaths; }
-    public String getPrincipalClaim() { return principalClaim; }
-    public void setPrincipalClaim(String principalClaim) { this.principalClaim = principalClaim; }
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers(
+                                "/actuator/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**")
+                        .permitAll()
+                        .anyExchange().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)))
+                .build();
+    }
 }

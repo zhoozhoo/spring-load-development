@@ -23,6 +23,7 @@ import reactor.core.publisher.Mono;
  * @author Zhubin Salehi
  */
 class SecurityAutoConfigurationTest {
+    
     private final ReactiveWebApplicationContextRunner contextRunner = new ReactiveWebApplicationContextRunner()
             .withUserConfiguration(SecurityAutoConfiguration.class)
             .withBean(ReactiveJwtDecoder.class, () -> token -> Mono.just(

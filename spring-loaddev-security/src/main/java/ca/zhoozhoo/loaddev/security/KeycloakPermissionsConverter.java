@@ -35,9 +35,11 @@ class KeycloakPermissionsConverter implements Converter<Jwt, Collection<GrantedA
         if (authorization == null) {
             return emptyList();
         }
+        
         if (!(authorization.get("permissions") instanceof List<?> rawPermissions)) {
             return emptyList();
         }
+
         return rawPermissions.stream()
                 .filter(p -> p instanceof Map<?, ?>)
                 .map(p -> (Map<?, ?>) p)

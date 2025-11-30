@@ -32,44 +32,39 @@ class KeycloakPermissionsConverterEdgeCasesTest {
     @Test
     @DisplayName("Returns empty list when authorization claim missing")
     void noAuthorizationClaim() {
-        var result = converter.convert(jwt(Map.of("sub", "user1")));
-        assertThat(result).isEmpty();
+        assertThat(converter.convert(jwt(Map.of("sub", "user1")))).isEmpty();
     }
 
     @Test
     @DisplayName("Returns empty list when permissions not a List")
     void permissionsNotAList() {
-        var auth = Map.of("permissions", "not-a-list");
-        var result = converter.convert(jwt(Map.of("authorization", auth)));
-        assertThat(result).isEmpty();
+        assertThat(converter.convert(jwt(Map.of("authorization", Map.of("permissions", "not-a-list"))))).isEmpty();
     }
 
     @Test
     @DisplayName("Returns empty when permission map lacks rsname")
     void permissionMissingRsname() {
-        var perm = Map.of("scopes", List.of("edit"));
-        var auth = Map.of("permissions", List.of(perm));
-        var result = converter.convert(jwt(Map.of("authorization", auth)));
-        assertThat(result).isEmpty();
+        assertThat(converter.convert(
+                jwt(Map.of("authorization", Map.of("permissions", List.of(Map.of("scopes", List.of("edit"))))))))
+                .isEmpty();
     }
 
     @Test
     @DisplayName("Returns authorities when scopes present and strings")
     void scopesProduceAuthorities() {
-        var perm = Map.of("rsname", "loads", "scopes", List.of("edit", "view"));
-        var auth = Map.of("permissions", List.of(perm));
-        var result = converter.convert(jwt(Map.of("authorization", auth)));
-        assertThat(result).extracting(GrantedAuthority::getAuthority)
+        assertThat(converter.convert(jwt(Map.of("authorization",
+                Map.of("permissions", List.of(Map.of("rsname", "loads", "scopes", List.of("edit", "view"))))))))
+                .extracting(GrantedAuthority::getAuthority)
                 .containsExactlyInAnyOrder("loads:edit", "loads:view");
     }
 
     @Test
     @DisplayName("Skip non-string scopes and only map valid ones")
     void mixedScopeTypes() {
-        var perm = Map.of("rsname", "groups", "scopes", List.of("list", 42, new Object(), "delete"));
-        var auth = Map.of("permissions", List.of(perm));
-        var result = converter.convert(jwt(Map.of("authorization", auth)));
-        assertThat(result).extracting(GrantedAuthority::getAuthority)
+        assertThat(converter.convert(jwt(Map.of("authorization",
+                Map.of("permissions",
+                        List.of(Map.of("rsname", "groups", "scopes", List.of("list", 42, new Object(), "delete"))))))))
+                .extracting(GrantedAuthority::getAuthority)
                 .containsExactlyInAnyOrder("groups:list", "groups:delete");
     }
 
@@ -79,8 +74,7 @@ class KeycloakPermissionsConverterEdgeCasesTest {
         var perm = new HashMap<String, Object>();
         perm.put("rsname", "shots");
         perm.put("scopes", null); // explicitly null to exercise branch
-        var auth = Map.of("permissions", List.of(perm));
-        var result = converter.convert(jwt(Map.of("authorization", auth)));
-        assertThat(result).isEmpty();
+
+        assertThat(converter.convert(jwt(Map.of("authorization", Map.of("permissions", List.of(perm)))))).isEmpty();
     }
 }
