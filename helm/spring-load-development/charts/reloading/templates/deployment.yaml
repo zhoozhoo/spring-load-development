@@ -1,0 +1,28 @@
+{{/*
+Deployments for all microservices
+*/}}
+
+{{/* API Gateway Deployment */}}
+{{- if .Values.apiGateway.enabled }}
+{{- include "reloading.microservice.deployment" (dict "componentName" "api-gateway" "config" .Values.apiGateway "context" . "needsDatabase" false) }}
+{{- end }}
+
+{{/* Loads Service Deployment */}}
+{{- if .Values.loadsService.enabled }}
+{{- include "reloading.microservice.deployment" (dict "componentName" "loads-service" "config" .Values.loadsService "context" . "needsDatabase" true) }}
+{{- end }}
+
+{{/* Components Service Deployment */}}
+{{- if .Values.componentsService.enabled }}
+{{- include "reloading.microservice.deployment" (dict "componentName" "components-service" "config" .Values.componentsService "context" . "needsDatabase" true) }}
+{{- end }}
+
+{{/* Rifles Service Deployment */}}
+{{- if .Values.riflesService.enabled }}
+{{- include "reloading.microservice.deployment" (dict "componentName" "rifles-service" "config" .Values.riflesService "context" . "needsDatabase" true) }}
+{{- end }}
+
+{{/* MCP Server Deployment */}}
+{{- if .Values.mcpServer.enabled }}
+{{- include "reloading.microservice.deployment" (dict "componentName" "mcp-server" "config" .Values.mcpServer "context" . "needsDatabase" false) }}
+{{- end }}

@@ -1,0 +1,28 @@
+{{/*
+Services for all microservices
+*/}}
+
+{{/* API Gateway Service */}}
+{{- if .Values.apiGateway.enabled }}
+{{- include "reloading.microservice.service" (dict "componentName" "api-gateway" "serviceName" "api-gateway" "config" .Values.apiGateway "context" .) }}
+{{- end }}
+
+{{/* Loads Service */}}
+{{- if .Values.loadsService.enabled }}
+{{- include "reloading.microservice.service" (dict "componentName" "loads-service" "serviceName" "loads-service" "config" .Values.loadsService "context" .) }}
+{{- end }}
+
+{{/* Components Service */}}
+{{- if .Values.componentsService.enabled }}
+{{- include "reloading.microservice.service" (dict "componentName" "components-service" "serviceName" "components-service" "config" .Values.componentsService "context" .) }}
+{{- end }}
+
+{{/* Rifles Service */}}
+{{- if .Values.riflesService.enabled }}
+{{- include "reloading.microservice.service" (dict "componentName" "rifles-service" "serviceName" "rifles-service" "config" .Values.riflesService "context" .) }}
+{{- end }}
+
+{{/* MCP Server Service */}}
+{{- if .Values.mcpServer.enabled }}
+{{- include "reloading.microservice.service" (dict "componentName" "mcp-server" "serviceName" "mcp-server-service" "config" .Values.mcpServer "context" .) }}
+{{- end }}

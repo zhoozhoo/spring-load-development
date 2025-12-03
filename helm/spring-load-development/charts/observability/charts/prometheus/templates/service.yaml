@@ -1,0 +1,40 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: prometheus
+    {{- include "prometheus.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: prometheus
+
+---
+{{- if .Values.nodePort.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-nodeport
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: prometheus
+    {{- include "prometheus.labels" . | nindent 4 }}
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
+      nodePort: {{ .Values.nodePort.port }}
+  selector:
+    app: prometheus
+{{- end }}
+{{- end }}

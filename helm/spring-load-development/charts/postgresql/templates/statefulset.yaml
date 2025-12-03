@@ -1,26 +1,4 @@
 {{- if and .Values.postgresql.enabled (not .Values.postgresql.external) }}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: postgres-config
-  namespace: {{ .Values.postgresql.namespace }}
-  labels:
-    {{- include "spring-load-development.labels" . | nindent 4 }}
-data:
-  POSTGRES_DB: {{ .Values.postgresql.auth.database }}
-  POSTGRES_USER: {{ .Values.postgresql.auth.username }}
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: postgres-secret
-  namespace: {{ .Values.postgresql.namespace }}
-  labels:
-    {{- include "spring-load-development.labels" . | nindent 4 }}
-type: Opaque
-data:
-  POSTGRES_PASSWORD: {{ .Values.postgresql.auth.password | b64enc }}
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -28,7 +6,7 @@ metadata:
   namespace: {{ .Values.postgresql.namespace }}
   labels:
     app: postgres
-    {{- include "spring-load-development.labels" . | nindent 4 }}
+    {{- include "postgresql.labels" . | nindent 4 }}
 spec:
   serviceName: postgres-service
   replicas: {{ .Values.postgresql.replicas | default 1 }}
@@ -41,13 +19,13 @@ spec:
         app: postgres
     spec:
       securityContext:
-        {{- include "spring-load-development.podSecurityContext" . | nindent 8 }}
+        {{- include "postgresql.podSecurityContext" . | nindent 8 }}
       containers:
-        - name: postgres
-          image: "postgres:{{ .Values.postgresql.image.tag }}"
+        - name: postgresql
+          image: "postgres:{{ if .Values.global }}{{ .Values.global.versions.postgresql | default .Values.postgresql.image.tag }}{{ else }}{{ .Values.postgresql.image.tag }}{{ end }}"
           imagePullPolicy: IfNotPresent
           securityContext:
-            {{- include "spring-load-development.databaseSecurityContext" . | nindent 12 }}
+            {{- include "postgresql.databaseSecurityContext" . | nindent 12 }}
           {{- if .Values.postgresql.resources }}
           resources:
             {{- toYaml .Values.postgresql.resources | nindent 12 }}
@@ -92,7 +70,7 @@ spec:
         name: postgres-storage
         labels:
           app: postgres
-          {{- include "spring-load-development.labels" . | nindent 10 }}
+          {{- include "postgresql.labels" . | nindent 10 }}
       spec:
         accessModes:
           - ReadWriteOnce
@@ -106,49 +84,9 @@ spec:
         storageClassName: {{ .Values.postgresql.persistence.storageClass }}
         {{- end }}
         {{- end }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgres-service
-  namespace: {{ .Values.postgresql.namespace }}
-  labels:
-    app: postgres
-    {{- include "spring-load-development.labels" . | nindent 4 }}
-spec:
-  type: {{ .Values.postgresql.service.type }}
-  ports:
-    - port: {{ .Values.postgresql.service.ports.postgresql }}
-      targetPort: postgres
-      protocol: TCP
-      name: postgres
-  selector:
-    app: postgres
 {{- end }}
 
 {{- if and .Values.keycloakPostgresql.enabled (not .Values.keycloakPostgresql.external) }}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: keycloak-postgres-config
-  namespace: {{ .Values.keycloakPostgresql.namespace }}
-  labels:
-    {{- include "spring-load-development.labels" . | nindent 4 }}
-data:
-  POSTGRES_DB: {{ .Values.keycloakPostgresql.auth.database }}
-  POSTGRES_USER: {{ .Values.keycloakPostgresql.auth.username }}
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: keycloak-postgres-secret
-  namespace: {{ .Values.keycloakPostgresql.namespace }}
-  labels:
-    {{- include "spring-load-development.labels" . | nindent 4 }}
-type: Opaque
-data:
-  POSTGRES_PASSWORD: {{ .Values.keycloakPostgresql.auth.password | b64enc }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -157,7 +95,7 @@ metadata:
   namespace: {{ .Values.keycloakPostgresql.namespace }}
   labels:
     app: keycloak-postgres
-    {{- include "spring-load-development.labels" . | nindent 4 }}
+    {{- include "postgresql.labels" . | nindent 4 }}
 spec:
   serviceName: keycloak-postgres-service
   replicas: {{ .Values.keycloakPostgresql.replicas | default 1 }}
@@ -170,13 +108,13 @@ spec:
         app: keycloak-postgres
     spec:
       securityContext:
-        {{- include "spring-load-development.podSecurityContext" . | nindent 8 }}
+        {{- include "postgresql.podSecurityContext" . | nindent 8 }}
       containers:
         - name: postgres
-          image: "postgres:{{ .Values.keycloakPostgresql.image.tag }}"
+          image: "postgres:{{ if .Values.global }}{{ .Values.global.versions.postgresql | default .Values.keycloakPostgresql.image.tag }}{{ else }}{{ .Values.keycloakPostgresql.image.tag }}{{ end }}"
           imagePullPolicy: IfNotPresent
           securityContext:
-            {{- include "spring-load-development.databaseSecurityContext" . | nindent 12 }}
+            {{- include "postgresql.databaseSecurityContext" . | nindent 12 }}
           {{- if .Values.keycloakPostgresql.resources }}
           resources:
             {{- toYaml .Values.keycloakPostgresql.resources | nindent 12 }}
@@ -221,7 +159,7 @@ spec:
         name: postgres-storage
         labels:
           app: keycloak-postgres
-          {{- include "spring-load-development.labels" . | nindent 10 }}
+          {{- include "postgresql.labels" . | nindent 10 }}
       spec:
         accessModes:
           - ReadWriteOnce
@@ -235,22 +173,4 @@ spec:
         storageClassName: {{ .Values.keycloakPostgresql.persistence.storageClass }}
         {{- end }}
         {{- end }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: keycloak-postgres-service
-  namespace: {{ .Values.keycloakPostgresql.namespace }}
-  labels:
-    app: keycloak-postgres
-    {{- include "spring-load-development.labels" . | nindent 4 }}
-spec:
-  type: {{ .Values.keycloakPostgresql.service.type }}
-  ports:
-    - port: {{ .Values.keycloakPostgresql.service.ports.postgresql }}
-      targetPort: postgres
-      protocol: TCP
-      name: postgres
-  selector:
-    app: keycloak-postgres
 {{- end }}

@@ -4,9 +4,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: common-config
-  namespace: {{ .Values.microservices.namespace | default "reloading" }}
+  namespace: {{ .Values.namespace | default "reloading" }}
   labels:
-    {{- include "spring-load-development.labels" . | nindent 4 }}
+    {{- include "reloading.labels" . | nindent 4 }}
     app.kubernetes.io/component: common-config
 data:
   application.yml: |
@@ -94,9 +94,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: api-gateway
-  namespace: {{ .Values.microservices.namespace | default "reloading" }}
+  namespace: {{ .Values.namespace | default "reloading" }}
   labels:
-    {{- include "spring-load-development.labels" . | nindent 4 }}
+    {{- include "reloading.labels" . | nindent 4 }}
     app.kubernetes.io/component: api-gateway
 data:
   api-gateway.yml: |
@@ -108,20 +108,20 @@ data:
         oauth2:
           resourceserver:
             jwt:
-              jwk-set-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm | default "reloading" }}/protocol/openid-connect/certs
+              jwk-set-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm | default "reloading" }}/protocol/openid-connect/certs
           client:
             provider:
               keycloak:
-                token-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/token
-                authorization-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/auth
-                issuer-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}
-                user-info-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/userinfo
-                jwk-set-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/certs
+                token-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/token
+                authorization-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/auth
+                issuer-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}
+                user-info-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/userinfo
+                jwk-set-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/certs
             registration:
               api-gateway:
                 provider: keycloak
-                client-id: {{ .Values.keycloak.integration.clientId | default "reloading-client" }}
-                client-secret: {{ .Values.keycloak.integration.clientSecret | default "2EvQuluZfxaaRms8V4NhzBDWzVCSXtty" }}
+                client-id: {{ .Values.keycloak.clientId | default "reloading-client" }}
+                client-secret: {{ .Values.keycloak.clientSecret | default "2EvQuluZfxaaRms8V4NhzBDWzVCSXtty" }}
                 authorization-grant-type: authorization_code
                 redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
                 scope: 
@@ -131,7 +131,7 @@ data:
                   - roles
       webclient:
         keycloak:
-          base-url: {{ .Values.keycloak.integration.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:{{ .Values.keycloak.nodePort.port | default 8080 }}" }}
+          base-url: {{ .Values.keycloak.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:{{ .Values.keycloak.nodePort.port | default 8080 }}" }}
       reactor:
         context-propagation: AUTO
       cloud:
@@ -140,7 +140,7 @@ data:
             webflux:
               routes:
                 - id: loads-service
-                  uri: http://loads-service.{{ .Values.apiGateway.namespace | default "default" }}.svc.cluster.local:8080
+                  uri: http://loads-service.{{ .Values.namespace | default "default" }}.svc.cluster.local:8080
                   predicates:
                     - Path=/api/loads/**,/api/groups/**,/api/shots/**,/loads-service/v3/api-docs
                   filters:
@@ -152,7 +152,7 @@ data:
                         name: loadsCircuitBreaker
                     - Retry=1
                 - id: rifles-service
-                  uri: http://rifles-service.{{ .Values.apiGateway.namespace | default "default" }}.svc.cluster.local:8080
+                  uri: http://rifles-service.{{ .Values.namespace | default "default" }}.svc.cluster.local:8080
                   predicates:
                     - Path=/api/rifles/**,/rifles-service/v3/api-docs
                   filters:
@@ -164,7 +164,7 @@ data:
                         name: riflesCircuitBreaker
                     - Retry=1
                 - id: components-service
-                  uri: http://components-service.{{ .Values.apiGateway.namespace | default "default" }}.svc.cluster.local:8080
+                  uri: http://components-service.{{ .Values.namespace | default "default" }}.svc.cluster.local:8080
                   predicates:
                     - Path=/api/projectiles/**,/api/cases/**,/api/propellants/**,/api/primers/**,/components-service/v3/api-docs
                   filters:
@@ -176,7 +176,7 @@ data:
                         name: componentsCircuitBreaker
                     - Retry=1
                 - id: mcp-server
-                  uri: http://mcp-server-service.{{ .Values.apiGateway.namespace | default "default" }}.svc.cluster.local:8080
+                  uri: http://mcp-server-service.{{ .Values.namespace | default "default" }}.svc.cluster.local:8080
                   predicates:
                     - Path=/mcp/**,/sse/**
                   filters:
@@ -219,9 +219,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: log4j2-config
-  namespace: {{ .Values.microservices.namespace | default "reloading" }}
+  namespace: {{ .Values.namespace | default "reloading" }}
   labels:
-    {{- include "spring-load-development.labels" . | nindent 4 }}
+    {{- include "reloading.labels" . | nindent 4 }}
     app.kubernetes.io/component: log4j2-config
 data:
   log4j2.yaml: |
@@ -276,9 +276,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: loads-service-config
-  namespace: {{ .Values.microservices.namespace | default "reloading" }}
+  namespace: {{ .Values.namespace | default "reloading" }}
   labels:
-    {{- include "spring-load-development.labels" . | nindent 4 }}
+    {{- include "reloading.labels" . | nindent 4 }}
     app.kubernetes.io/component: loads-service-config
 data:
   application.yml: |
@@ -298,8 +298,8 @@ data:
         oauth2:
           resourceserver:
             jwt:
-              issuer-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}
-              jwk-set-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/certs
+              issuer-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}
+              jwk-set-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/certs
 {{- end }}
 
 {{- if .Values.componentsService.enabled }}
@@ -308,9 +308,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: components-service-config
-  namespace: {{ .Values.componentsService.namespace | default "reloading" }}
+  namespace: {{ .Values.namespace | default "reloading" }}
   labels:
-    {{- include "spring-load-development.labels" . | nindent 4 }}
+    {{- include "reloading.labels" . | nindent 4 }}
     app.kubernetes.io/component: components-service-config
 data:
   application.yml: |
@@ -330,8 +330,8 @@ data:
         oauth2:
           resourceserver:
             jwt:
-              issuer-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}
-              jwk-set-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/certs
+              issuer-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}
+              jwk-set-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/certs
 
     eureka:
       client:
@@ -344,9 +344,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: rifles-service-config
-  namespace: {{ .Values.riflesService.namespace | default "reloading" }}
+  namespace: {{ .Values.namespace | default "reloading" }}
   labels:
-    {{- include "spring-load-development.labels" . | nindent 4 }}
+    {{- include "reloading.labels" . | nindent 4 }}
     app.kubernetes.io/component: rifles-service-config
 data:
   application.yml: |
@@ -366,8 +366,8 @@ data:
         oauth2:
           resourceserver:
             jwt:
-              issuer-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}
-              jwk-set-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/certs
+              issuer-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}
+              jwk-set-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/certs
 
     eureka:
       client:
@@ -380,9 +380,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: mcp-server-config
-  namespace: {{ .Values.mcpServer.namespace | default "reloading" }}
+  namespace: {{ .Values.namespace | default "reloading" }}
   labels:
-    {{- include "spring-load-development.labels" . | nindent 4 }}
+    {{- include "reloading.labels" . | nindent 4 }}
     app.kubernetes.io/component: mcp-server-config
 data:
   application.yml: |
@@ -405,8 +405,8 @@ data:
         oauth2:
           resourceserver:
             jwt:
-              issuer-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}
-              jwk-set-uri: {{ .Values.keycloak.integration.baseUrl }}/realms/{{ .Values.keycloak.integration.realm }}/protocol/openid-connect/certs
+              issuer-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}
+              jwk-set-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/certs
     
     eureka:
       client:

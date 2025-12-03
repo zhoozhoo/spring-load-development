@@ -1,0 +1,40 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: loki
+    {{- include "loki.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: loki
+
+---
+{{- if .Values.nodePort.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-nodeport
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: loki
+    {{- include "loki.labels" . | nindent 4 }}
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
+      nodePort: {{ .Values.nodePort.port }}
+  selector:
+    app: loki
+{{- end }}
+{{- end }}

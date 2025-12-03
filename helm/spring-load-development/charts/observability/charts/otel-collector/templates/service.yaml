@@ -1,0 +1,48 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: otel-collector
+    {{- include "otel-collector.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.ports.grpc }}
+      targetPort: otlp-grpc
+      protocol: TCP
+      name: otlp-grpc
+    - port: {{ .Values.service.ports.prometheus }}
+      targetPort: prometheus
+      protocol: TCP
+      name: prometheus
+  selector:
+    app: otel-collector
+
+---
+{{- if .Values.nodePort.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector-nodeport
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: otel-collector
+    {{- include "otel-collector.labels" . | nindent 4 }}
+spec:
+  type: NodePort
+  ports:
+    - name: otlp-grpc
+      port: {{ .Values.service.ports.grpc }}
+      targetPort: otlp-grpc
+      nodePort: {{ .Values.nodePort.grpcPort }}
+    - name: prometheus
+      port: {{ .Values.service.ports.prometheus }}
+      targetPort: prometheus
+      nodePort: {{ .Values.nodePort.prometheusPort }}
+  selector:
+    app: otel-collector
+{{- end }}
+{{- end }}

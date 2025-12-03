@@ -1,0 +1,13 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "keycloak.labels" . | nindent 4 }}
+data:
+  {{- range .Values.extraEnvVars }}
+  {{ .name }}: {{ .value | quote }}
+  {{- end }}
+{{- end }}

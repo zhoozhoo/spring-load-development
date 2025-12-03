@@ -1,0 +1,75 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: loki
+    {{- include "loki.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      securityContext:
+        {{- include "loki.podSecurityContext" . | nindent 8 }}
+      containers:
+        - name: loki
+          image: "{{ .Values.image.repository }}:{{ if .Values.global }}{{ .Values.global.versions.loki | default .Values.image.tag }}{{ else }}{{ .Values.image.tag }}{{ end }}"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "loki.containerSecurityContext" . | nindent 12 }}
+          args:
+            - "-config.file=/etc/loki/local-config.yaml"
+          ports:
+            - name: http
+              containerPort: {{ .Values.config.server.http_listen_port }}
+              protocol: TCP
+            - name: grpc
+              containerPort: {{ .Values.config.server.grpc_listen_port }}
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/loki
+            {{- if .Values.persistence.enabled }}
+            - name: storage
+              mountPath: /loki
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.config.server.http_listen_port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.config.server.http_listen_port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          {{- if .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: loki-config
+            items:
+              - key: loki.yaml
+                path: local-config.yaml
+        {{- if .Values.persistence.enabled }}
+        - name: storage
+          persistentVolumeClaim:
+            claimName: loki-pvc
+        {{- else }}
+        - name: storage
+          emptyDir: {}
+        {{- end }}
+{{- end }}

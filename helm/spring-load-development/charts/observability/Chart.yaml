@@ -1,0 +1,23 @@
+apiVersion: v2
+name: observability
+description: Observability stack with Grafana, Prometheus, Loki, Tempo, and OpenTelemetry Collector
+type: application
+version: 0.1.0-SNAPSHOT
+appVersion: 0.1.0-SNAPSHOT
+
+dependencies:
+  - name: loki
+    version: 0.1.0-SNAPSHOT
+    condition: loki.enabled
+  - name: tempo
+    version: 0.1.0-SNAPSHOT
+    condition: tempo.enabled
+  - name: prometheus
+    version: 0.1.0-SNAPSHOT
+    condition: prometheus.enabled
+  - name: grafana
+    version: 0.1.0-SNAPSHOT
+    condition: grafana.enabled
+  - name: otel-collector
+    version: 0.1.0-SNAPSHOT
+    condition: otel-collector.enabled

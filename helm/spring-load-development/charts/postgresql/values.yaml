@@ -1,0 +1,77 @@
+# PostgreSQL configuration for microservices
+postgresql:
+  enabled: true
+  namespace: postgres
+  replicas: 1  # Can be increased for HA with replication configured
+  image:
+    tag: "18.1"
+  
+  auth:
+    database: loadsdb
+    username: user
+    password: password
+    postgresPassword: password
+  
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: ""
+  
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+  
+  service:
+    type: ClusterIP
+    ports:
+      postgresql: 5432
+
+# PostgreSQL configuration for Keycloak
+keycloakPostgresql:
+  enabled: true
+  namespace: keycloak
+  replicas: 1  # Can be increased for HA with replication configured
+  image:
+    tag: "18.1"
+  
+  auth:
+    database: keycloak
+    username: user
+    password: password
+    postgresPassword: password
+  
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: ""
+  
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+  
+  service:
+    type: ClusterIP
+    ports:
+      postgresql: 5432
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
+
+# Pod Disruption Budgets
+podDisruptionBudget:
+  enabled: true
+  postgresql:
+    minAvailable: 1
+  keycloakPostgresql:
+    minAvailable: 1

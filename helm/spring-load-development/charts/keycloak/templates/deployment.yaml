@@ -1,0 +1,56 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: keycloak
+    {{- include "keycloak.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      securityContext:
+        {{- include "keycloak.podSecurityContext" . | nindent 8 }}
+      containers:
+        - name: keycloak
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ if .Values.global }}{{ .Values.global.versions.keycloak | default .Values.image.tag }}{{ else }}{{ .Values.image.tag }}{{ end }}"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "keycloak.containerSecurityContext" . | nindent 12 }}
+          {{- if .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
+          args:
+            - start-dev
+            - --import-realm
+          envFrom:
+            - configMapRef:
+                name: keycloak-config
+            - secretRef:
+                name: keycloak-secret
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.http.port }}
+              protocol: TCP
+          volumeMounts:
+            {{- if .Values.realm.enabled }}
+            - name: realm-config
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
+            {{- end }}
+      volumes:
+        {{- if .Values.realm.enabled }}
+        - name: realm-config
+          configMap:
+            name: {{ .Values.realm.configMapName | default "keycloak-realm-config" }}
+        {{- end }}
+{{- end }}

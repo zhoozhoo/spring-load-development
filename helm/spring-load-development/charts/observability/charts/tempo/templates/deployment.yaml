@@ -1,0 +1,71 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: tempo
+    {{- include "tempo.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tempo
+  template:
+    metadata:
+      labels:
+        app: tempo
+    spec:
+      securityContext:
+        {{- include "tempo.podSecurityContext" . | nindent 8 }}
+      containers:
+        - name: tempo
+          image: "{{ .Values.image.repository }}:{{ if .Values.global }}{{ .Values.global.versions.tempo | default .Values.image.tag }}{{ else }}{{ .Values.image.tag }}{{ end }}"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "tempo.containerSecurityContext" . | nindent 12 }}
+          args:
+            - "-config.file=/etc/tempo/tempo.yaml"
+          ports:
+            - name: http
+              containerPort: {{ .Values.config.server.http_listen_port }}
+              protocol: TCP
+            - name: otlp-grpc
+              containerPort: 4317
+              protocol: TCP
+            - name: otlp-http
+              containerPort: 4318
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/tempo
+            {{- if .Values.persistence.enabled }}
+            - name: storage
+              mountPath: /var/tempo
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.config.server.http_listen_port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.config.server.http_listen_port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: tempo-config
+        {{- if .Values.persistence.enabled }}
+        - name: storage
+          persistentVolumeClaim:
+            claimName: tempo-pvc
+        {{- else }}
+        - name: storage
+          emptyDir: {}
+        {{- end }}
+{{- end }}

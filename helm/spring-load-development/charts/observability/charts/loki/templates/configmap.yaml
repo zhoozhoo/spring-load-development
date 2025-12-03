@@ -1,0 +1,67 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loki-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: loki
+    {{- include "loki.labels" . | nindent 4 }}
+data:
+  loki.yaml: |
+    auth_enabled: {{ .Values.config.auth_enabled }}
+    
+    server:
+      http_listen_port: {{ .Values.config.server.http_listen_port }}
+      grpc_listen_port: {{ .Values.config.server.grpc_listen_port }}
+      log_level: {{ .Values.config.server.log_level }}
+    
+    common:
+      path_prefix: {{ .Values.config.common.path_prefix }}
+      storage:
+        filesystem:
+          chunks_directory: {{ .Values.config.common.storage.filesystem.chunks_directory }}
+          rules_directory: {{ .Values.config.common.storage.filesystem.rules_directory }}
+      replication_factor: {{ .Values.config.common.replication_factor }}
+      ring:
+        kvstore:
+          store: {{ .Values.config.common.ring.kvstore.store }}
+    
+    query_range:
+      results_cache:
+        cache:
+          embedded_cache:
+            enabled: {{ .Values.config.query_range.results_cache.cache.embedded_cache.enabled }}
+            max_size_mb: {{ .Values.config.query_range.results_cache.cache.embedded_cache.max_size_mb }}
+    
+    schema_config:
+      configs:
+        - from: {{ (index .Values.config.schema_config.configs 0).from }}
+          store: {{ (index .Values.config.schema_config.configs 0).store }}
+          object_store: {{ (index .Values.config.schema_config.configs 0).object_store }}
+          schema: {{ (index .Values.config.schema_config.configs 0).schema }}
+          index:
+            prefix: {{ (index .Values.config.schema_config.configs 0).index.prefix }}
+            period: {{ (index .Values.config.schema_config.configs 0).index.period }}
+    
+    limits_config:
+      metric_aggregation_enabled: {{ .Values.config.limits_config.metric_aggregation_enabled }}
+      allow_structured_metadata: {{ .Values.config.limits_config.allow_structured_metadata }}
+      volume_enabled: {{ .Values.config.limits_config.volume_enabled }}
+      retention_period: {{ .Values.config.limits_config.retention_period }}
+    
+    ruler:
+      enable_alertmanager_discovery: {{ .Values.config.ruler.enable_alertmanager_discovery }}
+      enable_api: {{ .Values.config.ruler.enable_api }}
+    
+    frontend:
+      encoding: {{ .Values.config.frontend.encoding }}
+    
+    compactor:
+      working_directory: {{ .Values.config.compactor.working_directory }}
+      compaction_interval: {{ .Values.config.compactor.compaction_interval }}
+      delete_request_store: {{ .Values.config.compactor.delete_request_store }}
+    
+    analytics:
+      reporting_enabled: {{ .Values.config.analytics.reporting_enabled }}
+{{- end }}

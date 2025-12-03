@@ -1,0 +1,18 @@
+# Observability stack values
+enabled: true
+
+# Sub-subchart enable/disable flags
+loki:
+  enabled: true
+
+tempo:
+  enabled: true
+
+prometheus:
+  enabled: true
+
+grafana:
+  enabled: true
+
+otel-collector:
+  enabled: true
