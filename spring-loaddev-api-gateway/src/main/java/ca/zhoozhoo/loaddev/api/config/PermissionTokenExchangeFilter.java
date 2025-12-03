@@ -56,6 +56,9 @@ public class PermissionTokenExchangeFilter implements WebFilter {
      * Main filter method that processes each incoming request.
      * It extracts the original token, exchanges it for a permission token via the service,
      * and stores the new token in the exchange attributes.
+     * 
+     * <p>This filter skips token exchange for actuator endpoints to avoid polluting logs
+     * with health check requests from Kubernetes probes.</p>
      *
      * @param exchange the current server exchange
      * @param chain the filter chain
@@ -65,6 +68,13 @@ public class PermissionTokenExchangeFilter implements WebFilter {
     @NonNull
     public Mono<Void> filter(@NonNull ServerWebExchange exchange, @NonNull WebFilterChain chain) {
         var request = Objects.requireNonNull(exchange.getRequest(), "request must not be null");
+        var path = request.getPath().value();
+        
+        // Skip token exchange for actuator endpoints (health checks, metrics, etc.)
+        if (shouldSkipTokenExchange(path)) {
+            return chain.filter(exchange);
+        }
+        
         var originalToken = extractToken(request);
 
         if (originalToken == null) {
@@ -72,7 +82,7 @@ public class PermissionTokenExchangeFilter implements WebFilter {
             return chain.filter(exchange);
         }
 
-        log.debug("Processing request to: {} - exchanging for permission token", request.getPath());
+        log.debug("Processing request to: {} - exchanging for permission token", path);
 
         return tokenExchangeService.exchangeForPermissionToken(originalToken)
                 .doOnNext(permissionToken -> {
@@ -88,6 +98,20 @@ public class PermissionTokenExchangeFilter implements WebFilter {
                     
                     return chain.filter(exchange);
                 });
+    }
+
+    /**
+     * Determines if token exchange should be skipped for the given path.
+     * Skips actuator endpoints, Swagger UI, and OpenAPI documentation paths
+     * to avoid polluting logs with health check and monitoring requests.
+     * 
+     * @param path the request path
+     * @return true if token exchange should be skipped, false otherwise
+     */
+    private boolean shouldSkipTokenExchange(String path) {
+        return path.startsWith("/actuator/") 
+            || path.startsWith("/swagger-ui") 
+            || path.startsWith("/v3/api-docs");
     }
 
     /**

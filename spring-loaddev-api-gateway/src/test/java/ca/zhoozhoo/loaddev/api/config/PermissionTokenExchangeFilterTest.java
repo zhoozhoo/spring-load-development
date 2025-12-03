@@ -261,4 +261,136 @@ class PermissionTokenExchangeFilterTest {
 
         verify(tokenExchangeService).exchangeForPermissionToken(VALID_TOKEN);
     }
+
+    @Test
+    @DisplayName("Should skip token exchange for actuator health endpoint")
+    void shouldSkipTokenExchangeForActuatorHealth() {
+        // Given
+        var request = MockServerHttpRequest.get("/actuator/health")
+                .header(AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                .build();
+        var exchange = MockServerWebExchange.from(request);
+        when(filterChain.filter(exchange)).thenReturn(empty());
+
+        // When
+        var result = filter.filter(exchange, filterChain);
+
+        // Then - Should skip token exchange for actuator endpoints
+        create(result)
+                .verifyComplete();
+
+        verify(filterChain).filter(exchange);
+        verify(tokenExchangeService, never()).exchangeForPermissionToken(VALID_TOKEN);
+        assertThat(exchange.getAttributes().get("permission_token")).isNull();
+    }
+
+    @Test
+    @DisplayName("Should skip token exchange for actuator liveness probe")
+    void shouldSkipTokenExchangeForActuatorLiveness() {
+        // Given
+        var request = MockServerHttpRequest.get("/actuator/health/liveness")
+                .build();
+        var exchange = MockServerWebExchange.from(request);
+        when(filterChain.filter(exchange)).thenReturn(empty());
+
+        // When
+        var result = filter.filter(exchange, filterChain);
+
+        // Then
+        create(result)
+                .verifyComplete();
+
+        verify(filterChain).filter(exchange);
+        verify(tokenExchangeService, never()).exchangeForPermissionToken(VALID_TOKEN);
+    }
+
+    @Test
+    @DisplayName("Should skip token exchange for actuator readiness probe")
+    void shouldSkipTokenExchangeForActuatorReadiness() {
+        // Given
+        var request = MockServerHttpRequest.get("/actuator/health/readiness")
+                .build();
+        var exchange = MockServerWebExchange.from(request);
+        when(filterChain.filter(exchange)).thenReturn(empty());
+
+        // When
+        var result = filter.filter(exchange, filterChain);
+
+        // Then
+        create(result)
+                .verifyComplete();
+
+        verify(filterChain).filter(exchange);
+        verify(tokenExchangeService, never()).exchangeForPermissionToken(VALID_TOKEN);
+    }
+
+    @Test
+    @DisplayName("Should skip token exchange for Swagger UI")
+    void shouldSkipTokenExchangeForSwaggerUI() {
+        // Given
+        var request = MockServerHttpRequest.get("/swagger-ui/index.html")
+                .header(AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                .build();
+        var exchange = MockServerWebExchange.from(request);
+        when(filterChain.filter(exchange)).thenReturn(empty());
+
+        // When
+        var result = filter.filter(exchange, filterChain);
+
+        // Then
+        create(result)
+                .verifyComplete();
+
+        verify(filterChain).filter(exchange);
+        verify(tokenExchangeService, never()).exchangeForPermissionToken(VALID_TOKEN);
+        assertThat(exchange.getAttributes().get("permission_token")).isNull();
+    }
+
+    @Test
+    @DisplayName("Should skip token exchange for OpenAPI docs")
+    void shouldSkipTokenExchangeForOpenApiDocs() {
+        // Given
+        var request = MockServerHttpRequest.get("/v3/api-docs")
+                .header(AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                .build();
+        var exchange = MockServerWebExchange.from(request);
+        when(filterChain.filter(exchange)).thenReturn(empty());
+
+        // When
+        var result = filter.filter(exchange, filterChain);
+
+        // Then
+        create(result)
+                .verifyComplete();
+
+        verify(filterChain).filter(exchange);
+        verify(tokenExchangeService, never()).exchangeForPermissionToken(VALID_TOKEN);
+        assertThat(exchange.getAttributes().get("permission_token")).isNull();
+    }
+
+    @Test
+    @DisplayName("Should perform token exchange for regular API endpoints")
+    void shouldPerformTokenExchangeForRegularEndpoints() {
+        // Given
+        var request = MockServerHttpRequest.get("/api/loads")
+                .header(AUTHORIZATION, "Bearer " + VALID_TOKEN)
+                .build();
+        var exchange = MockServerWebExchange.from(request);
+
+        var umaToken = new UmaPermissionToken(PERMISSION_TOKEN, "Bearer", 300, "openid");
+        when(tokenExchangeService.exchangeForPermissionToken(VALID_TOKEN))
+                .thenReturn(just(umaToken));
+        when(filterChain.filter(exchange)).thenReturn(empty());
+
+        // When
+        var result = filter.filter(exchange, filterChain);
+
+        // Then - Should exchange token for regular endpoints
+        create(result)
+                .verifyComplete();
+
+        verify(tokenExchangeService).exchangeForPermissionToken(VALID_TOKEN);
+        verify(filterChain).filter(exchange);
+        assertThat(exchange.getAttributes().get("permission_token")).isEqualTo(PERMISSION_TOKEN);
+    }
 }
