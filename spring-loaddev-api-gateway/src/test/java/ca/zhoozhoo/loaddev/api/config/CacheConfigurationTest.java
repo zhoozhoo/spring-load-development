@@ -2,20 +2,19 @@ package ca.zhoozhoo.loaddev.api.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.cache.Caching;
-
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.cache.jcache.JCacheCacheManager;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
 
 /**
  * Unit tests for {@link CacheConfiguration}.
- * Tests JSR-107 JCache with EhCache 3 configuration.
+ * Tests Caffeine cache configuration for reactive caching support.
  * 
  * <p>These tests verify that the cache manager can be created and configured correctly
- * using the JCache API with EhCache 3 as the provider.</p>
+ * using Caffeine, which supports CompletableFuture-based retrieval required for
+ * Spring Boot 4.0's reactive caching infrastructure.</p>
  * 
  * <p>Note: These are simplified unit tests that directly test cache functionality without
  * requiring full Spring Boot context initialization. This avoids the need to configure
@@ -25,32 +24,22 @@ import org.springframework.cache.jcache.JCacheCacheManager;
  */
 class CacheConfigurationTest {
 
-    private JCacheCacheManager cacheManager;
+    private CacheManager cacheManager;
+    private CacheConfiguration cacheConfiguration;
 
     @BeforeEach
-    void setUp() throws Exception {
-        // Create JCache cache manager programmatically with EhCache 3
-        var cachingProvider = Caching.getCachingProvider("org.ehcache.jsr107.EhcacheCachingProvider");
-        var jCacheManager = cachingProvider.getCacheManager(
-            getClass().getResource("/ehcache.xml").toURI(),
-            getClass().getClassLoader()
-        );
-        cacheManager = new JCacheCacheManager(jCacheManager);
-    }
-
-    @AfterEach
-    void tearDown() {
-        if (cacheManager != null) {
-            cacheManager.getCacheManager().close();
-        }
+    void setUp() {
+        // Create Caffeine cache manager programmatically
+        cacheConfiguration = new CacheConfiguration();
+        cacheManager = cacheConfiguration.cacheManager();
     }
 
     @Test
-    @DisplayName("Should create JCache cache manager with EhCache 3")
-    void shouldCreateJCacheCacheManager() {
+    @DisplayName("Should create Caffeine cache manager")
+    void shouldCreateCaffeineCacheManager() {
         // Then
         assertThat(cacheManager).isNotNull();
-        assertThat(cacheManager).isInstanceOf(JCacheCacheManager.class);
+        assertThat(cacheManager).isInstanceOf(CaffeineCacheManager.class);
         
         var cache = cacheManager.getCache(CacheConfiguration.UMA_TOKEN_CACHE);
         assertThat(cache).isNotNull();
@@ -58,16 +47,15 @@ class CacheConfigurationTest {
     }
 
     @Test
-    @DisplayName("Should configure EhCache with JSR-107 JCache API")
-    void shouldConfigureEhCacheFromXml() {
-        // Then - Verify JCache manager is properly initialized
-        assertThat(cacheManager).isInstanceOf(JCacheCacheManager.class);
+    @DisplayName("Should configure Caffeine cache with proper settings")
+    void shouldConfigureCaffeineCache() {
+        // Then - Verify cache manager is properly initialized
+        assertThat(cacheManager).isInstanceOf(CaffeineCacheManager.class);
         
-        var underlyingCacheManager = cacheManager.getCacheManager();
-        assertThat(underlyingCacheManager).isNotNull();
+        var caffeineCacheManager = (CaffeineCacheManager) cacheManager;
         
         // Verify the UMA token cache is available
-        var cacheNames = underlyingCacheManager.getCacheNames();
+        var cacheNames = caffeineCacheManager.getCacheNames();
         assertThat(cacheNames).contains(CacheConfiguration.UMA_TOKEN_CACHE);
         
         // Verify we can retrieve the cache

@@ -4,9 +4,9 @@ spring:
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
   cache:
-    jcache:
-      provider: org.ehcache.jsr107.EhcacheCachingProvider
-      config: classpath:ehcache.xml
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=5m
+    cache-names: umaTokens
 
 ---
 spring:
