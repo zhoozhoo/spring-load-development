@@ -102,6 +102,10 @@ data:
   api-gateway.yml: |
     server:
       port: 8080
+    
+    logging:
+      level:
+        io.kubernetes.client.informer.cache.ReflectorRunnable: WARN
       
     spring:
       security:
