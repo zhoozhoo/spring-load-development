@@ -10,11 +10,6 @@ services:
       - ./docker/loki/loki.yaml:/etc/loki/loki.yaml:ro
       - loki_data:/loki
     command: -config.file=/etc/loki/loki.yaml
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/ready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
 
   tempo:
@@ -28,11 +23,6 @@ services:
     ports:
       - "3200:3200"
       - "4319:4317"
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3200/ready"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
     restart: unless-stopped
 
   prometheus:
@@ -71,12 +61,9 @@ services:
       - 4317:4317
       - 55679:55679
     depends_on:
-      loki:
-        condition: service_healthy
-      tempo:
-        condition: service_healthy
-      prometheus:
-        condition: service_healthy
+      - loki
+      - tempo
+      - prometheus
     restart: unless-stopped
 
   grafana:
