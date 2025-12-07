@@ -44,6 +44,10 @@ data:
             http:
               server:
                 requests: 'true'
+      otlp:
+        metrics:
+          export:
+            enabled: false
       tracing:
         sampling:
           probability: 1
