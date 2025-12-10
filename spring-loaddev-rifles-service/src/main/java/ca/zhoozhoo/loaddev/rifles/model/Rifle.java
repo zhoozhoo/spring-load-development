@@ -90,9 +90,10 @@ public record Rifle(
     }
 
     private boolean quantitiesEqual(Quantity<?> q1, Quantity<?> q2) {
-        if (q1 == q2) return true;
+        if (q1 == null && q2 == null) return true;
         if (q1 == null || q2 == null) return false;
-        return q1.getValue().doubleValue() == q2.getValue().doubleValue() &&
+        // Use Double.compare to avoid floating point equality issues
+        return Double.compare(q1.getValue().doubleValue(), q2.getValue().doubleValue()) == 0 &&
                Objects.equals(q1.getUnit(), q2.getUnit());
     }
 
