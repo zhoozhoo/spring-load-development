@@ -40,12 +40,26 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
     "scale": "ABSOLUTE"
   },
   "barrelContour": "Heavy Varmint",
-  "twistRate": "1:8",
-  "rifling": "5R",
-  "freeBore": {
-    "value": 0.160,
-    "unit": "[in_i]",
-    "scale": "ABSOLUTE"
+  "rifling": {
+    "twistRate": {
+      "value": 8.0,
+      "unit": "[in_i]",
+      "scale": "ABSOLUTE"
+    },
+    "twistDirection": "RIGHT",
+    "numberOfGrooves": 5
+  },
+  "zeroing": {
+    "sightHeight": {
+      "value": 1.5,
+      "unit": "[in_i]",
+      "scale": "ABSOLUTE"
+    },
+    "zeroDistance": {
+      "value": 100.0,
+      "unit": "[yd_i]",
+      "scale": "ABSOLUTE"
+    }
   }
 }
 
@@ -70,13 +84,27 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
     "scale": "ABSOLUTE"
   },
   "barrelContour": "M24",
-  "twistRate": "1:7.5",
-  "freeBore": {
-    "value": 0.153,
-    "unit": "[in_i]",
-    "scale": "ABSOLUTE"
+  "rifling": {
+    "twistRate": {
+      "value": 7.5,
+      "unit": "[in_i]",
+      "scale": "ABSOLUTE"
+    },
+    "twistDirection": "RIGHT",
+    "numberOfGrooves": 6
   },
-  "rifling": "6 Groove"
+  "zeroing": {
+    "sightHeight": {
+      "value": 1.75,
+      "unit": "[in_i]",
+      "scale": "ABSOLUTE"
+    },
+    "zeroDistance": {
+      "value": 200.0,
+      "unit": "[yd_i]",
+      "scale": "ABSOLUTE"
+    }
+  }
 }
 
 ### Delete created rifle
@@ -100,12 +128,26 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
     "scale": "ABSOLUTE"
   },
   "barrelContour": "Medium Sporter",
-  "twistRate": "1:9",
-  "rifling": "4 Groove",
-  "freeBore": {
-    "value": 4.06,
-    "unit": "mm",
-    "scale": "ABSOLUTE"
+  "rifling": {
+    "twistRate": {
+      "value": 22.86,
+      "unit": "cm",
+      "scale": "ABSOLUTE"
+    },
+    "twistDirection": "RIGHT",
+    "numberOfGrooves": 4
+  },
+  "zeroing": {
+    "sightHeight": {
+      "value": 4.0,
+      "unit": "cm",
+      "scale": "ABSOLUTE"
+    },
+    "zeroDistance": {
+      "value": 100.0,
+      "unit": "m",
+      "scale": "ABSOLUTE"
+    }
   }
 }
 

@@ -124,9 +124,8 @@ public class RifleController {
                 rifle.caliber(),
                 rifle.barrelLength(),
                 rifle.barrelContour(),
-                rifle.twistRate(),
                 rifle.rifling(),
-                rifle.freeBore()))
+                rifle.zeroing()))
                 .flatMap(rifleRepository::save)
                 .doOnNext(savedRifle -> log.info("Created new rifle with id: {}", savedRifle.id()))
                 .map(savedRifle -> status(CREATED).body(savedRifle));
@@ -154,9 +153,8 @@ public class RifleController {
                         rifle.caliber(),
                         rifle.barrelLength(),
                         rifle.barrelContour(),
-                        rifle.twistRate(),
                         rifle.rifling(),
-                        rifle.freeBore())))
+                        rifle.zeroing())))
                 .doOnNext(updatedRifle -> log.info("Updated rifle with id: {}", updatedRifle.id()))
                 .map(updatedRifle -> ok(updatedRifle))
                 .defaultIfEmpty(notFound().build());

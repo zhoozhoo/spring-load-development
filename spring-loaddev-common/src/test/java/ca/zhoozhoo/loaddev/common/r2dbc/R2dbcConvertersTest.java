@@ -28,8 +28,8 @@ class R2dbcConvertersTest {
     private final JsonToMonetaryAmountConverter jsonToMoneyConverter = new JsonToMonetaryAmountConverter();
 
     @Test
-    void getConverters_shouldReturnFourConverters() {
-        assertEquals(4, R2dbcConverters.getConverters().size());
+    void getConverters_shouldReturnEightConverters() {
+        assertEquals(8, R2dbcConverters.getConverters().size());
     }
 
     @Test
@@ -188,5 +188,71 @@ class R2dbcConvertersTest {
         var money = jsonToMoneyConverter.convert(Json.of("{\"amount\":-25.50,\"currency\":\"GBP\"}"));
         assertEquals(-25.50, money.getNumber().doubleValue(), 0.001);
         assertEquals("GBP", money.getCurrency().getCurrencyCode());
+    }
+
+    // Rifling and Zeroing converter tests (null handling verification)
+
+    @Test
+    void riflingToJson_withNullInput_shouldReturnNull() {
+        var converter = new R2dbcConverters.RiflingToJsonConverter();
+        var result = converter.convert(null, null, null);
+        assertEquals(null, result);
+    }
+
+    @Test
+    void jsonToRifling_withNullInput_shouldReturnNull() {
+        var converter = new R2dbcConverters.JsonToRiflingConverter();
+        var result = converter.convert(null, null, null);
+        assertEquals(null, result);
+    }
+
+    @Test
+    void zeroingToJson_withNullInput_shouldReturnNull() {
+        var converter = new R2dbcConverters.ZeroingToJsonConverter();
+        var result = converter.convert(null, null, null);
+        assertEquals(null, result);
+    }
+
+    @Test
+    void jsonToZeroing_withNullInput_shouldReturnNull() {
+        var converter = new R2dbcConverters.JsonToZeroingConverter();
+        var result = converter.convert(null, null, null);
+        assertEquals(null, result);
+    }
+
+    @Test
+    void riflingToJson_getConvertibleTypes_shouldReturnPairsOrEmpty() {
+        var converter = new R2dbcConverters.RiflingToJsonConverter();
+        var types = converter.getConvertibleTypes();
+        assertNotNull(types);
+        // Will be empty if Rifling class not available in classpath
+        // Will have one pair if Rifling class is available
+    }
+
+    @Test
+    void jsonToRifling_getConvertibleTypes_shouldReturnPairsOrEmpty() {
+        var converter = new R2dbcConverters.JsonToRiflingConverter();
+        var types = converter.getConvertibleTypes();
+        assertNotNull(types);
+        // Will be empty if Rifling class not available in classpath
+        // Will have one pair if Rifling class is available
+    }
+
+    @Test
+    void zeroingToJson_getConvertibleTypes_shouldReturnPairsOrEmpty() {
+        var converter = new R2dbcConverters.ZeroingToJsonConverter();
+        var types = converter.getConvertibleTypes();
+        assertNotNull(types);
+        // Will be empty if Zeroing class not available in classpath
+        // Will have one pair if Zeroing class is available
+    }
+
+    @Test
+    void jsonToZeroing_getConvertibleTypes_shouldReturnPairsOrEmpty() {
+        var converter = new R2dbcConverters.JsonToZeroingConverter();
+        var types = converter.getConvertibleTypes();
+        assertNotNull(types);
+        // Will be empty if Zeroing class not available in classpath
+        // Will have one pair if Zeroing class is available
     }
 }

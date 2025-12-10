@@ -2,6 +2,8 @@ package ca.zhoozhoo.loaddev.rifles.model;
 
 import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
 
+import java.util.Objects;
+
 import javax.measure.Quantity;
 import javax.measure.quantity.Length;
 
@@ -19,7 +21,7 @@ import jakarta.validation.constraints.NotBlank;
 /**
  * Rifle firearm specifications for ammunition load development.
  * <p>
- * Includes caliber, barrel length, twist rate, and free bore measurements using
+ * Includes caliber, barrel length, rifling, and optional zeroing configuration using
  * JSR-385 Quantity types. Each rifle is owned by a specific user for multi-tenant isolation.
  *
  * @author Zhubin Salehi
@@ -45,17 +47,12 @@ public record Rifle(
 
         @Column("barrel_contour") String barrelContour,
 
-        @Column("twist_rate") String twistRate,
+        @Column("rifling") Rifling rifling,
 
-        @Column("rifling") String rifling,
-
-        @JsonSerialize(using = QuantitySerializer.class)
-        @JsonDeserialize(using = QuantityDeserializer.class)
-        @Column("free_bore") Quantity<Length> freeBore) {
+        @Column("zeroing") Zeroing zeroing) {
 
     /**
-     * Validates rifle specifications:
-     * barrel length (4-50 inches) and free bore (0.001-0.5 inches).
+     * Validates rifle specifications: barrel length (4-50 inches).
      */
     public Rifle {
         // Validate reasonable barrel length (4 to 50 inches equivalent)
@@ -67,15 +64,40 @@ public record Rifle(
                 );
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         
-        // Validate reasonable free bore (0.001 to 0.5 inches equivalent)
-        if (freeBore != null) {
-            double freeBoreInInches = freeBore.to(INCH_INTERNATIONAL).getValue().doubleValue();
-            if (freeBoreInInches < 0.001 || freeBoreInInches > 0.5) {
-                throw new IllegalArgumentException(
-                    "Free bore must be between 0.001 and 0.5 inches, got: %.4f".formatted(freeBoreInInches)
-                );
-            }
-        }
+        Rifle rifle = (Rifle) o;
+        return Objects.equals(id, rifle.id) &&
+               Objects.equals(ownerId, rifle.ownerId) &&
+               Objects.equals(name, rifle.name) &&
+               Objects.equals(description, rifle.description) &&
+               Objects.equals(caliber, rifle.caliber) &&
+               quantitiesEqual(barrelLength, rifle.barrelLength) &&
+               Objects.equals(barrelContour, rifle.barrelContour) &&
+               Objects.equals(rifling, rifle.rifling) &&
+               Objects.equals(zeroing, rifle.zeroing);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, ownerId, name, description, caliber, 
+                           quantityHashCode(barrelLength), barrelContour, rifling, zeroing);
+    }
+
+    private boolean quantitiesEqual(Quantity<?> q1, Quantity<?> q2) {
+        if (q1 == q2) return true;
+        if (q1 == null || q2 == null) return false;
+        return q1.getValue().doubleValue() == q2.getValue().doubleValue() &&
+               Objects.equals(q1.getUnit(), q2.getUnit());
+    }
+
+    private int quantityHashCode(Quantity<?> q) {
+        if (q == null) return 0;
+        return Objects.hash(q.getValue().doubleValue(), q.getUnit());
     }
 }

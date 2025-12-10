@@ -3,13 +3,17 @@ package ca.zhoozhoo.loaddev.common.r2dbc;
 import static systems.uom.ucum.format.UCUMFormat.Variant.CASE_SENSITIVE;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.measure.Quantity;
 import javax.money.MonetaryAmount;
 
 import org.jspecify.annotations.NonNull;
+import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 
@@ -44,6 +48,10 @@ public class R2dbcConverters {
         converters.add(new JsonToQuantityConverter());
         converters.add(new MonetaryAmountToJsonConverter());
         converters.add(new JsonToMonetaryAmountConverter());
+        converters.add(new RiflingToJsonConverter());
+        converters.add(new JsonToRiflingConverter());
+        converters.add(new ZeroingToJsonConverter());
+        converters.add(new JsonToZeroingConverter());
 
         return converters;
     }
@@ -109,6 +117,154 @@ public class R2dbcConverters {
                 return OBJECT_MAPPER.readValue(source.asString(), MonetaryAmount.class);
             } catch (JacksonException e) {
                 throw new IllegalArgumentException("Failed to parse MonetaryAmount JSON: " + source.asString(), e);
+            }
+        }
+    }
+
+    /**
+     * Converts {@code Rifling} to PostgreSQL JSONB.
+     * Example: {@code {"twistRate": {"value": 16.0, "unit": "[in_i]", "scale": "ABSOLUTE"}, "twistDirection": "RIGHT"}}
+     * Note: Uses GenericConverter to explicitly declare supported types and avoid circular dependency.
+     */
+    @WritingConverter
+    public static class RiflingToJsonConverter implements GenericConverter {
+
+        private static final String RIFLING_CLASS_NAME = "ca.zhoozhoo.loaddev.rifles.model.Rifling";
+
+        @Override
+        public Set<ConvertiblePair> getConvertibleTypes() {
+            try {
+                Class<?> riflingClass = Class.forName(RIFLING_CLASS_NAME);
+                Set<ConvertiblePair> pairs = new HashSet<>();
+                pairs.add(new ConvertiblePair(riflingClass, Json.class));
+                return pairs;
+            } catch (ClassNotFoundException e) {
+                // Rifling class not available in this module - return empty set
+                return Set.of();
+            }
+        }
+
+        @Override
+        public Object convert(Object source, @NonNull TypeDescriptor sourceType, @NonNull TypeDescriptor targetType) {
+            if (source == null) {
+                return null;
+            }
+            try {
+                return Json.of(OBJECT_MAPPER.writeValueAsString(source));
+            } catch (JacksonException e) {
+                throw new IllegalArgumentException("Failed to write Rifling JSON", e);
+            }
+        }
+    }
+
+    /**
+     * Converts PostgreSQL JSONB to {@code Rifling}.
+     * Example: {@code {"twistRate": {"value": 16.0, "unit": "[in_i]", "scale": "ABSOLUTE"}, "twistDirection": "RIGHT"}}
+     */
+    @ReadingConverter
+    public static class JsonToRiflingConverter implements GenericConverter {
+
+        private static final String RIFLING_CLASS_NAME = "ca.zhoozhoo.loaddev.rifles.model.Rifling";
+
+        @Override
+        public Set<ConvertiblePair> getConvertibleTypes() {
+            try {
+                Class<?> riflingClass = Class.forName(RIFLING_CLASS_NAME);
+                Set<ConvertiblePair> pairs = new HashSet<>();
+                pairs.add(new ConvertiblePair(Json.class, riflingClass));
+                return pairs;
+            } catch (ClassNotFoundException e) {
+                // Rifling class not available in this module - return empty set
+                return Set.of();
+            }
+        }
+
+        @Override
+        public Object convert(Object source, @NonNull TypeDescriptor sourceType, @NonNull TypeDescriptor targetType) {
+            if (source == null) {
+                return null;
+            }
+            if (!(source instanceof Json json)) {
+                throw new IllegalArgumentException("Source must be Json type");
+            }
+            try {
+                return OBJECT_MAPPER.readValue(json.asString(), Class.forName(RIFLING_CLASS_NAME));
+            } catch (JacksonException | ClassNotFoundException e) {
+                throw new IllegalArgumentException("Failed to parse Rifling JSON: " + json.asString(), e);
+            }
+        }
+    }
+
+    /**
+     * Converts {@code Zeroing} to PostgreSQL JSONB.
+     * Example: {@code {"sightHeight": {"value": 1.5, "unit": "[in_i]", "scale": "ABSOLUTE"}, "zeroDistance": {"value": 100.0, "unit": "[in_i]", "scale": "ABSOLUTE"}}}
+     * Note: Uses GenericConverter to explicitly declare supported types and avoid circular dependency.
+     */
+    @WritingConverter
+    public static class ZeroingToJsonConverter implements GenericConverter {
+
+        private static final String ZEROING_CLASS_NAME = "ca.zhoozhoo.loaddev.rifles.model.Zeroing";
+
+        @Override
+        public Set<ConvertiblePair> getConvertibleTypes() {
+            try {
+                Class<?> zeroingClass = Class.forName(ZEROING_CLASS_NAME);
+                Set<ConvertiblePair> pairs = new HashSet<>();
+                pairs.add(new ConvertiblePair(zeroingClass, Json.class));
+                return pairs;
+            } catch (ClassNotFoundException e) {
+                // Zeroing class not available in this module - return empty set
+                return Set.of();
+            }
+        }
+
+        @Override
+        public Object convert(Object source, @NonNull TypeDescriptor sourceType, @NonNull TypeDescriptor targetType) {
+            if (source == null) {
+                return null;
+            }
+            try {
+                return Json.of(OBJECT_MAPPER.writeValueAsString(source));
+            } catch (JacksonException e) {
+                throw new IllegalArgumentException("Failed to write Zeroing JSON", e);
+            }
+        }
+    }
+
+    /**
+     * Converts PostgreSQL JSONB to {@code Zeroing}.
+     * Example: {@code {"sightHeight": {"value": 1.5, "unit": "[in_i]", "scale": "ABSOLUTE"}, "zeroDistance": {"value": 100.0, "unit": "[in_i]", "scale": "ABSOLUTE"}}}
+     */
+    @ReadingConverter
+    public static class JsonToZeroingConverter implements GenericConverter {
+
+        private static final String ZEROING_CLASS_NAME = "ca.zhoozhoo.loaddev.rifles.model.Zeroing";
+
+        @Override
+        public Set<ConvertiblePair> getConvertibleTypes() {
+            try {
+                Class<?> zeroingClass = Class.forName(ZEROING_CLASS_NAME);
+                Set<ConvertiblePair> pairs = new HashSet<>();
+                pairs.add(new ConvertiblePair(Json.class, zeroingClass));
+                return pairs;
+            } catch (ClassNotFoundException e) {
+                // Zeroing class not available in this module - return empty set
+                return Set.of();
+            }
+        }
+
+        @Override
+        public Object convert(Object source, @NonNull TypeDescriptor sourceType, @NonNull TypeDescriptor targetType) {
+            if (source == null) {
+                return null;
+            }
+            if (!(source instanceof Json json)) {
+                throw new IllegalArgumentException("Source must be Json type");
+            }
+            try {
+                return OBJECT_MAPPER.readValue(json.asString(), Class.forName(ZEROING_CLASS_NAME));
+            } catch (JacksonException | ClassNotFoundException e) {
+                throw new IllegalArgumentException("Failed to parse Zeroing JSON: " + json.asString(), e);
             }
         }
     }

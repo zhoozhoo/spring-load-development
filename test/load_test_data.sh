@@ -107,7 +107,18 @@ create_rifle() {
     local rifle_payload='{
         "name": "Tikka T3x CTR",
         "description": "6.5mm Creedmoor Tikka T3x CTR",
-        "caliber": "6.5 Creedmoor"
+        "caliber": "6.5 Creedmoor",
+        "barrelLength": { "value": 20.0, "unit": "[in_i]", "scale": "ABSOLUTE" },
+        "barrelContour": "Heavy",
+        "rifling": {
+            "twistRate": { "value": 8.0, "unit": "[in_i]", "scale": "ABSOLUTE" },
+            "twistDirection": "RIGHT",
+            "numberOfGrooves": 6
+        },
+        "zeroing": {
+            "sightHeight": { "value": 1.5, "unit": "[in_i]", "scale": "ABSOLUTE" },
+            "zeroDistance": { "value": 100.0, "unit": "[yd_i]", "scale": "ABSOLUTE" }
+        }
     }'
     
     local response=$(curl -s -X POST \

@@ -6,8 +6,9 @@ import javax.measure.quantity.Length;
 /**
  * Barrel rifling specifications.
  *
- * @param riflingStep    distance for one complete rotation (twist rate)
- * @param twistDirection direction of rifling twist
+ * @param twistRate       distance for one complete rotation (twist rate)
+ * @param twistDirection  direction of rifling twist
+ * @param numberOfGrooves number of grooves cut into the barrel (typically 3, 4, 5, or 6)
  *
  * @author Zhubin Salehi
  */
@@ -15,5 +16,7 @@ public record Rifling(
 
         Quantity<Length> twistRate,
 
-        TwistDirection twistDirection) {
+        TwistDirection twistDirection,
+
+        Integer numberOfGrooves) {
 }
