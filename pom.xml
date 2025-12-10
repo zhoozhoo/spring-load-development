@@ -112,6 +112,41 @@
                     <version>${com.azure.spring.version}</version>
                 </dependency>
             </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <configuration>
+                            <image>
+                                <name>${docker.publishRegistry.url}/spring-load-development/${project.artifactId}:${project.version}</name>
+                                <buildpacks>
+                                    <buildpack>docker.io/paketobuildpacks/microsoft-openjdk</buildpack>
+                                    <buildpack>docker.io/paketobuildpacks/java</buildpack>
+                                </buildpacks>
+                                <env>
+                                    <BP_JVM_VERSION>${java.version}</BP_JVM_VERSION>
+                                    <BP_HEALTH_CHECKER_ENABLED>true</BP_HEALTH_CHECKER_ENABLED>
+                                </env>
+                            </image>
+                            <docker>
+                                <publishRegistry>
+                                    <username>${docker.publishRegistry.username}</username>
+                                    <token>${docker.publishRegistry.token}</token>
+                                    <url>${docker.publishRegistry.url}</url>
+                                </publishRegistry>
+                            </docker>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>build-image</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
     
