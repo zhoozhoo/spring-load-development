@@ -35,16 +35,33 @@ import reactor.util.retry.Retry;
  * <ol>
  *   <li>Receives a standard OAuth2 access token</li>
  *   <li>Constructs a token exchange request with grant type {@code urn:ietf:params:oauth:grant-type:uma-ticket}</li>
- *   <li>Calls Keycloak's token endpoint with client credentials</li>
+ *   <li>Calls Keycloak's token endpoint with client credentials via the Keycloak WebClient</li>
  *   <li>Returns the permission token containing resource permissions</li>
  * </ol>
  * 
  * <p>The service includes automatic retry logic for transient failures, proper error handling,
  * and Spring Cache integration for caching permission tokens.</p>
  * 
+ * <p><b>OpenTelemetry Observability:</b></p>
+ * <p>This service benefits from automatic OpenTelemetry instrumentation through the injected
+ * {@code keycloakWebClient}, which is configured with an {@link io.micrometer.observation.ObservationRegistry}.
+ * Each token exchange operation generates observability data:</p>
+ * <ul>
+ *   <li><b>Distributed Traces:</b> HTTP client spans are created for each Keycloak call, showing
+ *       request duration, response status, and correlation with parent gateway spans. Trace context
+ *       is propagated using W3C Trace Context headers (traceparent, tracestate).</li>
+ *   <li><b>Metrics:</b> Request count, duration histograms, error rates, and retry attempts are
+ *       automatically collected and exported to OpenTelemetry collectors.</li>
+ *   <li><b>Error Tracking:</b> Failed token exchanges include exception details in span events,
+ *       enabling quick diagnosis of authentication issues.</li>
+ *   <li><b>Cache Hit/Miss Observability:</b> Spring Cache operations are observable through
+ *       Micrometer's cache metrics, showing cache effectiveness for token reuse.</li>
+ * </ul>
+ * 
  * @author Zhubin Salehi
  * @see <a href="https://docs.kantarainitiative.org/uma/wg/rec-oauth-uma-grant-2.0.html">UMA 2.0 Grant</a>
  * @see CacheConfiguration
+ * @see SecurityConfiguration#keycloakWebClient
  */
 @Service
 @Log4j2
@@ -79,6 +96,18 @@ public class UmaTokenExchangeService {
      * When caching is enabled, permission tokens are automatically cached using the
      * access token as the key. Cached tokens are returned immediately without making
      * a network call to Keycloak.</p>
+     * 
+     * <p><b>OpenTelemetry Tracing:</b></p>
+     * <p>The WebClient call to Keycloak's token endpoint automatically creates a child span
+     * in the distributed trace. This span includes:</p>
+     * <ul>
+     *   <li>HTTP method, URL, and status code</li>
+     *   <li>Request/response timing</li>
+     *   <li>Error details if the exchange fails</li>
+     *   <li>Retry attempt counts and timing</li>
+     * </ul>
+     * <p>Trace context is propagated to Keycloak via W3C Trace Context headers, enabling
+     * end-to-end trace correlation across the gateway and authorization server.</p>
      * 
      * @param accessToken the OAuth2 access token to exchange (used as cache key)
      * @return a Mono emitting the permission token, or an error if exchange fails

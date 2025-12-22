@@ -3,7 +3,11 @@ package ca.zhoozhoo.loaddev.loads;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import ca.zhoozhoo.loaddev.common.opentelemetry.ContextPropagationConfiguration;
+import ca.zhoozhoo.loaddev.common.opentelemetry.OpenTelemetryConfiguration;
 
 /**
  * Main application class for the Loads Service.
@@ -19,6 +23,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @SpringBootApplication
 @EnableTransactionManagement
 @EnableDiscoveryClient
+@Import({OpenTelemetryConfiguration.class, ContextPropagationConfiguration.class})
 public class LoadsServiceApplication {
 
     public static void main(String[] args) {

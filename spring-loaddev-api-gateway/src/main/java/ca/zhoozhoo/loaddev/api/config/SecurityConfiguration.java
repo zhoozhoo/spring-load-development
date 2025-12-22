@@ -3,9 +3,10 @@ package ca.zhoozhoo.loaddev.api.config;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.client.loadbalancer.reactive.ReactorLoadBalancerExchangeFilterFunction;
+import org.springframework.cloud.gateway.config.HttpClientFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
@@ -104,19 +105,6 @@ public class SecurityConfiguration {
     }
 
     /**
-     * Configures a WebClient with load balancing capabilities.
-     * This WebClient is used for making requests to other services through service
-     * discovery, with automatic load balancing across available service instances.
-     *
-     * @param lbFunction the ReactorLoadBalancerExchangeFilterFunction for load balancing
-     * @return a WebClient instance with load balancing support
-     */
-    @Bean
-    public WebClient webClient(ReactorLoadBalancerExchangeFilterFunction lbFunction) {
-        return WebClient.builder().filter(lbFunction).build();
-    }
-
-    /**
      * Configures OAuth2 client support for WebClient requests.
      * This filter function manages OAuth2 token acquisition and renewal for client
      * credentials flow, using the specified client registration for authentication.
@@ -138,20 +126,57 @@ public class SecurityConfiguration {
     }
 
     /**
-     * Creates a dedicated WebClient for Keycloak interactions.
+     * Creates a dedicated WebClient for Keycloak interactions with OpenTelemetry observability.
      * This WebClient is specifically configured for communication with the Keycloak
      * authorization server, used for authentication, token introspection, and other
-     * identity management operations. The client includes observability support for
-     * monitoring and tracing HTTP requests.
+     * identity management operations.
+     * 
+     * <p>The underlying HttpClient is created using Spring Cloud Gateway's HttpClientFactory,
+     * which provides:</p>
+     * <ul>
+     *   <li>Connection pooling with max 50 connections</li>
+     *   <li>5-second response timeout</li>
+     *   <li>Metrics and observability support via Micrometer</li>
+     *   <li>Base URL configuration for Keycloak server</li>
+     * </ul>
+     * 
+     * <p><b>OpenTelemetry Integration:</b></p>
+     * <p>The WebClient is configured with an {@link ObservationRegistry} that bridges Micrometer
+     * observations to OpenTelemetry. This enables:</p>
+     * <ul>
+     *   <li><b>Distributed Tracing:</b> Automatic trace context propagation using W3C Trace Context
+     *       standard (traceparent and tracestate headers). Each HTTP request creates a new span
+     *       linked to the parent trace, providing end-to-end visibility across the gateway and
+     *       Keycloak server.</li>
+     *   <li><b>HTTP Client Metrics:</b> Request duration, response status codes, connection pool
+     *       metrics, and error rates are automatically collected and exported to OpenTelemetry
+     *       collectors.</li>
+     *   <li><b>Contextual Logging:</b> Log correlation with trace IDs for troubleshooting failed
+     *       token exchange operations.</li>
+     * </ul>
+     * 
+     * <p>The trace context is automatically propagated from incoming gateway requests through
+     * this WebClient to Keycloak, maintaining the distributed trace across the entire request flow.</p>
      *
      * @param baseUrl             the base URL of the Keycloak server
-     * @param observationRegistry registry for recording metrics and traces of HTTP
-     *                            client operations
-     * @return a WebClient configured for Keycloak communication with observability support
+     * @param observationRegistry Micrometer registry bridged to OpenTelemetry for metrics and traces
+     * @param httpClientFactory   Spring Cloud Gateway's HTTP client factory with pooling and timeouts
+     * @return a WebClient configured for Keycloak communication with full OpenTelemetry observability
      */
     @Bean
-    public WebClient keycloakWebClient(@Value("${spring.webclient.keycloak.base-url}") String baseUrl,
-            ObservationRegistry observationRegistry) {
-        return WebClient.builder().baseUrl(baseUrl).observationRegistry(observationRegistry).build();
+    public WebClient keycloakWebClient(
+            @Value("${spring.webclient.keycloak.base-url}") String baseUrl,
+            ObservationRegistry observationRegistry,
+            HttpClientFactory httpClientFactory) {
+        
+        try {
+            return WebClient.builder()
+                    .baseUrl(baseUrl)
+                    .clientConnector(new ReactorClientHttpConnector(httpClientFactory.getObject()))
+                    .observationRegistry(observationRegistry)
+                    .build();
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to create Keycloak WebClient", e);
+        }
     }
 }

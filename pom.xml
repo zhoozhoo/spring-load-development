@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.0</version>
+        <version>4.0.1</version>
     </parent>
 
     <groupId>ca.zhoozhoo.load-development</groupId>
@@ -31,22 +31,21 @@
 
     <properties>
         <java.version>25</java.version>
-        <spring-boot.version>4.0.0</spring-boot.version>
+        <spring-boot.version>4.0.1</spring-boot.version>
         <spring-boot-admin.version>3.5.6</spring-boot-admin.version>
         <spring-cloud.version>2025.1.0</spring-cloud.version>
-        <spring-ai.version>1.1.1</spring-ai.version>
+        <spring-ai.version>1.1.2</spring-ai.version>
         <springdoc.version>3.0.0</springdoc.version>
         <r2dbc-postgresql.version>1.1.1.RELEASE</r2dbc-postgresql.version>
         <mapstruct.version>1.6.3</mapstruct.version>
-        <opentelemetry.version>1.57.0</opentelemetry.version>
-        <opentelemetry-instrumentation.version>2.22.0</opentelemetry-instrumentation.version>
-        <opentelemetry-instrumentation.version.alpha>2.22.0-alpha</opentelemetry-instrumentation.version.alpha>
+        <okhttp.version>5.3.2</okhttp.version>
+        <opentelemetry-instrumentation.version>2.23.0</opentelemetry-instrumentation.version>
+        <opentelemetry-instrumentation.version.alpha>2.23.0-alpha</opentelemetry-instrumentation.version.alpha>
         <spotbugs-maven-plugin.version>4.9.8.1</spotbugs-maven-plugin.version>
         <spotbugs.version>4.9.8</spotbugs.version>
         <findsecbugs-plugin.version>1.14.0</findsecbugs-plugin.version>
         <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
         <testcontainers-keycloak.version>4.0.0</testcontainers-keycloak.version>
-        <okhttp.version>5.3.2</okhttp.version>
         <javax.measure.version>2.2</javax.measure.version>
         <tech.units.indriya.version>2.2.3</tech.units.indriya.version>
         <systems.uom.version>2.2</systems.uom.version>
@@ -72,13 +71,6 @@
                 <groupId>org.springframework.ai</groupId>
                 <artifactId>spring-ai-bom</artifactId>
                 <version>${spring-ai.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.opentelemetry</groupId>
-                <artifactId>opentelemetry-bom</artifactId>
-                <version>${opentelemetry.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
