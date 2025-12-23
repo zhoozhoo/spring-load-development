@@ -3,7 +3,7 @@ namespace: observability
 
 image:
   repository: grafana/loki
-  tag: "3.6.2"
+  tag: "3.6.3"
 
 config:
   auth_enabled: false

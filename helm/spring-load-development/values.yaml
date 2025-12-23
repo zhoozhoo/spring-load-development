@@ -14,11 +14,11 @@ global:
     microservices: "0.1.0-SNAPSHOT"
     
     # Observability stack
-    loki: "3.6.2"
+    loki: "3.6.3"
     tempo: "2.9.0"
-    prometheus: "v3.8.0"
-    grafana: "12.3.0"
-    otelCollector: "0.141.0"
+    prometheus: "v3.8.1"
+    grafana: "12.3.1"
+    otelCollector: "0.142.0"
     
     # Identity and database
     keycloak: "26.4"

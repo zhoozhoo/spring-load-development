@@ -549,9 +549,9 @@ API Gateway excludes `SimpleMetricsExportAutoConfiguration` to prevent duplicate
 **Observability Stack (All Environments):**
 - **OpenTelemetry Collector** - Port 4318 (HTTP), 4317 (gRPC)
 - **Tempo 2.9.0** - Distributed tracing backend
-- **Loki 3.6.2** - Log aggregation
-- **Prometheus v3.8.0** - Metrics collection
-- **Grafana 12.3.0** - Unified dashboard
+- **Loki 3.6.3** - Log aggregation
+- **Prometheus v3.8.1** - Metrics collection
+- **Grafana 12.3.1** - Unified dashboard
 
 ### Multi-Module Maven Structure
 Parent POM defines:

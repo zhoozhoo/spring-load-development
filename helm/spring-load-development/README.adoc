@@ -349,7 +349,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Grafana (Visualization)
 
-* *Version*: 12.3.0
+* *Version*: 12.3.1
 * *Port*: 30000
 * *Authentication*: Anonymous access enabled (Admin role)
 * *Datasources*: Pre-configured Loki, Tempo, and Prometheus
@@ -360,7 +360,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== OpenTelemetry Collector
 
-* *Version*: 0.141.0
+* *Version*: 0.142.0
 * *Namespace*: `observability`
 * *GRPC Port*: 30317
 * *Metrics Port*: 30889
@@ -390,11 +390,11 @@ global:
     microservices: "0.1.0-SNAPSHOT"
     
     # Observability stack
-    loki: "3.6.2"
+    loki: "3.6.3"
     tempo: "2.9.0"
-    prometheus: "v3.8.0"
-    grafana: "12.3.0"
-    otelCollector: "0.141.0"
+    prometheus: "v3.8.1"
+    grafana: "12.3.1"
+    otelCollector: "0.142.0"
     
     # Identity and database
     keycloak: "26.4"
@@ -1026,7 +1026,7 @@ spring-load-development/
     │   │   └── _helpers.tpl   # Observability helper functions
     │   └── charts/             # Observability sub-subcharts
     │       ├── grafana/        # Grafana sub-subchart
-    │       │   ├── Chart.yaml  # Version: 0.1.0-SNAPSHOT, AppVersion: 12.3.0
+    │       │   ├── Chart.yaml  # Version: 0.1.0-SNAPSHOT, AppVersion: 12.3.1
     │       │   ├── values.yaml # Grafana-specific configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # Grafana helper functions
@@ -1037,7 +1037,7 @@ spring-load-development/
     │       │       ├── pvc.yaml          # Persistent storage
     │       │       └── service.yaml      # Grafana service with NodePort 30000
     │       ├── loki/            # Loki sub-subchart
-    │       │   ├── Chart.yaml   # Version: 0.1.0-SNAPSHOT, AppVersion: 3.6.2
+    │       │   ├── Chart.yaml   # Version: 0.1.0-SNAPSHOT, AppVersion: 3.6.3
     │       │   ├── values.yaml  # Loki-specific configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # Loki helper functions
@@ -1047,7 +1047,7 @@ spring-load-development/
     │       │       ├── pvc.yaml          # Persistent storage
     │       │       └── service.yaml      # Loki service with NodePort 30100
     │       ├── otel-collector/  # OpenTelemetry Collector sub-subchart
-    │       │   ├── Chart.yaml   # Version: 0.1.0-SNAPSHOT, AppVersion: 0.141.0
+    │       │   ├── Chart.yaml   # Version: 0.1.0-SNAPSHOT, AppVersion: 0.142.0
     │       │   ├── values.yaml  # OTel Collector configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # OTel Collector helper functions
@@ -1056,7 +1056,7 @@ spring-load-development/
     │       │       ├── pdb.yaml          # PodDisruptionBudget
     │       │       └── service.yaml      # OTel service (GRPC 30317, HTTP 30889)
     │       ├── prometheus/      # Prometheus sub-subchart
-    │       │   ├── Chart.yaml   # Version: 0.1.0-SNAPSHOT, AppVersion: v3.8.0
+    │       │   ├── Chart.yaml   # Version: 0.1.0-SNAPSHOT, AppVersion: v3.8.1
     │       │   ├── values.yaml  # Prometheus-specific configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # Prometheus helper functions

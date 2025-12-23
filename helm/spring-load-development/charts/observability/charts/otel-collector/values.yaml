@@ -3,7 +3,7 @@ namespace: observability
 
 image:
   repository: otel/opentelemetry-collector-contrib
-  tag: "0.141.0"
+  tag: "0.142.0"
 
 config:
   extensions:
