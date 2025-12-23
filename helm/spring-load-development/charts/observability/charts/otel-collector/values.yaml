@@ -17,6 +17,8 @@ config:
       protocols:
         grpc:
           endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
   
   processors:
     batch:
@@ -75,11 +77,13 @@ service:
   type: ClusterIP
   ports:
     grpc: 4317
+    http: 4318
     prometheus: 8889
 
 nodePort:
   enabled: true
   grpcPort: 30317
+  httpPort: 30318
   prometheusPort: 30889
 
 securityContext:

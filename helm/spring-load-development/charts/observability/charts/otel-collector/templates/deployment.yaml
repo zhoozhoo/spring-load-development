@@ -31,6 +31,9 @@ spec:
             - name: otlp-grpc
               containerPort: {{ .Values.service.ports.grpc }}
               protocol: TCP
+            - name: otlp-http
+              containerPort: {{ .Values.service.ports.http }}
+              protocol: TCP
             - name: prometheus
               containerPort: {{ .Values.service.ports.prometheus }}
               protocol: TCP
