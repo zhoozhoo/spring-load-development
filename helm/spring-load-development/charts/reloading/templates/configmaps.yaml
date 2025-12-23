@@ -32,25 +32,6 @@ data:
         web:
           exposure:
             include: "*"
-      metrics:
-        enable:
-          all: true
-        tags:
-          application: ${spring.application.name}
-          service: ${spring.application.name}
-          environment: ${SPRING_PROFILES_ACTIVE:kubernetes}
-        distribution:
-          percentiles-histogram:
-            http:
-              server:
-                requests: 'true'
-      otlp:
-        metrics:
-          export:
-            enabled: false
-      tracing:
-        sampling:
-          probability: 1
       info:
         build:
           enabled: true
@@ -64,6 +45,42 @@ data:
           enabled: true
         process:
           enabled: true
+      metrics:
+        enable:
+          all: true
+        tags:
+          application: ${spring.application.name}
+          service: ${spring.application.name}
+          environment: ${SPRING_PROFILES_ACTIVE:kubernetes}
+        distribution:
+          percentiles-histogram:
+            http:
+              server:
+                requests: 'true'
+      observations:
+        annotations:
+          enabled: true
+        enable:
+          all: true
+      opentelemetry:
+        logging:
+          export:
+            otlp:
+              endpoint: ${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:http://otel-collector-service.observability.svc.cluster.local:4317/v1/logs}
+              transport: grpc
+        tracing:
+          export:
+            otlp:
+              endpoint: ${OTEL_EXPORTER_OTLP_TRACING_ENDPOINT:http://otel-collector-service.observability.svc.cluster.local:4317}
+              transport: grpc
+      otlp:
+        metrics:
+          export:
+            url: ${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:http://otel-collector-service.observability.svc.cluster.local:4318/v1/metrics}
+            step: 10s
+      tracing:
+        sampling:
+          probability: 1
 
     logging:
       config: /etc/config/log4j2.yaml
@@ -71,27 +88,6 @@ data:
     log4j2:
       Configuration:
         allowedProtocols: "http,https,file,jar"
-
-    otel:
-      exporter:
-        otlp:
-          endpoint: {{ .Values.otelCollector.grpcEndpoint | default "http://otel-collector-service.observability.svc.cluster.local:4317" }}
-          protocol: grpc
-      instrumentation:
-        micrometer:
-          enabled: true
-        runtime-telemetry:
-          enabled: false
-      metric:
-        export:
-          interval: 10000
-      resource:
-        attributes:
-          service:
-            name: ${spring.application.name}
-            version: ${project.version}
-      service:
-        name: ${spring.application.name}
 
 ---
 apiVersion: v1
