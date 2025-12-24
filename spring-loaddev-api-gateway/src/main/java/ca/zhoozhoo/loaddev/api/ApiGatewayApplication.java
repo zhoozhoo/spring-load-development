@@ -6,6 +6,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.annotation.Import;
 
 import ca.zhoozhoo.loaddev.common.opentelemetry.ContextPropagationConfiguration;
+import ca.zhoozhoo.loaddev.common.opentelemetry.FilterConfiguration;
 import ca.zhoozhoo.loaddev.common.opentelemetry.OpenTelemetryConfiguration;
 
 /**
@@ -37,7 +38,7 @@ import ca.zhoozhoo.loaddev.common.opentelemetry.OpenTelemetryConfiguration;
         "org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration"
 })
 @EnableDiscoveryClient
-@Import({OpenTelemetryConfiguration.class, ContextPropagationConfiguration.class})
+@Import({OpenTelemetryConfiguration.class, ContextPropagationConfiguration.class, FilterConfiguration.class})
 public class ApiGatewayApplication {
 
     public static void main(String[] args) {

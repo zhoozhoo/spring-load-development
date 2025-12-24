@@ -16,6 +16,13 @@ import tools.jackson.databind.json.JsonMapper;
  */
 class SpringObjectMapperMcpJsonMapperTest {
 
+    private static final class BeanWithFailingGetter {
+        @SuppressWarnings("unused")
+        public String getValue() throws Exception {
+            throw new Exception("Forced error");
+        }
+    }
+
     private SpringObjectMapperMcpJsonMapper mapper;
     private JsonMapper jsonMapper;
 
@@ -94,12 +101,8 @@ class SpringObjectMapperMcpJsonMapperTest {
     @Test
     void writeValueAsBytesThrowsOnInvalidObject() {
         // Jackson 3 throws unchecked exceptions directly
-        assertThatThrownBy(() -> mapper.writeValueAsBytes(new Object() {
-            @SuppressWarnings("unused")
-            public String getValue() throws Exception {
-                throw new Exception("Forced error");
-            }
-        })).isInstanceOf(RuntimeException.class);
+        assertThatThrownBy(() -> mapper.writeValueAsBytes(new BeanWithFailingGetter()))
+            .isInstanceOf(RuntimeException.class);
     }
 
     @Test

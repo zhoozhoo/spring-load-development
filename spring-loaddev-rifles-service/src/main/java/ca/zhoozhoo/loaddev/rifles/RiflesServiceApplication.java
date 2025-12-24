@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import ca.zhoozhoo.loaddev.common.opentelemetry.ContextPropagationConfiguration;
+import ca.zhoozhoo.loaddev.common.opentelemetry.FilterConfiguration;
 import ca.zhoozhoo.loaddev.common.opentelemetry.OpenTelemetryConfiguration;
 
 /**
@@ -20,7 +21,7 @@ import ca.zhoozhoo.loaddev.common.opentelemetry.OpenTelemetryConfiguration;
 @SpringBootApplication
 @EnableTransactionManagement
 @EnableDiscoveryClient
-@Import({OpenTelemetryConfiguration.class, ContextPropagationConfiguration.class})
+@Import({OpenTelemetryConfiguration.class, ContextPropagationConfiguration.class, FilterConfiguration.class})
 public class RiflesServiceApplication {
 
     public static void main(String[] args) {
