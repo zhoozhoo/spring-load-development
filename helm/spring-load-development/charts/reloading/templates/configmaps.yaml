@@ -261,7 +261,7 @@ data:
       Loggers:
         Logger:
           - name: ca.zhoozhoo.loaddev
-            level: DEBUG
+            level: INFO
             additivity: false
             AppenderRef:
               - ref: ConsoleAppender
