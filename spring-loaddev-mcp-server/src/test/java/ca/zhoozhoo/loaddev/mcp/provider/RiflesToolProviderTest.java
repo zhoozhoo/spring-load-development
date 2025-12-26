@@ -56,7 +56,15 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
                 \"name\": \"Test Rifle\",
                 \"caliber\": \"6.5 Creedmoor\",
                 \"barrelLength\": { \"value\": 61.0, \"unit\": \"cm\" },
-                \"freeBore\": { \"value\": 0.25, \"unit\": \"cm\" }
+                \"rifling\": {
+                    \"twistRate\": { \"value\": 8.0, \"unit\": \"[in_i]\" },
+                    \"twistDirection\": \"RIGHT\",
+                    \"numberOfGrooves\": 4
+                },
+                \"zeroing\": {
+                    \"sightHeight\": { \"value\": 1.5, \"unit\": \"[in_i]\" },
+                    \"zeroDistance\": { \"value\": 100.0, \"unit\": \"[yd_i]\" }
+                }
             }
             """;
 
@@ -182,7 +190,22 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
             .satisfies(s -> assertThat(s).containsAnyOf(
                 "\"barrelLength\":{\"value\":61.0,\"unit\":\"cm\",\"scale\":\"ABSOLUTE\"}",
                 "\"barrelLength\":{\"value\":61,\"unit\":\"cm\",\"scale\":\"ABSOLUTE\"}"));
-        assertThat(textContent.text()).contains("\"freeBore\":{\"value\":0.25,\"unit\":\"cm\",\"scale\":\"ABSOLUTE\"}");
+        // Verify rifling object structure
+        assertThat(textContent.text())
+            .satisfies(s -> assertThat(s).containsAnyOf(
+                "\"twistRate\":{\"value\":8.0,\"unit\":\"[in_i]\",\"scale\":\"ABSOLUTE\"}",
+                "\"twistRate\":{\"value\":8,\"unit\":\"[in_i]\",\"scale\":\"ABSOLUTE\"}"));
+        assertThat(textContent.text()).contains("\"twistDirection\":\"RIGHT\"");
+        assertThat(textContent.text()).contains("\"numberOfGrooves\":4");
+        // Verify zeroing object structure
+        assertThat(textContent.text())
+            .satisfies(s -> assertThat(s).containsAnyOf(
+                "\"sightHeight\":{\"value\":1.5,\"unit\":\"[in_i]\",\"scale\":\"ABSOLUTE\"}",
+                "\"sightHeight\":{\"value\":1.5,\"unit\":\"[in_i]\",\"scale\":\"ABSOLUTE\"}"));
+        assertThat(textContent.text())
+            .satisfies(s -> assertThat(s).containsAnyOf(
+                "\"zeroDistance\":{\"value\":100.0,\"unit\":\"[yd_i]\",\"scale\":\"ABSOLUTE\"}",
+                "\"zeroDistance\":{\"value\":100,\"unit\":\"[yd_i]\",\"scale\":\"ABSOLUTE\"}"));
 
         // Restore original dispatcher for other tests
         mockRiflesServer.setDispatcher(createRiflesDispatcher());

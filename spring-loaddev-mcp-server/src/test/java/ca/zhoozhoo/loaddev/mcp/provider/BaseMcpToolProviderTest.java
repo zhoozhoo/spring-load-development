@@ -290,7 +290,9 @@ public abstract class BaseMcpToolProviderTest {
             {
                 "id": 1,
                 "name": "Test Rifle",
-                "caliber": "6.5 Creedmoor"
+                \"caliber\": \"6.5 Creedmoor\",
+                \"rifling\": null,
+                \"zeroing\": null
             }
             """;
 

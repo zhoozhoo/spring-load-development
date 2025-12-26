@@ -33,7 +33,7 @@ class LoadDetailsTest {
                         "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
                         "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L),
                 new RifleDto(1L, "Remington 700", "Precision rifle",
-                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE)),
+                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", null, null),
                 List.of(
                         new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), null, null, null, List.of()),
                         new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(200.0, METRE), getQuantity(1.25, METRE), null, null, null, List.of())
@@ -60,7 +60,7 @@ class LoadDetailsTest {
                         "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
                         "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L),
                 new RifleDto(1L, "Remington 700", "Precision rifle",
-                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE)),
+                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", null, null),
                 originalGroups);
 
         // Then
@@ -84,7 +84,7 @@ class LoadDetailsTest {
                         "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
                         "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L),
                 new RifleDto(1L, "Remington 700", "Precision rifle",
-                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE)),
+                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", null, null),
                 null);
 
         // Then
@@ -103,7 +103,7 @@ class LoadDetailsTest {
                         "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
                         "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L),
                 new RifleDto(1L, "Remington 700", "Precision rifle",
-                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE)),
+                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", null, null),
                 List.of(new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), null, null, null, List.of())));
 
         // When/Then
@@ -139,7 +139,7 @@ class LoadDetailsTest {
                         "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
                         "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L),
                 new RifleDto(1L, "Remington 700", "Precision rifle",
-                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE)),
+                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", null, null),
                 List.of());
 
         // Then
@@ -159,14 +159,14 @@ class LoadDetailsTest {
                         "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
                         "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L),
                 new RifleDto(1L, "Remington 700", "Precision rifle",
-                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE)),
+                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", null, null),
                 List.of(new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), null, null, null, List.of())));
         var loadDetails2 = new LoadDetails(
                 new LoadDto(1L, "308 Win Load", "Test load",
                         "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
                         "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L),
                 new RifleDto(1L, "Remington 700", "Precision rifle",
-                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE)),
+                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", null, null),
                 List.of(new GroupDto(LocalDate.now(), getQuantity(42.5, GRAM), getQuantity(100.0, METRE), getQuantity(0.75, METRE), null, null, null, List.of())));
 
         // Then
@@ -185,14 +185,14 @@ class LoadDetailsTest {
                         "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
                         "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L),
                 new RifleDto(1L, "Remington 700", "Precision rifle",
-                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE)),
+                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", null, null),
                 List.of());
         var loadDetails2 = new LoadDetails(
                 new LoadDto(2L, "308 Win Load", "Test load",
                         "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
                         "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L),
                 new RifleDto(1L, "Remington 700", "Precision rifle",
-                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE)),
+                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", null, null),
                 List.of());
 
         // Then
@@ -210,7 +210,7 @@ class LoadDetailsTest {
                         "Hodgdon", "Varget", "Hornady", "BTHP", getQuantity(168.0, GRAM),
                         "CCI", "BR-2", getQuantity(0.020, METRE), getQuantity(2.800, METRE), getQuantity(0.002, METRE), 1L),
                 new RifleDto(1L, "Remington 700", "Precision rifle",
-                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", "1:10", "Button", getQuantity(0.0, METRE)),
+                        "308 Winchester", getQuantity(24.0, METRE), "Heavy", null, null),
                 List.of());
 
         // When

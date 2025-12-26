@@ -24,9 +24,7 @@ public record RifleDto(
 
         String barrelContour,
 
-        String twistRate,
+        RiflingDto rifling,
 
-        String rifling,
-
-        Quantity<Length> freeBore) {
+        ZeroingDto zeroing) {
 }
