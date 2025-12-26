@@ -1,0 +1,53 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: otel-collector
+    {{- include "otel-collector.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      securityContext:
+        {{- include "otel-collector.podSecurityContext" . | nindent 8 }}
+      containers:
+        - name: otel-collector
+          image: "{{ .Values.image.repository }}:{{ if .Values.global }}{{ .Values.global.versions.otelCollector | default .Values.image.tag }}{{ else }}{{ .Values.image.tag }}{{ end }}"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "otel-collector.containerSecurityContext" . | nindent 12 }}
+          args:
+            - "--config=/etc/otel-collector/otel-collector.yaml"
+          ports:
+            - name: otlp-grpc
+              containerPort: {{ .Values.service.ports.grpc }}
+              protocol: TCP
+            - name: otlp-http
+              containerPort: {{ .Values.service.ports.http }}
+              protocol: TCP
+            - name: prometheus
+              containerPort: {{ .Values.service.ports.prometheus }}
+              protocol: TCP
+            - name: zpages
+              containerPort: 55679
+              protocol: TCP
+            - name: health
+              containerPort: 13133
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otel-collector
+      volumes:
+        - name: config
+          configMap:
+            name: otel-collector-config
+{{- end }}

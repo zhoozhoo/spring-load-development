@@ -6,6 +6,7 @@ import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ca.zhoozhoo.loaddev.rifles.dao.RifleRepository;
 import ca.zhoozhoo.loaddev.rifles.model.Rifle;
-import ca.zhoozhoo.loaddev.rifles.security.CurrentUser;
+import ca.zhoozhoo.loaddev.security.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -41,13 +42,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * REST controller for managing rifle firearm data using JSR-385 units.
+ * REST controller for managing rifle firearm specifications.
  * <p>
- * This controller provides endpoints for CRUD operations on rifle specifications including
- * caliber, barrel length (using JSR-385 Quantity&lt;Length&gt;), and twist rate. 
- * All endpoints are secured with OAuth2 authentication and enforce user-based access control 
- * for multi-tenant data isolation.
- * </p>
+ * Provides CRUD operations for rifles with JSR-385 Quantity types for measurements.
+ * All endpoints are OAuth2 secured with user-based access control for multi-tenant isolation.
  *
  * @author Zhubin Salehi
  */
@@ -115,6 +113,9 @@ public class RifleController {
     public Mono<ResponseEntity<Rifle>> createRifle(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Rifle to create", required = true) @Valid @RequestBody Rifle rifle) {
+                if (userId == null || userId.isBlank()) {
+                        return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).<Rifle>build());
+                }
         return Mono.just(new Rifle(
                 rifle.id(),
                 userId,
@@ -123,9 +124,8 @@ public class RifleController {
                 rifle.caliber(),
                 rifle.barrelLength(),
                 rifle.barrelContour(),
-                rifle.twistRate(),
                 rifle.rifling(),
-                rifle.freeBore()))
+                rifle.zeroing()))
                 .flatMap(rifleRepository::save)
                 .doOnNext(savedRifle -> log.info("Created new rifle with id: {}", savedRifle.id()))
                 .map(savedRifle -> status(CREATED).body(savedRifle));
@@ -153,9 +153,8 @@ public class RifleController {
                         rifle.caliber(),
                         rifle.barrelLength(),
                         rifle.barrelContour(),
-                        rifle.twistRate(),
                         rifle.rifling(),
-                        rifle.freeBore())))
+                        rifle.zeroing())))
                 .doOnNext(updatedRifle -> log.info("Updated rifle with id: {}", updatedRifle.id()))
                 .map(updatedRifle -> ok(updatedRifle))
                 .defaultIfEmpty(notFound().build());

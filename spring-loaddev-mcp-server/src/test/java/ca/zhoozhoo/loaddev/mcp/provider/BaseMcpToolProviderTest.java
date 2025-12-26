@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -16,26 +17,24 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
-import org.springframework.http.codec.json.Jackson2JsonDecoder;
-import org.springframework.http.codec.json.Jackson2JsonEncoder;
+import org.springframework.http.codec.json.JacksonJsonDecoder;
+import org.springframework.http.codec.json.JacksonJsonEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ca.zhoozhoo.loaddev.mcp.config.TestSecurityConfig;
 import io.modelcontextprotocol.client.McpAsyncClient;
 import io.modelcontextprotocol.client.McpClient;
 import io.modelcontextprotocol.client.transport.WebFluxSseClientTransport;
 import io.modelcontextprotocol.json.McpJsonMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import io.modelcontextprotocol.spec.McpClientTransport;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Abstract base class for MCP tool provider integration tests.
@@ -94,15 +93,15 @@ public abstract class BaseMcpToolProviderTest {
         
         @Bean
         @Primary
-        public WebClient webClient(ObjectMapper objectMapper) {
+        public WebClient webClient(JsonMapper jsonMapper) {
             // Ensure WebClient uses the application's ObjectMapper with custom modules (e.g., QuantityModule)
             return WebClient.builder()
                 .exchangeStrategies(ExchangeStrategies.builder()
                     .codecs(configurer -> {
                     configurer.defaultCodecs()
-                        .jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
+                        .jacksonJsonEncoder(new JacksonJsonEncoder(jsonMapper));
                     configurer.defaultCodecs()
-                        .jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
+                        .jacksonJsonDecoder(new JacksonJsonDecoder(jsonMapper));
                     })
                     .build())
                 .build();
@@ -291,7 +290,9 @@ public abstract class BaseMcpToolProviderTest {
             {
                 "id": 1,
                 "name": "Test Rifle",
-                "caliber": "6.5 Creedmoor"
+                \"caliber\": \"6.5 Creedmoor\",
+                \"rifling\": null,
+                \"zeroing\": null
             }
             """;
 

@@ -1,0 +1,211 @@
+# Microservices configuration
+name: spring-load-development
+namespace: reloading
+
+# Image settings (can be overridden by parent global values)
+imageRegistry: "zhoozhoo.ca"
+imageTag: "0.1.0-SNAPSHOT"
+
+# OpenTelemetry Collector endpoint for microservices
+otelCollector:
+  grpcEndpoint: "http://otel-collector-service.observability.svc.cluster.local:4317"
+
+# Keycloak integration
+keycloak:
+  baseUrl: "http://keycloak-service.keycloak.svc.cluster.local:8080"
+  realm: "reloading"
+  clientId: "reloading-client"
+  clientSecret: "2EvQuluZfxaaRms8V4NhzBDWzVCSXtty"
+
+# PostgreSQL configuration
+postgresql:
+  namespace: postgres
+  auth:
+    username: user
+    password: password
+
+# API Gateway configuration
+apiGateway:
+  enabled: true
+  replicas: 1
+  
+  image:
+    repository: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway
+    tag: "0.1.0-SNAPSHOT"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: NodePort
+    port: 8080
+    nodePort: 30090
+  
+  ingress:
+    enabled: false
+    annotations: {}
+    hosts:
+      - host: api-gateway.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  
+  env: []
+  
+  podDisruptionBudget:
+    minAvailable: 1
+  
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Loads Service configuration
+loadsService:
+  enabled: true
+  replicas: 1
+  
+  image:
+    repository: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service
+    tag: "0.1.0-SNAPSHOT"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 8080
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  
+  env: []
+  
+  podDisruptionBudget:
+    minAvailable: 1
+  
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Components Service configuration
+componentsService:
+  enabled: true
+  replicas: 1
+  
+  image:
+    repository: zhoozhoo.ca/spring-load-development/spring-loaddev-components-service
+    tag: "0.1.0-SNAPSHOT"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 8080
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  
+  env: []
+  
+  podDisruptionBudget:
+    minAvailable: 1
+  
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Rifles Service configuration
+riflesService:
+  enabled: true
+  replicas: 1
+  
+  image:
+    repository: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service
+    tag: "0.1.0-SNAPSHOT"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 8080
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  
+  env: []
+  
+  podDisruptionBudget:
+    minAvailable: 1
+  
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# MCP Server configuration
+mcpServer:
+  enabled: true
+  replicas: 1
+  
+  image:
+    repository: zhoozhoo.ca/spring-load-development/spring-loaddev-mcp-server
+    tag: "0.1.0-SNAPSHOT"
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: ClusterIP
+    port: 8080
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  
+  env: []
+  
+  podDisruptionBudget:
+    minAvailable: 1
+  
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# RBAC configuration
+rbac:
+  create: true
+  
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# Security context - Applied to all pods
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
+
+# Node selector, tolerations and affinity
+nodeSelector: {}
+tolerations: []
+affinity: {}

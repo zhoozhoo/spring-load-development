@@ -1,0 +1,26 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: otel-collector
+    {{- include "otel-collector.labels" . | nindent 4 }}
+data:
+  otel-collector.yaml: |
+    extensions:
+      {{- toYaml .Values.config.extensions | nindent 6 }}
+    
+    receivers:
+      {{- toYaml .Values.config.receivers | nindent 6 }}
+    
+    processors:
+      {{- toYaml .Values.config.processors | nindent 6 }}
+    
+    exporters:
+      {{- toYaml .Values.config.exporters | nindent 6 }}
+    
+    service:
+      {{- toYaml .Values.config.service | nindent 6 }}
+{{- end }}

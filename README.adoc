@@ -22,7 +22,7 @@ Spring Load Development is a project that demonstrates the integration of variou
 * API Gateway using link:https://spring.io/projects/spring-cloud-gateway[Spring Cloud Gateway]
 * Circuit Breaker using link:https://spring.io/projects/spring-cloud-circuitbreaker[Spring Cloud Circuit Breaker] and link:https://resilience4j.readme.io/docs/getting-started[Resilience4J]
 * AI Integration using link:https://spring.io/projects/spring-ai[Spring AI] and Model Context Protocol (MCP)
-* Observability and Monitoring using link:https://opentelemetry.io/[OpenTelemetry], link:https://grafana.com/oss/tempo/[Tempo], link:https://grafana.com/oss/loki/[Loki], link:https://prometheus.io/[Prometheus], and link:https://grafana.com/[Grafana]
+* Observability and Monitoring using link:https://opentelemetry.io/[OpenTelemetry] (via Spring Boot starter), link:https://grafana.com/oss/tempo/[Tempo], link:https://grafana.com/oss/loki/[Loki], link:https://prometheus.io/[Prometheus], and link:https://grafana.com/[Grafana]
 * Application Monitoring using link:https://github.com/codecentric/spring-boot-admin[Spring Boot Admin]
 * Container Orchestration using link:https://kubernetes.io/[Kubernetes] and link:https://helm.sh/[Helm]
 
@@ -36,22 +36,21 @@ All technologies are open source and widely adopted in cloud-native Java ecosyst
 This project uses the following key versions:
 
 * *Java*: 25
-* *Spring Boot*: 3.5.7
+* *Spring Boot*: 4.0.1
 * *Spring Boot Admin*: 3.5.6
-* *Spring Cloud*: 2025.0.0
-* *Spring AI*: 1.1.0
-* *SpringDoc OpenAPI*: 2.8.14
+* *Spring Cloud*: 2025.1.0
+* *Spring AI*: 1.1.2
+* *SpringDoc OpenAPI*: 3.0.0
 * *MapStruct*: 1.6.3
-* *OpenTelemetry API/SDK*: 1.56.0
-* *OpenTelemetry Instrumentation*: 2.21.0 (+ alpha)
-* *Maven*: 4.0.0-rc-4 or later
-* *PostgreSQL*: 18.0
+* *OpenTelemetry Instrumentation*: 2.23.0 (+ alpha)
+* *Maven*: 4.0.0-rc-5 or later
+* *PostgreSQL*: 18.1
 * *Keycloak*: 26.4
-* *Grafana*: 12.2.1
-* *Loki*: 3.5.8
+* *Grafana*: 12.3.1
+* *Loki*: 3.6.3
 * *Tempo*: 2.9.0
-* *Prometheus*: v3.7.3
-* *OpenTelemetry Collector*: 0.138.0
+* *Prometheus*: v3.8.1
+* *OpenTelemetry Collector*: 0.142.0
 
 == Getting Started
 

@@ -1,0 +1,35 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+# PostgreSQL PDB
+{{- if .Values.postgresql.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: postgres-pdb
+  namespace: {{ .Values.postgresql.namespace }}
+  labels:
+    app: postgres
+    {{- include "postgresql.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.postgresql.minAvailable | default 1 }}
+  selector:
+    matchLabels:
+      app: postgres
+{{- end }}
+---
+# Keycloak PostgreSQL PDB
+{{- if .Values.keycloakPostgresql.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: keycloak-postgres-pdb
+  namespace: {{ .Values.keycloakPostgresql.namespace }}
+  labels:
+    app: keycloak-postgres
+    {{- include "postgresql.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.keycloakPostgresql.minAvailable | default 1 }}
+  selector:
+    matchLabels:
+      app: keycloak-postgres
+{{- end }}
+{{- end }}

@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS loads (
     distance_from_lands JSONB,
     case_overall_length JSONB,
     neck_tension JSONB,
-    rifle_id BIGSERIAL,
+    rifle_id BIGINT,
     CONSTRAINT chk_measurement CHECK (
         distance_from_lands IS NOT NULL OR case_overall_length IS NOT NULL
     )

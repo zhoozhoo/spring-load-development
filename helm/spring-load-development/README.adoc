@@ -6,17 +6,18 @@
 :source-highlighter: highlight.js
 :icons: font
 
-This Helm chart deploys the complete Spring Load Development application stack on Kubernetes, including infrastructure components and microservices, providing a production-ready foundation for the reloading management system.
+This Helm chart deploys the complete Spring Load Development application stack on Kubernetes using a modular subchart architecture, providing a production-ready foundation for the reloading management system.
 
 == Overview
 
-The Helm chart deploys and manages:
+The Helm chart uses a **modular subchart architecture** with 4 independent subcharts:
 
-* *Two PostgreSQL Instances* - Separate databases for microservices and Keycloak
-* *Keycloak* - Authentication and authorization server with realm configuration  
-* *Complete Observability Stack* - Loki, Tempo, Prometheus, Grafana, and OpenTelemetry Collector
-* *Spring Boot Microservices* - API Gateway, Loads Service, Components Service, Rifles Service, and MCP Server
-* *All networking and storage* - Services, persistent volumes, and NodePort access
+* *Observability Subchart* - Loki, Tempo, Prometheus, Grafana, and OpenTelemetry Collector for monitoring and tracing
+* *Keycloak Subchart* - Authentication and authorization server with dedicated PostgreSQL database and realm configuration  
+* *PostgreSQL Subchart* - Separate database instances for microservices and Keycloak
+* *Reloading Subchart* - Spring Boot microservices (API Gateway, Loads Service, Components Service, Rifles Service, and MCP Server)
+
+Each subchart can be enabled/disabled independently and configured separately, providing maximum flexibility and maintainability.
 
 === Excluded Core Services
 
@@ -152,7 +153,7 @@ flowchart LR
 * kubectl configured
 * Cluster admin permissions to create namespaces
 
-=== Deploy Infrastructure
+=== Deploy with Subcharts
 
 [source,bash]
 ----
@@ -160,7 +161,10 @@ flowchart LR
 git clone <your-repo-url>
 cd spring-load-development/helm/spring-load-development
 
-# Step 1: Create required namespaces
+# Step 1: Update subchart dependencies
+helm dependency update
+
+# Step 2: Create required namespaces
 # The chart requires 4 namespaces: postgres, keycloak, observability, reloading
 ./create-namespaces.sh
 
@@ -170,18 +174,21 @@ cd spring-load-development/helm/spring-load-development
 # kubectl create namespace observability
 # kubectl create namespace reloading
 
-# Step 2: Deploy the infrastructure
+# Step 3: Deploy the complete stack
 helm install spring-load-development . \
   --values values.yaml \
+  --create-namespace \
+  --namespace reloading \
   --timeout 300s
 
 # Or upgrade if already installed
 helm upgrade spring-load-development . \
   --values values.yaml \
+  --namespace reloading \
   --timeout 300s
 ----
 
-NOTE: The chart no longer creates namespaces automatically. This follows Kubernetes best practices where namespace lifecycle should be managed separately from application deployments.
+NOTE: The `helm dependency update` command downloads and packages the subcharts. This step is required before first installation.
 
 === Access Services
 
@@ -236,7 +243,7 @@ Both PostgreSQL instances use *StatefulSets* for stable network identity and per
 * *Database*: `loadsdb`
 * *Credentials*: `user` / `password`
 * *Storage*: 8Gi persistent volume (managed by volumeClaimTemplates)
-* *Version*: PostgreSQL 18.0
+* *Version*: PostgreSQL 18.1
 * *Replicas*: 1 (configurable via `postgresql.replicas`)
 * *Purpose*: For Spring Boot microservices data storage
 
@@ -248,7 +255,7 @@ Both PostgreSQL instances use *StatefulSets* for stable network identity and per
 * *Database*: `keycloak`
 * *Credentials*: `user` / `password`
 * *Storage*: 8Gi persistent volume (managed by volumeClaimTemplates)
-* *Version*: PostgreSQL 18.0
+* *Version*: PostgreSQL 18.1
 * *Replicas*: 1 (configurable via `keycloakPostgresql.replicas`)
 * *Purpose*: Dedicated for Keycloak authentication data
 
@@ -342,7 +349,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Grafana (Visualization)
 
-* *Version*: 12.2.1
+* *Version*: 12.3.1
 * *Port*: 30000
 * *Authentication*: Anonymous access enabled (Admin role)
 * *Datasources*: Pre-configured Loki, Tempo, and Prometheus
@@ -353,7 +360,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== OpenTelemetry Collector
 
-* *Version*: 0.138.0
+* *Version*: 0.142.0
 * *Namespace*: `observability`
 * *GRPC Port*: 30317
 * *Metrics Port*: 30889
@@ -367,170 +374,173 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 == Configuration
 
-=== Main Configuration File
+=== Version Management (Single Source of Truth)
 
-All application and infrastructure configuration is managed through a single `values.yaml` file with the following main sections:
+All container versions are centrally managed in the parent chart's `values.yaml` under `global.versions`. This provides a **single source of truth** for all image versions across all subcharts:
 
 [source,yaml]
 ----
-# Global settings
 global:
   imageRegistry: "zhoozhoo.ca"
   imageTag: "0.1.0-SNAPSHOT"
+  
+  # Single source of truth for all container versions
+  versions:
+    # Spring Boot microservices
+    microservices: "0.1.0-SNAPSHOT"
+    
+    # Observability stack
+    loki: "3.6.3"
+    tempo: "2.9.0"
+    prometheus: "v3.8.1"
+    grafana: "12.3.1"
+    otelCollector: "0.142.0"
+    
+    # Identity and database
+    keycloak: "26.4"
+    postgresql: "18.1"
+----
 
-# Microservices configuration  
-microservices:
-  name: spring-load-development
-  namespace: reloading
+To upgrade all microservices to a new version, simply change `global.versions.microservices`:
 
-# API Gateway
-apiGateway:
-  enabled: true
-  namespace: reloading
-  replicas: 1
-  service:
-    type: NodePort
-    port: 8080
-    nodePort: 30090
+[source,bash]
+----
+# Upgrade all microservices to version 1.0.0
+helm upgrade spring-load-development . \
+  --set global.versions.microservices=1.0.0
 
-# Individual microservices
-loadsService:
-  enabled: true
-  namespace: reloading
-  replicas: 1
+# Upgrade specific observability component
+helm upgrade spring-load-development . \
+  --set global.versions.grafana=13.0.0
+----
 
-componentsService:
-  enabled: true
-  namespace: reloading
-  replicas: 1
+Individual subchart `values.yaml` files still contain version tags as fallbacks, but the parent chart's `global.versions` always takes precedence. This ensures:
 
-riflesService:
-  enabled: true
-  namespace: reloading
-  replicas: 1
+* **Consistency** - All services use the same version without duplicate configuration
+* **Simplicity** - Single place to update versions for deployment
+* **Flexibility** - Individual subcharts can still be used standalone with their own defaults
 
-mcpServer:
-  enabled: true
-  namespace: reloading
-  replicas: 1
+=== Modular Subchart Configuration
 
-# PostgreSQL for microservices
-postgresql:
-  enabled: true
-  namespace: postgres
-  auth:
-    database: loadsdb
-    username: user
-    password: password
-  persistence:
-    enabled: true
-    size: 8Gi
+The chart uses a modular configuration structure where each subchart has its own `values.yaml`. The parent chart's `values.yaml` controls which subcharts are enabled and overrides their values:
 
-# PostgreSQL for Keycloak
-keycloakPostgresql:
-  enabled: true
-  namespace: keycloak
-  auth:
-    database: keycloak
-    username: user
-    password: password
-  persistence:
-    enabled: true
-    size: 8Gi
+[source,yaml]
+----
+# Parent values.yaml - Global settings and subchart control
 
-# Authentication server
-keycloak:
-  enabled: true
-  namespace: keycloak
-  auth:
-    adminUser: admin
-    adminPassword: admin
-  realm:
-    enabled: true
-    configMapName: keycloak-realm-config
-  integration:
-    baseUrl: "http://keycloak-service.keycloak.svc.cluster.local:8080"
-    realm: "reloading"
-    clientId: "reloading-client"
+# Global settings shared across all subcharts
+global:
+  imageRegistry: "zhoozhoo.ca"
+  imageTag: "latest"
 
-# Observability components
+# Enable/disable entire subcharts
 observability:
-  enabled: true
+  enabled: true               # Enable/disable complete observability stack
   namespace: observability
-  
-  loki:
-    enabled: true
-    persistence:
-      size: 10Gi
-  
-  tempo:
-    enabled: true
-    persistence:
-      size: 10Gi
-  
-  prometheus:
-    enabled: true
-    persistence:
-      size: 10Gi
-  
-  grafana:
-    enabled: true
-    persistence:
-      size: 5Gi
-    auth:
-      anonymous:
-        enabled: true
-  
-  otelCollector:
-    enabled: true
-----
+  observability:             # Subchart-specific values (nested)
+    # Override subchart values here
 
-=== Customizing Configuration
+keycloak:
+  enabled: true               # Enable/disable Keycloak authentication
+  namespace: keycloak
+  keycloak:                  # Subchart-specific values (nested)
+    # Override subchart values here
 
-==== Storage Volumes
-
-[source,yaml]
-----
-# Increase PostgreSQL storage
 postgresql:
-  persistence:
-    size: 20Gi
+  enabled: true               # Enable/disable PostgreSQL databases
+  postgresql:                # Subchart-specific values (nested)
+    namespace: postgres
+    # Override subchart values here
 
-keycloakPostgresql:
-  persistence:
-    size: 15Gi
-
-# Increase observability storage
-observability:
-  loki:
-    persistence:
-      size: 50Gi
-  tempo:
-    persistence:
-      size: 100Gi
-  prometheus:
-    persistence:
-      size: 25Gi
+reloading:
+  enabled: true               # Enable/disable microservices
+  namespace: reloading
+  # Microservice configurations here
+  apiGateway:
+    enabled: true
+    replicas: 1
+    service:
+      nodePort: 30090
+  loadsService:
+    enabled: true
+  componentsService:
+    enabled: true
+  riflesService:
+    enabled: true
+  mcpServer:
+    enabled: true
 ----
 
-==== Microservice Scaling
+=== Subchart Structure
+
+Each subchart has its own independent configuration:
+
+* `charts/observability/values.yaml` - Loki, Tempo, Prometheus, Grafana, OTEL Collector settings
+* `charts/keycloak/values.yaml` - Keycloak authentication and realm configuration
+* `charts/postgresql/values.yaml` - PostgreSQL database settings for both instances
+* `charts/reloading/values.yaml` - All microservice configurations
+
+=== Customizing Subchart Configuration
+
+==== Disable Specific Subcharts
 
 [source,yaml]
 ----
-# Scale microservices
-apiGateway:
-  replicas: 2
-  resources:
-    limits:
-      cpu: 2000m
-      memory: 2Gi
+# Disable observability stack for development
+observability:
+  enabled: false
 
-loadsService:
-  replicas: 3
-  resources:
-    limits:
-      cpu: 1000m
-      memory: 1Gi
+# Disable Keycloak if using external auth
+keycloak:
+  enabled: false
+
+# Run only infrastructure (no microservices)
+reloading:
+  enabled: false
+----
+
+==== Override Subchart Values
+
+[source,yaml]
+----
+# Override observability storage sizes
+observability:
+  enabled: true
+  observability:
+    loki:
+      persistence:
+        size: 50Gi
+    tempo:
+      persistence:
+        size: 100Gi
+    prometheus:
+      persistence:
+        size: 25Gi
+
+# Override PostgreSQL configuration
+postgresql:
+  enabled: true
+  postgresql:
+    persistence:
+      size: 20Gi
+    auth:
+      password: "mysecurepassword"
+
+# Scale microservices in reloading subchart
+reloading:
+  enabled: true
+  apiGateway:
+    replicas: 2
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 2Gi
+  loadsService:
+    replicas: 3
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
 ----
 
 ==== External Access Ports
@@ -991,82 +1001,258 @@ kubectl get configmap keycloak-realm-config -n keycloak -o yaml > keycloak-realm
 
 == Chart Structure
 
-This Helm chart follows modern best practices with a modular, maintainable structure:
+This Helm chart follows modern best practices with a **modular subchart architecture** featuring subcharts and sub-subcharts for maximum modularity.
 
-=== Key Files
+=== Folder Structure
 
-* `.helmignore` - Excludes unnecessary files from chart packages (IDE configs, tests, documentation)
-* `values.schema.json` - JSON Schema validation for values.yaml to prevent misconfigurations
-* `Chart.yaml` - Chart metadata and version information
-* `values.yaml` - Configuration values for all components
+[source,text]
+----
+spring-load-development/
+├── Chart.yaml                    # Parent chart metadata with subchart dependencies
+├── Chart.lock                    # Dependency lock file (generated, committed)
+├── values.yaml                   # Simplified parent configuration
+├── values.schema.json           # JSON Schema validation
+├── .helmignore                  # Helm packaging exclusions
+├── README.adoc                  # This documentation
+├── create-namespaces.sh         # Namespace creation script
+├── templates/                   # Parent chart templates
+│   ├── _helpers.tpl            # Parent helper functions
+│   └── NOTES.txt               # Post-installation instructions
+└── charts/                      # Subcharts directory
+    ├── observability/           # Observability subchart
+    │   ├── Chart.yaml          # Observability metadata with sub-subchart dependencies
+    │   ├── values.yaml         # Enable/disable flags for sub-subcharts
+    │   ├── templates/          # Observability shared templates
+    │   │   └── _helpers.tpl   # Observability helper functions
+    │   └── charts/             # Observability sub-subcharts
+    │       ├── grafana/        # Grafana sub-subchart
+    │       │   ├── Chart.yaml  # Version: 0.1.0-SNAPSHOT, AppVersion: 12.3.1
+    │       │   ├── values.yaml # Grafana-specific configuration
+    │       │   └── templates/
+    │       │       ├── _helpers.tpl      # Grafana helper functions
+    │       │       ├── configmap.yaml    # Grafana configuration & datasources
+    │       │       ├── deployment.yaml   # Grafana deployment
+    │       │       ├── ingress.yaml      # Grafana ingress
+    │       │       ├── pdb.yaml          # PodDisruptionBudget
+    │       │       ├── pvc.yaml          # Persistent storage
+    │       │       └── service.yaml      # Grafana service with NodePort 30000
+    │       ├── loki/            # Loki sub-subchart
+    │       │   ├── Chart.yaml   # Version: 0.1.0-SNAPSHOT, AppVersion: 3.6.3
+    │       │   ├── values.yaml  # Loki-specific configuration
+    │       │   └── templates/
+    │       │       ├── _helpers.tpl      # Loki helper functions
+    │       │       ├── configmap.yaml    # Loki configuration
+    │       │       ├── deployment.yaml   # Loki deployment
+    │       │       ├── pdb.yaml          # PodDisruptionBudget
+    │       │       ├── pvc.yaml          # Persistent storage
+    │       │       └── service.yaml      # Loki service with NodePort 30100
+    │       ├── otel-collector/  # OpenTelemetry Collector sub-subchart
+    │       │   ├── Chart.yaml   # Version: 0.1.0-SNAPSHOT, AppVersion: 0.142.0
+    │       │   ├── values.yaml  # OTel Collector configuration
+    │       │   └── templates/
+    │       │       ├── _helpers.tpl      # OTel Collector helper functions
+    │       │       ├── configmap.yaml    # OTel pipeline configuration
+    │       │       ├── deployment.yaml   # OTel Collector deployment
+    │       │       ├── pdb.yaml          # PodDisruptionBudget
+    │       │       └── service.yaml      # OTel service (GRPC 30317, HTTP 30889)
+    │       ├── prometheus/      # Prometheus sub-subchart
+    │       │   ├── Chart.yaml   # Version: 0.1.0-SNAPSHOT, AppVersion: v3.8.1
+    │       │   ├── values.yaml  # Prometheus-specific configuration
+    │       │   └── templates/
+    │       │       ├── _helpers.tpl      # Prometheus helper functions
+    │       │       ├── configmap.yaml    # Prometheus scrape configs
+    │       │       ├── deployment.yaml   # Prometheus deployment
+    │       │       ├── pdb.yaml          # PodDisruptionBudget
+    │       │       ├── pvc.yaml          # Persistent storage
+    │       │       └── service.yaml      # Prometheus service with NodePort 30091
+    │       └── tempo/           # Tempo sub-subchart
+    │           ├── Chart.yaml   # Version: 0.1.0-SNAPSHOT, AppVersion: 2.9.0
+    │           ├── values.yaml  # Tempo-specific configuration
+    │           └── templates/
+    │               ├── _helpers.tpl      # Tempo helper functions
+    │               ├── configmap.yaml    # Tempo configuration
+    │               ├── deployment.yaml   # Tempo deployment
+    │               ├── pdb.yaml          # PodDisruptionBudget
+    │               ├── pvc.yaml          # Persistent storage
+    │               └── service.yaml      # Tempo service with NodePort 30200
+    ├── keycloak/                # Keycloak subchart
+    │   ├── Chart.yaml           # Keycloak metadata
+    │   ├── values.yaml          # Keycloak configuration
+    │   ├── files/
+    │   │   └── realm.json       # Keycloak realm definition
+    │   └── templates/
+    │       ├── _helpers.tpl             # Keycloak helper functions
+    │       ├── configmap.yaml           # Keycloak configuration
+    │       ├── deployment.yaml          # Keycloak deployment with realm import
+    │       ├── ingress.yaml             # Keycloak ingress
+    │       ├── poddisruptionbudget.yaml # Keycloak PDB
+    │       ├── realm-configmap.yaml     # Realm import ConfigMap
+    │       ├── secret.yaml              # Keycloak secrets
+    │       └── service.yaml             # Keycloak service
+    ├── postgresql/              # PostgreSQL subchart
+    │   ├── Chart.yaml           # PostgreSQL metadata
+    │   ├── values.yaml          # PostgreSQL configuration (2 instances)
+    │   └── templates/
+    │       ├── _helpers.tpl             # Database helper functions
+    │       ├── configmap.yaml           # PostgreSQL configuration
+    │       ├── poddisruptionbudgets.yaml # PDBs for both databases
+    │       ├── secret.yaml              # Database secrets
+    │       ├── service.yaml             # Database services
+    │       └── statefulset.yaml         # 2 StatefulSets
+    └── reloading/               # Spring Boot microservices subchart
+        ├── Chart.yaml           # Reloading metadata
+        ├── values.yaml          # All microservice configurations
+        └── templates/
+            ├── _helpers.tpl             # Microservice helper functions
+            ├── configmaps.yaml          # Spring Boot configs, Log4j2
+            ├── deployment.yaml          # 5 microservice deployments
+            ├── ingress.yaml             # Microservice ingresses
+            ├── poddisruptionbudgets.yaml # PDBs for all microservices
+            ├── rbac.yaml                # ClusterRole for service discovery
+            ├── service.yaml             # Microservice services
+            └── serviceaccount.yaml      # Service account for microservices
+----
+
+=== Sub-Subchart Architecture
+
+The observability subchart uses an advanced **sub-subchart pattern** where each observability component (Grafana, Loki, Prometheus, Tempo, OTel Collector) is its own independent chart. This provides:
+
+* **Component Independence**: Enable/disable individual observability components
+* **Simplified Values**: Each sub-subchart has flat value paths (`.Values.config` instead of `.Values.loki.config`)
+* **Isolated Testing**: Test and validate each observability component separately
+* **Flexible Deployment**: Deploy only the monitoring components you need
+* **Cleaner Organization**: 5-6 focused template files per component instead of monolithic files
+
+Example: Disable Loki while keeping other observability components:
+[source,bash]
+----
+helm install spring-load-developme . \
+  --set observability.loki.enabled=false \
+  --namespace reloading
+----
+
+=== Parent Chart Files
+
+* `Chart.yaml` - Parent chart metadata with subchart dependencies
+* `values.yaml` - Simplified parent configuration controlling subcharts
+* `values-old.yaml` - Original monolithic values (backup, preserved for reference)
+* `values.schema.json` - JSON Schema validation
+* `.helmignore` - Excludes unnecessary files from packages
 * `README.adoc` - This comprehensive documentation
+* `templates/_helpers.tpl` - Parent chart helper functions
+* `templates/NOTES.txt` - Post-installation instructions
+* `Chart.lock` - Dependency lock file (generated by `helm dependency update`, committed to git)
 
-=== Templates Organization
+=== Subchart Architecture
 
-The chart uses a highly optimized template structure that eliminates code duplication:
+The chart is organized into 4 independent subcharts under `charts/`:
 
-==== Core Templates
+==== 1. Observability Subchart (`charts/observability/`)
 
-* `_helpers.tpl` - Reusable template functions and helpers
-** Standard Helm helpers (name, fullname, labels, etc.)
-** *Microservice helpers*: 7 specialized functions for generating consistent microservice resources
-** Database environment helpers
-** Common environment variable generators
+Complete monitoring and tracing stack using **sub-subchart architecture**:
 
-* `microservices.yaml` - *Unified microservice template*
-** Single template generates all 5 microservices (API Gateway, Loads Service, Components Service, Rifles Service, MCP Server)
-** Uses parameterized helper functions from `_helpers.tpl`
-** Conditional database configuration
-** Consistent patterns across all services
-** *Replaces 5 individual template files with ~40 lines of code*
+* `Chart.yaml` - Subchart metadata with 5 sub-subchart dependencies
+* `values.yaml` - Enable/disable flags for each observability component
+* `templates/_helpers.tpl` - Shared observability helper functions
+* `charts/` - Sub-subchart directory containing 5 independent observability components:
+** `grafana/` - Grafana visualization (7 templates: _helpers.tpl, ConfigMap, Deployment, Ingress, PDB, PVC, Service)
+** `loki/` - Loki log aggregation (6 templates: _helpers.tpl, ConfigMap, Deployment, PDB, PVC, Service)
+** `otel-collector/` - OpenTelemetry Collector (5 templates: _helpers.tpl, ConfigMap, Deployment, PDB, Service)
+** `prometheus/` - Prometheus metrics (6 templates: _helpers.tpl, ConfigMap, Deployment, PDB, PVC, Service)
+** `tempo/` - Tempo distributed tracing (6 templates: _helpers.tpl, ConfigMap, Deployment, PDB, PVC, Service)
 
-==== Infrastructure Templates
+**Total: 5 sub-subcharts with 30 template files for complete observability stack**
 
-* `postgresql.yaml` - Two PostgreSQL instances (microservices DB and Keycloak DB)
-* `keycloak.yaml` - Keycloak authentication server deployment
-* `keycloak-realm-configmap.yaml` - Keycloak realm configuration
-* `observability-stack.yaml` - Complete observability stack (Loki, Tempo, Prometheus, Grafana, OpenTelemetry Collector)
-* `configmaps.yaml` - Application configuration (Log4j2, application properties)
-* `namespaces.yaml` - Namespace definitions
-* `rbac.yaml` - Role-based access control
-* `serviceaccount.yaml` - Service account for microservices
-* `NOTES.txt` - Post-installation instructions and access information
+Each sub-subchart has its own:
 
-=== Template Helpers
+* `Chart.yaml` - Component metadata (version 0.1.0-SNAPSHOT with specific appVersion)
+* `values.yaml` - Component-specific configuration with flat value paths
+* `templates/_helpers.tpl` - Component-specific helper functions
+* Resource templates - Deployments, Services, ConfigMaps, PVCs, PDBs as needed
 
-The chart includes 7 specialized helper functions for microservices:
+This architecture enables granular control: disable Loki with `--set observability.loki.enabled=false` while keeping Prometheus, Grafana, Tempo, and OTel Collector active.
 
-1. `microservice.labels` - Generate consistent labels for any microservice
-2. `microservice.selectorLabels` - Generate selector labels
-3. `microservice.commonEnv` - Common environment variables (Spring profiles, OTEL, Keycloak)
-4. `microservice.databaseEnv` - Database connection configuration
-5. `microservice.deployment` - Generic Deployment template
-6. `microservice.service` - Generic Service template
-7. `microservice.ingress` - Generic Ingress template
+==== 2. Keycloak Subchart (`charts/keycloak/`)
 
-These helpers enable:
+Authentication and authorization:
 
-* *Single source of truth* for microservice patterns
-* *Consistent configuration* across all services
-* *Easy maintenance* - change once, applies to all services
-* *Simple service addition* - just 3 lines of code to add a new microservice
+* `Chart.yaml` - Subchart metadata
+* `values.yaml` - Keycloak configuration (auth, realm, tracing)
+* `files/realm.json` - Keycloak realm definition
+* `templates/_helpers.tpl` - Keycloak helper functions
+* `templates/configmap.yaml` - Keycloak configuration
+* `templates/deployment.yaml` - Keycloak deployment with realm import
+* `templates/ingress.yaml` - Keycloak ingress
+* `templates/poddisruptionbudget.yaml` - Keycloak PDB
+* `templates/realm-configmap.yaml` - ConfigMap for realm import
+* `templates/secret.yaml` - Keycloak secrets
+* `templates/service.yaml` - Keycloak service
 
-=== Schema Validation
+**Total: 8 template files + realm configuration**
 
-The `values.schema.json` provides comprehensive validation:
+==== 3. PostgreSQL Subchart (`charts/postgresql/`)
 
-* Type checking for all configuration values
-* Required field enforcement
-* Range validation (ports: 1-65535, nodePorts: 30000-32767)
-* Resource specification pattern matching (CPU, memory)
-* Enum validation (service types, pull policies)
-* Prevents deployment with invalid configurations
+Database services:
+
+* `Chart.yaml` - Subchart metadata
+* `values.yaml` - PostgreSQL configuration for both instances
+* `templates/_helpers.tpl` - Database helper functions
+* `templates/configmap.yaml` - PostgreSQL configuration
+* `templates/poddisruptionbudgets.yaml` - PDBs for both databases
+* `templates/secret.yaml` - Database credentials
+* `templates/service.yaml` - Database services
+* `templates/statefulset.yaml` - Two StatefulSets (microservices DB + Keycloak DB)
+
+**Total: 6 template files managing 2 database instances**
+
+==== 4. Reloading Subchart (`charts/reloading/`)
+
+Spring Boot microservices:
+
+* `Chart.yaml` - Subchart metadata
+* `values.yaml` - All microservice configurations (API Gateway, Loads, Components, Rifles, MCP Server)
+* `templates/_helpers.tpl` - Microservice helper functions with unified generation logic
+* `templates/configmaps.yaml` - Application configs (Spring Boot profiles, Log4j2)
+* `templates/deployment.yaml` - All 5 microservice deployments using helper templates
+* `templates/ingress.yaml` - Microservice ingresses
+* `templates/poddisruptionbudgets.yaml` - PDBs for all microservices
+* `templates/rbac.yaml` - ClusterRole for service discovery
+* `templates/service.yaml` - Microservice services
+* `templates/serviceaccount.yaml` - Service account for microservices
+
+**Total: 8 template files managing 5 microservices**
+
+=== Benefits of Subchart Architecture
+
+==== Modularity
+* Each subchart is independently developed and tested
+* Clear separation of concerns (observability, auth, data, apps)
+* Smaller, focused configuration files
+* Easier to understand and navigate
+
+==== Flexibility
+* Enable/disable entire stacks with a single flag
+* Override subchart values without modifying subchart code
+* Mix and match components (e.g., use external Keycloak)
+* Different teams can own different subcharts
+
+==== Maintainability
+* Changes to one subchart don't affect others
+* Reduced risk of breaking changes
+* Independent versioning of subcharts
+* Easier to test components in isolation
+
+==== Reusability
+* Subcharts can be used in other projects
+* Common patterns (observability, auth) standardized
+* Can publish subcharts to Helm repositories
+* Share infrastructure patterns across teams
 
 === Adding a New Microservice
 
-Thanks to the refactored template structure, adding a new microservice is simple:
+To add a new microservice to the reloading subchart:
 
-*Step 1: Add configuration to values.yaml*
+*Step 1: Add to charts/reloading/values.yaml*
 [source,yaml]
 ----
 newService:
@@ -1074,7 +1260,7 @@ newService:
   replicas: 1
   image:
     repository: zhoozhoo.ca/spring-load-development/new-service
-    tag: "0.1.0-SNAPSHOT"
+    tag: "latest"
   service:
     type: ClusterIP
     port: 8080
@@ -1083,22 +1269,40 @@ newService:
     requests: {cpu: 250m, memory: 256Mi}
 ----
 
-*Step 2: Add to templates/microservices.yaml*
+*Step 2: Add to charts/reloading/templates/deployment.yaml*
 [source,yaml]
 ----
-{{/* New Service */}}
+{{/* New Service Deployment */}}
 {{- if .Values.newService.enabled }}
-{{- include "spring-load-development.microservice.deployment" (dict "componentName" "new-service" "config" .Values.newService "context" . "needsDatabase" true) }}
-{{- include "spring-load-development.microservice.service" (dict "componentName" "new-service" "serviceName" "new-service" "config" .Values.newService "context" .) }}
+{{- include "reloading.microservice.deployment" (dict "componentName" "new-service" "config" .Values.newService "context" . "needsDatabase" true) }}
 {{- end }}
 ----
 
-That's it! The helper functions automatically generate the Deployment and Service with all standard configurations.
+*Step 3: Add to charts/reloading/templates/service.yaml*
+[source,yaml]
+----
+{{/* New Service Service */}}
+{{- if .Values.newService.enabled }}
+{{- include "reloading.microservice.service" (dict "componentName" "new-service" "serviceName" "new-service" "config" .Values.newService "context" .) }}
+{{- end }}
+----
 
-=== Chart Package
+*Step 4: Add to charts/reloading/templates/poddisruptionbudgets.yaml*
+[source,yaml]
+----
+{{/* New Service PDB */}}
+{{- if .Values.newService.enabled }}
+{{- include "reloading.microservice.podDisruptionBudget" (dict "componentName" "new-service" "config" .Values.newService "context" .) }}
+{{- end }}
+----
 
-When packaged with `helm package`, the `.helmignore` file ensures only essential files are included:
+*Step 5: Update parent values.yaml if needed*
+[source,yaml]
+----
+reloading:
+  enabled: true
+  newService:
+    enabled: true
+----
 
-* Excludes: IDE configs, tests, backup files, VCS files, documentation
-* Reduces package size significantly
-* Improves security by excluding development files
+The helper functions in `charts/reloading/templates/_helpers.tpl` automatically generate consistent Deployments and Services.

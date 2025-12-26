@@ -10,11 +10,6 @@ services:
       - ./docker/loki/loki.yaml:/etc/loki/loki.yaml:ro
       - loki_data:/loki
     command: -config.file=/etc/loki/loki.yaml
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3100/ready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
 
   tempo:
@@ -28,11 +23,6 @@ services:
     ports:
       - "3200:3200"
       - "4319:4317"
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3200/ready"]
-      interval: 10s
-      timeout: 5s
-      retries: 15
     restart: unless-stopped
 
   prometheus:
@@ -69,14 +59,12 @@ services:
       - 8889:8889  
       - 13133:13133
       - 4317:4317
+      - 4318:4318
       - 55679:55679
     depends_on:
-      loki:
-        condition: service_healthy
-      tempo:
-        condition: service_healthy
-      prometheus:
-        condition: service_healthy
+      - loki
+      - tempo
+      - prometheus
     restart: unless-stopped
 
   grafana:
@@ -106,7 +94,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - reloading_data:/var/lib/postgresql/data
+      - reloading_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d loadsdb"]
       interval: 30s
@@ -124,7 +112,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - keycloak_data:/var/lib/postgresql/data
+      - keycloak_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d keycloak"]
       interval: 30s
@@ -213,7 +201,9 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - DISCOVERY_SERVER=http://discovery-server:8761
       - KEYCLOAK_BASE_URL=http://keycloak:7080
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otel-collector:4317/v1/logs
+      - OTEL_EXPORTER_OTLP_TRACING_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://otel-collector:4318/v1/metrics
       - OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED=true
       - SPRING_CLOUD_DISCOVERY_ENABLED=true
       - THC_PATH=/actuator/health/readiness
@@ -242,7 +232,9 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - DISCOVERY_SERVER=http://discovery-server:8761
       - KEYCLOAK_BASE_URL=http://keycloak:7080
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otel-collector:4317/v1/logs
+      - OTEL_EXPORTER_OTLP_TRACING_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://otel-collector:4318/v1/metrics
       - OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED=true
       - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/loadsdb
       - SPRING_R2DBC_USERNAME=user
@@ -275,7 +267,9 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - DISCOVERY_SERVER=http://discovery-server:8761
       - KEYCLOAK_BASE_URL=http://keycloak:7080
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otel-collector:4317/v1/logs
+      - OTEL_EXPORTER_OTLP_TRACING_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://otel-collector:4318/v1/metrics
       - OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED=true
       - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/loadsdb
       - SPRING_R2DBC_USERNAME=user
@@ -308,7 +302,9 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - DISCOVERY_SERVER=http://discovery-server:8761
       - KEYCLOAK_BASE_URL=http://keycloak:7080
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otel-collector:4317/v1/logs
+      - OTEL_EXPORTER_OTLP_TRACING_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://otel-collector:4318/v1/metrics
       - OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED=true
       - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/loadsdb
       - SPRING_R2DBC_USERNAME=user
@@ -341,7 +337,9 @@ services:
       - CONFIG_SERVER_URL=http://config-server:8888
       - DISCOVERY_SERVER=http://discovery-server:8761
       - KEYCLOAK_BASE_URL=http://keycloak:7080
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER_OTLP_LOGS_ENDPOINT=http://otel-collector:4317/v1/logs
+      - OTEL_EXPORTER_OTLP_TRACING_ENDPOINT=http://otel-collector:4317
+      - OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=http://otel-collector:4318/v1/metrics
       - OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED=true
       - THC_PATH=/actuator/health/readiness
       - THC_PORT=8083
@@ -359,27 +357,27 @@ services:
       retries: 5
     restart: unless-stopped
 
-  admin-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-admin-server:${PROJECT_VERSION}
-    container_name: admin-server
-    ports:
-      - "9090:9090"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - CONFIG_SERVER_URL=http://config-server:8888
-      - DISCOVERY_SERVER=http://discovery-server:8761
-      - KEYCLOAK_BASE_URL=http://keycloak:7080
-      - THC_PATH=/actuator/health/readiness
-      - THC_PORT=9090
-    depends_on:
-      discovery-server:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "/workspace/health-check"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
+  # admin-server:
+  #   image: zhoozhoo.ca/spring-load-development/spring-loaddev-admin-server:${PROJECT_VERSION}
+  #   container_name: admin-server
+  #   ports:
+  #     - "9090:9090"
+  #   environment:
+  #     - SPRING_PROFILES_ACTIVE=docker
+  #     - CONFIG_SERVER_URL=http://config-server:8888
+  #     - DISCOVERY_SERVER=http://discovery-server:8761
+  #     - KEYCLOAK_BASE_URL=http://keycloak:7080
+  #     - THC_PATH=/actuator/health/readiness
+  #     - THC_PORT=9090
+  #   depends_on:
+  #     discovery-server:
+  #       condition: service_healthy
+  #   healthcheck:
+  #     test: ["CMD", "/workspace/health-check"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   restart: unless-stopped
 
 volumes:
   reloading_data:

@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.7</version>
+        <version>4.0.1</version>
     </parent>
 
     <groupId>ca.zhoozhoo.load-development</groupId>
@@ -26,26 +26,26 @@
         <subproject>spring-loaddev-components-service</subproject>
         <subproject>spring-loaddev-integration-tests</subproject>
         <subproject>spring-loaddev-common</subproject>
+        <subproject>spring-loaddev-security</subproject>
     </subprojects>
 
     <properties>
         <java.version>25</java.version>
-        <spring-boot.version>3.5.7</spring-boot.version>
+        <spring-boot.version>4.0.1</spring-boot.version>
         <spring-boot-admin.version>3.5.6</spring-boot-admin.version>
-        <spring-cloud.version>2025.0.0</spring-cloud.version>
-        <spring-ai.version>1.1.0</spring-ai.version>
-        <springdoc.version>2.8.14</springdoc.version>
-        <r2dbc-postgresql.version>1.1.0.RELEASE</r2dbc-postgresql.version>
+        <spring-cloud.version>2025.1.0</spring-cloud.version>
+        <spring-ai.version>2.0.0-M1</spring-ai.version>
+        <springdoc.version>3.0.0</springdoc.version>
+        <r2dbc-postgresql.version>1.1.1.RELEASE</r2dbc-postgresql.version>
         <mapstruct.version>1.6.3</mapstruct.version>
-        <opentelemetry.version>1.56.0</opentelemetry.version>
-        <opentelemetry-instrumentation.version>2.21.0</opentelemetry-instrumentation.version>
-        <opentelemetry-instrumentation.version.alpha>2.21.0-alpha</opentelemetry-instrumentation.version.alpha>
+        <okhttp.version>5.3.2</okhttp.version>
+        <opentelemetry-instrumentation.version>2.23.0</opentelemetry-instrumentation.version>
+        <opentelemetry-instrumentation.version.alpha>2.23.0-alpha</opentelemetry-instrumentation.version.alpha>
         <spotbugs-maven-plugin.version>4.9.8.1</spotbugs-maven-plugin.version>
         <spotbugs.version>4.9.8</spotbugs.version>
         <findsecbugs-plugin.version>1.14.0</findsecbugs-plugin.version>
         <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
-        <testcontainers-keycloak.version>3.9.0</testcontainers-keycloak.version>
-        <okhttp.version>5.1.0</okhttp.version>
+        <testcontainers-keycloak.version>4.0.0</testcontainers-keycloak.version>
         <javax.measure.version>2.2</javax.measure.version>
         <tech.units.indriya.version>2.2.3</tech.units.indriya.version>
         <systems.uom.version>2.2</systems.uom.version>
@@ -64,13 +64,6 @@
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
                 <version>${spring-cloud.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.opentelemetry</groupId>
-                <artifactId>opentelemetry-bom</artifactId>
-                <version>${opentelemetry.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -98,6 +91,47 @@
         </dependencies>
     </dependencyManagement>
 
+    <profiles>
+        <profile>
+            <id>azure</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <configuration>
+                            <image>
+                                <name>${docker.publishRegistry.url}/spring-load-development/${project.artifactId}:${project.version}</name>
+                                <buildpacks>
+                                    <buildpack>docker.io/paketobuildpacks/microsoft-openjdk</buildpack>
+                                    <buildpack>docker.io/paketobuildpacks/java</buildpack>
+                                </buildpacks>
+                                <env>
+                                    <BP_JVM_VERSION>${java.version}</BP_JVM_VERSION>
+                                    <BP_HEALTH_CHECKER_ENABLED>true</BP_HEALTH_CHECKER_ENABLED>
+                                </env>
+                            </image>
+                            <docker>
+                                <publishRegistry>
+                                    <username>${docker.publishRegistry.username}</username>
+                                    <token>${docker.publishRegistry.token}</token>
+                                    <url>${docker.publishRegistry.url}</url>
+                                </publishRegistry>
+                            </docker>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>build-image</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    
     <build>
         <resources>
             <resource>

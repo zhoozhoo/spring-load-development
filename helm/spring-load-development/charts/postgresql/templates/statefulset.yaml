@@ -1,0 +1,176 @@
+{{- if and .Values.postgresql.enabled (not .Values.postgresql.external) }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: {{ .Values.postgresql.namespace }}
+  labels:
+    app: postgres
+    {{- include "postgresql.labels" . | nindent 4 }}
+spec:
+  serviceName: postgres-service
+  replicas: {{ .Values.postgresql.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      securityContext:
+        {{- include "postgresql.podSecurityContext" . | nindent 8 }}
+      containers:
+        - name: postgresql
+          image: "postgres:{{ if .Values.global }}{{ .Values.global.versions.postgresql | default .Values.postgresql.image.tag }}{{ else }}{{ .Values.postgresql.image.tag }}{{ end }}"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "postgresql.databaseSecurityContext" . | nindent 12 }}
+          {{- if .Values.postgresql.resources }}
+          resources:
+            {{- toYaml .Values.postgresql.resources | nindent 12 }}
+          {{- end }}
+          env:
+            - name: PGDATA
+              value: /pgdata/data
+          envFrom:
+            - configMapRef:
+                name: postgres-config
+            - secretRef:
+                name: postgres-secret
+          ports:
+            - name: postgres
+              containerPort: {{ .Values.postgresql.service.ports.postgresql }}
+              protocol: TCP
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /pgdata
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U {{ .Values.postgresql.auth.username }} -d {{ .Values.postgresql.auth.database }} -h 127.0.0.1 -p {{ .Values.postgresql.service.ports.postgresql }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U {{ .Values.postgresql.auth.username }} -d {{ .Values.postgresql.auth.database }} -h 127.0.0.1 -p {{ .Values.postgresql.service.ports.postgresql }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+        labels:
+          app: postgres
+          {{- include "postgresql.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.postgresql.persistence.size }}
+        {{- if .Values.postgresql.persistence.storageClass }}
+        {{- if (eq "-" .Values.postgresql.persistence.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: {{ .Values.postgresql.persistence.storageClass }}
+        {{- end }}
+        {{- end }}
+{{- end }}
+
+{{- if and .Values.keycloakPostgresql.enabled (not .Values.keycloakPostgresql.external) }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: keycloak-postgres
+  namespace: {{ .Values.keycloakPostgresql.namespace }}
+  labels:
+    app: keycloak-postgres
+    {{- include "postgresql.labels" . | nindent 4 }}
+spec:
+  serviceName: keycloak-postgres-service
+  replicas: {{ .Values.keycloakPostgresql.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: keycloak-postgres
+  template:
+    metadata:
+      labels:
+        app: keycloak-postgres
+    spec:
+      securityContext:
+        {{- include "postgresql.podSecurityContext" . | nindent 8 }}
+      containers:
+        - name: postgres
+          image: "postgres:{{ if .Values.global }}{{ .Values.global.versions.postgresql | default .Values.keycloakPostgresql.image.tag }}{{ else }}{{ .Values.keycloakPostgresql.image.tag }}{{ end }}"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "postgresql.databaseSecurityContext" . | nindent 12 }}
+          {{- if .Values.keycloakPostgresql.resources }}
+          resources:
+            {{- toYaml .Values.keycloakPostgresql.resources | nindent 12 }}
+          {{- end }}
+          env:
+            - name: PGDATA
+              value: /pgdata/data
+          envFrom:
+            - configMapRef:
+                name: keycloak-postgres-config
+            - secretRef:
+                name: keycloak-postgres-secret
+          ports:
+            - name: postgres
+              containerPort: 5432
+              protocol: TCP
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /pgdata
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "pg_isready -U {{ .Values.keycloakPostgresql.auth.username }} -d {{ .Values.keycloakPostgresql.auth.database }}"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "pg_isready -U {{ .Values.keycloakPostgresql.auth.username }} -d {{ .Values.keycloakPostgresql.auth.database }}"
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+        labels:
+          app: keycloak-postgres
+          {{- include "postgresql.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.keycloakPostgresql.persistence.size }}
+        {{- if .Values.keycloakPostgresql.persistence.storageClass }}
+        {{- if (eq "-" .Values.keycloakPostgresql.persistence.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: {{ .Values.keycloakPostgresql.persistence.storageClass }}
+        {{- end }}
+        {{- end }}
+{{- end }}

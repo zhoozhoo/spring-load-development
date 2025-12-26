@@ -1,0 +1,97 @@
+enabled: true
+namespace: observability
+
+image:
+  repository: grafana/tempo
+  tag: "2.9.0"
+
+config:
+  stream_over_http_enabled: true
+  server:
+    http_listen_port: 3200
+    log_level: info
+  
+  query_frontend:
+    search:
+      duration_slo: 5s
+      throughput_bytes_slo: 1.073741824e+09
+      metadata_slo:
+        duration_slo: 5s
+        throughput_bytes_slo: 1.073741824e+09
+    trace_by_id:
+      duration_slo: 100ms
+      throughput_bytes_slo: 1.073741824e+09
+    metrics:
+      max_duration: 200h
+      query_backend_after: 5m
+      duration_slo: 5s
+      throughput_bytes_slo: 1.073741824e+09
+  
+  distributor:
+    usage:
+      cost_attribution:
+        enabled: false
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: "0.0.0.0:4317"
+          http:
+            endpoint: "0.0.0.0:4318"
+  
+  compactor:
+    compaction:
+      block_retention: 1h
+  
+  ingester:
+    max_block_duration: 1m
+  
+  metrics_generator:
+    registry:
+      external_labels:
+        source: tempo
+        cluster: kubernetes
+    storage:
+      path: /var/tempo/generator/wal
+      remote_write:
+        - url: http://prometheus-service.observability.svc.cluster.local:9090/api/v1/write
+          send_exemplars: true
+    traces_storage:
+      path: /var/tempo/generator/traces
+  
+  storage:
+    trace:
+      backend: local
+      wal:
+        path: /var/tempo/wal
+      local:
+        path: /var/tempo/blocks
+  
+  overrides:
+    defaults:
+      cost_attribution:
+        dimensions: {}
+      metrics_generator:
+        processors: [service-graphs, span-metrics, local-blocks]
+        generate_native_histograms: both
+
+persistence:
+  enabled: true
+  size: 10Gi
+
+service:
+  type: ClusterIP
+  port: 3200
+
+nodePort:
+  enabled: true
+  port: 30200
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

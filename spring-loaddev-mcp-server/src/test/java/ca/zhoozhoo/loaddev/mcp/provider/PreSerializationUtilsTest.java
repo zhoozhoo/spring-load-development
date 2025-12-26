@@ -1,17 +1,18 @@
 package ca.zhoozhoo.loaddev.mcp.provider;
 
-import ca.zhoozhoo.loaddev.mcp.config.SpringObjectMapperMcpJsonMapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.modelcontextprotocol.json.McpJsonMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static java.util.Map.of;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.util.Map.of;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import ca.zhoozhoo.loaddev.mcp.config.SpringObjectMapperMcpJsonMapper;
+import io.modelcontextprotocol.json.McpJsonMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Unit tests for {@link PreSerializationUtils}.
@@ -23,7 +24,7 @@ class PreSerializationUtilsTest {
 
     @BeforeEach
     void setUp() {
-        mapper = new SpringObjectMapperMcpJsonMapper(new ObjectMapper());
+        mapper = new SpringObjectMapperMcpJsonMapper(new JsonMapper());
     }
 
     @Test

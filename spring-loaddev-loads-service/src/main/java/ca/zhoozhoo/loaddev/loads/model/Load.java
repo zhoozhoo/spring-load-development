@@ -13,10 +13,14 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ca.zhoozhoo.loaddev.common.jackson.QuantityDeserializer;
+import ca.zhoozhoo.loaddev.common.jackson.QuantitySerializer;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import tech.units.indriya.format.SimpleQuantityFormat;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
  * Represents an ammunition load configuration.
@@ -34,7 +38,7 @@ public record Load(
         @Id Long id,
 
         @JsonIgnore
-        @Column String ownerId,
+        @Column("owner_id") String ownerId,
 
         @NotBlank(message = "Name is required")
         @Column("name") String name,
@@ -53,6 +57,8 @@ public record Load(
         @NotBlank(message = "Bullet type is required")
         @Column("bullet_type") String bulletType,
 
+        @JsonSerialize(using = QuantitySerializer.class)
+        @JsonDeserialize(using = QuantityDeserializer.class)
         @NotNull(message = "Bullet weight is required")
         @Positive(message = "Bullet weight must be positive")
         @Column("bullet_weight") Quantity<Mass> bulletWeight,
@@ -63,20 +69,22 @@ public record Load(
         @NotBlank(message = "Primer type is required")
         @Column("primer_type") String primerType,
 
+        @JsonSerialize(using = QuantitySerializer.class)
+        @JsonDeserialize(using = QuantityDeserializer.class)
         @Positive(message = "Distance from lands must be positive")
         @Column("distance_from_lands") Quantity<Length> distanceFromLands,
 
+        @JsonSerialize(using = QuantitySerializer.class)
+        @JsonDeserialize(using = QuantityDeserializer.class)
         @Positive(message = "Case overall length must be positive")
         @Column("case_overall_length") Quantity<Length> caseOverallLength,
 
+        @JsonSerialize(using = QuantitySerializer.class)
+        @JsonDeserialize(using = QuantityDeserializer.class)
         @Positive(message = "Neck tension must be positive")
         @Column("neck_tension") Quantity<Length> neckTension,
 
         @Column("rifle_id") Long rifleId) {
-
-    public static final String METRIC = "Metric";
-
-    public static final String IMPERIAL = "Imperial";
 
     private static final QuantityFormat QUANTITY_FORMAT = SimpleQuantityFormat.getInstance();
 

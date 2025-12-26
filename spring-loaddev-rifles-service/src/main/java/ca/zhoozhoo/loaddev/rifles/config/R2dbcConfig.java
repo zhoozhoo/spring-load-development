@@ -9,16 +9,14 @@ import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.r2dbc.connection.R2dbcTransactionManager;
 import org.springframework.transaction.ReactiveTransactionManager;
 
+import ca.zhoozhoo.loaddev.common.r2dbc.R2dbcConverters;
 import io.r2dbc.spi.ConnectionFactory;
 
 /**
- * Configuration class for R2DBC (Reactive Relational Database Connectivity) with JSR-385 support.
+ * R2DBC configuration with JSR-385 Quantity support.
  * <p>
- * This configuration enables reactive database access for the rifles service,
- * providing non-blocking database operations with PostgreSQL. It configures
- * the reactive transaction manager for handling database transactions in a
- * reactive programming model and registers custom converters for JSR-385 Quantity types.
- * </p>
+ * Enables reactive PostgreSQL database access with non-blocking operations,
+ * reactive transaction management, and custom converters for Quantity types.
  *
  * @author Zhubin Salehi
  */

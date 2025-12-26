@@ -14,9 +14,10 @@ import static tech.units.indriya.unit.Units.KILOGRAM;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -24,7 +25,7 @@ import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.components.dao.ProjectileRepository;
 import ca.zhoozhoo.loaddev.components.model.Projectile;
 
-@SpringBootTest
+@SpringBootTest(properties = "spring.autoconfigure.exclude=ca.zhoozhoo.loaddev.security.SecurityAutoConfiguration")
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
 @Import(TestSecurityConfig.class)
@@ -44,9 +45,13 @@ public class ProjectileControllerTest {
     @Test
     void getAllProjectiles() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/projectiles")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/projectiles")
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -57,11 +62,15 @@ public class ProjectileControllerTest {
     @Test
     void searchProjectiles() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedProjectile = projectileRepository.save(createTestProjectile(userId)).block();
 
-        webTestClient.mutateWith(jwt).get().uri(uriBuilder -> uriBuilder.path("/projectiles/search").queryParam("query", "Hornady ELD-X").build())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri(uriBuilder -> uriBuilder.path("/projectiles/search").queryParam("query", "Hornady ELD-X").build())
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -76,11 +85,15 @@ public class ProjectileControllerTest {
     @Test
     void getProjectileById() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedProjectile = projectileRepository.save(createTestProjectile(userId)).block();
 
-        webTestClient.mutateWith(jwt).get().uri("/projectiles/{id}", savedProjectile.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/projectiles/{id}", savedProjectile.id())
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -92,9 +105,13 @@ public class ProjectileControllerTest {
     @Test
     void getProjectileByIdNotFound() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).get().uri("/projectiles/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/projectiles/999")
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -103,11 +120,15 @@ public class ProjectileControllerTest {
     @Test
     void createProjectile() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var projectile = createTestProjectile(userId);
 
-        webTestClient.mutateWith(jwt).post().uri("/projectiles")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .post()
+                .uri("/projectiles")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(projectile), Projectile.class)
                 .exchange()
@@ -127,14 +148,17 @@ public class ProjectileControllerTest {
     @Test
     void createProjectileInvalidInput() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        var invalidProjectile = new Projectile(null, userId, "", 
-                getQuantity(-1, GRAM), "", 
+        var invalidProjectile = new Projectile(null, userId, "",
+                getQuantity(-1, GRAM), "",
                 of(-1, getCurrency("CAD")), -1);
 
-        webTestClient.mutateWith(jwt).post().uri("/projectiles")
-                .contentType(APPLICATION_JSON)
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .post()
+                .uri("/projectiles")
+                .header("Authorization", "Bearer " + userId)
                 .body(just(invalidProjectile), Projectile.class)
                 .exchange()
                 .expectStatus().isBadRequest()
@@ -151,7 +175,6 @@ public class ProjectileControllerTest {
     @Test
     void updateProjectile() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedProjectile = projectileRepository.save(createTestProjectile(userId)).block();
 
@@ -164,7 +187,12 @@ public class ProjectileControllerTest {
                 of(49.99, getCurrency("CAD")),
                 50);
 
-        webTestClient.mutateWith(jwt).put().uri("/projectiles/{id}", savedProjectile.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .put()
+                .uri("/projectiles/{id}", savedProjectile.id())
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(updatedProjectile), Projectile.class)
                 .exchange()
@@ -184,11 +212,15 @@ public class ProjectileControllerTest {
     @Test
     void updateProjectileNotFound() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var projectile = createTestProjectile(userId);
 
-        webTestClient.mutateWith(jwt).put().uri("/projectiles/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .put()
+                .uri("/projectiles/999")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(projectile), Projectile.class)
                 .exchange()
@@ -198,17 +230,24 @@ public class ProjectileControllerTest {
     @Test
     void deleteProjectile() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
         var savedProjectile = projectileRepository.save(createTestProjectile(userId)).block();
 
-        webTestClient.mutateWith(jwt)
-                .delete().uri("/projectiles/{id}", savedProjectile.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .delete()
+                .uri("/projectiles/{id}", savedProjectile.id())
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNoContent();
 
-        webTestClient.mutateWith(jwt)
-                .get().uri("/projectiles/{id}", savedProjectile.id())
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:view")))
+                .get()
+                .uri("/projectiles/{id}", savedProjectile.id())
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -216,9 +255,13 @@ public class ProjectileControllerTest {
     @Test
     void deleteProjectileNotFound() {
         var userId = randomUUID().toString();
-        var jwt = mockJwt().jwt(token -> token.claim("sub", userId));
 
-        webTestClient.mutateWith(jwt).delete().uri("/projectiles/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
+                        new SimpleGrantedAuthority("components:edit")))
+                .delete()
+                .uri("/projectiles/999")
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
     }

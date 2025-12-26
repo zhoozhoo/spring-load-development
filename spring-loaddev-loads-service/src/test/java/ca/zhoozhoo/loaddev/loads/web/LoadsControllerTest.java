@@ -7,14 +7,16 @@ import static org.springframework.security.test.web.reactive.server.SecurityMock
 import static reactor.core.publisher.Mono.just;
 import static systems.uom.ucum.UCUM.GRAIN;
 import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
+import static tech.units.indriya.quantity.Quantities.getQuantity;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
@@ -24,7 +26,6 @@ import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
 import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 import reactor.core.publisher.Flux;
-import tech.units.indriya.quantity.Quantities;
 
 /**
  * Integration tests for LoadsController.
@@ -36,7 +37,7 @@ import tech.units.indriya.quantity.Quantities;
  *
  * @author Zhubin Salehi
  */
-@SpringBootTest
+@SpringBootTest(properties = "spring.autoconfigure.exclude=ca.zhoozhoo.loaddev.security.SecurityAutoConfiguration")
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
 @Import(TestSecurityConfig.class)
@@ -63,10 +64,10 @@ class LoadsControllerTest {
     }
 
     private Load createLoad(String ownerId, String name) {
-        var bulletWeight = Quantities.getQuantity(168, GRAIN);
-        var distanceFromLands = Quantities.getQuantity(0.020, INCH_INTERNATIONAL);
-        var caseOverallLength = Quantities.getQuantity(2.800, INCH_INTERNATIONAL);
-        var neckTension = Quantities.getQuantity(0.002, INCH_INTERNATIONAL);
+        var bulletWeight = getQuantity(168, GRAIN);
+        var distanceFromLands = getQuantity(0.020, INCH_INTERNATIONAL);
+        var caseOverallLength = getQuantity(2.800, INCH_INTERNATIONAL);
+        var neckTension = getQuantity(0.002, INCH_INTERNATIONAL);
 
         return new Load(null, ownerId, name, name + " Description",
                 "Hodgdon", "H4350",
@@ -92,8 +93,11 @@ class LoadsControllerTest {
                 createLoad(userId, "Load2")
         )).blockLast();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .get().uri("/loads")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("loads:view")))
+                .get()
+                .uri("/loads")
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -109,8 +113,11 @@ class LoadsControllerTest {
         var userId = randomUUID().toString();
         var loadId = loadRepository.save(createLoad(userId, "Load1")).block().id();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .get().uri("/loads/{id}", loadId)
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("loads:view")))
+                .get()
+                .uri("/loads/{id}", loadId)
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -124,8 +131,11 @@ class LoadsControllerTest {
     void createLoad() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .post().uri("/loads")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("loads:edit")))
+                .post()
+                .uri("/loads")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(createLoad(userId, "Load1")), Load.class)
                 .exchange()
@@ -142,16 +152,19 @@ class LoadsControllerTest {
         var userId = randomUUID().toString();
         var loadId = loadRepository.save(createLoad(userId, "Load1")).block().id();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .put().uri("/loads/{id}", loadId)
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("loads:edit")))
+                .put()
+                .uri("/loads/{id}", loadId)
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(new Load(loadId, userId, "UpdatedLoad", "UpdatedDescription",
                         "Alliant", "Reloder 16",
-                        "Berger", "Hybrid Target", Quantities.getQuantity(175, GRAIN),
+                        "Berger", "Hybrid Target", getQuantity(175, GRAIN),
                         "Federal", "210M",
-                        Quantities.getQuantity(0.025, INCH_INTERNATIONAL),
-                        Quantities.getQuantity(2.850, INCH_INTERNATIONAL),
-                        Quantities.getQuantity(0.003, INCH_INTERNATIONAL),
+                        getQuantity(0.025, INCH_INTERNATIONAL),
+                        getQuantity(2.850, INCH_INTERNATIONAL),
+                        getQuantity(0.003, INCH_INTERNATIONAL),
                         1L)), Load.class)
                 .exchange()
                 .expectStatus().isOk()
@@ -166,13 +179,19 @@ class LoadsControllerTest {
         var userId = randomUUID().toString();
         var loadId = loadRepository.save(createLoad(userId, "Load1")).block().id();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .delete().uri("/loads/{id}", loadId)
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("loads:delete")))
+                .delete()
+                .uri("/loads/{id}", loadId)
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNoContent();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .get().uri("/loads/{id}", loadId)
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("loads:view")))
+                .get()
+                .uri("/loads/{id}", loadId)
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -186,8 +205,11 @@ class LoadsControllerTest {
     void getNonExistentLoad() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .get().uri("/loads/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("loads:view")))
+                .get()
+                .uri("/loads/999")
+                .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -198,8 +220,11 @@ class LoadsControllerTest {
     void updateNonExistentLoad() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .put().uri("/loads/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("loads:edit")))
+                .put()
+                .uri("/loads/999")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(createLoad(userId, "TestLoad")), Load.class)
                 .exchange()
@@ -211,8 +236,11 @@ class LoadsControllerTest {
     void deleteNonExistentLoad() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .delete().uri("/loads/999")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("loads:delete")))
+                .delete()
+                .uri("/loads/999")
+                .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
     }
@@ -227,7 +255,7 @@ class LoadsControllerTest {
         assertThrows(IllegalArgumentException.class, () ->
                 new Load(null, null, "Test", "Description",
                         "Manufacturer", "Type",
-                        "BulletManufacturer", "BulletType", Quantities.getQuantity(168, GRAIN),
+                        "BulletManufacturer", "BulletType", getQuantity(168, GRAIN),
                         "PrimerManufacturer", "PrimerType",
                         null,  // No distanceFromLands
                         null,  // No caseOverallLength - violates constraint
@@ -240,14 +268,17 @@ class LoadsControllerTest {
     void createLoadWithNullBulletWeight() {
         var userId = randomUUID().toString();
 
-        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId)))
-                .post().uri("/loads")
+        webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
+                .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("loads:edit")))
+                .post()
+                .uri("/loads")
+                .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(new Load(null, userId, "Test", "Description",
                         "Manufacturer", "Type",
                         "BulletManufacturer", "BulletType", null,  // null bullet weight
                         "PrimerManufacturer", "PrimerType",
-                        Quantities.getQuantity(0.020, INCH_INTERNATIONAL),
+                        getQuantity(0.020, INCH_INTERNATIONAL),
                         null,
                         null,
                         null)), Load.class)

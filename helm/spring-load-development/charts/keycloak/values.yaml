@@ -1,0 +1,89 @@
+# Keycloak configuration
+enabled: true
+namespace: keycloak
+
+image:
+  registry: quay.io
+  repository: keycloak/keycloak
+  tag: "26.4"
+
+auth:
+  adminUser: admin
+  adminPassword: admin
+
+postgresql:
+  enabled: false
+  host: keycloak-postgres-service.keycloak.svc.cluster.local
+  port: 5432
+  database: keycloak
+  username: user
+  password: password
+
+extraEnvVars:
+  - name: KC_DB
+    value: postgres
+  - name: KC_DB_URL
+    value: jdbc:postgresql://keycloak-postgres-service.keycloak.svc.cluster.local:5432/keycloak
+  - name: KC_DB_USERNAME
+    value: user
+  - name: KC_HTTP_PORT
+    value: "8080"
+  - name: KC_HOSTNAME
+    value: keycloak-service.keycloak.svc.cluster.local
+  - name: KC_HEALTH_ENABLED
+    value: "true"
+  - name: KC_TRACING_ENABLED
+    value: "true"
+  - name: KC_TRACING_ENDPOINT
+    value: http://otel-collector-service.observability.svc.cluster.local:4317
+  - name: KC_TRACING_SAMPLER_TYPE
+    value: parentbased_traceidratio
+  - name: KC_TRACING_JDBC_ENABLED
+    value: "false"
+  - name: QUARKUS_OTEL_TRACES_SUPPRESS_NON_APPLICATION_URIS
+    value: "true"
+
+resources:
+  limits:
+    cpu: "1000m"
+    memory: "1Gi"
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+
+service:
+  type: ClusterIP
+  http:
+    port: 8080
+
+nodePort:
+  enabled: true
+  port: 30080
+
+ingress:
+  enabled: true
+  hostname: keycloak.local
+  path: /
+  pathType: Prefix
+
+realm:
+  enabled: true
+  configMapName: keycloak-realm-config
+
+# API Gateway integration settings
+integration:
+  baseUrl: "http://keycloak-service.keycloak.svc.cluster.local:8080"
+  realm: "reloading"
+  clientId: "reloading-client"
+  clientSecret: "2EvQuluZfxaaRms8V4NhzBDWzVCSXtty"
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

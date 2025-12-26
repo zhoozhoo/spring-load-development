@@ -1,0 +1,26 @@
+{{- if and .Values.postgresql.enabled (not .Values.postgresql.external) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: {{ .Values.postgresql.namespace }}
+  labels:
+    {{- include "postgresql.labels" . | nindent 4 }}
+data:
+  POSTGRES_DB: {{ .Values.postgresql.auth.database }}
+  POSTGRES_USER: {{ .Values.postgresql.auth.username }}
+{{- end }}
+
+{{- if and .Values.keycloakPostgresql.enabled (not .Values.keycloakPostgresql.external) }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-postgres-config
+  namespace: {{ .Values.keycloakPostgresql.namespace }}
+  labels:
+    {{- include "postgresql.labels" . | nindent 4 }}
+data:
+  POSTGRES_DB: {{ .Values.keycloakPostgresql.auth.database }}
+  POSTGRES_USER: {{ .Values.keycloakPostgresql.auth.username }}
+{{- end }}

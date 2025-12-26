@@ -1,0 +1,68 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: grafana
+    {{- include "grafana.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      securityContext:
+        {{- include "grafana.podSecurityContext" . | nindent 8 }}
+      containers:
+        - name: grafana
+          image: "{{ .Values.image.repository }}:{{ if .Values.global }}{{ .Values.global.versions.grafana | default .Values.image.tag }}{{ else }}{{ .Values.image.tag }}{{ end }}"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "grafana.containerSecurityContext" . | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/grafana
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            {{- if .Values.persistence.enabled }}
+            - name: storage
+              mountPath: /var/lib/grafana
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: grafana-config
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        {{- if .Values.persistence.enabled }}
+        - name: storage
+          persistentVolumeClaim:
+            claimName: grafana-pvc
+        {{- else }}
+        - name: storage
+          emptyDir: {}
+        {{- end }}
+{{- end }}

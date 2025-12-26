@@ -3,6 +3,10 @@ spring:
     name: api-gateway
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
+  cache:
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=5m
+    cache-names: umaTokens
 
 ---
 spring:

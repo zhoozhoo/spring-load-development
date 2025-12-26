@@ -3,21 +3,25 @@ package ca.zhoozhoo.loaddev.rifles;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import ca.zhoozhoo.loaddev.common.opentelemetry.ContextPropagationConfiguration;
+import ca.zhoozhoo.loaddev.common.opentelemetry.FilterConfiguration;
+import ca.zhoozhoo.loaddev.common.opentelemetry.OpenTelemetryConfiguration;
 
 /**
  * Main application class for the Rifles Service.
  * <p>
- * This service manages rifle firearm data including specifications such as caliber, barrel length,
- * and twist rate. It provides RESTful APIs for creating, retrieving, updating, and deleting rifle
- * information for authenticated users in a multi-tenant environment.
- * </p>
+ * Manages rifle firearm specifications with RESTful APIs for authenticated users
+ * in a multi-tenant environment.
  *
  * @author Zhubin Salehi
  */
 @SpringBootApplication
 @EnableTransactionManagement
 @EnableDiscoveryClient
+@Import({OpenTelemetryConfiguration.class, ContextPropagationConfiguration.class, FilterConfiguration.class})
 public class RiflesServiceApplication {
 
     public static void main(String[] args) {

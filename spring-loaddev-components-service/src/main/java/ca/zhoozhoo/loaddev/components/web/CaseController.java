@@ -16,14 +16,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.zhoozhoo.loaddev.components.dao.CaseRepository;
 import ca.zhoozhoo.loaddev.components.model.Case;
-import ca.zhoozhoo.loaddev.components.security.CurrentUser;
+import ca.zhoozhoo.loaddev.security.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -43,12 +43,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * REST controller for managing cartridge case components using JSR-385 and JSR-354 units.
+ * REST controller for cartridge case components with JSR-385/JSR-354.
  * <p>
- * This controller provides endpoints for CRUD operations on case data with JSR-385 Units of
- * Measurement for quantity per box and JSR-354 Money and Currency API for cost handling.
- * All endpoints include full-text search capabilities, are secured with OAuth2 authentication,
- * and enforce user-based access control for multi-tenant data isolation.
+ * OAuth2-secured CRUD operations with full-text search and multi-tenant isolation.
  * </p>
  *
  * @author Zhubin Salehi

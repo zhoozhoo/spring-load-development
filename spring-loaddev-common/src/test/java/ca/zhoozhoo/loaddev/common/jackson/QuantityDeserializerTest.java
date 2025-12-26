@@ -15,9 +15,9 @@ import javax.measure.Quantity.Scale;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.databind.exc.MismatchedInputException;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Unit tests for QuantityDeserializer.
@@ -27,7 +27,10 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
  */
 class QuantityDeserializerTest {
 
-    private final ObjectMapper mapper = new ObjectMapper().registerModule(new QuantityModule());
+        private final JsonMapper mapper = new JsonMapper()
+            .rebuild()
+            .addModule(new QuantityModule())
+            .build();
 
     @Nested
     class SuccessfulDeserialization {
@@ -67,7 +70,7 @@ class QuantityDeserializerTest {
 
         @Test
         void deserialize_withInvalidScale_shouldThrowWithFriendlyMessage() {
-            var ex = assertThrows(JsonParseException.class, () ->
+            var ex = assertThrows(MismatchedInputException.class, () ->
                 mapper.readValue("{" +
                     "\"value\":1," +
                     "\"unit\":\"m\"," +
@@ -75,46 +78,46 @@ class QuantityDeserializerTest {
             );
 
             // message should indicate invalid scale
-            assertTrue(ex.getOriginalMessage().contains("Invalid scale"));
+            assertTrue(ex.getMessage().contains("Invalid scale"));
         }
 
         @Test
         void deserialize_withNonNumericValue_shouldThrow() {
-            assertThrows(JsonParseException.class, () ->
+            assertThrows(MismatchedInputException.class, () ->
                 mapper.readValue("{\"value\":\"abc\",\"unit\":\"m\",\"scale\":\"ABSOLUTE\"}", Quantity.class)
             );
         }
 
         @Test
         void deserialize_withNullValue_shouldThrowFriendlyMessage() {
-            var ex = assertThrows(JsonParseException.class, () ->
+            var ex = assertThrows(MismatchedInputException.class, () ->
                 mapper.readValue("{\"value\":null,\"unit\":\"m\",\"scale\":\"ABSOLUTE\"}", Quantity.class)
             );
-            assertTrue(ex.getOriginalMessage().contains("Invalid numeric value"));
+            assertTrue(ex.getMessage().contains("Invalid numeric value"));
         }
 
         @Test
         void deserialize_withNullUnit_shouldThrowFriendlyMessage() {
-            var ex = assertThrows(JsonParseException.class, () ->
+            var ex = assertThrows(MismatchedInputException.class, () ->
                 mapper.readValue("{\"value\":1,\"unit\":null,\"scale\":\"ABSOLUTE\"}", Quantity.class)
             );
-            assertTrue(ex.getOriginalMessage().contains("Invalid unit value"));
+            assertTrue(ex.getMessage().contains("Invalid unit value"));
         }
 
         @Test
         void deserialize_withInvalidUnitString_shouldThrowFromQuantityDeserializer() {
-            var ex = assertThrows(JsonParseException.class, () ->
+            var ex = assertThrows(MismatchedInputException.class, () ->
                 mapper.readValue("{\"value\":1,\"unit\":\"BAD\",\"scale\":\"ABSOLUTE\"}", Quantity.class)
             );
-            assertTrue(ex.getOriginalMessage().contains("Invalid unit value"));
+            assertTrue(ex.getMessage().contains("Invalid unit value"));
         }
 
         @Test
         void deserialize_withNullScale_shouldThrowFriendlyMessage() {
-            var ex = assertThrows(JsonParseException.class, () ->
+            var ex = assertThrows(MismatchedInputException.class, () ->
                 mapper.readValue("{\"value\":1,\"unit\":\"m\",\"scale\":null}", Quantity.class)
             );
-            assertTrue(ex.getOriginalMessage().contains("Invalid scale"));
+            assertTrue(ex.getMessage().contains("Invalid scale"));
         }
     }
 
@@ -123,22 +126,22 @@ class QuantityDeserializerTest {
 
         @Test
         void deserialize_withMissingValueField_shouldThrow() {
-            assertEquals("value not found for quantity type.", 
-                    assertThrows(JsonParseException.class, () -> 
+                assertTrue(
+                    assertThrows(MismatchedInputException.class, () -> 
                         mapper.readValue("""
                                 {"unit":"[in_i]","scale":"ABSOLUTE"}
                                 """, Quantity.class)
-                    ).getOriginalMessage());
+                    ).getMessage().contains("value not found for quantity type."));
         }
 
         @Test
         void deserialize_withMissingUnitField_shouldThrow() {
-            assertEquals("unit not found for quantity type.", 
-                    assertThrows(JsonParseException.class, () -> 
+                assertTrue(
+                    assertThrows(MismatchedInputException.class, () -> 
                         mapper.readValue("""
                                 {"value":26.0,"scale":"ABSOLUTE"}
                                 """, Quantity.class)
-                    ).getOriginalMessage());
+                    ).getMessage().contains("unit not found for quantity type."));
         }
 
     @Test
@@ -160,7 +163,7 @@ class QuantityDeserializerTest {
 
         @Test
         void deserialize_withEmptyJson_shouldThrow() {
-            assertThrows(JsonParseException.class, () -> mapper.readValue("{}", Quantity.class));
+            assertThrows(MismatchedInputException.class, () -> mapper.readValue("{}", Quantity.class));
         }
     }
 

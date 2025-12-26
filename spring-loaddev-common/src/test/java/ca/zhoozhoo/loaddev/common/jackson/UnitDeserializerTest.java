@@ -14,9 +14,9 @@ import javax.measure.Unit;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import tools.jackson.databind.deser.std.StdScalarDeserializer;
+import tools.jackson.databind.exc.MismatchedInputException;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Unit tests for UnitDeserializer.
@@ -26,7 +26,10 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
  */
 class UnitDeserializerTest {
 
-    private final ObjectMapper mapper = new ObjectMapper().registerModule(new QuantityModule());
+        private final JsonMapper mapper = new JsonMapper()
+            .rebuild()
+            .addModule(new QuantityModule())
+            .build();
 
     @Nested
     class SuccessfulDeserialization {

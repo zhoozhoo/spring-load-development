@@ -1,0 +1,418 @@
+{{- if .Values.apiGateway.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: common-config
+  namespace: {{ .Values.namespace | default "reloading" }}
+  labels:
+    {{- include "reloading.labels" . | nindent 4 }}
+    app.kubernetes.io/component: common-config
+data:
+  application.yml: |
+    server:
+      shutdown: graceful
+
+    spring:
+      threads:
+        virtual:
+          enabled: true
+
+    eureka:
+      client:
+        enabled: false
+
+    management:
+      endpoint:
+        health:
+          show-details: always
+          probes:
+            enabled: true
+      endpoints:
+        web:
+          exposure:
+            include: "*"
+      info:
+        build:
+          enabled: true
+        defaults:
+          enabled: true
+        env:
+          enabled: true
+        java:
+          enabled: true
+        os:
+          enabled: true
+        process:
+          enabled: true
+      metrics:
+        enable:
+          all: true
+        tags:
+          application: ${spring.application.name}
+          service: ${spring.application.name}
+          environment: ${SPRING_PROFILES_ACTIVE:kubernetes}
+        distribution:
+          percentiles-histogram:
+            http:
+              server:
+                requests: 'true'
+      observations:
+        annotations:
+          enabled: true
+        enable:
+          all: true
+      opentelemetry:
+        logging:
+          export:
+            otlp:
+              endpoint: ${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:http://otel-collector-service.observability.svc.cluster.local:4317/v1/logs}
+              transport: grpc
+        tracing:
+          export:
+            otlp:
+              endpoint: ${OTEL_EXPORTER_OTLP_TRACING_ENDPOINT:http://otel-collector-service.observability.svc.cluster.local:4317}
+              transport: grpc
+      otlp:
+        metrics:
+          export:
+            url: ${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:http://otel-collector-service.observability.svc.cluster.local:4318/v1/metrics}
+            step: 10s
+      tracing:
+        sampling:
+          probability: 1
+
+    logging:
+      config: /etc/config/log4j2.yaml
+
+    log4j2:
+      Configuration:
+        allowedProtocols: "http,https,file,jar"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway
+  namespace: {{ .Values.namespace | default "reloading" }}
+  labels:
+    {{- include "reloading.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api-gateway
+data:
+  api-gateway.yml: |
+    server:
+      port: 8080
+    
+    logging:
+      level:
+        io.kubernetes.client.informer.cache.ReflectorRunnable: WARN
+      
+    spring:
+      security:
+        oauth2:
+          resourceserver:
+            jwt:
+              jwk-set-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm | default "reloading" }}/protocol/openid-connect/certs
+          client:
+            provider:
+              keycloak:
+                token-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/token
+                authorization-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/auth
+                issuer-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}
+                user-info-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/userinfo
+                jwk-set-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/certs
+            registration:
+              api-gateway:
+                provider: keycloak
+                client-id: {{ .Values.keycloak.clientId | default "reloading-client" }}
+                client-secret: {{ .Values.keycloak.clientSecret | default "2EvQuluZfxaaRms8V4NhzBDWzVCSXtty" }}
+                authorization-grant-type: authorization_code
+                redirect-uri: "{baseUrl}/login/oauth2/code/keycloak"
+                scope: 
+                  - openid
+                  - email
+                  - profile
+                  - roles
+      webclient:
+        keycloak:
+          base-url: {{ .Values.keycloak.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:{{ .Values.keycloak.nodePort.port | default 8080 }}" }}
+      reactor:
+        context-propagation: AUTO
+      cloud:
+        gateway:
+          server:
+            webflux:
+              routes:
+                - id: loads-service
+                  uri: http://loads-service.{{ .Values.namespace | default "default" }}.svc.cluster.local:8080
+                  predicates:
+                    - Path=/api/loads/**,/api/groups/**,/api/shots/**,/loads-service/v3/api-docs
+                  filters:
+                    - StripPrefix=1
+                    - TokenForwarding
+                    - TokenRelay=
+                    - name: CircuitBreaker
+                      args:
+                        name: loadsCircuitBreaker
+                    - Retry=1
+                - id: rifles-service
+                  uri: http://rifles-service.{{ .Values.namespace | default "default" }}.svc.cluster.local:8080
+                  predicates:
+                    - Path=/api/rifles/**,/rifles-service/v3/api-docs
+                  filters:
+                    - StripPrefix=1
+                    - TokenForwarding
+                    - TokenRelay=
+                    - name: CircuitBreaker
+                      args:
+                        name: riflesCircuitBreaker
+                    - Retry=1
+                - id: components-service
+                  uri: http://components-service.{{ .Values.namespace | default "default" }}.svc.cluster.local:8080
+                  predicates:
+                    - Path=/api/projectiles/**,/api/cases/**,/api/propellants/**,/api/primers/**,/components-service/v3/api-docs
+                  filters:
+                    - StripPrefix=1
+                    - TokenForwarding
+                    - TokenRelay=
+                    - name: CircuitBreaker
+                      args:
+                        name: componentsCircuitBreaker
+                    - Retry=1
+                - id: mcp-server
+                  uri: http://mcp-server-service.{{ .Values.namespace | default "default" }}.svc.cluster.local:8080
+                  predicates:
+                    - Path=/mcp/**,/sse/**
+                  filters:
+                    - TokenForwarding
+                    - TokenRelay=
+                    - name: CircuitBreaker
+                      args:
+                        name: mcpCircuitBreaker
+                    - Retry=1
+                - id: fallback-route
+                  order: 100
+                  uri: no://op
+                  predicates:
+                    - Path=/
+                  filters:
+                    - SetPath=/${path}
+                    - RewritePath=/(?<segment>.*), /${segment}
+            
+    springdoc:
+      enable-native-support: true
+      api-docs:
+        enabled: true
+      swagger-ui:
+        enabled: true
+        path: /swagger-ui.html
+        config-url: /v3/api-docs/swagger-config
+        urls:
+          - url: /rifles-service/v3/api-docs
+            name: Rifles Service
+            primaryName: Rifles Service
+          - url: /loads-service/v3/api-docs
+            name: Loads Service
+            primaryName: Loads Service
+          - url: /components-service/v3/api-docs
+            name: Components Service
+            primaryName: Components Service
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: log4j2-config
+  namespace: {{ .Values.namespace | default "reloading" }}
+  labels:
+    {{- include "reloading.labels" . | nindent 4 }}
+    app.kubernetes.io/component: log4j2-config
+data:
+  log4j2.yaml: |
+    Configuration:
+      status: WARN
+      
+      Properties:
+        Property:
+          - name: LOG_EXCEPTION_CONVERSION_WORD
+            value: "%xwEx"
+          - name: LOG_LEVEL_PATTERN
+            value: "%5p"
+          - name: LOG_DATEFORMAT_PATTERN
+            value: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+          - name: CONSOLE_LOG_PATTERN
+            value: "%clr{%d{${LOG_DATEFORMAT_PATTERN}}}{faint} %clr{${LOG_LEVEL_PATTERN}} %clr{%pid}{magenta} %clr{--- [%15.15t] [trace_id=%X{trace_id} span_id=%X{span_id}]}{faint} %clr{%-40.40c{1.}}{cyan} %clr{:}{faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD}"
+      
+      Appenders:
+        Console:
+          name: ConsoleAppender
+          target: SYSTEM_OUT
+          follow: true
+          PatternLayout:
+            pattern: "${CONSOLE_LOG_PATTERN}"
+            disableAnsi: false
+        
+        OpenTelemetry:
+          name: OpenTelemetryAppender
+          captureMapMessageAttributes: true
+          captureMarkerAttribute: true
+          captureContextDataAttributes: "*"
+      
+      Loggers:
+        Logger:
+          - name: ca.zhoozhoo.loaddev
+            level: INFO
+            additivity: false
+            AppenderRef:
+              - ref: ConsoleAppender
+              - ref: OpenTelemetryAppender
+        
+        Root:
+          level: INFO
+          AppenderRef:
+            - ref: ConsoleAppender
+            - ref: OpenTelemetryAppender
+{{- end }}
+
+{{- if .Values.loadsService.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loads-service-config
+  namespace: {{ .Values.namespace | default "reloading" }}
+  labels:
+    {{- include "reloading.labels" . | nindent 4 }}
+    app.kubernetes.io/component: loads-service-config
+data:
+  application.yml: |
+    spring:
+      r2dbc:
+        url: ${SPRING_R2DBC_URL:r2dbc:postgresql://postgres-service.default.svc.cluster.local:5432/loadsdb}
+        username: ${SPRING_R2DBC_USERNAME:user}
+        password: ${SPRING_R2DBC_PASSWORD:password}
+        pool:
+            enabled: true   
+            max-size: 20
+            initial-size: 10
+      sql:
+        init:
+          mode: always  
+      security:
+        oauth2:
+          resourceserver:
+            jwt:
+              issuer-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}
+              jwk-set-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/certs
+{{- end }}
+
+{{- if .Values.componentsService.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: components-service-config
+  namespace: {{ .Values.namespace | default "reloading" }}
+  labels:
+    {{- include "reloading.labels" . | nindent 4 }}
+    app.kubernetes.io/component: components-service-config
+data:
+  application.yml: |
+    spring:
+      r2dbc:
+        url: ${SPRING_R2DBC_URL:r2dbc:postgresql://postgres-service.postgres.svc.cluster.local:5432/loadsdb}
+        username: ${SPRING_R2DBC_USERNAME:user}
+        password: ${SPRING_R2DBC_PASSWORD:password}
+        pool:
+            enabled: true   
+            max-size: 20
+            initial-size: 10
+      sql:
+        init:
+          mode: always  
+      security:
+        oauth2:
+          resourceserver:
+            jwt:
+              issuer-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}
+              jwk-set-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/certs
+
+    eureka:
+      client:
+        enabled: false
+{{- end }}
+
+{{- if .Values.riflesService.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rifles-service-config
+  namespace: {{ .Values.namespace | default "reloading" }}
+  labels:
+    {{- include "reloading.labels" . | nindent 4 }}
+    app.kubernetes.io/component: rifles-service-config
+data:
+  application.yml: |
+    spring:
+      r2dbc:
+        url: ${SPRING_R2DBC_URL:r2dbc:postgresql://postgres-service.postgres.svc.cluster.local:5432/loadsdb}
+        username: ${SPRING_R2DBC_USERNAME:user}
+        password: ${SPRING_R2DBC_PASSWORD:password}
+        pool:
+            enabled: true   
+            max-size: 20
+            initial-size: 10
+      sql:
+        init:
+          mode: always  
+      security:
+        oauth2:
+          resourceserver:
+            jwt:
+              issuer-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}
+              jwk-set-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/certs
+
+    eureka:
+      client:
+        enabled: false
+{{- end }}
+
+{{- if .Values.mcpServer.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mcp-server-config
+  namespace: {{ .Values.namespace | default "reloading" }}
+  labels:
+    {{- include "reloading.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mcp-server-config
+data:
+  application.yml: |
+    spring:
+      ai:
+        mcp:
+          server:
+            name: reloading-mcp-server
+            version: {{ .Values.global.imageTag | quote }}
+            type: ASYNC
+            sse-endpoint: /sse
+            sse-message-endpoint: /mcp/messages
+            tool-change-notification: true
+            capabilities:
+              tool: true
+              resource: true
+              prompt: false
+              completion: false
+      security:
+        oauth2:
+          resourceserver:
+            jwt:
+              issuer-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}
+              jwk-set-uri: {{ .Values.keycloak.baseUrl }}/realms/{{ .Values.keycloak.realm }}/protocol/openid-connect/certs
+    
+    eureka:
+      client:
+        enabled: false
+{{- end }}

@@ -3,33 +3,37 @@ package ca.zhoozhoo.loaddev.common.jackson;
 import static systems.uom.ucum.format.UCUMFormat.Variant.CASE_SENSITIVE;
 
 import java.io.IOException;
+import java.io.Serial;
+import java.io.Serializable;
 
 import javax.measure.Unit;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdScalarSerializer;
-
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import systems.uom.ucum.format.UCUMFormat;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.exc.StreamWriteException;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ser.std.StdScalarSerializer;
 
 /**
  * Custom Jackson serializer for JSR-385 {@link Unit} objects.
  * <p>
  * Serializes {@link Unit} instances into case-sensitive UCUM (Unified Code for Units of Measure)
- * formatted JSON strings. A {@code null} unit serializes to a JSON {@code null} (symmetrical with the deserializer which accepts null).
+ * formatted JSON strings. A {@code null} unit serializes to JSON {@code null}.
  * <p>
  * Behavior:
  * <ul>
- *   <li>Uses a UCUM formatter to produce canonical strings (e.g., {@code m/s}).</li>
- *   <li>Does not attempt pretty-printing or localization; output is strictly UCUM.</li>
- *   <li>Fails only if the underlying {@link UCUMFormat} cannot format the unit (rare for standard units).</li>
+ *   <li>Uses a cached case-sensitive {@link UCUMFormat} to produce canonical strings (e.g., {@code m/s}).</li>
+ *   <li>No localization or pretty-printing; output is strictly UCUM.</li>
+ *   <li>Rarely fails; only if the underlying formatter cannot format the unit.</li>
  * </ul>
  * Examples:
  * <ul>
- *   <li>meter → "m"</li>
- *   <li>international inch → "[in_i]"</li>
- *   <li>meters per second → "m/s"</li>
- *   <li>null → null</li>
+ *   <li>meter → {@code "m"}</li>
+ *   <li>international inch → {@code "[in_i]"}</li>
+ *   <li>meters per second → {@code "m/s"}</li>
+ *   <li>{@code null} → {@code null}</li>
  * </ul>
  *
  * @author Zhubin Salehi
@@ -37,27 +41,34 @@ import systems.uom.ucum.format.UCUMFormat;
  * @see UnitDeserializer
  * @see UCUMFormat
  */
-public class UnitSerializer extends StdScalarSerializer<Unit<?>> {
+@SuppressFBWarnings(value = "SE_NO_SUITABLE_CONSTRUCTOR", justification = "Jackson runtime never Java-serializes serializer instances; class implements Serializable only for framework compatibility and test expectations.")
+public final class UnitSerializer extends StdScalarSerializer<Unit<?>> implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @SuppressWarnings("unchecked")
     private static final Class<Unit<?>> UNIT_CLASS = (Class<Unit<?>>) (Class<?>) Unit.class;
+
+    /** Cached UCUM formatter instance (case-sensitive). */
+    private static final UCUMFormat UCUM = UCUMFormat.getInstance(CASE_SENSITIVE);
 
     public UnitSerializer() {
         super(UNIT_CLASS);
     }
 
     @Override
-    public void serialize(Unit<?> unit, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
-            throws IOException {
+    public void serialize(Unit<?> unit, JsonGenerator jsonGenerator, SerializationContext serializerProvider)
+            throws JacksonException {
 
-        if (unit == null) {
-            jsonGenerator.writeNull();
-        } else {
-            jsonGenerator.writeString(UCUMFormat.getInstance(CASE_SENSITIVE)
-                    .format(unit, new StringBuilder())
-                    .toString());
+        try {
+            if (unit == null) {
+                jsonGenerator.writeNull();
+            } else {
+                jsonGenerator.writeString(UCUM.format(unit, new StringBuilder()).toString());
+            }
+        } catch (IOException ioe) {
+            throw new StreamWriteException(jsonGenerator, ioe.getMessage(), ioe);
         }
     }
 }

@@ -6,17 +6,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
-import ca.zhoozhoo.loaddev.components.validation.PositiveQuantityValidator;
+import ca.zhoozhoo.loaddev.common.validation.NotNullQuantityValidator;
+import ca.zhoozhoo.loaddev.common.validation.PositiveQuantityValidator;
 import jakarta.validation.Validation;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 /**
- * Configuration for custom Bean Validation validators.
- * <p>
- * Registers custom validators for JSR-385 Quantity types to enable
- * Bean Validation annotations like @Positive to work with
- * javax.measure.Quantity fields.
- * </p>
+ * Bean Validation configuration registering custom Quantity validators.
  *
  * @author Zhubin Salehi
  */
@@ -34,12 +31,20 @@ public class ValidationConfig {
 
         var constraintMapping = configuration.createConstraintMapping();
 
+        // Register PositiveQuantityValidator for Quantity types
         constraintMapping
                 .constraintDefinition(Positive.class)
                 .includeExistingValidators(true)
                 .validatedBy(PositiveQuantityValidator.class);
 
+        // Register NotNullQuantityValidator for Quantity types
+        constraintMapping
+                .constraintDefinition(NotNull.class)
+                .includeExistingValidators(true)
+                .validatedBy(NotNullQuantityValidator.class);
+
         configuration.addMapping(constraintMapping);
+
         validatorFactoryBean.setConfigurationInitializer(
                 cfg -> ((HibernateValidatorConfiguration) cfg).addMapping(constraintMapping));
 

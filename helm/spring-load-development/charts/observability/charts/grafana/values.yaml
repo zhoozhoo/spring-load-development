@@ -1,0 +1,105 @@
+enabled: true
+namespace: observability
+
+image:
+  repository: grafana/grafana
+  tag: "12.3.1"
+
+auth:
+  disable_login_form: true
+  disable_signout_menu: true
+  anonymous:
+    enabled: true
+    org_name: "Main Org."
+    org_role: "Admin"
+
+datasources:
+  - name: Loki
+    type: loki
+    uid: loki
+    access: proxy
+    orgId: 1
+    url: http://loki-service.observability.svc.cluster.local:3100
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: true
+  
+  - name: Tempo
+    type: tempo
+    uid: tempo
+    access: proxy
+    orgId: 1
+    url: http://tempo-service.observability.svc.cluster.local:3200
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: true
+    apiVersion: 1
+    jsonData:
+      httpMethod: GET
+      serviceMap:
+        datasourceUid: prometheus
+      streamingEnabled:
+        search: true
+  
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus
+    access: proxy
+    url: http://prometheus-service.observability.svc.cluster.local:9090
+    basicAuth: false
+    isDefault: false
+    version: 1
+    editable: true
+    jsonData:
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo
+      tracesToMetrics:
+        datasourceUid: prometheus
+        spanStartTimeShift: '2m'
+        spanEndTimeShift: '-2m'
+        tags: 
+          - key: 'service.name'
+            value: 'service_name'
+          - key: 'peer.service'
+            value: 'server'
+          - key: 'job'
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: '-1h'
+        spanEndTimeShift: '1h'
+        filterByTraceID: true
+        filterBySpanID: true
+        tags:
+          - key: 'service.name'
+            value: 'service_name'
+          - key: 'peer.service'
+            value: 'server'
+          - key: 'job'
+
+persistence:
+  enabled: true
+  size: 5Gi
+
+service:
+  type: ClusterIP
+  port: 3000
+
+nodePort:
+  enabled: true
+  port: 30000
+
+ingress:
+  enabled: true
+  hostname: grafana.local
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

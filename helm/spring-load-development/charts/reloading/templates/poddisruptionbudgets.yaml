@@ -1,0 +1,28 @@
+{{/*
+PodDisruptionBudgets for all microservices
+*/}}
+
+{{/* API Gateway PDB */}}
+{{- if .Values.apiGateway.enabled }}
+{{- include "reloading.microservice.podDisruptionBudget" (dict "componentName" "api-gateway" "config" .Values.apiGateway "context" .) }}
+{{- end }}
+
+{{/* Loads Service PDB */}}
+{{- if .Values.loadsService.enabled }}
+{{- include "reloading.microservice.podDisruptionBudget" (dict "componentName" "loads-service" "config" .Values.loadsService "context" .) }}
+{{- end }}
+
+{{/* Components Service PDB */}}
+{{- if .Values.componentsService.enabled }}
+{{- include "reloading.microservice.podDisruptionBudget" (dict "componentName" "components-service" "config" .Values.componentsService "context" .) }}
+{{- end }}
+
+{{/* Rifles Service PDB */}}
+{{- if .Values.riflesService.enabled }}
+{{- include "reloading.microservice.podDisruptionBudget" (dict "componentName" "rifles-service" "config" .Values.riflesService "context" .) }}
+{{- end }}
+
+{{/* MCP Server PDB */}}
+{{- if .Values.mcpServer.enabled }}
+{{- include "reloading.microservice.podDisruptionBudget" (dict "componentName" "mcp-server" "config" .Values.mcpServer "context" .) }}
+{{- end }}

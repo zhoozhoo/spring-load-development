@@ -1,0 +1,41 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: grafana
+    {{- include "grafana.labels" . | nindent 4 }}
+data:
+  grafana.ini: |
+    [server]
+    http_port = {{ .Values.service.port }}
+    
+    [auth]
+    disable_login_form = {{ .Values.auth.disable_login_form }}
+    disable_signout_menu = {{ .Values.auth.disable_signout_menu }}
+    
+    [auth.anonymous]
+    enabled = {{ .Values.auth.anonymous.enabled }}
+    org_name = {{ .Values.auth.anonymous.org_name }}
+    org_role = {{ .Values.auth.anonymous.org_role }}
+    
+    [users]
+    allow_sign_up = false
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: grafana
+    {{- include "grafana.labels" . | nindent 4 }}
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      {{- toYaml .Values.datasources | nindent 6 }}
+{{- end }}

@@ -2,6 +2,8 @@ package ca.zhoozhoo.loaddev.rifles.model;
 
 import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
 
+import java.util.Objects;
+
 import javax.measure.Quantity;
 import javax.measure.quantity.Length;
 
@@ -9,17 +11,18 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
+
+import ca.zhoozhoo.loaddev.common.jackson.QuantityDeserializer;
+import ca.zhoozhoo.loaddev.common.jackson.QuantitySerializer;
 import jakarta.validation.constraints.NotBlank;
 
 /**
- * Represents a rifle firearm for ammunition load development using JSR-385 units.
+ * Rifle firearm specifications for ammunition load development.
  * <p>
- * A rifle defines the firearm specifications including name, description, caliber,
- * barrel length, twist rate. These specifications are critical
- * for load development as they affect bullet selection, powder charge, and overall
- * ballistic performance. Each rifle is owned by a specific user for multi-tenant data isolation.
- * Barrel length and free bore use JSR-385 Quantity&lt;Length&gt; for type-safe measurements with embedded units.
- * </p>
+ * Includes caliber, barrel length, rifling, and optional zeroing configuration using
+ * JSR-385 Quantity types. Each rifle is owned by a specific user for multi-tenant isolation.
  *
  * @author Zhubin Salehi
  */
@@ -38,26 +41,18 @@ public record Rifle(
         @NotBlank(message = "Caliber is required")
         @Column("caliber") String caliber,
 
+        @JsonSerialize(using = QuantitySerializer.class)
+        @JsonDeserialize(using = QuantityDeserializer.class)
         @Column("barrel_length") Quantity<Length> barrelLength,
 
         @Column("barrel_contour") String barrelContour,
 
-        @Column("twist_rate") String twistRate,
+        @Column("rifling") Rifling rifling,
 
-        @Column("rifling") String rifling,
-
-        @Column("free_bore") Quantity<Length> freeBore) {
-
-    public static final String METRIC = "Metric";
-
-    public static final String IMPERIAL = "Imperial";
+        @Column("zeroing") Zeroing zeroing) {
 
     /**
-     * Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
-     * <p>
-     * Validates reasonable ranges for rifle specifications using JSR-385 Quantity types.
-     * Uses enhanced pattern matching for improved readability and maintainability.
-     * </p>
+     * Validates rifle specifications: barrel length (4-50 inches).
      */
     public Rifle {
         // Validate reasonable barrel length (4 to 50 inches equivalent)
@@ -69,15 +64,41 @@ public record Rifle(
                 );
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         
-        // Validate reasonable free bore (0.001 to 0.5 inches equivalent)
-        if (freeBore != null) {
-            double freeBoreInInches = freeBore.to(INCH_INTERNATIONAL).getValue().doubleValue();
-            if (freeBoreInInches < 0.001 || freeBoreInInches > 0.5) {
-                throw new IllegalArgumentException(
-                    "Free bore must be between 0.001 and 0.5 inches, got: %.4f".formatted(freeBoreInInches)
-                );
-            }
-        }
+        Rifle rifle = (Rifle) o;
+        return Objects.equals(id, rifle.id) &&
+               Objects.equals(ownerId, rifle.ownerId) &&
+               Objects.equals(name, rifle.name) &&
+               Objects.equals(description, rifle.description) &&
+               Objects.equals(caliber, rifle.caliber) &&
+               quantitiesEqual(barrelLength, rifle.barrelLength) &&
+               Objects.equals(barrelContour, rifle.barrelContour) &&
+               Objects.equals(rifling, rifle.rifling) &&
+               Objects.equals(zeroing, rifle.zeroing);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, ownerId, name, description, caliber, 
+                           quantityHashCode(barrelLength), barrelContour, rifling, zeroing);
+    }
+
+    private boolean quantitiesEqual(Quantity<?> q1, Quantity<?> q2) {
+        if (q1 == null && q2 == null) return true;
+        if (q1 == null || q2 == null) return false;
+        // Use Double.compare to avoid floating point equality issues
+        return Double.compare(q1.getValue().doubleValue(), q2.getValue().doubleValue()) == 0 &&
+               Objects.equals(q1.getUnit(), q2.getUnit());
+    }
+
+    private int quantityHashCode(Quantity<?> q) {
+        if (q == null) return 0;
+        return Objects.hash(q.getValue().doubleValue(), q.getUnit());
     }
 }

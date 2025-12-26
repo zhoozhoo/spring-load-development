@@ -1,0 +1,48 @@
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: tempo-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: tempo
+    {{- include "tempo.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: 4317
+      targetPort: otlp-grpc
+      protocol: TCP
+      name: otlp-grpc
+    - port: 4318
+      targetPort: otlp-http
+      protocol: TCP
+      name: otlp-http
+  selector:
+    app: tempo
+
+---
+{{- if .Values.nodePort.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: tempo-nodeport
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: tempo
+    {{- include "tempo.labels" . | nindent 4 }}
+spec:
+  type: NodePort
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
+      nodePort: {{ .Values.nodePort.port }}
+  selector:
+    app: tempo
+{{- end }}
+{{- end }}

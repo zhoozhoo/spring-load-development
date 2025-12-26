@@ -1,12 +1,13 @@
 package ca.zhoozhoo.loaddev.common.jackson;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ser.std.StdSerializer;
+
+import java.math.BigDecimal;
 
 import javax.measure.Quantity;
-import java.io.IOException;
-import java.math.BigDecimal;
 
 /**
  * Custom Jackson serializer for JSR-385 {@link Quantity} objects.
@@ -14,10 +15,12 @@ import java.math.BigDecimal;
  * Writes quantities in the structured form:
  * { "value": <number>, "unit": "<UCUM>" }
  * The optional scale field is omitted; deserializers default to ABSOLUTE when absent.
+ * 
+ * @author Zhubin Salehi
+ * @see Quantity
+ * @see QuantityDeserializer
  */
 public class QuantitySerializer extends StdSerializer<Quantity<?>> {
-
-    private static final long serialVersionUID = 1L;
 
     @SuppressWarnings("unchecked")
     public QuantitySerializer() {
@@ -25,25 +28,33 @@ public class QuantitySerializer extends StdSerializer<Quantity<?>> {
     }
 
     @Override
-    public void serialize(Quantity<?> value, JsonGenerator jsonGenerator, SerializerProvider provider)
-            throws IOException {
+    public void serialize(Quantity<?> value, JsonGenerator generator, SerializationContext context)
+            throws JacksonException {
         if (value == null) {
-            jsonGenerator.writeNull();
+            generator.writeNull();
             return;
         }
 
-        jsonGenerator.writeStartObject();
-        // Write numeric value with stable precision handling
+        generator.writeStartObject();
+
         var number = value.getValue();
         if (number == null) {
-            jsonGenerator.writeNullField("value");
+            generator.writeNullProperty("value");
         } else {
-            // Use BigDecimal for consistency across numeric types
-            jsonGenerator.writeNumberField("value", new BigDecimal(number.toString()));
+            generator.writeNumberProperty("value", new BigDecimal(number.toString()));
         }
-        // Delegate unit serialization to UnitSerializer
-        jsonGenerator.writeFieldName("unit");
-        provider.defaultSerializeValue(value.getUnit(), jsonGenerator);
-        jsonGenerator.writeEndObject();
+        
+        context.defaultSerializeProperty("unit", value.getUnit(), generator);
+
+        try {
+            var scale = value.getScale();
+            if (scale != null) {
+                generator.writeStringProperty("scale", scale.toString());
+            }
+        } catch (Throwable ignored) {
+            // Scale not available; ignore.
+        }
+
+        generator.writeEndObject();
     }
 }

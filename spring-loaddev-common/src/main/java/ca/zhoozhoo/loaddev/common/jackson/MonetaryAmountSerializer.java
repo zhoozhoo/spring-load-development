@@ -1,36 +1,37 @@
 package ca.zhoozhoo.loaddev.common.jackson;
 
-import java.io.IOException;
+import java.math.BigDecimal;
 
 import javax.money.MonetaryAmount;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ser.std.StdSerializer;
+
 
 /**
  * Jackson serializer for JSR-354 {@link MonetaryAmount} types.
  * <p>
- * Serializes {@link MonetaryAmount} objects to JSON format:
- * {@code {"amount": 45.99, "currency": "USD"}}
+ * Serializes {@link MonetaryAmount} to JSON objects of the form
+ * {@code {"amount": 45.99, "currency": "USD"}}.
  * </p>
  *
  * @author Zhubin Salehi
+ * @see MonetaryAmountDeserializer
  */
-class MonetaryAmountSerializer extends StdSerializer<MonetaryAmount> {
-
-    private static final long serialVersionUID = 1L;
+public class MonetaryAmountSerializer extends StdSerializer<MonetaryAmount> {
 
     public MonetaryAmountSerializer() {
         super(MonetaryAmount.class);
     }
 
     @Override
-    public void serialize(MonetaryAmount value, JsonGenerator gen, SerializerProvider provider) 
-            throws IOException {
-        gen.writeStartObject();
-        gen.writeNumberField("amount", value.getNumber().numberValueExact(java.math.BigDecimal.class));
-        gen.writeStringField("currency", value.getCurrency().getCurrencyCode());
-        gen.writeEndObject();
+    public void serialize(MonetaryAmount amount, JsonGenerator generator, SerializationContext context) 
+            throws JacksonException {
+        generator.writeStartObject();
+        generator.writeNumberProperty("amount", amount.getNumber().numberValueExact(BigDecimal.class));
+        generator.writeStringProperty("currency", amount.getCurrency().getCurrencyCode());
+        generator.writeEndObject();
     }
 }

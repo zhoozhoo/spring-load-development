@@ -1,19 +1,14 @@
 package ca.zhoozhoo.loaddev.loads.config;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.NonNull;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 import org.springframework.web.reactive.result.method.annotation.ArgumentResolverConfigurer;
 
-import ca.zhoozhoo.loaddev.loads.security.CurrentUserMethodArgumentResolver;
+import ca.zhoozhoo.loaddev.security.CurrentUserMethodArgumentResolver;
 
 /**
- * WebFlux configuration for customizing web layer behavior.
- * <p>
- * This configuration registers custom argument resolvers for reactive controller methods,
- * specifically the {@link CurrentUserMethodArgumentResolver} for extracting the current
- * authenticated user's ID from JWT tokens.
- * </p>
+ * WebFlux configuration registering {@link CurrentUserMethodArgumentResolver} for JWT user extraction.
  *
  * @author Zhubin Salehi
  */

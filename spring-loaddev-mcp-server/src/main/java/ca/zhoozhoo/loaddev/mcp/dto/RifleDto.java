@@ -4,12 +4,9 @@ import javax.measure.Quantity;
 import javax.measure.quantity.Length;
 
 /**
- * Data Transfer Object representing a rifle aligned with JSR-385.
+ * Rifle specifications using JSR-385 {@link Quantity} types.
  * <p>
- * Mirrors the rifles microservice record replacing primitive numeric and string length
- * representations with {@link Quantity} types (barrelLength, freeBore). The previous
- * measurementUnits field is removed; units are embedded in each Quantity instance.
- * </p>
+ * Units are embedded in Quantity instances for type-safe measurements.
  *
  * @author Zhubin Salehi
  */
@@ -27,9 +24,7 @@ public record RifleDto(
 
         String barrelContour,
 
-        String twistRate,
+        RiflingDto rifling,
 
-        String rifling,
-
-        Quantity<Length> freeBore) {
+        ZeroingDto zeroing) {
 }

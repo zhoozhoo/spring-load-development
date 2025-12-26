@@ -55,11 +55,9 @@ class GlobalExceptionHandlerTest {
         bindingResult.addError(new FieldError("testObject", "field1", "value1", false, null, null, "Error 1"));
         bindingResult.addError(new FieldError("testObject", "field2", "value2", false, null, null, "Error 2"));
         
-        var exception = new WebExchangeBindException(
+        StepVerifier.create(handler.handleValidationException(new WebExchangeBindException(
                 new MethodParameter(this.getClass().getDeclaredMethod("handleValidationException_withMultipleErrors_shouldCombineMessages"), -1),
-                bindingResult);
-        
-        StepVerifier.create(handler.handleValidationException(exception))
+                bindingResult)))
                 .assertNext(response -> {
                     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
                     assertNotNull(response.getBody());

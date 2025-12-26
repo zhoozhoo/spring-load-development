@@ -12,20 +12,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import ca.zhoozhoo.loaddev.mcp.dto.LoadDto;
+import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootTest
 @ActiveProfiles("test")
 class LoadDtoSerializationTest {
 
     @Autowired
-    ObjectMapper mapper;
+    JsonMapper jsonMapper;
 
     @Test
     void writesLoadDtoWithQuantities() throws Exception {
-        var json = mapper.writeValueAsString(new LoadDto(1L, "Test Load 1", "Test description",
+        var json = jsonMapper.writeValueAsString(new LoadDto(1L, "Test Load 1", "Test description",
                 "Hodgdon", "H4350", "Hornady", "ELD-M",
                 getQuantity(new BigDecimal("140"), GRAM), "CCI", "BR2",
                 getQuantity(new BigDecimal("0.02"), METRE), getQuantity(new BigDecimal("0.071"), METRE),

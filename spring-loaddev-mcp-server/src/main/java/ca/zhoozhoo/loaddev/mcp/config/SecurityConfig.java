@@ -12,19 +12,11 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import lombok.extern.log4j.Log4j2;
 
 /**
- * Security configuration for the MCP server application.
- * Configures OAuth2 resource server with JWT authentication and defines security rules
- * for different URL patterns.
+ * Security configuration for OAuth2 resource server with JWT validation.
  * <p>
- * Key features:
- * <ul>
- *   <li>OAuth2 resource server with JWT validation</li>
- *   <li>Public access to actuator endpoints for monitoring</li>
- *   <li>Protected access to MCP and SSE endpoints (requires authentication)</li>
- *   <li>All other endpoints require authentication</li>
- * </ul>
+ * Public: /actuator/** | Authenticated: /mcp/**, /sse/** | All others: authenticated
  * <p>
- * Note: This configuration is not active in test profile.
+ * Not active in test profile.
  * 
  * @author Zhubin Salehi
  */
@@ -35,12 +27,7 @@ import lombok.extern.log4j.Log4j2;
 public class SecurityConfig {
 
     /**
-     * Configures the security filter chain for the application.
-     * 
-     * Security rules:
-     * - /actuator/** - Public access for monitoring
-     * - /mcp/**, /sse/** - Authenticated access for MCP operations
-     * - All other paths require authentication
+     * Configures security filter chain with public actuator access and authentication for other endpoints.
      *
      * @param http the ServerHttpSecurity to configure
      * @return the configured SecurityWebFilterChain

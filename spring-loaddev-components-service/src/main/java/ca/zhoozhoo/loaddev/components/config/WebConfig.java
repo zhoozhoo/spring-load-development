@@ -1,19 +1,14 @@
 package ca.zhoozhoo.loaddev.components.config;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.NonNull;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 import org.springframework.web.reactive.result.method.annotation.ArgumentResolverConfigurer;
 
-import ca.zhoozhoo.loaddev.components.security.CurrentUserMethodArgumentResolver;
+import ca.zhoozhoo.loaddev.security.CurrentUserMethodArgumentResolver;
 
 /**
- * WebFlux configuration for the components service.
- * <p>
- * Configures custom argument resolvers for reactive web endpoints,
- * specifically enabling the {@link CurrentUserMethodArgumentResolver}
- * for automatic injection of the current user's ID from security context.
- * </p>
+ * WebFlux configuration registering {@link CurrentUserMethodArgumentResolver}.
  *
  * @author Zhubin Salehi
  */

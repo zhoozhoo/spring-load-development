@@ -1,0 +1,43 @@
+enabled: true
+namespace: observability
+
+image:
+  repository: prom/prometheus
+  tag: "v3.8.1"
+
+config:
+  global:
+    scrape_interval: 15s
+    scrape_timeout: 15s
+    evaluation_interval: 15s
+  
+  scrape_configs:
+    - job_name: otel_collector
+      honor_timestamps: true
+      scrape_interval: 15s
+      scrape_timeout: 15s
+      metrics_path: /metrics
+      scheme: http
+      static_configs:
+        - targets: ["otel-collector-service.observability.svc.cluster.local:8889"]
+
+persistence:
+  enabled: true
+  size: 10Gi
+
+service:
+  type: ClusterIP
+  port: 9090
+
+nodePort:
+  enabled: true
+  port: 30091
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+
+import ca.zhoozhoo.loaddev.rifles.config.TestSecurityConfig;
 
 /**
  * Integration test for RiflesServiceApplication.
@@ -15,8 +18,9 @@ import org.springframework.test.context.ActiveProfiles;
  *
  * @author Zhubin Salehi
  */
-@SpringBootTest
+@SpringBootTest(properties = "spring.autoconfigure.exclude=ca.zhoozhoo.loaddev.security.SecurityAutoConfiguration")
 @ActiveProfiles("test")
+@Import(TestSecurityConfig.class)
 class RiflesServiceApplicationTest {
 
     @Autowired

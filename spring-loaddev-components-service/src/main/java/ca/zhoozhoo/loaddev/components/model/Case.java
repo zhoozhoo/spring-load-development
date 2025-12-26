@@ -12,25 +12,22 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import ca.zhoozhoo.loaddev.common.jackson.MonetaryAmountDeserializer;
+import ca.zhoozhoo.loaddev.common.jackson.MonetaryAmountSerializer;
+import ca.zhoozhoo.loaddev.common.jackson.QuantityDeserializer;
+import ca.zhoozhoo.loaddev.common.jackson.QuantitySerializer;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
- * Represents a cartridge case component for ammunition reloading using JSR-385 and JSR-354 units.
+ * Cartridge case component with JSR-385 Quantity and JSR-354 MonetaryAmount.
  * <p>
- * A case defines the brass cartridge specifications including manufacturer, caliber,
- * primer size requirements, and cost as a JSR-354 MonetaryAmount. Cases are the foundation of reloaded
- * ammunition and must match the specific caliber being loaded. The quantity per box is stored using
- * the JSR-385 Units of Measurement API as a dimensionless quantity, and the cost uses the JSR-354
- * Money and Currency API, allowing for type-safe unit conversions, calculations, and currency handling.
- * Each case is owned by a specific user for multi-tenant data isolation.
- * </p>
- * <p>
- * The quantityPerBox and cost are stored in the database as JSONB columns.
- * The JSR-385 Quantity type and JSR-354 MonetaryAmount provide compile-time type safety
- * and runtime unit/currency conversions.
+ * Stores quantityPerBox and cost as PostgreSQL JSONB for type-safe calculations.
+ * Multi-tenant by ownerId.
  * </p>
  *
  * @author Zhubin Salehi
@@ -40,17 +37,29 @@ public record Case(
     
         @Id Long id,
 
-        @JsonIgnore @Column("owner_id") String ownerId,
+        @JsonIgnore
+        @Column("owner_id") String ownerId,
 
-        @NotBlank(message = "Manufacturer is required") @Column("manufacturer") String manufacturer,
+        @NotBlank(message = "Manufacturer is required")
+        @Column("manufacturer") String manufacturer,
 
-        @NotBlank(message = "Caliber is required") @Column("caliber") String caliber,
+        @NotBlank(message = "Caliber is required")
+        @Column("caliber") String caliber,
 
-        @NotNull(message = "Primer size is required") @Column("primer_size") PrimerSize primerSize,
+        @NotNull(message = "Primer size is required")
+        @Column("primer_size") PrimerSize primerSize,
 
-        @NotNull(message = "Cost is required") @PositiveOrZero(message = "Cost must be non-negative") @Column("cost") MonetaryAmount cost,
+        @JsonSerialize(using = MonetaryAmountSerializer.class)
+        @JsonDeserialize(using = MonetaryAmountDeserializer.class)
+        @NotNull(message = "Cost is required")
+        @PositiveOrZero(message = "Cost must be non-negative")
+        @Column("cost") MonetaryAmount cost,
 
-        @NotNull(message = "Quantity per box is required") @Positive(message = "Quantity per box must be positive") @Column("quantity_per_box") Quantity<Dimensionless> quantityPerBox) {
+        @JsonSerialize(using = QuantitySerializer.class)
+        @JsonDeserialize(using = QuantityDeserializer.class)
+        @NotNull(message = "Quantity per box is required")
+        @Positive(message = "Quantity per box must be positive")
+        @Column("quantity_per_box") Quantity<Dimensionless> quantityPerBox) {
 
     /**
      * Custom equals() excluding ownerId to focus on business equality.

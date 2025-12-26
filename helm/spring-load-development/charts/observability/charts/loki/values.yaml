@@ -1,0 +1,95 @@
+enabled: true
+namespace: observability
+
+image:
+  repository: grafana/loki
+  tag: "3.6.3"
+
+config:
+  auth_enabled: false
+  server:
+    http_listen_port: 3100
+    grpc_listen_port: 9096
+    log_level: info
+  
+  common:
+    path_prefix: /loki
+    storage:
+      filesystem:
+        chunks_directory: /loki/chunks
+        rules_directory: /loki/rules
+    replication_factor: 1
+    ring:
+      kvstore:
+        store: inmemory
+  
+  query_range:
+    results_cache:
+      cache:
+        embedded_cache:
+          enabled: true
+          max_size_mb: 100
+  
+  schema_config:
+    configs:
+      - from: 2020-10-24
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+  
+  table_manager:
+    retention_deletes_enabled: true
+    retention_period: 6h
+  
+  limits_config:
+    metric_aggregation_enabled: true
+    allow_structured_metadata: true
+    volume_enabled: true
+    retention_period: 6h
+  
+  ruler:
+    enable_alertmanager_discovery: true
+    enable_api: true
+  
+  frontend:
+    encoding: protobuf
+  
+  compactor:
+    working_directory: /tmp/loki/retention
+    compaction_interval: 10m
+    delete_request_store: filesystem
+  
+  analytics:
+    reporting_enabled: false
+
+persistence:
+  enabled: true
+  size: 10Gi
+
+service:
+  type: ClusterIP
+  port: 3100
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+nodePort:
+  enabled: true
+  port: 30100
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 2000
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

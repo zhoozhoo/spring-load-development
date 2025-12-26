@@ -6,10 +6,10 @@ CREATE TABLE IF NOT EXISTS rifles (
     caliber VARCHAR(32) NOT NULL,
     barrel_length JSONB,
     barrel_contour VARCHAR(32),
-    twist_rate  VARCHAR(32),
-    rifling VARCHAR(32),
-    free_bore JSONB
+    rifling JSONB,
+    zeroing JSONB
 );
 
 COMMENT ON COLUMN rifles.barrel_length IS 'JSR-385 Quantity<Length> stored as JSONB with value and unit properties';
-COMMENT ON COLUMN rifles.free_bore IS 'JSR-385 Quantity<Length> stored as JSONB with value and unit properties';
+COMMENT ON COLUMN rifles.rifling IS 'Rifling specifications stored as JSONB with twistRate (Quantity<Length>) and twistDirection properties';
+COMMENT ON COLUMN rifles.zeroing IS 'Zeroing configuration stored as JSONB with sightHeight and zeroDistance (Quantity<Length>) properties';

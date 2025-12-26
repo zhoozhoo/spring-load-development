@@ -9,15 +9,17 @@ import javax.money.MonetaryAmount;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Unit tests for {@link MonetaryAmountDeserializer}.
  * Verifies correct parsing and error handling of JSON monetary objects.
+ * 
+ * @author Zhubin Salehi
  */
 class MonetaryAmountDeserializerTest {
 
-    private final ObjectMapper mapper = QuantityModuleSupport.newObjectMapperWithQuantityModule();
+    private final JsonMapper mapper = QuantityModuleSupport.newObjectMapperWithQuantityModule();
 
     @Nested
     class SuccessfulDeserialization {
@@ -88,7 +90,7 @@ class MonetaryAmountDeserializerTest {
     class TypeVerification {
         @Test
         void deserializer_shouldBeStdDeserializer() {
-            assertTrue(com.fasterxml.jackson.databind.deser.std.StdDeserializer.class
+            assertTrue(tools.jackson.databind.deser.std.StdDeserializer.class
                     .isAssignableFrom(MonetaryAmountDeserializer.class));
         }
     }

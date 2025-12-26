@@ -8,7 +8,7 @@ spring:
     virtual:
       enabled: true
   r2dbc:
-    url: "r2dbc:tc:postgresql:///databasename?TC_IMAGE_TAG=18.0"
+    url: "r2dbc:tc:postgresql:///databasename?TC_IMAGE_TAG=18.1"
     name: "sa"
   sql:
     init:
@@ -19,13 +19,19 @@ eureka:
     enabled: false
 
 management:
+  logging:
+    export:
+      otlp:
+        enabled: false
   otlp:
     metrics:
       export:
         enabled: false
   tracing:
-    enabled: false
+    export:
+      enabled: false
 
 otel:
-  sdk:
-    disabled: true
+  instrumentation:
+    spring-webflux:
+      enabled: false

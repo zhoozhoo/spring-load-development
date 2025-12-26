@@ -1,0 +1,40 @@
+{{- if and .Values.postgresql.enabled (not .Values.postgresql.external) }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: {{ .Values.postgresql.namespace }}
+  labels:
+    app: postgres
+    {{- include "postgresql.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.postgresql.service.type }}
+  ports:
+    - port: {{ .Values.postgresql.service.ports.postgresql }}
+      targetPort: postgres
+      protocol: TCP
+      name: postgres
+  selector:
+    app: postgres
+{{- end }}
+
+{{- if and .Values.keycloakPostgresql.enabled (not .Values.keycloakPostgresql.external) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak-postgres-service
+  namespace: {{ .Values.keycloakPostgresql.namespace }}
+  labels:
+    app: keycloak-postgres
+    {{- include "postgresql.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.keycloakPostgresql.service.type }}
+  ports:
+    - port: {{ .Values.keycloakPostgresql.service.ports.postgresql }}
+      targetPort: postgres
+      protocol: TCP
+      name: postgres
+  selector:
+    app: keycloak-postgres
+{{- end }}

@@ -9,12 +9,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Reactive R2DBC repository for managing {@link Projectile} entities.
- * <p>
- * Provides reactive data access operations for projectile components including
- * multi-tenant filtering by owner ID and full-text search capabilities using
- * PostgreSQL's text search features.
- * </p>
+ * Reactive repository for Projectile entities with multi-tenant filtering and PostgreSQL full-text search.
  *
  * @author Zhubin Salehi
  */

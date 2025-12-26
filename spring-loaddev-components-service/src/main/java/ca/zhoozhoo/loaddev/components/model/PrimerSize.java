@@ -1,12 +1,7 @@
 package ca.zhoozhoo.loaddev.components.model;
 
 /**
- * Enumeration of primer sizes used in ammunition reloading.
- * <p>
- * Primer sizes correspond to the primer pocket dimensions in cartridge cases and must match
- * both the case specifications and the propellent charge requirements. Different primer sizes
- * provide varying ignition characteristics suitable for different cartridge types and propellent loads.
- * </p>
+ * Primer sizes matching cartridge case pocket dimensions and propellant requirements.
  *
  * @author Zhubin Salehi
  */

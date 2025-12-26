@@ -5,6 +5,7 @@
   "properties": {
     "global": {
       "type": "object",
+      "description": "Global settings shared across all subcharts",
       "properties": {
         "imageRegistry": {
           "type": "string",
@@ -16,70 +17,50 @@
         },
         "imagePullSecrets": {
           "type": "array",
-          "description": "Global Docker registry secret names as an array"
+          "description": "Global Docker registry secret names as an array",
+          "items": {
+            "type": "string"
+          }
         },
         "storageClass": {
           "type": "string",
           "description": "Global storage class for PersistentVolumeClaims"
-        }
-      }
-    },
-    "microservices": {
-      "type": "object",
-      "required": ["namespace"],
-      "properties": {
-        "namespace": {
-          "type": "string",
-          "description": "Namespace for microservices"
-        }
-      }
-    },
-    "postgresql": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean",
-          "description": "Enable PostgreSQL for microservices"
         },
-        "namespace": {
-          "type": "string"
-        },
-        "auth": {
+        "versions": {
           "type": "object",
-          "required": ["database", "username", "password"],
+          "description": "Single source of truth for all container versions",
           "properties": {
-            "database": {
+            "microservices": {
               "type": "string",
-              "minLength": 1
+              "description": "Version for Spring Boot microservices"
             },
-            "username": {
+            "loki": {
               "type": "string",
-              "minLength": 1
+              "description": "Loki version for log aggregation"
             },
-            "password": {
+            "tempo": {
               "type": "string",
-              "minLength": 1
-            }
-          }
-        }
-      }
-    },
-    "keycloak": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        },
-        "auth": {
-          "type": "object",
-          "properties": {
-            "adminUser": {
-              "type": "string",
-              "minLength": 1
+              "description": "Tempo version for distributed tracing"
             },
-            "adminPassword": {
+            "prometheus": {
               "type": "string",
-              "minLength": 1
+              "description": "Prometheus version for metrics collection"
+            },
+            "grafana": {
+              "type": "string",
+              "description": "Grafana version for observability dashboards"
+            },
+            "otelCollector": {
+              "type": "string",
+              "description": "OpenTelemetry Collector version"
+            },
+            "keycloak": {
+              "type": "string",
+              "description": "Keycloak version for authentication"
+            },
+            "postgresql": {
+              "type": "string",
+              "description": "PostgreSQL version for databases"
             }
           }
         }
@@ -87,126 +68,71 @@
     },
     "observability": {
       "type": "object",
+      "description": "Observability subchart (Grafana, Prometheus, Loki, Tempo, OTEL Collector)",
       "properties": {
         "enabled": {
           "type": "boolean",
-          "description": "Enable observability stack (Loki, Tempo, Prometheus, Grafana)"
-        }
-      }
-    },
-    "apiGateway": {
-      "$ref": "#/definitions/microservice"
-    },
-    "loadsService": {
-      "$ref": "#/definitions/microservice"
-    },
-    "componentsService": {
-      "$ref": "#/definitions/microservice"
-    },
-    "riflesService": {
-      "$ref": "#/definitions/microservice"
-    },
-    "mcpServer": {
-      "$ref": "#/definitions/microservice"
-    },
-    "rbac": {
-      "type": "object",
-      "properties": {
-        "create": {
-          "type": "boolean"
-        }
-      }
-    },
-    "serviceAccount": {
-      "type": "object",
-      "properties": {
-        "create": {
-          "type": "boolean"
+          "description": "Enable observability stack"
         },
-        "name": {
-          "type": "string"
+        "namespace": {
+          "type": "string",
+          "description": "Namespace for observability components"
         }
       }
-    }
-  },
-  "definitions": {
-    "microservice": {
+    },
+    "keycloak": {
       "type": "object",
+      "description": "Keycloak subchart (Authentication and Authorization)",
       "properties": {
         "enabled": {
           "type": "boolean",
-          "description": "Enable this microservice"
+          "description": "Enable Keycloak"
         },
-        "replicas": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 100
+        "namespace": {
+          "type": "string",
+          "description": "Namespace for Keycloak"
+        }
+      }
+    },
+    "postgresql": {
+      "type": "object",
+      "description": "PostgreSQL subchart (Databases for microservices and Keycloak)",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable PostgreSQL databases"
         },
-        "image": {
+        "postgresql": {
           "type": "object",
-          "required": ["repository"],
           "properties": {
-            "repository": {
+            "namespace": {
               "type": "string",
-              "minLength": 1
-            },
-            "tag": {
-              "type": "string"
-            },
-            "pullPolicy": {
-              "type": "string",
-              "enum": ["Always", "IfNotPresent", "Never"]
+              "description": "Namespace for microservices PostgreSQL database"
             }
           }
         },
-        "service": {
+        "keycloakPostgresql": {
           "type": "object",
           "properties": {
-            "type": {
+            "namespace": {
               "type": "string",
-              "enum": ["ClusterIP", "NodePort", "LoadBalancer"]
-            },
-            "port": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 65535
-            },
-            "nodePort": {
-              "type": "integer",
-              "minimum": 30000,
-              "maximum": 32767
+              "description": "Namespace for Keycloak PostgreSQL database"
             }
-          }
-        },
-        "resources": {
-          "type": "object",
-          "properties": {
-            "limits": {
-              "$ref": "#/definitions/resourceRequirements"
-            },
-            "requests": {
-              "$ref": "#/definitions/resourceRequirements"
-            }
-          }
-        },
-        "env": {
-          "type": "array",
-          "items": {
-            "type": "object"
           }
         }
       }
     },
-    "resourceRequirements": {
+    "reloading": {
       "type": "object",
+      "description": "Reloading subchart (Spring Boot Microservices)",
       "properties": {
-        "cpu": {
-          "type": "string",
-          "pattern": "^[0-9]+(m|[0-9]*\\.?[0-9]+)?$"
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable Spring Boot microservices"
         },
-        "memory": {
+        "namespace": {
           "type": "string",
-          "pattern": "^[0-9]+(Ei|Pi|Ti|Gi|Mi|Ki|E|P|T|G|M|K)?$"
+          "description": "Namespace for Spring Boot microservices"
         }
       }
     }

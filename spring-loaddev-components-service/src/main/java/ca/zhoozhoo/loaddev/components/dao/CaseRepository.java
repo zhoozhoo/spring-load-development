@@ -9,12 +9,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Reactive repository for managing {@link Case} entities.
- * <p>
- * Provides reactive data access operations for cartridge case components including
- * multi-tenant filtering by owner ID and full-text search capabilities using
- * PostgreSQL's text search features.
- * </p>
+ * Reactive repository for Case entities with multi-tenant filtering and PostgreSQL full-text search.
  *
  * @author Zhubin Salehi
  */
