@@ -129,7 +129,7 @@
         <dependency>
             <groupId>ca.zhoozhoo.load-development</groupId>
             <artifactId>spring-loaddev-common</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <!-- SpotBugs annotations for @SuppressFBWarnings -->
         <dependency>
