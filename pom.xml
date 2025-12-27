@@ -16,8 +16,8 @@
     <packaging>pom</packaging>
 
     <subprojects>
-        <subproject>spring-loaddev-config-server</subproject>
-        <subproject>spring-loaddev-discovery-server</subproject>
+        <subproject>config-server</subproject>
+        <subproject>discovery-server</subproject>
         <subproject>loads-service</subproject>
         <subproject>rifles-service</subproject>
         <subproject>spring-loaddev-mcp-server</subproject>

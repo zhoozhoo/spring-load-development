@@ -144,10 +144,10 @@ docker-compose --env-file .env up -d postgres keycloak grafana loki tempo promet
 # IMPORTANT: All services default to port 8080. To run them side-by-side locally, supply a distinct port with -Dserver.port.
 
 # 1. Start Config Server (required) on 8888
-java -Dserver.port=8888 -jar spring-loaddev-config-server/target/spring-loaddev-config-server-*.jar
+java -Dserver.port=8888 -jar config-server/target/config-server-*.jar
 
 # 2. Start Discovery Server on 8761
-java -Dserver.port=8761 -jar spring-loaddev-discovery-server/target/spring-loaddev-discovery-server-*.jar
+java -Dserver.port=8761 -jar discovery-server/target/discovery-server-*.jar
 
 # 3. Start API Gateway on 8080 (external entrypoint)
 java -jar spring-loaddev-api-gateway/target/spring-loaddev-api-gateway-*.jar

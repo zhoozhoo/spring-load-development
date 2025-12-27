@@ -9,9 +9,9 @@
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>spring-loaddev-discovery-server</artifactId>
-    <name>Spring Load Development Discovery Server</name>
-    <description>Spring Load Development Discovery Server</description>
+    <artifactId>discovery-server</artifactId>
+    <name>Discovery Server</name>
+    <description>Discovery Server</description>
 
     <dependencies>
         <!-- Spring Cloud -->

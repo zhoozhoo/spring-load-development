@@ -9,9 +9,9 @@
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>spring-loaddev-config-server</artifactId>
-    <name>Spring Load Development Config Server</name>
-    <description>Spring Load Development Config Server</description>
+    <artifactId>config-server</artifactId>
+    <name>Config Server</name>
+    <description>Config Server</description>
 
     <dependencies>
         <!-- Spring Boot -->

@@ -157,7 +157,7 @@ services:
     restart: unless-stopped
 
   config-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-config-server:${PROJECT_VERSION}
+    image: zhoozhoo.ca/spring-load-development/config-server:${PROJECT_VERSION}
     container_name: config-server
     ports:
       - "8888:8888"
@@ -172,7 +172,7 @@ services:
     restart: unless-stopped
 
   discovery-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-discovery-server:${PROJECT_VERSION}
+    image: zhoozhoo.ca/spring-load-development/discovery-server:${PROJECT_VERSION}
     container_name: discovery-server
     ports:
       - "8761:8761"

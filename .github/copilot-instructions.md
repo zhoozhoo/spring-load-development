@@ -12,8 +12,8 @@ This is a **microservices-based load development management system** built with 
 - **Components Service** (`spring-loaddev-components-service`) - Manages reloading components (bullets, powder, primers, cases) with measurements
 - **Rifles Service** (`rifles-service`) - Manages rifle configurations including barrel specs and rifling parameters
 - **MCP Server** (`spring-loaddev-mcp-server`) - Model Context Protocol server with SSE support at `/sse`; integrates Spring AI for GitHub Copilot
-- **Config Server** (`spring-loaddev-config-server`) - Centralized configuration from `spring-load-development-config` git repo (Docker/local only)
-- **Discovery Server** (`spring-loaddev-discovery-server`) - Eureka service registry (Docker/local only)
+- **Config Server** (`config-server`) - Centralized configuration from `spring-load-development-config` git repo (Docker/local only)
+- **Discovery Server** (`discovery-server`) - Eureka service registry (Docker/local only)
 
 **Deployment-Specific Patterns:**
 - **Docker/Local:** Uses Config Server + Eureka Discovery + Spring Cloud LoadBalancer
@@ -338,10 +338,10 @@ helm uninstall spring-load-development -n spring-load-development
 docker-compose up -d postgres keycloak grafana loki tempo prometheus otel-collector
 
 # 2. Start Config Server (port 8888)
-java -jar spring-loaddev-config-server/target/spring-loaddev-config-server-*.jar
+java -jar config-server/target/onfig-server-*.jar
 
 # 3. Start Discovery Server (port 8761)
-java -jar spring-loaddev-discovery-server/target/spring-loaddev-discovery-server-*.jar
+java -jar discovery-server/target/discovery-server-*.jar
 
 # 4. Start API Gateway (port 8080)
 java -jar spring-loaddev-api-gateway/target/spring-loaddev-api-gateway-*.jar
