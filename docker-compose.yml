@@ -258,7 +258,7 @@ services:
     restart: unless-stopped
 
   rifles-service:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:${PROJECT_VERSION}
+    image: zhoozhoo.ca/spring-load-development/rifles-service:${PROJECT_VERSION}
     container_name: rifles-service
     ports:
       - "8081:8081"
@@ -356,28 +356,6 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
-
-  # admin-server:
-  #   image: zhoozhoo.ca/spring-load-development/spring-loaddev-admin-server:${PROJECT_VERSION}
-  #   container_name: admin-server
-  #   ports:
-  #     - "9090:9090"
-  #   environment:
-  #     - SPRING_PROFILES_ACTIVE=docker
-  #     - CONFIG_SERVER_URL=http://config-server:8888
-  #     - DISCOVERY_SERVER=http://discovery-server:8761
-  #     - KEYCLOAK_BASE_URL=http://keycloak:7080
-  #     - THC_PATH=/actuator/health/readiness
-  #     - THC_PORT=9090
-  #   depends_on:
-  #     discovery-server:
-  #       condition: service_healthy
-  #   healthcheck:
-  #     test: ["CMD", "/workspace/health-check"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #   restart: unless-stopped
 
 volumes:
   reloading_data:

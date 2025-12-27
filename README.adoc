@@ -154,7 +154,7 @@ java -jar spring-loaddev-api-gateway/target/spring-loaddev-api-gateway-*.jar
 
 # 4. Start microservices (distinct ports)
 java -Dserver.port=8081 -jar spring-loaddev-loads-service/target/spring-loaddev-loads-service-*.jar
-java -Dserver.port=8082 -jar spring-loaddev-rifles-service/target/spring-loaddev-rifles-service-*.jar
+java -Dserver.port=8082 -jar rifles-service/target/rifles-service-*.jar
 java -Dserver.port=8083 -jar spring-loaddev-components-service/target/spring-loaddev-components-service-*.jar
 java -Dserver.port=8084 -jar spring-loaddev-mcp-server/target/spring-loaddev-mcp-server-*.jar
 

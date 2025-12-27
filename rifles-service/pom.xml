@@ -9,9 +9,9 @@
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>spring-loaddev-rifles-service</artifactId>
-    <name>Spring Load Development Rifles Service</name>
-    <description>Spring Load Development Rifles Service</description>
+    <artifactId>rifles-service</artifactId>
+    <name>Rifles Service</name>
+    <description>Rifles Service</description>
 
     <dependencies>
         <!-- Spring Boot -->

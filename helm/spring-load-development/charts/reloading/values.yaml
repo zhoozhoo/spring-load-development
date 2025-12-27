@@ -134,7 +134,7 @@ riflesService:
   replicas: 1
   
   image:
-    repository: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service
+    repository: zhoozhoo.ca/spring-load-development/rifles-service
     tag: "0.1.0-SNAPSHOT"
     pullPolicy: IfNotPresent
   

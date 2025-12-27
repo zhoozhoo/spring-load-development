@@ -81,7 +81,7 @@ The chart includes the following Spring Boot microservices:
 * *API Gateway* (`spring-loaddev-api-gateway`) - Main entry point and routing service
 * *Loads Service* (`spring-loaddev-loads-service`) - Load data management service  
 * *Components Service* (`spring-loaddev-components-service`) - Component management service
-* *Rifles Service* (`spring-loaddev-rifles-service`) - Rifle data management service
+* *Rifles Service* (`rifles-service`) - Rifle data management service
 * *MCP Server* (`spring-loaddev-mcp-server`) - Model Context Protocol server
 
 == Architecture
@@ -306,7 +306,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Rifles Service
 
-* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:0.1.0-SNAPSHOT`
+* *Image*: `zhoozhoo.ca/spring-load-development/rifles-service:0.1.0-SNAPSHOT`
 * *Namespace*: `reloading`
 * *Service*: `rifles-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Manages rifle and firearm data
