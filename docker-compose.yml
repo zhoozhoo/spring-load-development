@@ -293,7 +293,7 @@ services:
     restart: unless-stopped
       
   loads-service:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:${PROJECT_VERSION}
+    image: zhoozhoo.ca/spring-load-development/loads-service:${PROJECT_VERSION}
     container_name: loads-service
     ports:
       - "8082:8082"

@@ -8,7 +8,7 @@ This is a **microservices-based load development management system** built with 
 
 ### Service Boundaries
 - **API Gateway** (`spring-loaddev-api-gateway`) - Single entry point; OAuth2 authentication, UMA token exchange with Keycloak, reactive routing with circuit breakers
-- **Loads Service** (`spring-loaddev-loads-service`) - Manages loads, groups, and shots; calculates ballistic statistics using JSR-385 quantities
+- **Loads Service** (`loads-service`) - Manages loads, groups, and shots; calculates ballistic statistics using JSR-385 quantities
 - **Components Service** (`spring-loaddev-components-service`) - Manages reloading components (bullets, powder, primers, cases) with measurements
 - **Rifles Service** (`rifles-service`) - Manages rifle configurations including barrel specs and rifling parameters
 - **MCP Server** (`spring-loaddev-mcp-server`) - Model Context Protocol server with SSE support at `/sse`; integrates Spring AI for GitHub Copilot
@@ -294,7 +294,7 @@ mvn clean package
 mvn clean package -DskipTests
 
 # Build specific service
-cd spring-loaddev-loads-service && mvn clean package
+cd loads-service && mvn clean package
 ```
 
 ### Run Locally (3 options)
@@ -347,7 +347,7 @@ java -jar spring-loaddev-discovery-server/target/spring-loaddev-discovery-server
 java -jar spring-loaddev-api-gateway/target/spring-loaddev-api-gateway-*.jar
 
 # 5. Start microservices (distinct ports)
-java -Dserver.port=8081 -jar spring-loaddev-loads-service/target/spring-loaddev-loads-service-*.jar
+java -Dserver.port=8081 -jar loads-service/target/loads-service-*.jar
 java -Dserver.port=8082 -jar rifles-service/target/rifles-service-*.jar
 java -Dserver.port=8083 -jar spring-loaddev-components-service/target/spring-loaddev-components-service-*.jar
 java -Dserver.port=8084 -jar spring-loaddev-mcp-server/target/spring-loaddev-mcp-server-*.jar
@@ -373,7 +373,7 @@ Use `.http` files in `test/` directory with VS Code REST Client extension:
 mvn test
 
 # Specific service
-cd spring-loaddev-loads-service && mvn test
+cd loads-service && mvn test
 
 # Single test class
 mvn test -Dtest=LoadsControllerTest
@@ -385,7 +385,7 @@ mvn test -Dtest=LoadsControllerTest
 1. Create new Maven module in `pom.xml` under `<subprojects>`
 2. Add to Docker Compose in `docker-compose.yml`
 3. Add Helm chart in `helm/spring-load-development/charts/`
-4. Follow existing service structure (see `spring-loaddev-loads-service` as template)
+4. Follow existing service structure (see `loads-service` as template)
 
 **Database Migrations:**
 - Schema files in `src/main/resources/schema.sql` for each service

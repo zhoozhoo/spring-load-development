@@ -72,7 +72,7 @@ loadsService:
   replicas: 1
   
   image:
-    repository: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service
+    repository: zhoozhoo.ca/spring-load-development/loads-service
     tag: "0.1.0-SNAPSHOT"
     pullPolicy: IfNotPresent
   
