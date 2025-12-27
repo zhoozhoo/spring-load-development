@@ -10,8 +10,8 @@
     </parent>
 
     <artifactId>mcp-server</artifactId>
-    <name>Spring Load Development MCP Server</name>
-    <description>Spring Load Development Model Context Protocol Server</description>
+    <name>MCP Server</name>
+    <description>Model Context Protocol Server</description>
 
     <dependencies>
         <!-- Spring Boot -->
@@ -128,7 +128,7 @@
         <!-- Common module providing Quantity Jackson serializers -->
         <dependency>
             <groupId>ca.zhoozhoo.load-development</groupId>
-            <artifactId>spring-loaddev-common</artifactId>
+            <artifactId>shared</artifactId>
             <version>${project.version}</version>
         </dependency>
         <!-- SpotBugs annotations for @SuppressFBWarnings -->

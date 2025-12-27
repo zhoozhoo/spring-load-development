@@ -30,7 +30,7 @@ apiGateway:
   replicas: 1
   
   image:
-    repository: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway
+    repository: zhoozhoo.ca/spring-load-development/api-gateway
     tag: "0.1.0-SNAPSHOT"
     pullPolicy: IfNotPresent
   

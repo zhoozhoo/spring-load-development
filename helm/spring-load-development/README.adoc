@@ -78,7 +78,7 @@ apiGateway:
 
 The chart includes the following Spring Boot microservices:
 
-* *API Gateway* (`spring-loaddev-api-gateway`) - Main entry point and routing service
+* *API Gateway* (`api-gateway`) - Main entry point and routing service
 * *Loads Service* (`loads-service`) - Load data management service  
 * *Components Service* (`components-service`) - Component management service
 * *Rifles Service* (`rifles-service`) - Rifle data management service
@@ -281,7 +281,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== API Gateway
 
-* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:0.1.0-SNAPSHOT`
+* *Image*: `zhoozhoo.ca/spring-load-development/api-gateway:0.1.0-SNAPSHOT`
 * *Namespace*: `reloading`
 * *Service*: `api-gateway.reloading.svc.cluster.local:8080`
 * *NodePort*: 30090

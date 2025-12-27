@@ -130,6 +130,6 @@ For different environments, adjust the URL accordingly:
 
 == Authentication
 
-The MCP server requires bearer token authentication for secure access. For detailed instructions on authentication and obtaining tokens, please refer to the link:../spring-loaddev-api-gateway/src/test/http/README.adoc[API Gateway Testing Guide].
+The MCP server requires bearer token authentication for secure access. For detailed instructions on authentication and obtaining tokens, please refer to the link:../api-gateway/src/test/http/README.adoc[API Gateway Testing Guide].
 
 TIP: The authentication process uses Keycloak and is the same as described in the API Gateway documentation.

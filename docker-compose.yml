@@ -192,7 +192,7 @@ services:
     restart: unless-stopped
 
   api-gateway:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:${PROJECT_VERSION}
+    image: zhoozhoo.ca/spring-load-development/api-gateway:${PROJECT_VERSION}
     container_name: api-gateway
     ports:
       - "8080:8080"

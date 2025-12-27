@@ -84,12 +84,12 @@
         <!-- Third parties -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>spring-loaddev-common</artifactId>
+            <artifactId>shared</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>spring-loaddev-security</artifactId>
+            <artifactId>shared-security</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -136,7 +136,7 @@
         <!-- Test dependencies -->
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>spring-loaddev-integration-tests</artifactId>
+            <artifactId>shared-integration-testing</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

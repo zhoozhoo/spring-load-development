@@ -123,7 +123,7 @@ helm install spring-load-development . \
 kubectl get services -n spring-load-development
 
 # For local development, port-forward to access services
-kubectl port-forward -n spring-load-development service/spring-loaddev-api-gateway 8080:8080
+kubectl port-forward -n spring-load-development service/api-gateway 8080:8080
 ----
 
 For detailed Helm chart configuration, see link:helm/spring-load-development/README.adoc[Helm Chart Documentation].
@@ -150,7 +150,7 @@ java -Dserver.port=8888 -jar config-server/target/config-server-*.jar
 java -Dserver.port=8761 -jar discovery-server/target/discovery-server-*.jar
 
 # 3. Start API Gateway on 8080 (external entrypoint)
-java -jar spring-loaddev-api-gateway/target/spring-loaddev-api-gateway-*.jar
+java -jar api-gateway/target/api-gateway-*.jar
 
 # 4. Start microservices (distinct ports)
 java -Dserver.port=8081 -jar loads-service/target/loads-service-*.jar

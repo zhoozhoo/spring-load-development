@@ -9,8 +9,8 @@
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>spring-loaddev-security</artifactId>
-    <name>Spring Load Development Security</name>
+    <artifactId>shared-security</artifactId>
+    <name>Shared Security</name>
     <description>Shared reactive security configuration (Keycloak permissions, CurrentUser, utilities)</description>
     <packaging>jar</packaging>
 

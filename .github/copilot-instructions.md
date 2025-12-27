@@ -7,7 +7,7 @@ This document provides essential knowledge for AI agents to be productive in thi
 This is a **microservices-based load development management system** built with Spring Cloud. The system manages ammunition reloading data with user isolation, full observability, and AI integration via Model Context Protocol.
 
 ### Service Boundaries
-- **API Gateway** (`spring-loaddev-api-gateway`) - Single entry point; OAuth2 authentication, UMA token exchange with Keycloak, reactive routing with circuit breakers
+- **API Gateway** (`api-gateway`) - Single entry point; OAuth2 authentication, UMA token exchange with Keycloak, reactive routing with circuit breakers
 - **Loads Service** (`loads-service`) - Manages loads, groups, and shots; calculates ballistic statistics using JSR-385 quantities
 - **Components Service** (`components-service`) - Manages reloading components (bullets, powder, primers, cases) with measurements
 - **Rifles Service** (`rifles-service`) - Manages rifle configurations including barrel specs and rifling parameters
@@ -344,7 +344,7 @@ java -jar config-server/target/onfig-server-*.jar
 java -jar discovery-server/target/discovery-server-*.jar
 
 # 4. Start API Gateway (port 8080)
-java -jar spring-loaddev-api-gateway/target/spring-loaddev-api-gateway-*.jar
+java -jar api-gateway/target/api-gateway-*.jar
 
 # 5. Start microservices (distinct ports)
 java -Dserver.port=8081 -jar loads-service/target/loads-service-*.jar

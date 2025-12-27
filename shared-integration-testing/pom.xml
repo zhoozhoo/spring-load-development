@@ -9,9 +9,9 @@
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>spring-loaddev-integration-tests</artifactId>
-    <name>Spring Load Development Integration Tests</name>
-    <description>Spring Load Development Integration Tests</description>
+    <artifactId>shared-integration-testing</artifactId>
+    <name>Shared Integration Testing</name>
+    <description>Shared Integration Testing</description>
     <packaging>jar</packaging>
 
     <dependencies>

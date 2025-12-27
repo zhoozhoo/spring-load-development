@@ -9,9 +9,9 @@
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>spring-loaddev-common</artifactId>
-    <name>Spring Load Development Common</name>
-    <description>Spring Load Development Common</description>
+    <artifactId>shared</artifactId>
+    <name>Shared</name>
+    <description>Shared Classes for Spring Load Development</description>
     <packaging>jar</packaging>
 
     <dependencies>
