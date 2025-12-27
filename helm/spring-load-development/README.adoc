@@ -80,9 +80,9 @@ The chart includes the following Spring Boot microservices:
 
 * *API Gateway* (`spring-loaddev-api-gateway`) - Main entry point and routing service
 * *Loads Service* (`loads-service`) - Load data management service  
-* *Components Service* (`spring-loaddev-components-service`) - Component management service
+* *Components Service* (`components-service`) - Component management service
 * *Rifles Service* (`rifles-service`) - Rifle data management service
-* *MCP Server* (`spring-loaddev-mcp-server`) - Model Context Protocol server
+* *MCP Server* (`mcp-server`) - Model Context Protocol server
 
 == Architecture
 
@@ -298,7 +298,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Components Service
 
-* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-components-service:0.1.0-SNAPSHOT`
+* *Image*: `zhoozhoo.ca/spring-load-development/components-service:0.1.0-SNAPSHOT`
 * *Namespace*: `reloading`
 * *Service*: `components-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Manages reloading components (cases, propellants/powders, primers, projectiles/bullets) with full-text search
@@ -314,7 +314,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== MCP Server
 
-* *Image*: `zhoozhoo.ca/spring-load-development/spring-loaddev-mcp-server:0.1.0-SNAPSHOT`
+* *Image*: `zhoozhoo.ca/spring-load-development/mcp-server:0.1.0-SNAPSHOT`
 * *Namespace*: `reloading`
 * *Service*: `mcp-server-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Model Context Protocol server for AI integrations

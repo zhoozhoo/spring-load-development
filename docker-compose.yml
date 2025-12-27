@@ -223,7 +223,7 @@ services:
     restart: unless-stopped
 
   components-service:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-components-service:${PROJECT_VERSION}
+    image: zhoozhoo.ca/spring-load-development/components-service:${PROJECT_VERSION}
     container_name: components-service
     ports:
       - "8084:8084"
@@ -328,7 +328,7 @@ services:
     restart: unless-stopped
 
   mcp-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-mcp-server:${PROJECT_VERSION}
+    image: zhoozhoo.ca/spring-load-development/mcp-server:${PROJECT_VERSION}
     container_name: mcp-server
     ports:
       - "8083:8083"

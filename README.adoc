@@ -155,8 +155,8 @@ java -jar spring-loaddev-api-gateway/target/spring-loaddev-api-gateway-*.jar
 # 4. Start microservices (distinct ports)
 java -Dserver.port=8081 -jar loads-service/target/loads-service-*.jar
 java -Dserver.port=8082 -jar rifles-service/target/rifles-service-*.jar
-java -Dserver.port=8083 -jar spring-loaddev-components-service/target/spring-loaddev-components-service-*.jar
-java -Dserver.port=8084 -jar spring-loaddev-mcp-server/target/spring-loaddev-mcp-server-*.jar
+java -Dserver.port=8083 -jar components-service/target/components-service-*.jar
+java -Dserver.port=8084 -jar mcp-server/target/mcp-server-*.jar
 
 # 5. Start Admin Server (optional) on 9090
 java -Dserver.port=9090 -jar spring-loaddev-admin-server/target/spring-loaddev-admin-server-*.jar
@@ -239,7 +239,7 @@ The application is composed of the following services:
 * *Rifles Service*: Manages rifle data and configurations
 * *Loads Service*: Handles load development data including groups and shots 
 * *Components Service*: Manages reloading components (cases, propellants/powders, primers, projectiles/bullets) with full-text search capabilities
-* *MCP Server*: Provides AI-assisted tools via Model Context Protocol for loads and rifles management (link:spring-loaddev-mcp-server/README.adoc[MCP Server Guide])
+* *MCP Server*: Provides AI-assisted tools via Model Context Protocol for loads and rifles management (link:mcp-server/README.adoc[MCP Server Guide])
 * *Admin Server*: Monitoring and management of all services
 * *Common Library*: Shared DTOs, mappers, utilities (not a runtime service)
 * *Integration Tests Module*: End‑to‑end verification (build-time only)

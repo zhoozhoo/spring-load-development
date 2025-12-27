@@ -9,9 +9,9 @@
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>spring-loaddev-components-service</artifactId>
-    <name>Spring Load Development Components Service</name>
-    <description>Spring Load Development Components Service</description>
+    <artifactId>components-service</artifactId>
+    <name>Components Service</name>
+    <description>Components Service</description>
 
     <dependencies>
         <!-- Spring Boot -->

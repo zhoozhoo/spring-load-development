@@ -9,7 +9,7 @@
         <version>0.1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>spring-loaddev-mcp-server</artifactId>
+    <artifactId>mcp-server</artifactId>
     <name>Spring Load Development MCP Server</name>
     <description>Spring Load Development Model Context Protocol Server</description>
 

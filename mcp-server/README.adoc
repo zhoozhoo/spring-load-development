@@ -116,7 +116,7 @@ If running without Spring Cloud Config (Helm chart default), mount or inject req
 ----
 export SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI="http://localhost:7080/realms/reloading"
 export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
-java -Dserver.port=8084 -jar target/spring-loaddev-mcp-server-*.jar
+java -Dserver.port=8084 -jar target/mcp-server-*.jar
 ----
 
 === Environment-Specific Configuration
