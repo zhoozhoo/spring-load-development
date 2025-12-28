@@ -30,7 +30,7 @@ apiGateway:
   replicas: 1
   
   image:
-    repository: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway
+    repository: zhoozhoo.ca/spring-load-development/api-gateway
     tag: "0.1.0-SNAPSHOT"
     pullPolicy: IfNotPresent
   
@@ -72,7 +72,7 @@ loadsService:
   replicas: 1
   
   image:
-    repository: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service
+    repository: zhoozhoo.ca/spring-load-development/loads-service
     tag: "0.1.0-SNAPSHOT"
     pullPolicy: IfNotPresent
   
@@ -103,7 +103,7 @@ componentsService:
   replicas: 1
   
   image:
-    repository: zhoozhoo.ca/spring-load-development/spring-loaddev-components-service
+    repository: zhoozhoo.ca/spring-load-development/components-service
     tag: "0.1.0-SNAPSHOT"
     pullPolicy: IfNotPresent
   
@@ -134,7 +134,7 @@ riflesService:
   replicas: 1
   
   image:
-    repository: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service
+    repository: zhoozhoo.ca/spring-load-development/rifles-service
     tag: "0.1.0-SNAPSHOT"
     pullPolicy: IfNotPresent
   
@@ -165,7 +165,7 @@ mcpServer:
   replicas: 1
   
   image:
-    repository: zhoozhoo.ca/spring-load-development/spring-loaddev-mcp-server
+    repository: zhoozhoo.ca/spring-load-development/mcp-server
     tag: "0.1.0-SNAPSHOT"
     pullPolicy: IfNotPresent
   

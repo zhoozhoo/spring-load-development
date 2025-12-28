@@ -1,0 +1,46 @@
+{
+  // ===================================================================
+  // VS Code Settings Example for Spring Load Development
+  // ===================================================================
+  // Copy this file to settings.json and adjust paths for your system
+  //
+  // Quick start:
+  //   cp .vscode/settings.json.example .vscode/settings.json
+  //
+  // Then update the java.home path to match your JDK 25 installation
+  // ===================================================================
+
+  // Ensure VS Code uses the same JDK as the Maven build (this project targets Java 25)
+  // IMPORTANT: Update this path to match your JDK 25 installation location
+  // Common paths:
+  //   Linux:   /usr/lib/jvm/temurin-25-jdk-amd64
+  //   macOS:   /Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home
+  //   Windows: C:\\Program Files\\Eclipse Adoptium\\jdk-25
+  "java.jdt.ls.java.home": "/usr/lib/jvm/temurin-25-jdk-amd64",
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-25",
+      "path": "/usr/lib/jvm/temurin-25-jdk-amd64",
+      "default": true
+    }
+  ],
+
+  // Keep Maven project model/classpath in sync for test discovery
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.import.maven.enabled": true,
+  "java.import.gradle.enabled": false,
+
+  // Use the repo-pinned Maven wrapper for builds/tests launched from VS Code
+  "maven.executable.path": "${workspaceFolder}/mvnw",
+
+  // VS Code Java Test Runner configs.
+  // Override any workspace/global java.test.defaultConfig that points to a non-existent config.
+  "java.test.config": [
+    {
+      "name": "Default",
+      "workingDirectory": "${workspaceFolder}",
+      "vmArgs": ["--enable-native-access=ALL-UNNAMED"]
+    }
+  ],
+  "java.test.defaultConfig": "Default"
+}

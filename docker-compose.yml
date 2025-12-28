@@ -157,7 +157,7 @@ services:
     restart: unless-stopped
 
   config-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-config-server:${PROJECT_VERSION}
+    image: zhoozhoo.ca/spring-load-development/config-server:${PROJECT_VERSION}
     container_name: config-server
     ports:
       - "8888:8888"
@@ -172,7 +172,7 @@ services:
     restart: unless-stopped
 
   discovery-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-discovery-server:${PROJECT_VERSION}
+    image: zhoozhoo.ca/spring-load-development/discovery-server:${PROJECT_VERSION}
     container_name: discovery-server
     ports:
       - "8761:8761"
@@ -192,7 +192,7 @@ services:
     restart: unless-stopped
 
   api-gateway:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-api-gateway:${PROJECT_VERSION}
+    image: zhoozhoo.ca/spring-load-development/api-gateway:${PROJECT_VERSION}
     container_name: api-gateway
     ports:
       - "8080:8080"
@@ -223,7 +223,7 @@ services:
     restart: unless-stopped
 
   components-service:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-components-service:${PROJECT_VERSION}
+    image: zhoozhoo.ca/spring-load-development/components-service:${PROJECT_VERSION}
     container_name: components-service
     ports:
       - "8084:8084"
@@ -258,7 +258,7 @@ services:
     restart: unless-stopped
 
   rifles-service:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-rifles-service:${PROJECT_VERSION}
+    image: zhoozhoo.ca/spring-load-development/rifles-service:${PROJECT_VERSION}
     container_name: rifles-service
     ports:
       - "8081:8081"
@@ -293,7 +293,7 @@ services:
     restart: unless-stopped
       
   loads-service:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-loads-service:${PROJECT_VERSION}
+    image: zhoozhoo.ca/spring-load-development/loads-service:${PROJECT_VERSION}
     container_name: loads-service
     ports:
       - "8082:8082"
@@ -328,7 +328,7 @@ services:
     restart: unless-stopped
 
   mcp-server:
-    image: zhoozhoo.ca/spring-load-development/spring-loaddev-mcp-server:${PROJECT_VERSION}
+    image: zhoozhoo.ca/spring-load-development/mcp-server:${PROJECT_VERSION}
     container_name: mcp-server
     ports:
       - "8083:8083"
@@ -356,28 +356,6 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
-
-  # admin-server:
-  #   image: zhoozhoo.ca/spring-load-development/spring-loaddev-admin-server:${PROJECT_VERSION}
-  #   container_name: admin-server
-  #   ports:
-  #     - "9090:9090"
-  #   environment:
-  #     - SPRING_PROFILES_ACTIVE=docker
-  #     - CONFIG_SERVER_URL=http://config-server:8888
-  #     - DISCOVERY_SERVER=http://discovery-server:8761
-  #     - KEYCLOAK_BASE_URL=http://keycloak:7080
-  #     - THC_PATH=/actuator/health/readiness
-  #     - THC_PORT=9090
-  #   depends_on:
-  #     discovery-server:
-  #       condition: service_healthy
-  #   healthcheck:
-  #     test: ["CMD", "/workspace/health-check"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #   restart: unless-stopped
 
 volumes:
   reloading_data:

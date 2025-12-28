@@ -16,17 +16,16 @@
     <packaging>pom</packaging>
 
     <subprojects>
-        <subproject>spring-loaddev-config-server</subproject>
-        <subproject>spring-loaddev-discovery-server</subproject>
-        <subproject>spring-loaddev-loads-service</subproject>
-        <subproject>spring-loaddev-rifles-service</subproject>
-        <subproject>spring-loaddev-mcp-server</subproject>
-        <subproject>spring-loaddev-admin-server</subproject>
-        <subproject>spring-loaddev-api-gateway</subproject>
-        <subproject>spring-loaddev-components-service</subproject>
-        <subproject>spring-loaddev-integration-tests</subproject>
-        <subproject>spring-loaddev-common</subproject>
-        <subproject>spring-loaddev-security</subproject>
+        <subproject>config-server</subproject>
+        <subproject>discovery-server</subproject>
+        <subproject>loads-service</subproject>
+        <subproject>rifles-service</subproject>
+        <subproject>mcp-server</subproject>
+        <subproject>api-gateway</subproject>
+        <subproject>components-service</subproject>
+        <subproject>shared-integration-testing</subproject>
+        <subproject>shared</subproject>
+        <subproject>shared-security</subproject>
     </subprojects>
 
     <properties>
@@ -180,14 +179,14 @@
                                 <replaceregexp file="helm/spring-load-development/Chart.yaml" match="^appVersion:.*" replace="appVersion: ${project.version}" byline="true" />
 
                                 <!-- Fix README.adoc - Target the specific broken pattern -->
-                                <replaceregexp file="helm/spring-load-development/README.adoc" match="spring-loaddev--SNAPSHOT:[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?" replace="spring-loaddev-api-gateway:${project.version}" flags="g" />
+                                <replaceregexp file="helm/spring-load-development/README.adoc" match="spring-loaddev--SNAPSHOT:[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?" replace="api-gateway:${project.version}" flags="g" />
 
                                 <!-- Update README.adoc - All correct microservice image references -->
-                                <replaceregexp file="helm/spring-load-development/README.adoc" match="spring-loaddev-api-gateway:[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?" replace="spring-loaddev-api-gateway:${project.version}" flags="g" />
-                                <replaceregexp file="helm/spring-load-development/README.adoc" match="spring-loaddev-loads-service:[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?" replace="spring-loaddev-loads-service:${project.version}" flags="g" />
-                                <replaceregexp file="helm/spring-load-development/README.adoc" match="spring-loaddev-components-service:[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?" replace="spring-loaddev-components-service:${project.version}" flags="g" />
-                                <replaceregexp file="helm/spring-load-development/README.adoc" match="spring-loaddev-rifles-service:[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?" replace="spring-loaddev-rifles-service:${project.version}" flags="g" />
-                                <replaceregexp file="helm/spring-load-development/README.adoc" match="spring-loaddev-mcp-server:[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?" replace="spring-loaddev-mcp-server:${project.version}" flags="g" />
+                                <replaceregexp file="helm/spring-load-development/README.adoc" match="api-gateway:[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?" replace="api-gateway:${project.version}" flags="g" />
+                                <replaceregexp file="helm/spring-load-development/README.adoc" match="loads-service:[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?" replace="loads-service:${project.version}" flags="g" />
+                                <replaceregexp file="helm/spring-load-development/README.adoc" match="components-service:[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?" replace="components-service:${project.version}" flags="g" />
+                                <replaceregexp file="helm/spring-load-development/README.adoc" match="rifles-service:[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?" replace="rifles-service:${project.version}" flags="g" />
+                                <replaceregexp file="helm/spring-load-development/README.adoc" match="mcp-server:[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?" replace="mcp-server:${project.version}" flags="g" />
 
                                 <!-- Update README.adoc - Chart metadata -->
                                 <replaceregexp file="helm/spring-load-development/README.adoc" match="(\* \*Chart Version\*: )[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?" replace="\1${project.version}" flags="g" />
@@ -198,7 +197,7 @@
                                 <replaceregexp file="helm/spring-load-development/README.adoc" match="(tag: &quot;)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?(&quot;)" replace="\1${project.version}\3" flags="g" />
 
                                 <!-- Update values.yaml -->
-                                <replaceregexp file="helm/spring-load-development/values.yaml" match="(repository: zhoozhoo\.ca/spring-load-development/spring-loaddev-[\w-]+[\s\S]*?tag: &quot;)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?(&quot;)" replace="\1${project.version}\3" flags="gs" />
+                                <replaceregexp file="helm/spring-load-development/values.yaml" match="(repository: zhoozhoo\.ca/spring-load-development/[\w-]+[\s\S]*?tag: &quot;)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?(&quot;)" replace="\1${project.version}\3" flags="gs" />
 
                                 <!-- Update values.yaml - Global imageTag -->
                                 <replaceregexp file="helm/spring-load-development/values.yaml" match="(global:[\s\S]*?imageTag: &quot;)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?(&quot;)" replace="\1${project.version}\3" flags="gs" />

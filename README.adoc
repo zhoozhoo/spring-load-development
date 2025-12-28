@@ -23,7 +23,6 @@ Spring Load Development is a project that demonstrates the integration of variou
 * Circuit Breaker using link:https://spring.io/projects/spring-cloud-circuitbreaker[Spring Cloud Circuit Breaker] and link:https://resilience4j.readme.io/docs/getting-started[Resilience4J]
 * AI Integration using link:https://spring.io/projects/spring-ai[Spring AI] and Model Context Protocol (MCP)
 * Observability and Monitoring using link:https://opentelemetry.io/[OpenTelemetry] (via Spring Boot starter), link:https://grafana.com/oss/tempo/[Tempo], link:https://grafana.com/oss/loki/[Loki], link:https://prometheus.io/[Prometheus], and link:https://grafana.com/[Grafana]
-* Application Monitoring using link:https://github.com/codecentric/spring-boot-admin[Spring Boot Admin]
 * Container Orchestration using link:https://kubernetes.io/[Kubernetes] and link:https://helm.sh/[Helm]
 
 [NOTE]
@@ -37,7 +36,6 @@ This project uses the following key versions:
 
 * *Java*: 25
 * *Spring Boot*: 4.0.1
-* *Spring Boot Admin*: 3.5.6
 * *Spring Cloud*: 2025.1.0
 * *Spring AI*: 1.1.2
 * *SpringDoc OpenAPI*: 3.0.0
@@ -120,10 +118,10 @@ helm install spring-load-development . \
 [source,bash]
 ----
 # Get service URLs
-kubectl get services -n spring-load-development
+kubectl get services -n reloading
 
 # For local development, port-forward to access services
-kubectl port-forward -n spring-load-development service/spring-loaddev-api-gateway 8080:8080
+kubectl port-forward -n reloading service/api-gateway 8080:8080
 ----
 
 For detailed Helm chart configuration, see link:helm/spring-load-development/README.adoc[Helm Chart Documentation].
@@ -144,22 +142,19 @@ docker-compose --env-file .env up -d postgres keycloak grafana loki tempo promet
 # IMPORTANT: All services default to port 8080. To run them side-by-side locally, supply a distinct port with -Dserver.port.
 
 # 1. Start Config Server (required) on 8888
-java -Dserver.port=8888 -jar spring-loaddev-config-server/target/spring-loaddev-config-server-*.jar
+java -Dserver.port=8888 -jar config-server/target/config-server-*.jar
 
 # 2. Start Discovery Server on 8761
-java -Dserver.port=8761 -jar spring-loaddev-discovery-server/target/spring-loaddev-discovery-server-*.jar
+java -Dserver.port=8761 -jar discovery-server/target/discovery-server-*.jar
 
 # 3. Start API Gateway on 8080 (external entrypoint)
-java -jar spring-loaddev-api-gateway/target/spring-loaddev-api-gateway-*.jar
+java -jar api-gateway/target/api-gateway-*.jar
 
 # 4. Start microservices (distinct ports)
-java -Dserver.port=8081 -jar spring-loaddev-loads-service/target/spring-loaddev-loads-service-*.jar
-java -Dserver.port=8082 -jar spring-loaddev-rifles-service/target/spring-loaddev-rifles-service-*.jar
-java -Dserver.port=8083 -jar spring-loaddev-components-service/target/spring-loaddev-components-service-*.jar
-java -Dserver.port=8084 -jar spring-loaddev-mcp-server/target/spring-loaddev-mcp-server-*.jar
-
-# 5. Start Admin Server (optional) on 9090
-java -Dserver.port=9090 -jar spring-loaddev-admin-server/target/spring-loaddev-admin-server-*.jar
+java -Dserver.port=8081 -jar loads-service/target/loads-service-*.jar
+java -Dserver.port=8082 -jar rifles-service/target/rifles-service-*.jar
+java -Dserver.port=8083 -jar components-service/target/components-service-*.jar
+java -Dserver.port=8084 -jar mcp-server/target/mcp-server-*.jar
 ----
 
 TIP: You can also override ports via environment variable `SERVER_PORT` or an `application-local.yml` profile.
@@ -173,7 +168,6 @@ Once the services are up and running, you can access them at the following URLs:
 * API Gateway: http://localhost:8080
 * Keycloak Admin Console: http://localhost:7080
 * Grafana Dashboard: http://localhost:3000
-* Admin Server: http://localhost:9090
 
 ==== Kubernetes Deployment
 
@@ -239,8 +233,7 @@ The application is composed of the following services:
 * *Rifles Service*: Manages rifle data and configurations
 * *Loads Service*: Handles load development data including groups and shots 
 * *Components Service*: Manages reloading components (cases, propellants/powders, primers, projectiles/bullets) with full-text search capabilities
-* *MCP Server*: Provides AI-assisted tools via Model Context Protocol for loads and rifles management (link:spring-loaddev-mcp-server/README.adoc[MCP Server Guide])
-* *Admin Server*: Monitoring and management of all services
+* *MCP Server*: Provides AI-assisted tools via Model Context Protocol for loads and rifles management (link:mcp-server/README.adoc[MCP Server Guide])
 * *Common Library*: Shared DTOs, mappers, utilities (not a runtime service)
 * *Integration Tests Module*: End‑to‑end verification (build-time only)
 
@@ -265,13 +258,6 @@ The application uses Keycloak for identity and access management with the follow
 
 The project includes a comprehensive observability stack with multiple components working together:
 
-==== Spring Boot Admin Server
-* Access the Admin Server dashboard at http://localhost:9090
-* Monitor application health, metrics, and environment
-* View detailed information about each service
-* Access actuator endpoints through a user-friendly interface
-* Track service status and configurations
-
 ==== Observability Stack
 The project uses a modern observability stack with:
 
@@ -287,7 +273,7 @@ Access the observability components at:
 
 ==== Monitoring architecture
 
-The diagram below shows the monitoring data flow used by this project. Services export metrics via the Actuator Prometheus endpoint and send telemetry (traces and logs) over OTLP to an OpenTelemetry Collector. The Collector routes traces to Tempo, logs to Loki and can optionally forward metrics or expose them for Prometheus. Prometheus scrapes the Actuator metrics endpoint; Grafana visualizes metrics, traces and logs; Alertmanager handles alerts from Prometheus; Spring Boot Admin provides a quick actuator UI for all services.
+The diagram below shows the monitoring data flow used by this project. Services export metrics via the Actuator Prometheus endpoint and send telemetry (traces and logs) over OTLP to an OpenTelemetry Collector. The Collector routes traces to Tempo, logs to Loki and can optionally forward metrics or expose them for Prometheus. Prometheus scrapes the Actuator metrics endpoint; Grafana visualizes metrics, traces and logs; Alertmanager handles alerts from Prometheus.
 
 [source,mermaid]
 ....
@@ -326,7 +312,7 @@ flowchart LR
     class OC,Tempo,Loki,Prom,Graf infraStyle
 ....
 
-This observability architecture shows how all telemetry data (traces, logs, and metrics) is centrally collected by the OpenTelemetry Collector and distributed to specialized backends: Tempo for traces, Loki for logs, and Prometheus for metrics. Grafana provides unified dashboards combining all three data types for comprehensive observability. Spring Boot Admin remains available for quick actuator inspection and service management.
+This observability architecture shows how all telemetry data (traces, logs, and metrics) is centrally collected by the OpenTelemetry Collector and distributed to specialized backends: Tempo for traces, Loki for logs, and Prometheus for metrics. Grafana provides unified dashboards combining all three data types for comprehensive observability.
 
 == Deployment Architecture Comparison
 
@@ -342,7 +328,6 @@ flowchart TB
             DC_GW[API Gateway<br/>:8080]
             DC_CONFIG[Config Server]
             DC_DISC[Discovery Server]
-            DC_ADMIN[Admin Server<br/>:9090]
             DC_LOADS[Loads Service]
             DC_RIFLES[Rifles Service]
             DC_COMP[Components Service]
@@ -391,7 +376,7 @@ flowchart TB
     classDef infraStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
     classDef obsStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000000
     
-    class DC_GW,DC_CONFIG,DC_DISC,DC_ADMIN,DC_LOADS,DC_RIFLES,DC_COMP,DC_MCP appStyle
+    class DC_GW,DC_CONFIG,DC_DISC,DC_LOADS,DC_RIFLES,DC_COMP,DC_MCP appStyle
     class DC_PG,DC_KC infraStyle
     class DC_GRAF,DC_LOKI,DC_TEMPO,DC_PROM,DC_OTEL obsStyle
 ....
@@ -549,7 +534,6 @@ flowchart LR
         ConfigServer[Config Server\n:8888]
         DiscoveryServer[Discovery Server\n:8761]
         Keycloak[Keycloak Auth\n:7080]
-        AdminServer[Admin Server\n:9090]
     end
 
     subgraph Observability

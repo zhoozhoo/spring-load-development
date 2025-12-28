@@ -1,0 +1,135 @@
+= Spring Load Development MCP Server
+:toc: left
+:icons: font
+:source-highlighter: highlightjs
+
+== Overview
+
+The MCP (Model Context Protocol) Server provides AI-assisted tools for the Spring Load Development project, enabling natural language interactions with load development data, rifle configurations, and component management through GitHub Copilot and other AI clients.
+
+=== Features
+
+* *Natural Language Queries*: Ask questions about loads, rifles, and components in plain English
+* *AI-Assisted Analysis*: Get intelligent recommendations for load development
+* *Reactive Architecture*: Built with Spring WebFlux for efficient, non-blocking operations
+* *SSE Transport*: Server-Sent Events for real-time communication with AI clients
+* *Type-Safe JSON*: Proper serialization of JSR-385 Quantity types and monetary amounts
+* *Service Integration*: Seamless integration with Loads, Rifles, and Components services via API Gateway
+
+=== MCP Tools Provided
+
+The server exposes several tools to AI clients:
+
+* *Load Management*: Create, read, update, delete, and search load data
+* *Rifle Configuration*: Manage rifle specifications and configurations
+* *Component Search*: Full-text search across bullets, powders, primers, and cases
+* *Group Analysis*: Track and analyze shooting groups and performance data
+* *Statistical Insights*: Generate statistics and trends from load development data
+
+== Architecture
+
+[source,mermaid]
+....
+flowchart LR
+    Copilot[GitHub Copilot] --> SSE[SSE /sse]
+    SSE --> Tools[MCP Tools]
+    Tools --> Mapper[JSON Mapper\nJSR-385 + Money]
+    Tools --> Gateway[API Gateway]
+    Gateway --> LoadsSvc[Loads]
+    Gateway --> RiflesSvc[Rifles]
+    Gateway --> CompSvc[Components]
+    Gateway --> Keycloak[Keycloak Auth]
+    Tools -->|Auth| Keycloak
+    classDef client fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef mcp fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef svc fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    class Copilot client
+    class SSE,Tools,Mapper mcp
+    class Gateway,LoadsSvc,RiflesSvc,CompSvc,Keycloak svc
+....
+
+== Quantity JSON serialization
+
+The DTOs in this module use JSR-385 (tech.units.indriya) `javax.measure.Quantity` types for physical measurements
+such as lengths, masses, and speeds. To ensure consistent JSON across services and MCP, a custom Jackson module
+is registered that serializes quantities using the following shape:
+
+- {"value": <number>, "unit": "<symbol>"}
+
+Examples:
+
+- bulletWeight -> {"value": 140, "unit": "g"}
+- barrelLength -> {"value": 61, "unit": "cm"}
+
+Note: While the server’s ObjectMapper understands `Quantity` directly, the MCP protocol envelope can intermittently
+struggle with complex generic types inside tool results. To avoid transport-level serialization pitfalls, MCP tools
+that return DTOs with `Quantity` fields pre-serialize their responses to JSON strings and return those strings to the
+client. This approach keeps the on-the-wire format stable without changing the DTOs or their public API.
+
+== Development notes
+
+- The server registers a single MCP JSON mapper backed by Spring’s ObjectMapper with the custom Quantity/Unit module.
+- Tool providers apply reactive context where available and return pre-serialized JSON for DTOs that include `Quantity`.
+- Integration tests cover both happy paths and common error scenarios (service not discovered, auth failures, not found).
+
+== Configuring Copilot Connection
+
+To connect GitHub Copilot to this server, you need to configure the `.vscode/mcp.json` file in your project directory.
+
+=== Configuration Steps
+
+1. Create an `mcp.json` file inside the `.vscode` folder
+2. Add the following configuration:
+
+[source,json]
+----
+{
+    "servers": {
+        "reloading-mcp-server": {
+            "type": "sse",
+            "url": "http://localhost:8080/sse",
+            "headers": {
+                "Authorization": "Bearer <your-access-token>"
+            }
+        }
+    }
+}
+----
+
+TIP: Make sure the port number matches your local MCP server configuration. The default is 8080 when running through the API Gateway.
+
+== External Configuration Source
+
+The MCP Server inherits its runtime properties (e.g. logging, Keycloak issuer, database connection) from the shared configuration repository:
+
+https://github.com/zhoozhoo/spring-load-development-config
+
+Relevant files:
+
+* `application.yml` – common defaults (e.g. OTEL exporter endpoints)
+* `mcp-server.yml` – MCP specific settings (ports, feature toggles)
+* `log4j2.xml` / `log4j2.yaml` – consistent logging layout across all services
+
+If running without Spring Cloud Config (Helm chart default), mount or inject required properties as environment variables. For example:
+
+[source,bash]
+----
+export SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI="http://localhost:7080/realms/reloading"
+export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
+java -Dserver.port=8084 -jar target/mcp-server-*.jar
+----
+
+=== Environment-Specific Configuration
+
+For different environments, adjust the URL accordingly:
+
+* *Local Development*: `http://localhost:8080/sse`
+* *Docker Compose*: `http://localhost:8080/sse`
+* *Kubernetes (Port Forward)*: `http://localhost:8080/sse`
+* *Kubernetes (NodePort)*: `http://localhost:30090/sse` (or your configured NodePort)
+
+== Authentication
+
+The MCP server requires bearer token authentication for secure access. For detailed instructions on authentication and obtaining tokens, please refer to the link:../api-gateway/src/test/http/README.adoc[API Gateway Testing Guide].
+
+TIP: The authentication process uses Keycloak and is the same as described in the API Gateway documentation.

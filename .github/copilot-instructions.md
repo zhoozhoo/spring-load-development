@@ -7,13 +7,13 @@ This document provides essential knowledge for AI agents to be productive in thi
 This is a **microservices-based load development management system** built with Spring Cloud. The system manages ammunition reloading data with user isolation, full observability, and AI integration via Model Context Protocol.
 
 ### Service Boundaries
-- **API Gateway** (`spring-loaddev-api-gateway`) - Single entry point; OAuth2 authentication, UMA token exchange with Keycloak, reactive routing with circuit breakers
-- **Loads Service** (`spring-loaddev-loads-service`) - Manages loads, groups, and shots; calculates ballistic statistics using JSR-385 quantities
-- **Components Service** (`spring-loaddev-components-service`) - Manages reloading components (bullets, powder, primers, cases) with measurements
-- **Rifles Service** (`spring-loaddev-rifles-service`) - Manages rifle configurations including barrel specs and rifling parameters
-- **MCP Server** (`spring-loaddev-mcp-server`) - Model Context Protocol server with SSE support at `/sse`; integrates Spring AI for GitHub Copilot
-- **Config Server** (`spring-loaddev-config-server`) - Centralized configuration from `spring-load-development-config` git repo (Docker/local only)
-- **Discovery Server** (`spring-loaddev-discovery-server`) - Eureka service registry (Docker/local only)
+- **API Gateway** (`api-gateway`) - Single entry point; OAuth2 authentication, UMA token exchange with Keycloak, reactive routing with circuit breakers
+- **Loads Service** (`loads-service`) - Manages loads, groups, and shots; calculates ballistic statistics using JSR-385 quantities
+- **Components Service** (`components-service`) - Manages reloading components (bullets, powder, primers, cases) with measurements
+- **Rifles Service** (`rifles-service`) - Manages rifle configurations including barrel specs and rifling parameters
+- **MCP Server** (`mcp-server`) - Model Context Protocol server with SSE support at `/sse`; integrates Spring AI for GitHub Copilot
+- **Config Server** (`config-server`) - Centralized configuration from `spring-load-development-config` git repo (Docker/local only)
+- **Discovery Server** (`discovery-server`) - Eureka service registry (Docker/local only)
 
 **Deployment-Specific Patterns:**
 - **Docker/Local:** Uses Config Server + Eureka Discovery + Spring Cloud LoadBalancer
@@ -294,7 +294,7 @@ mvn clean package
 mvn clean package -DskipTests
 
 # Build specific service
-cd spring-loaddev-loads-service && mvn clean package
+cd loads-service && mvn clean package
 ```
 
 ### Run Locally (3 options)
@@ -338,19 +338,19 @@ helm uninstall spring-load-development -n spring-load-development
 docker-compose up -d postgres keycloak grafana loki tempo prometheus otel-collector
 
 # 2. Start Config Server (port 8888)
-java -jar spring-loaddev-config-server/target/spring-loaddev-config-server-*.jar
+java -jar config-server/target/onfig-server-*.jar
 
 # 3. Start Discovery Server (port 8761)
-java -jar spring-loaddev-discovery-server/target/spring-loaddev-discovery-server-*.jar
+java -jar discovery-server/target/discovery-server-*.jar
 
 # 4. Start API Gateway (port 8080)
-java -jar spring-loaddev-api-gateway/target/spring-loaddev-api-gateway-*.jar
+java -jar api-gateway/target/api-gateway-*.jar
 
 # 5. Start microservices (distinct ports)
-java -Dserver.port=8081 -jar spring-loaddev-loads-service/target/spring-loaddev-loads-service-*.jar
-java -Dserver.port=8082 -jar spring-loaddev-rifles-service/target/spring-loaddev-rifles-service-*.jar
-java -Dserver.port=8083 -jar spring-loaddev-components-service/target/spring-loaddev-components-service-*.jar
-java -Dserver.port=8084 -jar spring-loaddev-mcp-server/target/spring-loaddev-mcp-server-*.jar
+java -Dserver.port=8081 -jar loads-service/target/loads-service-*.jar
+java -Dserver.port=8082 -jar rifles-service/target/rifles-service-*.jar
+java -Dserver.port=8083 -jar components-service/target/components-service-*.jar
+java -Dserver.port=8084 -jar mcp-server/target/mcp-server-*.jar
 ```
 
 ### Testing
@@ -373,7 +373,7 @@ Use `.http` files in `test/` directory with VS Code REST Client extension:
 mvn test
 
 # Specific service
-cd spring-loaddev-loads-service && mvn test
+cd loads-service && mvn test
 
 # Single test class
 mvn test -Dtest=LoadsControllerTest
@@ -385,7 +385,7 @@ mvn test -Dtest=LoadsControllerTest
 1. Create new Maven module in `pom.xml` under `<subprojects>`
 2. Add to Docker Compose in `docker-compose.yml`
 3. Add Helm chart in `helm/spring-load-development/charts/`
-4. Follow existing service structure (see `spring-loaddev-loads-service` as template)
+4. Follow existing service structure (see `loads-service` as template)
 
 **Database Migrations:**
 - Schema files in `src/main/resources/schema.sql` for each service
