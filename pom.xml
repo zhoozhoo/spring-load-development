@@ -197,7 +197,7 @@
                                 <replaceregexp file="helm/spring-load-development/README.adoc" match="(tag: &quot;)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?(&quot;)" replace="\1${project.version}\3" flags="g" />
 
                                 <!-- Update values.yaml -->
-                                <replaceregexp file="helm/spring-load-development/values.yaml" match="(repository: zhoozhoo\.ca/spring-load-development/spring-loaddev-[\w-]+[\s\S]*?tag: &quot;)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?(&quot;)" replace="\1${project.version}\3" flags="gs" />
+                                <replaceregexp file="helm/spring-load-development/values.yaml" match="(repository: zhoozhoo\.ca/spring-load-development/[\w-]+[\s\S]*?tag: &quot;)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?(&quot;)" replace="\1${project.version}\3" flags="gs" />
 
                                 <!-- Update values.yaml - Global imageTag -->
                                 <replaceregexp file="helm/spring-load-development/values.yaml" match="(global:[\s\S]*?imageTag: &quot;)[0-9]+\.[0-9]+\.[0-9]+(-SNAPSHOT)?(&quot;)" replace="\1${project.version}\3" flags="gs" />

@@ -39,7 +39,7 @@ Key files in that repository map directly to services:
 
 * `application.yml` – shared defaults consumed by all services via Config Server
 * `api-gateway.yml`, `loads-service.yml`, `rifles-service.yml`, `components-service.yml`, `mcp-server.yml` – service‑specific overrides
-* `discovery-server.yml`, `admin-server.yml` – infrastructure service settings
+* `discovery-server.yml` – infrastructure service settings
 * `log4j2.xml` / `log4j2.yaml` – centralized logging configuration
 
 When deploying with this Helm chart (which excludes Config Server/Eureka), you can either:
