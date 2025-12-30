@@ -154,6 +154,8 @@
                     <scmCommentPrefix>[maven-release-plugin] </scmCommentPrefix>
                     <scmReleaseCommitComment>@{prefix} prepare release @{releaseLabel}</scmReleaseCommitComment>
                     <scmDevelopmentCommitComment>@{prefix} prepare for next development iteration</scmDevelopmentCommitComment>
+                    <!-- System properties passed to the forked Maven process -->
+                    <arguments>-Dspotbugs.skip=true -Djacoco.skip=true</arguments>
                 </configuration>
             </plugin>
             <plugin>
