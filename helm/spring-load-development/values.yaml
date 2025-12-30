@@ -4,7 +4,7 @@
 # Global settings shared across all subcharts
 global:
   imageRegistry: "zhoozhoo.ca"
-  imageTag: "0.1.0"
+  imageTag: "0.1.1-SNAPSHOT"
   imagePullSecrets: []
   storageClass: ""
   

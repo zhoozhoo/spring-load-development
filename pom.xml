@@ -10,7 +10,7 @@
 
     <groupId>ca.zhoozhoo.load-development</groupId>
     <artifactId>spring-load-development-parent</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
     <name>Spring Load Development Parent</name>
     <description>Parent Project for Spring Load Development</description>
     <packaging>pom</packaging>
@@ -54,7 +54,7 @@
 
     <scm>
         <developerConnection>scm:git:git@github.com:zhoozhoo/spring-load-development.git</developerConnection>
-        <tag>v0.1.0</tag>
+        <tag>v0.0.8</tag>
     </scm>
 
     <dependencyManagement>
@@ -147,7 +147,7 @@
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <tagNameFormat>v@{project.version}</tagNameFormat>
                     <preparationGoals>clean verify antrun:run@update-helm-versions</preparationGoals>
-                    <completionGoals>antrun:run@update-helm-versions</completionGoals>
+                    <completionGoals>clean</completionGoals>
                     <!-- Allow modification of these files during release -->
                     <allowTimestampedSnapshots>true</allowTimestampedSnapshots>
                     <!-- Include all modified files in commits -->

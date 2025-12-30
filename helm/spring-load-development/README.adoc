@@ -281,7 +281,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== API Gateway
 
-* *Image*: `zhoozhoo.ca/spring-load-development/api-gateway:0.1.0`
+* *Image*: `zhoozhoo.ca/spring-load-development/api-gateway:0.1.1-SNAPSHOT`
 * *Namespace*: `reloading`
 * *Service*: `api-gateway.reloading.svc.cluster.local:8080`
 * *NodePort*: 30090
@@ -290,7 +290,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Loads Service
 
-* *Image*: `zhoozhoo.ca/spring-load-development/loads-service:0.1.0`
+* *Image*: `zhoozhoo.ca/spring-load-development/loads-service:0.1.1-SNAPSHOT`
 * *Namespace*: `reloading`
 * *Service*: `loads-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Manages load data and calculations
@@ -298,7 +298,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Components Service
 
-* *Image*: `zhoozhoo.ca/spring-load-development/components-service:0.1.0`
+* *Image*: `zhoozhoo.ca/spring-load-development/components-service:0.1.1-SNAPSHOT`
 * *Namespace*: `reloading`
 * *Service*: `components-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Manages reloading components (cases, propellants/powders, primers, projectiles/bullets) with full-text search
@@ -306,7 +306,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Rifles Service
 
-* *Image*: `zhoozhoo.ca/spring-load-development/rifles-service:0.1.0`
+* *Image*: `zhoozhoo.ca/spring-load-development/rifles-service:0.1.1-SNAPSHOT`
 * *Namespace*: `reloading`
 * *Service*: `rifles-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Manages rifle and firearm data
@@ -314,7 +314,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== MCP Server
 
-* *Image*: `zhoozhoo.ca/spring-load-development/mcp-server:0.1.0`
+* *Image*: `zhoozhoo.ca/spring-load-development/mcp-server:0.1.1-SNAPSHOT`
 * *Namespace*: `reloading`
 * *Service*: `mcp-server-service.reloading.svc.cluster.local:8080`
 * *Purpose*: Model Context Protocol server for AI integrations
@@ -382,7 +382,7 @@ All container versions are centrally managed in the parent chart's `values.yaml`
 ----
 global:
   imageRegistry: "zhoozhoo.ca"
-  imageTag: "0.1.0"
+  imageTag: "0.1.1-SNAPSHOT"
   
   # Single source of truth for all container versions
   versions:
@@ -991,8 +991,8 @@ kubectl get configmap keycloak-realm-config -n keycloak -o yaml > keycloak-realm
 
 == Chart Information
 
-* *Chart Version*: 0.1.0
-* *App Version*: 0.1.0
+* *Chart Version*: 0.1.1-SNAPSHOT
+* *App Version*: 0.1.1-SNAPSHOT
 * *Maintainer*: Zhubin Salehi (zhoozhoo@yahoo.com)
 * *Kubernetes Version*: 1.24+
 * *Helm Version*: 3.x
