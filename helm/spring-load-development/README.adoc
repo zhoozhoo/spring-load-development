@@ -387,7 +387,7 @@ global:
   # Single source of truth for all container versions
   versions:
     # Spring Boot microservices
-    microservices: "0.1.0-SNAPSHOT"
+    microservices: "0.1.1-SNAPSHOT"
     
     # Observability stack
     loki: "3.6.3"
@@ -1026,7 +1026,7 @@ spring-load-development/
     │   │   └── _helpers.tpl   # Observability helper functions
     │   └── charts/             # Observability sub-subcharts
     │       ├── grafana/        # Grafana sub-subchart
-    │       │   ├── Chart.yaml  # Version: 0.1.0-SNAPSHOT, AppVersion: 12.3.1
+    │       │   ├── Chart.yaml  # Version: 0.1.1-SNAPSHOT, AppVersion: 12.3.1
     │       │   ├── values.yaml # Grafana-specific configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # Grafana helper functions
@@ -1037,7 +1037,7 @@ spring-load-development/
     │       │       ├── pvc.yaml          # Persistent storage
     │       │       └── service.yaml      # Grafana service with NodePort 30000
     │       ├── loki/            # Loki sub-subchart
-    │       │   ├── Chart.yaml   # Version: 0.1.0-SNAPSHOT, AppVersion: 3.6.3
+    │       │   ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 3.6.3
     │       │   ├── values.yaml  # Loki-specific configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # Loki helper functions
@@ -1047,7 +1047,7 @@ spring-load-development/
     │       │       ├── pvc.yaml          # Persistent storage
     │       │       └── service.yaml      # Loki service with NodePort 30100
     │       ├── otel-collector/  # OpenTelemetry Collector sub-subchart
-    │       │   ├── Chart.yaml   # Version: 0.1.0-SNAPSHOT, AppVersion: 0.142.0
+    │       │   ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 0.142.0
     │       │   ├── values.yaml  # OTel Collector configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # OTel Collector helper functions
@@ -1056,7 +1056,7 @@ spring-load-development/
     │       │       ├── pdb.yaml          # PodDisruptionBudget
     │       │       └── service.yaml      # OTel service (GRPC 30317, HTTP 30889)
     │       ├── prometheus/      # Prometheus sub-subchart
-    │       │   ├── Chart.yaml   # Version: 0.1.0-SNAPSHOT, AppVersion: v3.8.1
+    │       │   ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: v3.8.1
     │       │   ├── values.yaml  # Prometheus-specific configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # Prometheus helper functions
@@ -1066,7 +1066,7 @@ spring-load-development/
     │       │       ├── pvc.yaml          # Persistent storage
     │       │       └── service.yaml      # Prometheus service with NodePort 30091
     │       └── tempo/           # Tempo sub-subchart
-    │           ├── Chart.yaml   # Version: 0.1.0-SNAPSHOT, AppVersion: 2.9.0
+    │           ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 2.9.0
     │           ├── values.yaml  # Tempo-specific configuration
     │           └── templates/
     │               ├── _helpers.tpl      # Tempo helper functions
@@ -1165,7 +1165,7 @@ Complete monitoring and tracing stack using **sub-subchart architecture**:
 
 Each sub-subchart has its own:
 
-* `Chart.yaml` - Component metadata (version 0.1.0-SNAPSHOT with specific appVersion)
+* `Chart.yaml` - Component metadata (version 0.1.1-SNAPSHOT with specific appVersion)
 * `values.yaml` - Component-specific configuration with flat value paths
 * `templates/_helpers.tpl` - Component-specific helper functions
 * Resource templates - Deployments, Services, ConfigMaps, PVCs, PDBs as needed
