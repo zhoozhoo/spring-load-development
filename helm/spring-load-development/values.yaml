@@ -11,7 +11,7 @@ global:
   # Single source of truth for all container versions
   versions:
     # Spring Boot microservices
-    microservices: "0.1.0-SNAPSHOT"
+    microservices: "0.1.1-SNAPSHOT"
     
     # Observability stack
     loki: "3.6.3"
