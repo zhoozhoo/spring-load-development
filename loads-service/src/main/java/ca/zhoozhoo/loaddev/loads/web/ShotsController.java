@@ -7,7 +7,6 @@ import static org.springframework.http.ResponseEntity.notFound;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,9 +19,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
+import ca.zhoozhoo.loaddev.loads.service.ShotService;
 import ca.zhoozhoo.loaddev.security.CurrentUser;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -74,9 +74,13 @@ import reactor.core.publisher.Mono;
 @Log4j2
 @PreAuthorize("hasRole('RELOADER')")
 public class ShotsController {
+    
+    private final ShotService shotService;
 
-    @Autowired
-    private ShotRepository shotRepository;
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public ShotsController(ShotService shotService) {
+        this.shotService = shotService;
+    }
 
     @Operation(summary = "Get all shots by group id", description = "Retrieves all shots associated with a specific group for the authenticated user.", security = {
             @SecurityRequirement(name = "Oauth2Security", scopes = "shots:view") })
@@ -87,7 +91,7 @@ public class ShotsController {
     public Flux<Shot> getShotsByGroupId(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of group") @PathVariable Long groupId) {
-        return shotRepository.findByGroupIdAndOwnerId(groupId, userId);
+        return shotService.getAllShots(groupId, userId);
     }
 
     @Operation(summary = "Get a shot by its id", description = "Retrieves detailed information about a specific shot by its identifier.", security = {
@@ -101,7 +105,7 @@ public class ShotsController {
     public Mono<ResponseEntity<Shot>> getShotById(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of shot") @PathVariable Long id) {
-        return shotRepository.findByIdAndOwnerId(id, userId)
+        return shotService.getShotById(id, userId)
                 .map(shot -> ok(shot))
                 .defaultIfEmpty(notFound().build());
     }
@@ -123,7 +127,7 @@ public class ShotsController {
                 userId,
                 shot.groupId(),
                 shot.velocity()))
-                .flatMap(shotRepository::save)
+                .flatMap(shotService::createShot)
                 .map(savedShot -> {
                     log.info("Created new shot with id: {}", savedShot.id());
                     return status(CREATED).body(savedShot);
@@ -143,14 +147,14 @@ public class ShotsController {
             @Parameter(hidden = true) @CurrentUser String userId, 
             @Parameter(description = "Id of shot") @PathVariable Long id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Shot data to update") @Valid @RequestBody Shot shot) {
-        return shotRepository.findByIdAndOwnerId(id, userId)
+        return shotService.getShotById(id, userId)
                 .flatMap(existingShot -> {
                     Shot updatedShot = new Shot(
                             existingShot.id(),
                             existingShot.ownerId(),
                             shot.groupId(),
                             shot.velocity());
-                    return shotRepository.save(updatedShot);
+                    return shotService.updateShot(updatedShot);
                 })
                 .map(updatedShot -> {
                     log.info("Updated shot with id: {}", updatedShot.id());
@@ -170,8 +174,8 @@ public class ShotsController {
     public Mono<ResponseEntity<Void>> deleteShot(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of shot") @PathVariable Long id) {
-        return shotRepository.findByIdAndOwnerId(id, userId)
-                .flatMap(existingShot -> shotRepository.delete(existingShot)
+        return shotService.getShotById(id, userId)
+                .flatMap(existingShot -> shotService.deleteShot(existingShot)
                         .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT)))
                         .doOnSuccess(_ -> log.info("Deleted shot with id: {}", id)))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));

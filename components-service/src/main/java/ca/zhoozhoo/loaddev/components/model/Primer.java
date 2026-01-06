@@ -59,7 +59,7 @@ public record Primer(
         @JsonDeserialize(using = QuantityDeserializer.class)
         @NotNull(message = "Quantity per box is required")
         @Positive(message = "Quantity per box must be positive")
-        @Column("quantity_per_box") Quantity<Dimensionless> quantityPerBox) {
+        @Column("quantity_per_box") Quantity<Dimensionless> quantityPerBox) implements Component {
 
     /**
      * Custom equals() excluding ownerId to focus on business equality.

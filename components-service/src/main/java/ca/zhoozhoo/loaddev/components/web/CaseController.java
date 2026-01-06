@@ -7,7 +7,7 @@ import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 import static reactor.core.publisher.Mono.just;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,13 +21,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import ca.zhoozhoo.loaddev.components.dao.CaseRepository;
 import ca.zhoozhoo.loaddev.components.model.Case;
+import ca.zhoozhoo.loaddev.components.service.CaseService;
 import ca.zhoozhoo.loaddev.security.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -62,8 +63,12 @@ import reactor.core.publisher.Mono;
 @PreAuthorize("hasRole('RELOADER')")
 public class CaseController {
 
-    @Autowired
-    private CaseRepository caseRepository;
+    private final CaseService caseService;
+
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public CaseController(CaseService caseService) {
+        this.caseService = caseService;
+    }
 
     @Operation(summary = "Get all cases", security = {
             @SecurityRequirement(name = "Oauth2Security", scopes = "components:view") })
@@ -72,7 +77,7 @@ public class CaseController {
     @GetMapping
     @PreAuthorize("hasAuthority('components:view')")
     public Flux<Case> getAllCases(@Parameter(hidden = true) @CurrentUser String userId) {
-        return caseRepository.findAllByOwnerId(userId);
+        return caseService.getAllCases(userId);
     }
 
     @Operation(summary = "Full-text search cases", security = {
@@ -81,10 +86,10 @@ public class CaseController {
             @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Case.class))) })
     @GetMapping("/search")
     @PreAuthorize("hasAuthority('components:view')")
-        public Flux<Case> searchCases(@Parameter(hidden = true) @CurrentUser String userId,
-                                                                  @Parameter(description = "Full text search query") @RequestParam("query") String query) {
-                return caseRepository.searchByOwnerIdAndQuery(userId, query);
-        }
+    public Flux<Case> searchCases(@Parameter(hidden = true) @CurrentUser String userId,
+            @Parameter(description = "Full text search query") @RequestParam("query") String query) {
+        return caseService.searchCases(userId, query);
+    }
 
     @Operation(summary = "Get a case by its id", security = {
             @SecurityRequirement(name = "Oauth2Security", scopes = "components:view") })
@@ -97,7 +102,7 @@ public class CaseController {
     public Mono<ResponseEntity<Case>> getCase(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of case") @PathVariable Long id) {
-        return caseRepository.findByIdAndOwnerId(id, userId)
+        return caseService.getCaseById(id, userId)
                 .doOnNext(casing -> log.debug("Found case: {}", casing))
                 .map(casing -> ok(casing))
                 .defaultIfEmpty(notFound().build());
@@ -114,6 +119,9 @@ public class CaseController {
     public Mono<ResponseEntity<Case>> createCase(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Valid @RequestBody Case casing) {
+        if (userId == null || userId.isBlank()) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).<Case>build());
+        }
         return just(casing)
                 .map(c -> new Case(
                         null,
@@ -123,7 +131,7 @@ public class CaseController {
                         c.primerSize(),
                         c.cost(),
                         c.quantityPerBox()))
-                .flatMap(caseRepository::save)
+                .flatMap(caseService::createCase)
                 .doOnNext(savedCase -> log.debug("Created new case with id: {}", savedCase.id()))
                 .map(savedCase -> status(CREATED).body(savedCase));
     }
@@ -140,8 +148,8 @@ public class CaseController {
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of case") @PathVariable Long id,
             @Valid @RequestBody Case casing) {
-        return caseRepository.findByIdAndOwnerId(id, userId)
-                .flatMap(existingCase -> caseRepository.save(new Case(
+        return caseService.getCaseById(id, userId)
+                .flatMap(existingCase -> caseService.updateCase(new Case(
                         existingCase.id(),
                         existingCase.ownerId(),
                         casing.manufacturer(),
@@ -164,8 +172,8 @@ public class CaseController {
     public Mono<ResponseEntity<Void>> deleteCase(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of case") @PathVariable Long id) {
-        return caseRepository.findByIdAndOwnerId(id, userId)
-                .flatMap(existingCase -> caseRepository.delete(existingCase)
+        return caseService.getCaseById(id, userId)
+                .flatMap(existingCase -> caseService.deleteCase(existingCase)
                         .thenReturn(ResponseEntity.noContent().<Void>build())
                         .doOnSuccess(_ -> log.debug("Deleted case with id: {}", id)))
                 .defaultIfEmpty(ResponseEntity.notFound().build());

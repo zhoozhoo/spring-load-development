@@ -3,18 +3,18 @@ package ca.zhoozhoo.loaddev.mcp.service;
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INTERNAL_ERROR;
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_REQUEST;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import ca.zhoozhoo.loaddev.mcp.dto.RifleDto;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema.JSONRPCResponse.JSONRPCError;
 import lombok.extern.log4j.Log4j2;
@@ -39,14 +39,16 @@ import reactor.core.publisher.Mono;
 @Log4j2
 public class RiflesService {
 
-    @Autowired
-    private WebClient webClient;
+    private final WebClient webClient;
+    private final DiscoveryClient discoveryClient;
+    private final String riflesServiceName;
 
-    @Autowired
-    private DiscoveryClient discoveryClient;
-
-    @Value("${service.rifles.name:rifles-service}")
-    private String riflesServiceName;
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public RiflesService(WebClient webClient, DiscoveryClient discoveryClient, @Value("${service.rifles.name:rifles-service}") String riflesServiceName) {
+        this.webClient = webClient;
+        this.discoveryClient = discoveryClient;
+        this.riflesServiceName = riflesServiceName;
+    }
 
     /**
      * Retrieves all rifles accessible to the authenticated user.

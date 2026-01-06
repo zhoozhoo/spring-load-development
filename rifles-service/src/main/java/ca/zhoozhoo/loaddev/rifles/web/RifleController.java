@@ -5,7 +5,6 @@ import static org.springframework.http.ResponseEntity.notFound;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import ca.zhoozhoo.loaddev.rifles.dao.RifleRepository;
 import ca.zhoozhoo.loaddev.rifles.model.Rifle;
+import ca.zhoozhoo.loaddev.rifles.service.RiflesService;
 import ca.zhoozhoo.loaddev.security.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -40,6 +39,7 @@ import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * REST controller for managing rifle firearm specifications.
@@ -72,8 +72,12 @@ import reactor.core.publisher.Mono;
 @PreAuthorize("hasRole('RELOADER')")
 public class RifleController {
 
-    @Autowired
-    private RifleRepository rifleRepository;
+    private final RiflesService riflesService;
+
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public RifleController(RiflesService riflesService) {
+        this.riflesService = riflesService;
+    }
 
     @Operation(summary = "Get all rifles", description = "Retrieves all rifles belonging to the authenticated user")
     @SecurityRequirement(name = "Oauth2Security", scopes = "view")
@@ -81,7 +85,7 @@ public class RifleController {
     @GetMapping
     @PreAuthorize("hasAuthority('rifles:view')")
     public Flux<Rifle> getAllRifles(@Parameter(hidden = true) @CurrentUser String userId) {
-        return rifleRepository.findAllByOwnerId(userId);
+        return riflesService.getAllRifles(userId);
     }
 
     @Operation(summary = "Get rifle by ID", description = "Retrieves a specific rifle by its ID for the authenticated user")
@@ -95,7 +99,7 @@ public class RifleController {
     public Mono<ResponseEntity<Rifle>> getRifleById(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Rifle ID", required = true) @PathVariable Long id) {
-        return rifleRepository.findByIdAndOwnerId(id, userId)
+        return riflesService.getRifleById(id, userId)
                 .doOnNext(rifle -> log.debug("Found rifle: {}", rifle))
                 .map(rifle -> ok(rifle))
                 .defaultIfEmpty(notFound().build());
@@ -126,7 +130,7 @@ public class RifleController {
                 rifle.barrelContour(),
                 rifle.rifling(),
                 rifle.zeroing()))
-                .flatMap(rifleRepository::save)
+                .flatMap(riflesService::createRifle)
                 .doOnNext(savedRifle -> log.info("Created new rifle with id: {}", savedRifle.id()))
                 .map(savedRifle -> status(CREATED).body(savedRifle));
     }
@@ -144,8 +148,8 @@ public class RifleController {
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Rifle ID", required = true) @PathVariable Long id,
             @Parameter(description = "Updated rifle data", required = true) @Valid @RequestBody Rifle rifle) {
-        return rifleRepository.findByIdAndOwnerId(id, userId)
-                .flatMap(existingRifle -> rifleRepository.save(new Rifle(
+        return riflesService.getRifleById(id, userId)
+                .flatMap(existingRifle -> riflesService.updateRifle(new Rifle(
                         existingRifle.id(),
                         existingRifle.ownerId(),
                         rifle.name(),
@@ -171,8 +175,8 @@ public class RifleController {
     public Mono<ResponseEntity<Void>> deleteRifle(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Rifle ID", required = true) @PathVariable Long id) {
-        return rifleRepository.findByIdAndOwnerId(id, userId)
-                .flatMap(existingRifle -> rifleRepository.delete(existingRifle)
+        return riflesService.getRifleById(id, userId)
+                .flatMap(existingRifle -> riflesService.deleteRifle(existingRifle)
                         .thenReturn(ResponseEntity.noContent().<Void>build())
                         .doOnSuccess(_ -> log.info("Deleted rifle with id: {}", id)))
                 .defaultIfEmpty(ResponseEntity.notFound().build());

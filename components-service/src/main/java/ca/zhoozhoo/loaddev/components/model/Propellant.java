@@ -55,7 +55,7 @@ public record Propellant(
         @JsonDeserialize(using = QuantityDeserializer.class)
         @NotNull(message = "Weight per container is required")
         @Positive(message = "Weight per container must be positive")
-        @Column("weight_per_container") Quantity<Mass> weightPerContainer) {
+        @Column("weight_per_container") Quantity<Mass> weightPerContainer) implements Component {
 
     /**
      * Custom equals() excluding ownerId to focus on business equality.

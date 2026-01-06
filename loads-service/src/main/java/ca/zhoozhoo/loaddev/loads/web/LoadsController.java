@@ -7,7 +7,6 @@ import static org.springframework.http.ResponseEntity.notFound;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,24 +19,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
 import ca.zhoozhoo.loaddev.loads.dto.GroupStatisticsDto;
 import ca.zhoozhoo.loaddev.loads.model.Load;
+import ca.zhoozhoo.loaddev.loads.service.GroupService;
+import ca.zhoozhoo.loaddev.loads.service.LoadService;
 import ca.zhoozhoo.loaddev.security.CurrentUser;
-import ca.zhoozhoo.loaddev.loads.service.LoadsService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.OAuthFlow;
+import io.swagger.v3.oas.annotations.security.OAuthFlows;
+import io.swagger.v3.oas.annotations.security.OAuthScope;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
-import io.swagger.v3.oas.annotations.security.OAuthFlows;
-import io.swagger.v3.oas.annotations.security.OAuthFlow;
-import io.swagger.v3.oas.annotations.security.OAuthScope;
-import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
@@ -76,12 +76,15 @@ import reactor.core.publisher.Mono;
 @Log4j2
 @PreAuthorize("hasRole('RELOADER')")
 public class LoadsController {
+    
+    private final LoadService loadService;
+    private final GroupService groupService;
 
-    @Autowired
-    private LoadRepository loadRepository;
-
-    @Autowired
-    private LoadsService loadsService;
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public LoadsController(LoadService loadService, GroupService groupService) {
+        this.loadService = loadService;
+        this.groupService = groupService;
+    }
 
     @Operation(summary = "Get all loads", security = {
             @SecurityRequirement(name = "Oauth2Security", scopes = "loads:view") })
@@ -90,7 +93,7 @@ public class LoadsController {
     @GetMapping
     @PreAuthorize("hasAuthority('loads:view')")
     public Flux<Load> getAllLoads(@Parameter(hidden = true) @CurrentUser String userId) {
-        return loadRepository.findAllByOwnerId(userId);
+        return loadService.getAllLoads(userId);
     }
 
     @Operation(summary = "Get a load by its id", security = {
@@ -104,7 +107,7 @@ public class LoadsController {
     public Mono<ResponseEntity<Load>> getLoadById(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of load") @PathVariable Long id) {
-        return loadRepository.findByIdAndOwnerId(id, userId)
+        return loadService.getLoadById(id, userId)
                 .map(load -> {
                     log.debug("Found load: {}", load);
                     return ok(load);
@@ -123,7 +126,7 @@ public class LoadsController {
     public Flux<GroupStatisticsDto> getLoadStatistics(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of load") @PathVariable Long id) {
-        return loadsService.getGroupStatisticsForLoad(id, userId);
+        return groupService.getGroupStatisticsForLoad(id, userId);
     }
 
     @Operation(summary = "Create a new load", security = { @SecurityRequirement(name = "Oauth2Security", scopes = "loads:edit") })
@@ -152,7 +155,7 @@ public class LoadsController {
                 load.caseOverallLength(),
                 load.neckTension(),
                 load.rifleId()))
-                .flatMap(loadRepository::save)
+                .flatMap(loadService::createLoad)
                 .map(savedLoad -> {
                     log.info("Created new load with id: {}", savedLoad.id());
                     return status(CREATED).body(savedLoad);
@@ -171,7 +174,7 @@ public class LoadsController {
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of load") @PathVariable Long id,
             @Valid @RequestBody Load load) {
-        return loadRepository.findByIdAndOwnerId(id, userId)
+        return loadService.getLoadById(id, userId)
                 .flatMap(existingLoad -> {
                     Load updatedLoad = new Load(
                             existingLoad.id(),
@@ -189,7 +192,7 @@ public class LoadsController {
                             load.caseOverallLength(),
                             load.neckTension(),
                             load.rifleId());
-                    return loadRepository.save(updatedLoad);
+                    return loadService.updateLoad(updatedLoad);
                 })
                 .map(updatedLoad -> {
                     log.info("Updated load with id: {}", updatedLoad.id());
@@ -208,8 +211,8 @@ public class LoadsController {
     public Mono<ResponseEntity<Void>> deleteLoad(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of load") @PathVariable Long id) {
-        return loadRepository.findByIdAndOwnerId(id, userId)
-                .flatMap(existingLoad -> loadRepository.delete(existingLoad)
+        return loadService.getLoadById(id, userId)
+                .flatMap(existingLoad -> loadService.deleteLoad(existingLoad)
                         .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT)))
                         .doOnSuccess(_ -> log.info("Deleted load with id: {}", id)))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
