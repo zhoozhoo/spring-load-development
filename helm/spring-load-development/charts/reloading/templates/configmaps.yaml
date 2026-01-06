@@ -395,7 +395,7 @@ data:
         mcp:
           server:
             name: reloading-mcp-server
-            version: {{ .Values.global.imageTag | quote }}
+            version: {{ include "reloading.imageTag" . | quote }}
             type: ASYNC
             sse-endpoint: /sse
             sse-message-endpoint: /mcp/messages

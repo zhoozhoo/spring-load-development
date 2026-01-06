@@ -2,9 +2,9 @@
 name: spring-load-development
 namespace: reloading
 
-# Image settings (can be overridden by parent global values)
+# Image settings (registry can be overridden by parent global values)
+# Note: imageTag is now managed centrally via global.versions.microservices
 imageRegistry: "zhoozhoo.ca"
-imageTag: "0.1.1-SNAPSHOT"
 
 # OpenTelemetry Collector endpoint for microservices
 otelCollector:
@@ -36,7 +36,6 @@ apiGateway:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/api-gateway
-    tag: "0.1.1-SNAPSHOT"
     pullPolicy: IfNotPresent
   
   service:
@@ -84,7 +83,6 @@ loadsService:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/loads-service
-    tag: "0.1.1-SNAPSHOT"
     pullPolicy: IfNotPresent
   
   service:
@@ -121,7 +119,6 @@ componentsService:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/components-service
-    tag: "0.1.1-SNAPSHOT"
     pullPolicy: IfNotPresent
   
   service:
@@ -158,7 +155,6 @@ riflesService:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/rifles-service
-    tag: "0.1.1-SNAPSHOT"
     pullPolicy: IfNotPresent
   
   service:
@@ -195,7 +191,6 @@ mcpServer:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/mcp-server
-    tag: "0.1.1-SNAPSHOT"
     pullPolicy: IfNotPresent
   
   service:

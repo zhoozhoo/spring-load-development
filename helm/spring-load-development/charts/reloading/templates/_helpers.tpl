@@ -49,6 +49,20 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+Get the microservice image tag - single source of truth for version
+Order of precedence:
+1. global.versions.microservices (from parent chart)
+2. Chart.AppVersion (fallback for standalone deployment)
+*/}}
+{{- define "reloading.imageTag" -}}
+{{- if and .Values.global .Values.global.versions -}}
+  {{- .Values.global.versions.microservices | default .Chart.AppVersion -}}
+{{- else -}}
+  {{- .Chart.AppVersion -}}
+{{- end -}}
+{{- end }}
+
+{{/*
 Create the name of the service account to use
 */}}
 {{- define "reloading.serviceAccountName" -}}
@@ -141,7 +155,7 @@ spec:
         {{- include "reloading.podSecurityContext" $context | nindent 8 }}
       containers:
       - name: {{ $componentName }}
-        image: {{ $config.image.repository }}:{{ if $context.Values.global }}{{ $context.Values.global.versions.microservices | default $config.image.tag | default $context.Chart.AppVersion }}{{ else }}{{ $config.image.tag | default $context.Chart.AppVersion }}{{ end }}
+        image: {{ $config.image.repository }}:{{ include "reloading.imageTag" $context }}
         imagePullPolicy: {{ $config.image.pullPolicy | default "IfNotPresent" }}
         securityContext:
           {{- include "reloading.containerSecurityContext" $context | nindent 10 }}
