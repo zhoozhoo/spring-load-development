@@ -561,16 +561,15 @@ flowchart LR
     Prom --> Graf
     Loki --> Graf
     Tempo --> Graf
-    AdminServer --> Microservices
 
-    classDef clientStyle fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
-    classDef serviceStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
-    classDef infraStyle fill:#fafafa,stroke:#616161,stroke-width:2px
-    classDef dataStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    classDef obsStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef clientStyle fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000000
+    classDef serviceStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
+    classDef infraStyle fill:#fafafa,stroke:#616161,stroke-width:2px,color:#000000
+    classDef dataStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
+    classDef obsStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000000
     class User,Copilot clientStyle
-    class LoadsService,RiflesService,ComponentsService,MCPServer serviceStyle
-    class ConfigServer,DiscoveryServer,Keycloak,AdminServer infraStyle
+    class APIGateway,LoadsService,RiflesService,ComponentsService,MCPServer serviceStyle
+    class ConfigServer,DiscoveryServer,Keycloak infraStyle
     class Postgres dataStyle
     class OTEL,Prom,Loki,Tempo,Graf obsStyle
 ....
@@ -620,13 +619,11 @@ erDiagram
         VARCHAR(255) owner_id NOT NULL
         VARCHAR(255) name NOT NULL
         TEXT description
-        VARCHAR(32) measurement_units NOT NULL "CHECK (Imperial, Metric)"
         VARCHAR(32) caliber NOT NULL
-        DOUBLE_PRECISION barrel_length
+        JSONB barrel_length "Quantity with value and unit"
         VARCHAR(32) barrel_contour
-        VARCHAR(32) twist_rate
-        VARCHAR(32) rifling
-        DOUBLE_PRECISION free_bore
+        JSONB rifling "twistRate (Quantity) and twistDirection"
+        JSONB zeroing "sightHeight and zeroDistance (Quantity)"
     }
     BULLETS {
         BIGSERIAL id PK
