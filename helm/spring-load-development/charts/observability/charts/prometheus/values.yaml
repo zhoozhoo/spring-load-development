@@ -33,6 +33,14 @@ nodePort:
   enabled: true
   port: 30091
 
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
 securityContext:
   runAsNonRoot: true
   runAsUser: 1000

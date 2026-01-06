@@ -4,7 +4,7 @@ namespace: reloading
 
 # Image settings (can be overridden by parent global values)
 imageRegistry: "zhoozhoo.ca"
-imageTag: "0.1.0-SNAPSHOT"
+imageTag: "0.1.1-SNAPSHOT"
 
 # OpenTelemetry Collector endpoint for microservices
 otelCollector:
@@ -16,6 +16,7 @@ keycloak:
   realm: "reloading"
   clientId: "reloading-client"
   clientSecret: "2EvQuluZfxaaRms8V4NhzBDWzVCSXtty"
+  namespace: keycloak
 
 # PostgreSQL configuration
 postgresql:
@@ -24,6 +25,10 @@ postgresql:
     username: user
     password: password
 
+# Observability configuration
+observability:
+  namespace: observability
+
 # API Gateway configuration
 apiGateway:
   enabled: true
@@ -31,7 +36,7 @@ apiGateway:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/api-gateway
-    tag: "0.1.0-SNAPSHOT"
+    tag: "0.1.1-SNAPSHOT"
     pullPolicy: IfNotPresent
   
   service:
@@ -59,8 +64,14 @@ apiGateway:
   
   env: []
   
+  # Pod Disruption Budget for high availability
   podDisruptionBudget:
+    enabled: true
     minAvailable: 1
+  
+  # Network Policy for zero-trust security
+  networkPolicy:
+    enabled: true
   
   nodeSelector: {}
   tolerations: []
@@ -73,7 +84,7 @@ loadsService:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/loads-service
-    tag: "0.1.0-SNAPSHOT"
+    tag: "0.1.1-SNAPSHOT"
     pullPolicy: IfNotPresent
   
   service:
@@ -90,8 +101,14 @@ loadsService:
   
   env: []
   
+  # Pod Disruption Budget for high availability
   podDisruptionBudget:
+    enabled: true
     minAvailable: 1
+  
+  # Network Policy for zero-trust security
+  networkPolicy:
+    enabled: true
   
   nodeSelector: {}
   tolerations: []
@@ -104,7 +121,7 @@ componentsService:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/components-service
-    tag: "0.1.0-SNAPSHOT"
+    tag: "0.1.1-SNAPSHOT"
     pullPolicy: IfNotPresent
   
   service:
@@ -121,8 +138,14 @@ componentsService:
   
   env: []
   
+  # Pod Disruption Budget for high availability
   podDisruptionBudget:
+    enabled: true
     minAvailable: 1
+  
+  # Network Policy for zero-trust security
+  networkPolicy:
+    enabled: true
   
   nodeSelector: {}
   tolerations: []
@@ -135,7 +158,7 @@ riflesService:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/rifles-service
-    tag: "0.1.0-SNAPSHOT"
+    tag: "0.1.1-SNAPSHOT"
     pullPolicy: IfNotPresent
   
   service:
@@ -152,8 +175,14 @@ riflesService:
   
   env: []
   
+  # Pod Disruption Budget for high availability
   podDisruptionBudget:
+    enabled: true
     minAvailable: 1
+  
+  # Network Policy for zero-trust security
+  networkPolicy:
+    enabled: true
   
   nodeSelector: {}
   tolerations: []
@@ -166,7 +195,7 @@ mcpServer:
   
   image:
     repository: zhoozhoo.ca/spring-load-development/mcp-server
-    tag: "0.1.0-SNAPSHOT"
+    tag: "0.1.1-SNAPSHOT"
     pullPolicy: IfNotPresent
   
   service:
@@ -183,8 +212,14 @@ mcpServer:
   
   env: []
   
+  # Pod Disruption Budget for high availability
   podDisruptionBudget:
+    enabled: true
     minAvailable: 1
+  
+  # Network Policy for zero-trust security
+  networkPolicy:
+    enabled: true
   
   nodeSelector: {}
   tolerations: []
