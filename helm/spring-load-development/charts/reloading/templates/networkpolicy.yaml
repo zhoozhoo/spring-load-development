@@ -1,0 +1,28 @@
+{{/*
+NetworkPolicies for all microservices
+*/}}
+
+{{/* API Gateway NetworkPolicy */}}
+{{- if .Values.apiGateway.enabled }}
+{{- include "reloading.microservice.networkPolicy" (dict "componentName" "api-gateway" "config" .Values.apiGateway "context" . "needsDatabase" false) }}
+{{- end }}
+
+{{/* Loads Service NetworkPolicy */}}
+{{- if .Values.loadsService.enabled }}
+{{- include "reloading.microservice.networkPolicy" (dict "componentName" "loads-service" "config" .Values.loadsService "context" . "needsDatabase" true) }}
+{{- end }}
+
+{{/* Components Service NetworkPolicy */}}
+{{- if .Values.componentsService.enabled }}
+{{- include "reloading.microservice.networkPolicy" (dict "componentName" "components-service" "config" .Values.componentsService "context" . "needsDatabase" true) }}
+{{- end }}
+
+{{/* Rifles Service NetworkPolicy */}}
+{{- if .Values.riflesService.enabled }}
+{{- include "reloading.microservice.networkPolicy" (dict "componentName" "rifles-service" "config" .Values.riflesService "context" . "needsDatabase" true) }}
+{{- end }}
+
+{{/* MCP Server NetworkPolicy */}}
+{{- if .Values.mcpServer.enabled }}
+{{- include "reloading.microservice.networkPolicy" (dict "componentName" "mcp-server" "config" .Values.mcpServer "context" . "needsDatabase" false) }}
+{{- end }}
