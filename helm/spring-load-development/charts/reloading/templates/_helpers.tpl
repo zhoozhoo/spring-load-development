@@ -309,6 +309,7 @@ Generate microservice PodDisruptionBudget
 {{- $componentName := .componentName }}
 {{- $config := .config }}
 {{- $context := .context }}
+{{- if $config.podDisruptionBudget.enabled }}
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
@@ -326,4 +327,114 @@ spec:
   selector:
     matchLabels:
       {{- include "reloading.microservice.selectorLabels" (dict "componentName" $componentName "context" $context) | nindent 6 }}
+{{- end }}
+{{- end }}
+
+{{/*
+Generate microservice NetworkPolicy
+*/}}
+{{- define "reloading.microservice.networkPolicy" -}}
+{{- $componentName := .componentName }}
+{{- $config := .config }}
+{{- $context := .context }}
+{{- $needsDatabase := .needsDatabase | default false }}
+{{- if $config.networkPolicy.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "reloading.fullname" $context }}-{{ $componentName }}-netpol
+  namespace: {{ $context.Values.namespace }}
+  labels:
+    {{- include "reloading.microservice.labels" (dict "componentName" $componentName "context" $context) | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "reloading.microservice.selectorLabels" (dict "componentName" $componentName "context" $context) | nindent 6 }}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  {{- if eq $componentName "api-gateway" }}
+  # API Gateway accepts traffic from Ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 8080
+  {{- else }}
+  # Other services accept traffic from API Gateway
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/component: api-gateway
+    ports:
+    - protocol: TCP
+      port: 8080
+  {{- end }}
+  egress:
+  # Allow DNS resolution
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  {{- if eq $componentName "api-gateway" }}
+  # API Gateway needs to reach all microservices
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: {{ include "reloading.name" $context }}
+    ports:
+    - protocol: TCP
+      port: 8080
+  {{- end }}
+  {{- if $needsDatabase }}
+  # Allow access to PostgreSQL
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: {{ $context.Values.postgresql.namespace | default "postgres" }}
+    ports:
+    - protocol: TCP
+      port: 5432
+  {{- end }}
+  # Allow access to Keycloak for OAuth2/OIDC
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: {{ $context.Values.keycloak.namespace | default "keycloak" }}
+    ports:
+    - protocol: TCP
+      port: 8080
+  # Allow access to Discovery Server (Eureka)
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: {{ include "reloading.name" $context }}
+          app.kubernetes.io/component: discovery-server
+    ports:
+    - protocol: TCP
+      port: 8761
+  # Allow access to OpenTelemetry Collector
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: {{ $context.Values.observability.namespace | default "observability" }}
+    ports:
+    - protocol: TCP
+      port: 4317
+    - protocol: TCP
+      port: 4318
+  # Allow HTTPS for external APIs (e.g., Spring AI)
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443
+{{- end }}
 {{- end }}
