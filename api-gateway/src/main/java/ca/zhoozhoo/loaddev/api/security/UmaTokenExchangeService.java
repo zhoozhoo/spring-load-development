@@ -6,7 +6,6 @@ import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 
 import java.time.Duration;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
@@ -20,9 +19,11 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ca.zhoozhoo.loaddev.api.config.CacheConfiguration;
+import ca.zhoozhoo.loaddev.api.config.SecurityConfiguration;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Service responsible for exchanging OAuth2 access tokens for UMA permission tokens.
@@ -73,18 +74,25 @@ public class UmaTokenExchangeService {
 
     private static final Duration RETRY_DELAY = ofMillis(100);
 
-    @Qualifier("keycloakWebClient")
-    @Autowired
-    private WebClient keycloakWebClient;
+    private final WebClient keycloakWebClient;
 
-    @Value("${spring.security.oauth2.client.provider.keycloak.token-uri}")
-    private String tokenUri;
+    private final String tokenUri;
 
-    @Value("${spring.security.oauth2.client.registration.api-gateway.client-id}")
-    private String clientId;
+    private final String clientId;
 
-    @Value("${spring.security.oauth2.client.registration.api-gateway.client-secret}")
-    private String clientSecret;
+    private final String clientSecret;
+
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public UmaTokenExchangeService(
+            @Qualifier("keycloakWebClient") WebClient keycloakWebClient,
+            @Value("${spring.security.oauth2.client.provider.keycloak.token-uri}") String tokenUri,
+            @Value("${spring.security.oauth2.client.registration.api-gateway.client-id}") String clientId,
+            @Value("${spring.security.oauth2.client.registration.api-gateway.client-secret}") String clientSecret) {
+        this.keycloakWebClient = keycloakWebClient;
+        this.tokenUri = tokenUri;
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+    }
 
     /**
      * Exchanges a standard OAuth2 access token for a UMA permission token.

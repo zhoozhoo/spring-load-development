@@ -33,7 +33,7 @@ import tools.jackson.databind.annotation.JsonSerialize;
  * @author Zhubin Salehi
  */
 @Table(name = "projectiles")
-public record Projectile(
+public record Projectile (
 
         @Id Long id,
 
@@ -60,7 +60,7 @@ public record Projectile(
 
         @NotNull(message = "Quantity per box is required")
         @Positive(message = "Quantity per box must be positive")
-        @Column("quantity_per_box") Integer quantityPerBox) {
+        @Column("quantity_per_box") Integer quantityPerBox) implements Component {
 
     /**
      * Custom equals() excluding ownerId to focus on business equality.

@@ -21,4 +21,10 @@
         <Method name="formatLoadInfo"/>
         <Bug pattern="IMPROPER_UNICODE"/>
     </Match>
+    
+    <!-- Exclude MapStruct-generated mapper implementations - false positives on generated code -->
+    <Match>
+        <Class name="~.*MapperImpl"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
 </FindBugsFilter>

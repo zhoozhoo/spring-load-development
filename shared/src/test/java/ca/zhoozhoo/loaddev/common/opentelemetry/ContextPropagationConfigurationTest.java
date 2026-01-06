@@ -27,7 +27,7 @@ class ContextPropagationConfigurationTest {
     @Test
     void contextPropagatingTaskDecoratorCanDecorateRunnable() {
         contextRunner.run(ctx -> {
-            assertThat(ctx.getBean(ContextPropagatingTaskDecorator.class).decorate(() -> System.out.println("test")))
+            assertThat(ctx.getBean(ContextPropagatingTaskDecorator.class).decorate(() -> { /* test runnable */ }))
                     .isNotNull();
         });
     }

@@ -1,11 +1,13 @@
 package ca.zhoozhoo.loaddev.loads.service;
 
+import static systems.uom.ucum.UCUM.FOOT_INTERNATIONAL;
+import static tech.units.indriya.unit.Units.SECOND;
+
 import java.util.List;
 
 import javax.measure.Unit;
 import javax.measure.quantity.Speed;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
@@ -18,34 +20,90 @@ import ca.zhoozhoo.loaddev.loads.model.Shot;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import static systems.uom.ucum.UCUM.FOOT_INTERNATIONAL;
-import static tech.units.indriya.unit.Units.SECOND;
-
 /**
- * Service class for handling operations related to Loads, Groups, and Shots.
+ * Service class for managing Group entities.
  * <p>
- * This service provides business logic for calculating ballistic statistics from shooting data
- * with type-safe unit handling. It computes average velocity, standard deviation, and extreme spread
- * using {@link javax.measure.Quantity} types. The service coordinates between repository layers and 
- * mappers to transform domain models into DTOs for API responses.
+ * This service provides reactive operations for Groups.
+ * It handles CRUD operations ensuring data isolation by user ID.
+ * It also calculates group statistics based on shot data.
  * </p>
  *
  * @author Zhubin Salehi
  */
 @Service
-public class LoadsService {
+public class GroupService {
 
     @SuppressWarnings("unchecked")
     private static final Unit<Speed> DEFAULT_VELOCITY_UNIT = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
 
-    @Autowired
-    private GroupRepository groupRepository;
+    private final GroupRepository groupRepository;
+    private final ShotRepository shotRepository;
+    private final GroupStatisticsMapper groupStatisticsMapper;
 
-    @Autowired
-    private ShotRepository shotRepository;
+    /**
+     * Constructs a new GroupService with required repository and mapper.
+     *
+     * @param groupRepository       the repository for Group entities
+     * @param shotRepository        the repository for Shot entities
+     * @param groupStatisticsMapper the mapper for group statistics
+     */
+    public GroupService(GroupRepository groupRepository, ShotRepository shotRepository, GroupStatisticsMapper groupStatisticsMapper) {
+        this.groupRepository = groupRepository;
+        this.shotRepository = shotRepository;
+        this.groupStatisticsMapper = groupStatisticsMapper;
+    }
 
-    @Autowired
-    private GroupStatisticsMapper groupStatisticsMapper;
+    /**
+     * Retrieves all groups for a specific load and user.
+     *
+     * @param loadId the ID of the load
+     * @param userId the ID of the user
+     * @return a Flux of Group entities
+     */
+    public Flux<Group> getAllGroups(Long loadId, String userId) {
+        return groupRepository.findAllByLoadIdAndOwnerId(loadId, userId);
+    }
+
+    /**
+     * Retrieves a specific group by ID and user ID.
+     *
+     * @param id     the ID of the group
+     * @param userId the ID of the user
+     * @return a Mono containing the Group if found, or empty
+     */
+    public Mono<Group> getGroupById(Long id, String userId) {
+        return groupRepository.findByIdAndOwnerId(id, userId);
+    }
+
+    /**
+     * Creates a new group.
+     *
+     * @param group the Group entity to create
+     * @return a Mono containing the created Group
+     */
+    public Mono<Group> createGroup(Group group) {
+        return groupRepository.save(group);
+    }
+
+    /**
+     * Updates an existing group.
+     *
+     * @param group the Group entity to update
+     * @return a Mono containing the updated Group
+     */
+    public Mono<Group> updateGroup(Group group) {
+        return groupRepository.save(group);
+    }
+
+    /**
+     * Deletes a group.
+     *
+     * @param group the Group entity to delete
+     * @return a Mono<Void> that completes when deletion is finished
+     */
+    public Mono<Void> deleteGroup(Group group) {
+        return groupRepository.delete(group);
+    }
 
     /**
      * Retrieves statistics for a specific group belonging to a user.

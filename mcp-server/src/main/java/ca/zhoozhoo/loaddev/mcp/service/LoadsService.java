@@ -6,7 +6,6 @@ import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -18,6 +17,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 import ca.zhoozhoo.loaddev.mcp.dto.GroupDto;
 import ca.zhoozhoo.loaddev.mcp.dto.LoadDto;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema.JSONRPCResponse.JSONRPCError;
 import lombok.extern.log4j.Log4j2;
@@ -42,14 +42,16 @@ import reactor.core.publisher.Mono;
 @Log4j2
 public class LoadsService {
 
-    @Autowired
-    private WebClient webClient;
+    private final WebClient webClient;
+    private final DiscoveryClient discoveryClient;
+    private final String loadsServiceName;
 
-    @Autowired
-    private DiscoveryClient discoveryClient;
-
-    @Value("${service.loads.name:loads-service}")
-    private String loadsServiceName;
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public LoadsService(WebClient webClient, DiscoveryClient discoveryClient, @Value("${service.loads.name:loads-service}") String loadsServiceName) {
+        this.webClient = webClient;
+        this.discoveryClient = discoveryClient;
+        this.loadsServiceName = loadsServiceName;
+    }
 
     /**
      * Retrieves all loads accessible to the authenticated user.

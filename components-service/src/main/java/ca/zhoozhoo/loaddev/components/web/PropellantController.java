@@ -7,7 +7,7 @@ import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 import static reactor.core.publisher.Mono.just;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,13 +21,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import ca.zhoozhoo.loaddev.components.dao.PropellantRepository;
 import ca.zhoozhoo.loaddev.components.model.Propellant;
+import ca.zhoozhoo.loaddev.components.service.PropellantService;
 import ca.zhoozhoo.loaddev.security.CurrentUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -62,8 +63,12 @@ import reactor.core.publisher.Mono;
 @PreAuthorize("hasRole('RELOADER')")
 public class PropellantController {
 
-    @Autowired
-    private PropellantRepository propellantRepository;
+    private final PropellantService propellantService;
+
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public PropellantController(PropellantService propellantService) {
+        this.propellantService = propellantService;
+    }
 
     @Operation(summary = "Get all propellants", security = {
             @SecurityRequirement(name = "Oauth2Security", scopes = "components:view") })
@@ -72,7 +77,7 @@ public class PropellantController {
     @GetMapping
     @PreAuthorize("hasAuthority('components:view')")
     public Flux<Propellant> getAllPropellants(@Parameter(hidden = true) @CurrentUser String userId) {
-        return propellantRepository.findAllByOwnerId(userId);
+        return propellantService.getAllPropellants(userId);
     }
 
     @Operation(summary = "Full-text search propellants", security = {
@@ -83,7 +88,7 @@ public class PropellantController {
     @PreAuthorize("hasAuthority('components:view')")
     public Flux<Propellant> searchPropellants(@Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Full text search query") @RequestParam("query") String query) {
-        return propellantRepository.searchByOwnerIdAndQuery(userId, query);
+        return propellantService.searchPropellants(userId, query);
     }
 
     @Operation(summary = "Get a propellant by its id", security = {
@@ -97,7 +102,7 @@ public class PropellantController {
     public Mono<ResponseEntity<Propellant>> getPropellant(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of propellant") @PathVariable Long id) {
-        return propellantRepository.findByIdAndOwnerId(id, userId)
+        return propellantService.getPropellantById(id, userId)
                 .doOnNext(propellant -> log.debug("Found propellant: {}", propellant))
                 .map(propellant -> ok(propellant))
                 .defaultIfEmpty(notFound().build());
@@ -114,6 +119,9 @@ public class PropellantController {
     public Mono<ResponseEntity<Propellant>> createPropellant(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Valid @RequestBody Propellant propellant) {
+        if (userId == null || userId.isBlank()) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).<Propellant>build());
+        }
         return just(propellant)
                 .map(p -> new Propellant(
                         null,
@@ -122,7 +130,7 @@ public class PropellantController {
                         p.type(),
                         p.cost(),
                         p.weightPerContainer()))
-                .flatMap(propellantRepository::save)
+                .flatMap(propellantService::createPropellant)
                 .doOnNext(savedPropellant -> log.debug("Created new propellant with id: {}", savedPropellant.id()))
                 .map(savedPropellant -> status(CREATED).body(savedPropellant));
     }
@@ -139,9 +147,9 @@ public class PropellantController {
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of propellant") @PathVariable Long id,
             @Valid @RequestBody Propellant propellant) {
-        return propellantRepository.findByIdAndOwnerId(id, userId)
+        return propellantService.getPropellantById(id, userId)
                 .flatMap(existingPropellant -> 
-                     propellantRepository.save(new Propellant(
+                     propellantService.updatePropellant(new Propellant(
                             existingPropellant.id(),
                             existingPropellant.ownerId(),
                             propellant.manufacturer(),
@@ -163,8 +171,8 @@ public class PropellantController {
     public Mono<ResponseEntity<Void>> deletePropellant(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Id of propellant") @PathVariable Long id) {
-        return propellantRepository.findByIdAndOwnerId(id, userId)
-                .flatMap(existingPropellant -> propellantRepository.delete(existingPropellant)
+        return propellantService.getPropellantById(id, userId)
+                .flatMap(existingPropellant -> propellantService.deletePropellant(existingPropellant)
                         .thenReturn(ResponseEntity.noContent().<Void>build())
                         .doOnSuccess(_ -> log.debug("Deleted propellant with id: {}", id)))
                 .defaultIfEmpty(ResponseEntity.notFound().build());

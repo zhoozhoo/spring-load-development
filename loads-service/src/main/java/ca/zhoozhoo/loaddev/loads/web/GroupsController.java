@@ -8,7 +8,6 @@ import static org.springframework.http.ResponseEntity.notFound;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,11 +19,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
 import ca.zhoozhoo.loaddev.loads.dto.GroupStatisticsDto;
 import ca.zhoozhoo.loaddev.loads.model.Group;
+import ca.zhoozhoo.loaddev.loads.service.GroupService;
 import ca.zhoozhoo.loaddev.security.CurrentUser;
-import ca.zhoozhoo.loaddev.loads.service.LoadsService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -78,12 +77,13 @@ import reactor.core.publisher.Mono;
 @Log4j2
 @PreAuthorize("hasRole('RELOADER')")
 public class GroupsController {
+    
+    private final GroupService groupService;
 
-    @Autowired
-    private GroupRepository groupRepository;
-
-    @Autowired
-    private LoadsService loadsService;
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public GroupsController(GroupService groupService) {
+        this.groupService = groupService;
+    }
 
     @Operation(summary = "Get all groups by load id", description = "Retrieves all groups associated with a specific load for the authenticated user.")
     @SecurityRequirement(name = "Oauth2Security", scopes = "view")
@@ -93,7 +93,7 @@ public class GroupsController {
     public Flux<Group> getAllGroupsByLoadId(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(in = PATH, description = "Id of load", required = true) @PathVariable Long loadId) {
-        return groupRepository.findAllByLoadIdAndOwnerId(loadId, userId);
+        return groupService.getAllGroups(loadId, userId);
     }
 
     @Operation(summary = "Get a group by its id", description = "Retrieves detailed information about a specific group by its identifier.")
@@ -106,7 +106,7 @@ public class GroupsController {
     public Mono<ResponseEntity<Group>> getGroupById(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id) {
-        return groupRepository.findByIdAndOwnerId(id, userId)
+        return groupService.getGroupById(id, userId)
                 .map(group -> ok(group))
                 .defaultIfEmpty(notFound().build());
     }
@@ -121,7 +121,7 @@ public class GroupsController {
     public Mono<ResponseEntity<GroupStatisticsDto>> getGroupStatistics(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id) {
-        return loadsService.getGroupStatistics(id, userId)
+        return groupService.getGroupStatistics(id, userId)
                 .map(stats -> ok(stats))
                 .defaultIfEmpty(notFound().build());
     }
@@ -144,7 +144,7 @@ public class GroupsController {
                 group.powderCharge(),
                 group.targetRange(),
                 group.groupSize());
-        return groupRepository.save(newGroup)
+        return groupService.createGroup(newGroup)
                 .map(savedGroup -> {
                     log.info("Created new group with id: {}", savedGroup.id());
                     return status(CREATED).body(savedGroup);
@@ -163,7 +163,7 @@ public class GroupsController {
     public Mono<ResponseEntity<Group>> updateGroup(@Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Group to update") @Valid @RequestBody Group group) {
-        return groupRepository.findByIdAndOwnerId(id, userId)
+        return groupService.getGroupById(id, userId)
                 .flatMap(existingGroup -> {
                     var updatedGroup = new Group(
                             existingGroup.id(),
@@ -173,7 +173,7 @@ public class GroupsController {
                             group.powderCharge(),
                             group.targetRange(),
                             group.groupSize());
-                    return groupRepository.save(updatedGroup);
+                    return groupService.updateGroup(updatedGroup);
                 })
                 .map(updatedGroup -> {
                     log.info("Updated group with id: {}", updatedGroup.id());
@@ -193,8 +193,8 @@ public class GroupsController {
     public Mono<ResponseEntity<Void>> deleteGroup(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id) {
-        return groupRepository.findByIdAndOwnerId(id, userId)
-                .flatMap(existingGroup -> groupRepository.delete(existingGroup)
+        return groupService.getGroupById(id, userId)
+                .flatMap(existingGroup -> groupService.deleteGroup(existingGroup)
                         .then(Mono.just(new ResponseEntity<Void>(NO_CONTENT)))
                         .doOnSuccess(_ -> log.info("Deleted group with id: {}", id)))
                 .defaultIfEmpty(new ResponseEntity<>(NOT_FOUND));
