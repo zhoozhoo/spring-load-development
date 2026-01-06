@@ -1,15 +1,15 @@
 dependencies:
 - name: observability
   repository: ""
-  version: 0.1.0-SNAPSHOT
+  version: 0.1.1-SNAPSHOT
 - name: keycloak
   repository: ""
-  version: 0.1.0-SNAPSHOT
+  version: 0.1.1-SNAPSHOT
 - name: postgresql
   repository: ""
-  version: 0.1.0-SNAPSHOT
+  version: 0.1.1-SNAPSHOT
 - name: reloading
   repository: ""
-  version: 0.1.0-SNAPSHOT
+  version: 0.1.1-SNAPSHOT
 digest: sha256:13bc52afb0cee8f4cbe270e2119d89bee004ae6201a3d8cf5afa6dc5227815bd
 generated: "2025-12-02T09:25:13.079494706-05:00"

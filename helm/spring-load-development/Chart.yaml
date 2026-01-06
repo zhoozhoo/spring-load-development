@@ -10,14 +10,14 @@ maintainers:
 
 dependencies:
   - name: observability
-    version: 0.1.0-SNAPSHOT
+    version: 0.1.1-SNAPSHOT
     condition: observability.enabled
   - name: keycloak
-    version: 0.1.0-SNAPSHOT
+    version: 0.1.1-SNAPSHOT
     condition: keycloak.enabled
   - name: postgresql
-    version: 0.1.0-SNAPSHOT
+    version: 0.1.1-SNAPSHOT
     condition: postgresql.enabled
   - name: reloading
-    version: 0.1.0-SNAPSHOT
+    version: 0.1.1-SNAPSHOT
     condition: reloading.enabled
