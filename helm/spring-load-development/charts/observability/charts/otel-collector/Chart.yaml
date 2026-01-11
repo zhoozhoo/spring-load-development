@@ -3,4 +3,4 @@ name: otel-collector
 description: OpenTelemetry Collector
 type: application
 version: 0.1.1-SNAPSHOT
-appVersion: 0.142.0
+appVersion: 0.143.0

@@ -3,4 +3,4 @@ name: prometheus
 description: Prometheus monitoring system
 type: application
 version: 0.1.1-SNAPSHOT
-appVersion: v3.8.1
+appVersion: v3.9.1
