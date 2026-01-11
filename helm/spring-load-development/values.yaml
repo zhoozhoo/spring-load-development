@@ -15,12 +15,12 @@ global:
     # Observability stack
     loki: "3.6.3"
     tempo: "2.9.0"
-    prometheus: "v3.8.1"
+    prometheus: "v3.9.1"
     grafana: "12.3.1"
-    otelCollector: "0.142.0"
+    otelCollector: "0.143.0"
     
     # Identity and database
-    keycloak: "26.4"
+    keycloak: "26.5"
     postgresql: "18.1"
 
 # Observability subchart (Grafana, Prometheus, Loki, Tempo, OTEL Collector)

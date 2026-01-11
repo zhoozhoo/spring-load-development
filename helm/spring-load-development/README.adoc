@@ -263,7 +263,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 === Keycloak Authentication Server
 
-* *Version*: 26.4
+* *Version*: 26.5
 * *Namespace*: `keycloak`
 * *Admin Console*: http://localhost:30080
 * *Admin Credentials*: `admin` / `admin`
@@ -360,7 +360,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== OpenTelemetry Collector
 
-* *Version*: 0.142.0
+* *Version*: 0.143.0
 * *Namespace*: `observability`
 * *GRPC Port*: 30317
 * *Metrics Port*: 30889
@@ -394,10 +394,10 @@ global:
     tempo: "2.9.0"
     prometheus: "v3.8.1"
     grafana: "12.3.1"
-    otelCollector: "0.142.0"
+    otelCollector: "0.143.0"
     
     # Identity and database
-    keycloak: "26.4"
+    keycloak: "26.5"
     postgresql: "18.1"
 ----
 
@@ -1047,7 +1047,7 @@ spring-load-development/
     │       │       ├── pvc.yaml          # Persistent storage
     │       │       └── service.yaml      # Loki service with NodePort 30100
     │       ├── otel-collector/  # OpenTelemetry Collector sub-subchart
-    │       │   ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 0.142.0
+    │       │   ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 0.143.0
     │       │   ├── values.yaml  # OTel Collector configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # OTel Collector helper functions
