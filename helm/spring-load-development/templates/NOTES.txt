@@ -34,7 +34,7 @@ QUICK START
    API Gateway: http://<node-ip>:30090 (default NodePort)
    
    Or use port-forward:
-   kubectl port-forward svc/api-gateway-service 8080:8080 -n reloading
+  kubectl port-forward svc/api-gateway 8080:8080 -n reloading
    echo "Visit http://localhost:8080"
 
 3. Access monitoring dashboards:
