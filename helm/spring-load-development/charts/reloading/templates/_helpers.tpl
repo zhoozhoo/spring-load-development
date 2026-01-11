@@ -171,32 +171,40 @@ spec:
         {{- if $config.env }}
         {{- toYaml $config.env | nindent 8 }}
         {{- end }}
+        {{- if $config.probes.liveness.enabled }}
         livenessProbe:
           httpGet:
-            path: /actuator/health/liveness
+            path: {{ $config.probes.liveness.path }}
             port: http
-          initialDelaySeconds: 60
-          periodSeconds: 30
-          timeoutSeconds: 10
-          failureThreshold: 3
+          initialDelaySeconds: {{ $config.probes.liveness.initialDelaySeconds }}
+          periodSeconds: {{ $config.probes.liveness.periodSeconds }}
+          timeoutSeconds: {{ $config.probes.liveness.timeoutSeconds }}
+          failureThreshold: {{ $config.probes.liveness.failureThreshold }}
+        {{- end }}
+        {{- if $config.probes.readiness.enabled }}
         readinessProbe:
           httpGet:
-            path: /actuator/health/readiness
+            path: {{ $config.probes.readiness.path }}
             port: http
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
+          initialDelaySeconds: {{ $config.probes.readiness.initialDelaySeconds }}
+          periodSeconds: {{ $config.probes.readiness.periodSeconds }}
+          timeoutSeconds: {{ $config.probes.readiness.timeoutSeconds }}
+          failureThreshold: {{ $config.probes.readiness.failureThreshold }}
+        {{- end }}
         volumeMounts:
         - name: log4j2-volume
           mountPath: /etc/config
           readOnly: true
+        - name: tmp-volume
+          mountPath: /tmp
         resources:
           {{- toYaml $config.resources | nindent 10 }}
       volumes:
       - name: log4j2-volume
         configMap:
           name: log4j2-config
+      - name: tmp-volume
+        emptyDir: {}
       {{- with $config.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -246,6 +254,7 @@ Generate microservice ingress
 */}}
 {{- define "reloading.microservice.ingress" -}}
 {{- $componentName := .componentName }}
+{{- $serviceName := .serviceName | default (printf "%s-%s" (include "reloading.fullname" .context) $componentName) }}
 {{- $config := .config }}
 {{- $context := .context }}
 {{- if $config.ingress.enabled }}
@@ -282,7 +291,7 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ include "reloading.fullname" $context }}-{{ $componentName }}
+                name: {{ $serviceName }}
                 port:
                   number: {{ $config.service.port | default 8080 }}
           {{- end }}
@@ -311,7 +320,7 @@ runAsUser: {{ .Values.securityContext.runAsUser | default 1000 }}
 capabilities:
   drop:
   - ALL
-readOnlyRootFilesystem: false
+readOnlyRootFilesystem: true
 seccompProfile:
   type: RuntimeDefault
 {{- end }}
@@ -374,7 +383,7 @@ spec:
   - from:
     - namespaceSelector:
         matchLabels:
-          name: ingress-nginx
+          kubernetes.io/metadata.name: ingress-nginx
     ports:
     - protocol: TCP
       port: 8080
@@ -393,7 +402,7 @@ spec:
   - to:
     - namespaceSelector:
         matchLabels:
-          name: kube-system
+          kubernetes.io/metadata.name: kube-system
     ports:
     - protocol: UDP
       port: 53
@@ -412,7 +421,7 @@ spec:
   - to:
     - namespaceSelector:
         matchLabels:
-          name: {{ $context.Values.postgresql.namespace | default "postgres" }}
+          kubernetes.io/metadata.name: {{ $context.Values.postgresql.namespace | default "postgres" }}
     ports:
     - protocol: TCP
       port: 5432
@@ -421,7 +430,7 @@ spec:
   - to:
     - namespaceSelector:
         matchLabels:
-          name: {{ $context.Values.keycloak.namespace | default "keycloak" }}
+          kubernetes.io/metadata.name: {{ $context.Values.keycloak.namespace | default "keycloak" }}
     ports:
     - protocol: TCP
       port: 8080
@@ -438,7 +447,7 @@ spec:
   - to:
     - namespaceSelector:
         matchLabels:
-          name: {{ $context.Values.observability.namespace | default "observability" }}
+          kubernetes.io/metadata.name: {{ $context.Values.observability.namespace | default "observability" }}
     ports:
     - protocol: TCP
       port: 4317
@@ -446,7 +455,8 @@ spec:
       port: 4318
   # Allow HTTPS for external APIs (e.g., Spring AI)
   - to:
-    - namespaceSelector: {}
+    - ipBlock:
+        cidr: 0.0.0.0/0
     ports:
     - protocol: TCP
       port: 443

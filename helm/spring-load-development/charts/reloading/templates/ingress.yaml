@@ -3,5 +3,5 @@ Ingress for API Gateway (only service with ingress configuration)
 */}}
 
 {{- if .Values.apiGateway.enabled }}
-{{- include "reloading.microservice.ingress" (dict "componentName" "api-gateway" "config" .Values.apiGateway "context" .) }}
+{{- include "reloading.microservice.ingress" (dict "componentName" "api-gateway" "serviceName" "api-gateway" "config" .Values.apiGateway "context" .) }}
 {{- end }}

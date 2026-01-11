@@ -243,6 +243,7 @@ Generate microservice ingress
 */}}
 {{- define "spring-load-development.microservice.ingress" -}}
 {{- $componentName := .componentName }}
+{{- $serviceName := .serviceName | default (printf "%s-%s" (include "spring-load-development.fullname" .context) $componentName) }}
 {{- $config := .config }}
 {{- $context := .context }}
 {{- if $config.ingress.enabled }}
@@ -279,7 +280,7 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ include "spring-load-development.fullname" $context }}-{{ $componentName }}
+                name: {{ $serviceName }}
                 port:
                   number: {{ $config.service.port | default 8080 }}
           {{- end }}

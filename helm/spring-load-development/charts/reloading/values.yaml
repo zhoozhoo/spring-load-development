@@ -15,7 +15,8 @@ keycloak:
   baseUrl: "http://keycloak-service.keycloak.svc.cluster.local:8080"
   realm: "reloading"
   clientId: "reloading-client"
-  clientSecret: "2EvQuluZfxaaRms8V4NhzBDWzVCSXtty"
+  # This secret should be created outside the chart, e.g., using a pre-install hook or manually.
+  existingSecret: "keycloak-client-secret"
   namespace: keycloak
 
 # PostgreSQL configuration
@@ -23,7 +24,8 @@ postgresql:
   namespace: postgres
   auth:
     username: user
-    password: password
+    # This secret should be created outside the chart.
+    existingSecret: "postgresql-user-password"
 
 # Observability configuration
 observability:
@@ -44,8 +46,9 @@ apiGateway:
     nodePort: 30090
   
   ingress:
-    enabled: false
-    annotations: {}
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
     hosts:
       - host: api-gateway.local
         paths:
@@ -56,10 +59,32 @@ apiGateway:
   resources:
     limits:
       cpu: 1000m
-      memory: 2Gi
+      memory: 1Gi
     requests:
       cpu: 500m
-      memory: 1Gi
+      memory: 512Mi
+  
+  probes:
+    liveness:
+      enabled: true
+      path: "/actuator/health/liveness"
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      enabled: true
+      path: "/actuator/health/readiness"
+      initialDelaySeconds: 15
+      periodSeconds: 5
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
   
   env: []
   
@@ -92,10 +117,32 @@ loadsService:
   resources:
     limits:
       cpu: 1000m
-      memory: 2Gi
+      memory: 1Gi
     requests:
       cpu: 500m
-      memory: 1Gi
+      memory: 512Mi
+
+  probes:
+    liveness:
+      enabled: true
+      path: "/actuator/health/liveness"
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      enabled: true
+      path: "/actuator/health/readiness"
+      initialDelaySeconds: 15
+      periodSeconds: 5
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
   
   env: []
   
@@ -128,10 +175,32 @@ componentsService:
   resources:
     limits:
       cpu: 1000m
-      memory: 2Gi
+      memory: 1Gi
     requests:
       cpu: 500m
-      memory: 1Gi
+      memory: 512Mi
+
+  probes:
+    liveness:
+      enabled: true
+      path: "/actuator/health/liveness"
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      enabled: true
+      path: "/actuator/health/readiness"
+      initialDelaySeconds: 15
+      periodSeconds: 5
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
   
   env: []
   
@@ -164,10 +233,32 @@ riflesService:
   resources:
     limits:
       cpu: 1000m
-      memory: 2Gi
+      memory: 1Gi
     requests:
       cpu: 500m
-      memory: 1Gi
+      memory: 512Mi
+
+  probes:
+    liveness:
+      enabled: true
+      path: "/actuator/health/liveness"
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      enabled: true
+      path: "/actuator/health/readiness"
+      initialDelaySeconds: 15
+      periodSeconds: 5
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
   
   env: []
   
@@ -200,10 +291,32 @@ mcpServer:
   resources:
     limits:
       cpu: 1000m
-      memory: 2Gi
+      memory: 1Gi
     requests:
       cpu: 500m
-      memory: 1Gi
+      memory: 512Mi
+
+  probes:
+    liveness:
+      enabled: true
+      path: "/actuator/health/liveness"
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      enabled: true
+      path: "/actuator/health/readiness"
+      initialDelaySeconds: 15
+      periodSeconds: 5
+      timeoutSeconds: 5
+      failureThreshold: 3
+
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
   
   env: []
   
@@ -223,6 +336,9 @@ mcpServer:
 # RBAC configuration
 rbac:
   create: true
+  # Some libraries (e.g., informers used by service discovery) list/watch Services at cluster scope.
+  # Set to false if your workloads only need namespace-scoped discovery.
+  clusterScope: true
   
 serviceAccount:
   create: true
