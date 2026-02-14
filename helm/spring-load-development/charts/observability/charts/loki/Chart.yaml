@@ -3,4 +3,4 @@ name: loki
 description: Loki log aggregation system
 type: application
 version: 0.1.1-SNAPSHOT
-appVersion: 3.6.3
+appVersion: 3.6.5
