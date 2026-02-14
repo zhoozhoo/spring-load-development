@@ -3,7 +3,7 @@ namespace: observability
 
 image:
   repository: grafana/tempo
-  tag: "2.9.0"
+  tag: "2.10.0"
 
 config:
   stream_over_http_enabled: true
