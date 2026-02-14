@@ -30,8 +30,3 @@ management:
   tracing:
     export:
       enabled: false
-
-otel:
-  instrumentation:
-    spring-webflux:
-      enabled: false

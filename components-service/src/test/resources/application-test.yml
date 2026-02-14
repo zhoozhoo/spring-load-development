@@ -19,13 +19,14 @@ eureka:
     enabled: false
 
 management:
+  logging:
+    export:
+      otlp:
+        enabled: false
   otlp:
     metrics:
       export:
         enabled: false
   tracing:
-    enabled: false
-
-otel:
-  sdk:
-    disabled: true
+    export:
+      enabled: false
