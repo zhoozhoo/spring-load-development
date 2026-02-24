@@ -293,43 +293,51 @@ Access the observability components at:
 
 ==== Monitoring architecture
 
-The diagram below shows the monitoring data flow used by this project. Services export metrics via the Actuator Prometheus endpoint and send telemetry (traces and logs) over OTLP to an OpenTelemetry Collector. The Collector routes traces to Tempo, logs to Loki and can optionally forward metrics or expose them for Prometheus. Prometheus scrapes the Actuator metrics endpoint; Grafana visualizes metrics, traces and logs; Alertmanager handles alerts from Prometheus.
+The diagram below shows the monitoring data flow used by this project. Services export metrics via the Actuator Prometheus endpoint and send telemetry (traces and logs) over OTLP to an OpenTelemetry Collector. The Collector routes traces to Tempo, logs to Loki and forwards metrics to Prometheus. Grafana visualizes metrics, traces and logs from all three backends.
 
 [source,mermaid]
 ....
 flowchart LR
-    subgraph Services[Services / Applications]
-        S1["Microservice"]
+    subgraph Services["Services / Applications"]
+        GW["API Gateway"]
+        LS["Loads Service"]
+        RS["Rifles Service"]
+        CS["Components Service"]
+        MCP["MCP Server"]
+        KC["Keycloak"]
     end
 
-    subgraph OTEL[Observability Plane]
-        OC["OpenTelemetry Collector"]
+    subgraph OTEL["Observability Plane"]
+        OC["OpenTelemetry Collector\n:4317 / :4318"]
         Tempo["Tempo\n(Trace Store)"]
         Loki["Loki\n(Log Store)"]
         Prom["Prometheus"]
-        Graf["Grafana"]
+        Graf["Grafana\n:3000"]
     end
 
-    %% Service -> telemetry
-    S1 -->|"OTLP (traces)"| OC
-    S1 -->|"OTLP (logs)"| OC
-    S1 -->|"OTLP (metrics)"| OC
+    %% Services -> Collector
+    GW -->|"OTLP"| OC
+    LS -->|"OTLP"| OC
+    RS -->|"OTLP"| OC
+    CS -->|"OTLP"| OC
+    MCP -->|"OTLP"| OC
+    KC -->|"OTLP (traces)"| OC
 
     %% Collector -> backends
     OC -->|"traces"| Tempo
     OC -->|"logs"| Loki
     OC -->|"metrics"| Prom
 
-    %% Visualisation / alerting
+    %% Visualisation
     Tempo -->|traces| Graf
     Loki -->|logs| Graf
     Prom -->|metrics| Graf
 
     classDef serviceStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
-    classDef infraStyle fill:#fafafa,stroke:#616161,stroke-width:2px,color:#000000
-    
-    class S1 serviceStyle
-    class OC,Tempo,Loki,Prom,Graf infraStyle
+    classDef obsStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000000
+
+    class GW,LS,RS,CS,MCP,KC serviceStyle
+    class OC,Tempo,Loki,Prom,Graf obsStyle
 ....
 
 This observability architecture shows how all telemetry data (traces, logs, and metrics) is centrally collected by the OpenTelemetry Collector and distributed to specialized backends: Tempo for traces, Loki for logs, and Prometheus for metrics. Grafana provides unified dashboards combining all three data types for comprehensive observability.
@@ -343,22 +351,28 @@ The Spring Load Development application supports two primary deployment models: 
 [source,mermaid]
 ....
 flowchart TB
+    User(["User / Client"]) -->|REST :8080| DC_GW
+
     subgraph "Docker Compose - Local Development"
         subgraph "Application Services"
             DC_GW[API Gateway<br/>:8080]
-            DC_CONFIG[Config Server]
-            DC_DISC[Discovery Server]
-            DC_LOADS[Loads Service]
-            DC_RIFLES[Rifles Service]
-            DC_COMP[Components Service]
-            DC_MCP[MCP Server]
+            DC_LOADS[Loads Service<br/>:8081]
+            DC_RIFLES[Rifles Service<br/>:8082]
+            DC_COMP[Components Service<br/>:8084]
+            DC_MCP[MCP Server<br/>:8083]
         end
-        
+
+        subgraph "Support Services"
+            DC_CONFIG[Config Server<br/>:8888]
+            DC_DISC[Discovery Server<br/>:8761]
+        end
+
         subgraph "Infrastructure"
             DC_PG[(PostgreSQL<br/>:5432)]
             DC_KC[Keycloak<br/>:7080]
+            DC_KC_DB[(Keycloak DB<br/>:5433)]
         end
-        
+
         subgraph "Observability"
             DC_GRAF[Grafana<br/>:3000]
             DC_LOKI[Loki]
@@ -367,37 +381,62 @@ flowchart TB
             DC_OTEL[OTEL Collector]
         end
     end
-    
+
+    %% Gateway routes
     DC_GW --> DC_LOADS
     DC_GW --> DC_RIFLES
     DC_GW --> DC_COMP
     DC_GW --> DC_MCP
-    
+
+    %% Database connections (MCP Server has no DB)
     DC_LOADS --> DC_PG
     DC_RIFLES --> DC_PG
     DC_COMP --> DC_PG
-    DC_MCP --> DC_PG
-    
-    DC_GW --> DC_KC
+
+    %% MCP Server calls downstream services
+    DC_MCP -.->|HTTP| DC_LOADS
+    DC_MCP -.->|HTTP| DC_RIFLES
+
+    %% Auth connections
+    DC_GW -->|OAuth2/UMA| DC_KC
+    DC_KC --> DC_KC_DB
+
+    %% Config & Discovery
+    DC_LOADS -.-> DC_CONFIG
+    DC_RIFLES -.-> DC_CONFIG
+    DC_COMP -.-> DC_CONFIG
+    DC_MCP -.-> DC_CONFIG
+    DC_LOADS -.-> DC_DISC
+    DC_RIFLES -.-> DC_DISC
+    DC_COMP -.-> DC_DISC
+    DC_MCP -.-> DC_DISC
+
+    %% Telemetry
+    DC_GW --> DC_OTEL
     DC_LOADS --> DC_OTEL
     DC_RIFLES --> DC_OTEL
     DC_COMP --> DC_OTEL
     DC_MCP --> DC_OTEL
-    
+    DC_KC -->|traces| DC_OTEL
+
     DC_OTEL --> DC_LOKI
     DC_OTEL --> DC_TEMPO
     DC_OTEL --> DC_PROM
-    
+
     DC_LOKI --> DC_GRAF
     DC_TEMPO --> DC_GRAF
     DC_PROM --> DC_GRAF
-    
+
+    classDef clientStyle fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000000
     classDef appStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
+    classDef supportStyle fill:#e8eaf6,stroke:#3949ab,stroke-width:2px,color:#000000
     classDef infraStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
     classDef obsStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000000
-    
-    class DC_GW,DC_CONFIG,DC_DISC,DC_LOADS,DC_RIFLES,DC_COMP,DC_MCP appStyle
-    class DC_PG,DC_KC infraStyle
+
+    class User clientStyle
+    class DC_GW,DC_LOADS,DC_RIFLES,DC_COMP,DC_MCP appStyle
+    class DC_CONFIG,DC_DISC supportStyle
+    class DC_PG,DC_KC,DC_KC_DB infraStyle
     class DC_GRAF,DC_LOKI,DC_TEMPO,DC_PROM,DC_OTEL obsStyle
 ....
 
@@ -415,24 +454,27 @@ flowchart TB
 [source,mermaid]
 ....
 flowchart TB
+    User(["User / Client"]) -->|REST :30090| K8S_GW
+
     subgraph "Kubernetes Cluster"
         subgraph "Namespace: reloading"
+            K8S_CM[/ConfigMaps/]
             K8S_GW[API Gateway<br/>NodePort: 30090]
             K8S_LOADS[Loads Service]
             K8S_RIFLES[Rifles Service]
             K8S_COMP[Components Service]
             K8S_MCP[MCP Server]
         end
-        
+
         subgraph "Namespace: postgres"
             K8S_PG[(PostgreSQL StatefulSet<br/>8Gi PVC)]
         end
-        
+
         subgraph "Namespace: keycloak"
             K8S_KC_PG[(Keycloak PostgreSQL<br/>StatefulSet<br/>8Gi PVC)]
             K8S_KC[Keycloak<br/>NodePort: 30080]
         end
-        
+
         subgraph "Namespace: observability"
             K8S_GRAF[Grafana<br/>NodePort: 30000<br/>5Gi PVC]
             K8S_LOKI[Loki<br/>10Gi PVC]
@@ -441,38 +483,58 @@ flowchart TB
             K8S_OTEL[OTEL Collector<br/>NodePort: 30317]
         end
     end
-    
+
+    %% Gateway routes
     K8S_GW --> K8S_LOADS
     K8S_GW --> K8S_RIFLES
     K8S_GW --> K8S_COMP
     K8S_GW --> K8S_MCP
-    
+
+    %% Database connections (MCP Server has no DB)
     K8S_LOADS --> K8S_PG
     K8S_RIFLES --> K8S_PG
     K8S_COMP --> K8S_PG
-    K8S_MCP --> K8S_PG
-    
+
+    %% MCP Server calls downstream services
+    K8S_MCP -.->|HTTP| K8S_LOADS
+    K8S_MCP -.->|HTTP| K8S_RIFLES
+
+    %% ConfigMaps (replaces Config Server in K8s)
+    K8S_CM -.-> K8S_GW
+    K8S_CM -.-> K8S_LOADS
+    K8S_CM -.-> K8S_RIFLES
+    K8S_CM -.-> K8S_COMP
+    K8S_CM -.-> K8S_MCP
+
+    %% Auth
+    K8S_GW -->|OAuth2/UMA| K8S_KC
     K8S_KC --> K8S_KC_PG
-    
-    K8S_GW --> K8S_KC
+
+    %% Telemetry
+    K8S_GW --> K8S_OTEL
     K8S_LOADS --> K8S_OTEL
     K8S_RIFLES --> K8S_OTEL
     K8S_COMP --> K8S_OTEL
     K8S_MCP --> K8S_OTEL
-    
+    K8S_KC -->|traces| K8S_OTEL
+
     K8S_OTEL --> K8S_LOKI
     K8S_OTEL --> K8S_TEMPO
     K8S_OTEL --> K8S_PROM
-    
+
     K8S_LOKI --> K8S_GRAF
     K8S_TEMPO --> K8S_GRAF
     K8S_PROM --> K8S_GRAF
-    
+
+    classDef clientStyle fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000000
     classDef appStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
+    classDef configStyle fill:#e8eaf6,stroke:#3949ab,stroke-width:2px,color:#000000
     classDef infraStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
     classDef obsStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000000
-    
+
+    class User clientStyle
     class K8S_GW,K8S_LOADS,K8S_RIFLES,K8S_COMP,K8S_MCP appStyle
+    class K8S_CM configStyle
     class K8S_PG,K8S_KC_PG,K8S_KC infraStyle
     class K8S_GRAF,K8S_LOKI,K8S_TEMPO,K8S_PROM,K8S_OTEL obsStyle
 ....
@@ -541,7 +603,7 @@ flowchart LR
         Copilot[GitHub Copilot]
     end
 
-    APIGateway[API Gateway\n:8080]
+    APIGateway["API Gateway<br/>:8080<br/>CircuitBreaker"]
 
     subgraph Microservices
         LoadsService[Loads Service]
@@ -550,11 +612,12 @@ flowchart LR
         MCPServer[MCP Server]
     end
 
-    subgraph Infrastructure
-        ConfigServer[Config Server\n:8888]
-        DiscoveryServer[Discovery Server\n:8761]
-        Keycloak[Keycloak Auth\n:7080]
+    subgraph DockerOnly["Infrastructure - Docker/Local only"]
+        ConfigServer["Config Server<br/>:8888"]
+        DiscoveryServer["Discovery Server<br/>:8761"]
     end
+
+    Keycloak["Keycloak Auth<br/>:7080"]
 
     subgraph Observability
         OTEL[OTel Collector]
@@ -568,128 +631,159 @@ flowchart LR
 
     User -->|REST| APIGateway
     Copilot -->|MCP SSE| APIGateway
-    APIGateway --> LoadsService & RiflesService & ComponentsService & MCPServer
+    APIGateway --> LoadsService
+    APIGateway --> RiflesService
+    APIGateway --> ComponentsService
+    APIGateway --> MCPServer
+
+    %% Database connections (MCP Server has no DB)
     LoadsService --> Postgres
     RiflesService --> Postgres
     ComponentsService --> Postgres
-    MCPServer --> Postgres
-    Microservices -->|Config| ConfigServer
-    Microservices -->|Register| DiscoveryServer
-    Microservices -->|Auth| Keycloak
-    Microservices -->|Telemetry| OTEL
-    OTEL --> Prom & Loki & Tempo
+
+    %% MCP Server calls downstream services, not DB
+    MCPServer -.->|HTTP| LoadsService
+    MCPServer -.->|HTTP| RiflesService
+
+    %% Auth
+    APIGateway -->|OAuth2/UMA| Keycloak
+    LoadsService -->|JWT| Keycloak
+    RiflesService -->|JWT| Keycloak
+    ComponentsService -->|JWT| Keycloak
+    MCPServer -->|JWT| Keycloak
+
+    %% Config & Discovery (Docker/Local only)
+    LoadsService -.->|Config| ConfigServer
+    RiflesService -.->|Config| ConfigServer
+    ComponentsService -.->|Config| ConfigServer
+    MCPServer -.->|Config| ConfigServer
+    LoadsService -.->|Register| DiscoveryServer
+    RiflesService -.->|Register| DiscoveryServer
+    ComponentsService -.->|Register| DiscoveryServer
+    MCPServer -.->|Register| DiscoveryServer
+
+    %% Telemetry
+    APIGateway -->|Telemetry| OTEL
+    LoadsService -->|Telemetry| OTEL
+    RiflesService -->|Telemetry| OTEL
+    ComponentsService -->|Telemetry| OTEL
+    MCPServer -->|Telemetry| OTEL
+    OTEL --> Prom
+    OTEL --> Loki
+    OTEL --> Tempo
     Prom --> Graf
     Loki --> Graf
     Tempo --> Graf
 
     classDef clientStyle fill:#e1f5fe,stroke:#0277bd,stroke-width:2px,color:#000000
     classDef serviceStyle fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000000
-    classDef infraStyle fill:#fafafa,stroke:#616161,stroke-width:2px,color:#000000
+    classDef infraStyle fill:#e8eaf6,stroke:#3949ab,stroke-width:2px,color:#000000
+    classDef authStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
     classDef dataStyle fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000000
     classDef obsStyle fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000000
     class User,Copilot clientStyle
     class APIGateway,LoadsService,RiflesService,ComponentsService,MCPServer serviceStyle
-    class ConfigServer,DiscoveryServer,Keycloak infraStyle
+    class ConfigServer,DiscoveryServer infraStyle
+    class Keycloak authStyle
     class Postgres dataStyle
     class OTEL,Prom,Loki,Tempo,Graf obsStyle
 ....
 
 == Database Schema
 
-The application uses PostgreSQL 18.0 with the following schema design. The schema includes full-text search capabilities for component tables (bullets, powders, primers, cases) using PostgreSQL's `tsvector` type, enabling efficient natural language searches across manufacturer names, types, and other attributes.
+The application uses PostgreSQL 18.0 with the following schema design. Measurement columns use JSONB to store JSR-385 `Quantity` values (e.g. `{"value": 175.5, "unit": "grain"}`) and JSR-354 `MonetaryAmount` values (e.g. `{"amount": 45.99, "currency": "USD"}`). The component tables (projectiles, propellants, primers, cases) include full-text search via PostgreSQL's `tsvector` type with GIN indexes, enabling efficient natural language searches across manufacturer names, types, and other attributes. Tables are grouped by owning service — each service uses its own schema.
 
 [source,mermaid]
 ....
 erDiagram
+    %% ── Loads Service ──
     LOADS {
         BIGSERIAL id PK
-        VARCHAR(255) owner_id NOT NULL
-        VARCHAR(255) name NOT NULL
+        VARCHAR owner_id NOT NULL
+        VARCHAR name NOT NULL
         TEXT description
-        VARCHAR(32) measurement_units NOT NULL "CHECK (Imperial, Metric)"
-        VARCHAR(255) powder_manufacturer NOT NULL
-        VARCHAR(255) powder_type NOT NULL
-        VARCHAR(255) bullet_manufacturer NOT NULL
-        VARCHAR(255) bullet_type NOT NULL
-        DOUBLE_PRECISION bullet_weight NOT NULL
-        VARCHAR(255) primer_manufacturer NOT NULL
-        VARCHAR(255) primer_type NOT NULL
-        DOUBLE_PRECISION distance_from_lands
-        DOUBLE_PRECISION case_overall_length
-        DOUBLE_PRECISION neck_tension
-        BIGSERIAL rifle_id FK
+        VARCHAR powder_manufacturer NOT NULL
+        VARCHAR powder_type NOT NULL
+        VARCHAR bullet_manufacturer NOT NULL
+        VARCHAR bullet_type NOT NULL
+        JSONB bullet_weight NOT NULL "Quantity Mass"
+        VARCHAR primer_manufacturer NOT NULL
+        VARCHAR primer_type NOT NULL
+        JSONB distance_from_lands "Quantity Length"
+        JSONB case_overall_length "Quantity Length"
+        JSONB neck_tension "Quantity Length"
+        BIGINT rifle_id FK
     }
     GROUPS {
         BIGSERIAL id PK
-        VARCHAR(255) owner_id NOT NULL
+        VARCHAR owner_id NOT NULL
         BIGSERIAL load_id FK NOT NULL
         DATE date NOT NULL
-        DOUBLE_PRECISION powder_charge NOT NULL
-        INTEGER target_range NOT NULL
-        DOUBLE_PRECISION group_size
+        JSONB powder_charge NOT NULL "Quantity Mass"
+        JSONB target_range NOT NULL "Quantity Length"
+        JSONB group_size "Quantity Length"
     }
     SHOTS {
         BIGSERIAL id PK
-        VARCHAR(255) owner_id NOT NULL
+        VARCHAR owner_id NOT NULL
         BIGSERIAL group_id FK NOT NULL
-        INTEGER velocity
+        JSONB velocity "Quantity Speed"
     }
+
+    %% ── Rifles Service ──
     RIFLES {
         BIGSERIAL id PK
-        VARCHAR(255) owner_id NOT NULL
-        VARCHAR(255) name NOT NULL
+        VARCHAR owner_id NOT NULL
+        VARCHAR name NOT NULL
         TEXT description
-        VARCHAR(32) caliber NOT NULL
-        JSONB barrel_length "Quantity with value and unit"
-        VARCHAR(32) barrel_contour
-        JSONB rifling "twistRate (Quantity) and twistDirection"
-        JSONB zeroing "sightHeight and zeroDistance (Quantity)"
+        VARCHAR caliber NOT NULL
+        JSONB barrel_length "Quantity Length"
+        VARCHAR barrel_contour
+        JSONB rifling "twistRate and twistDirection"
+        JSONB zeroing "sightHeight and zeroDistance"
     }
-    BULLETS {
+
+    %% ── Components Service ──
+    PROJECTILES {
         BIGSERIAL id PK
-        VARCHAR(255) owner_id NOT NULL
-        VARCHAR(255) manufacturer NOT NULL
-        DOUBLE_PRECISION weight NOT NULL
-        VARCHAR(255) type NOT NULL
-        VARCHAR(255) measurement_units NOT NULL
-        DECIMAL(10) cost NOT NULL
-        VARCHAR(3) currency NOT NULL
+        VARCHAR owner_id NOT NULL
+        VARCHAR manufacturer NOT NULL
+        JSONB weight NOT NULL "Quantity Mass"
+        VARCHAR type NOT NULL
+        JSONB cost NOT NULL "MonetaryAmount"
         INTEGER quantity_per_box NOT NULL
-        TSVECTOR search_vector
+        TSVECTOR search_vector "GIN indexed"
     }
-    POWDERS {
+    PROPELLANTS {
         BIGSERIAL id PK
-        VARCHAR(255) owner_id NOT NULL
-        VARCHAR(255) manufacturer NOT NULL
-        VARCHAR(255) type NOT NULL
-        VARCHAR(255) measurement_units NOT NULL
-        DECIMAL(10) cost
-        VARCHAR(3) currency
-        DOUBLE_PRECISION weight_per_container
-        TSVECTOR search_vector
+        VARCHAR owner_id NOT NULL
+        VARCHAR manufacturer NOT NULL
+        VARCHAR type NOT NULL
+        JSONB cost "MonetaryAmount"
+        JSONB weight_per_container "Quantity Mass"
+        TSVECTOR search_vector "GIN indexed"
     }
     PRIMERS {
         BIGSERIAL id PK
-        VARCHAR(255) owner_id NOT NULL
-        VARCHAR(255) manufacturer NOT NULL
-        VARCHAR(255) type NOT NULL
-        VARCHAR(20) size NOT NULL
-        DECIMAL(10) cost NOT NULL
-        VARCHAR(3) currency NOT NULL
-        INTEGER quantity_per_box NOT NULL
-        TSVECTOR search_vector
+        VARCHAR owner_id NOT NULL
+        VARCHAR manufacturer NOT NULL
+        VARCHAR type NOT NULL
+        VARCHAR size NOT NULL
+        JSONB cost NOT NULL "MonetaryAmount"
+        JSONB quantity_per_box NOT NULL "Quantity Dimensionless"
+        TSVECTOR search_vector "GIN indexed"
     }
     CASES {
         BIGSERIAL id PK
-        VARCHAR(255) owner_id NOT NULL
-        VARCHAR(255) manufacturer NOT NULL
-        VARCHAR(50) caliber NOT NULL
-        VARCHAR(20) primer_size NOT NULL
-        DECIMAL(10) cost NOT NULL
-        VARCHAR(3) currency NOT NULL
-        INTEGER quantity_per_box NOT NULL
-        TSVECTOR search_vector
+        VARCHAR owner_id NOT NULL
+        VARCHAR manufacturer NOT NULL
+        VARCHAR caliber NOT NULL
+        VARCHAR primer_size NOT NULL
+        JSONB cost NOT NULL "MonetaryAmount"
+        JSONB quantity_per_box NOT NULL "Quantity Dimensionless"
+        TSVECTOR search_vector "GIN indexed"
     }
+
     %% Relationships
     LOADS ||--o{ GROUPS : "has"
     GROUPS ||--o{ SHOTS : "has"
