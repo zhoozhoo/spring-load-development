@@ -1,4 +1,24 @@
-= Spring Load Development image:https://github.com/zhoozhoo/spring-load-development/actions/workflows/github-code-scanning/codeql/badge.svg["CodeQL", link="https://github.com/zhoozhoo/spring-load-development/actions/workflows/github-code-scanning/codeql"] image:https://github.com/zhoozhoo/spring-load-development/actions/workflows/ci.yml/badge.svg["Continuous Integration", link="https://github.com/zhoozhoo/spring-load-development/actions/workflows/ci.yml"]
+= Spring Load Development
+
+// CI & Security
+image:https://github.com/zhoozhoo/spring-load-development/actions/workflows/ci.yml/badge.svg["Continuous Integration", link="https://github.com/zhoozhoo/spring-load-development/actions/workflows/ci.yml"]
+image:https://github.com/zhoozhoo/spring-load-development/actions/workflows/github-code-scanning/codeql/badge.svg["CodeQL", link="https://github.com/zhoozhoo/spring-load-development/actions/workflows/github-code-scanning/codeql"]
+image:https://img.shields.io/github/license/zhoozhoo/spring-load-development["License", link="https://github.com/zhoozhoo/spring-load-development/blob/main/LICENSE"]
+
+// Technology Stack
+image:https://img.shields.io/badge/Java-25-blue?logo=openjdk["Java 25"]
+image:https://img.shields.io/badge/Spring%20Boot-4.0.3-green?logo=springboot["Spring Boot 4.0.3"]
+image:https://img.shields.io/badge/Spring%20Cloud-2025.1.1-green?logo=spring["Spring Cloud 2025.1.1"]
+image:https://img.shields.io/badge/Spring%20AI-2.0.0--M2-green?logo=spring["Spring AI 2.0.0-M2"]
+image:https://img.shields.io/badge/Maven-4.0%2B-blue?logo=apachemaven["Maven 4.0+"]
+image:https://img.shields.io/badge/PostgreSQL-18-blue?logo=postgresql["PostgreSQL 18"]
+
+// Infrastructure
+image:https://img.shields.io/badge/Kubernetes-ready-blue?logo=kubernetes["Kubernetes"]
+image:https://img.shields.io/badge/Helm-3-blue?logo=helm["Helm 3"]
+image:https://img.shields.io/badge/Docker-Compose-blue?logo=docker["Docker Compose"]
+image:https://img.shields.io/badge/OpenTelemetry-1.59.0-blue?logo=opentelemetry["OpenTelemetry 1.59.0"]
+image:https://img.shields.io/badge/Keycloak-26-blue["Keycloak 26"]
 
 :author: Zhubin Salehi
 :email: zhoozhoo@yahoo.com
@@ -35,12 +55,12 @@ All technologies are open source and widely adopted in cloud-native Java ecosyst
 This project uses the following key versions:
 
 * *Java*: 25
-* *Spring Boot*: 4.0.1
-* *Spring Cloud*: 2025.1.0
-* *Spring AI*: 1.1.2
+* *Spring Boot*: 4.0.3
+* *Spring Cloud*: 2025.1.1
+* *Spring AI*: 2.0
 * *SpringDoc OpenAPI*: 3.0.0
 * *MapStruct*: 1.6.3
-* *OpenTelemetry Instrumentation*: 2.23.0 (+ alpha)
+* *OpenTelemetry Instrumentation*: 2.25.0 (+ alpha)
 * *Maven*: 4.0.0-rc-5 or later
 * *PostgreSQL*: 18.2
 * *Keycloak*: 26.5
@@ -56,7 +76,7 @@ This project uses the following key versions:
 
 * Java 25 or later
 * Docker and Docker Compose
-* Maven 4.0+ (4.0.0-rc-4 or later)
+* Maven 4.0+ (4.0.0-rc-5 or later)
 * Kubernetes cluster and kubectl (for Kubernetes deployment)
 * Helm 3.0+ (for Helm deployment)
 
