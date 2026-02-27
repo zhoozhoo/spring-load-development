@@ -12,13 +12,11 @@ import jakarta.validation.Validation;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-/**
- * Bean Validation configuration for JSR-385 Quantity types.
- * <p>
- * Registers custom validators for @Positive and @NotNull annotations.
- *
- * @author Zhubin Salehi
- */
+/// Bean Validation configuration for JSR-385 Quantity types.
+///
+/// Registers custom validators for @Positive and @NotNull annotations.
+///
+/// @author Zhubin Salehi
 @Configuration
 public class ValidationConfig {
 

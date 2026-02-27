@@ -3,10 +3,10 @@ package ca.zhoozhoo.loaddev.mcp.provider;
 import static ca.zhoozhoo.loaddev.mcp.provider.PreSerializationUtils.serialize;
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_PARAMS;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springaicommunity.mcp.annotation.McpTool;
 import org.springaicommunity.mcp.annotation.McpToolParam;
 import org.springframework.ai.model.tool.internal.ToolCallReactiveContextHolder;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ca.zhoozhoo.loaddev.mcp.dto.LoadDetails;
@@ -18,34 +18,33 @@ import io.modelcontextprotocol.spec.McpSchema.JSONRPCResponse.JSONRPCError;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
-/**
- * MCP tool provider for load-related operations.
- * <p>
- * Provides tools for retrieving and searching loads in the system.
- * All operations use reactive programming for efficient execution.
- * </p>
- */
+/// MCP tool provider for load-related operations.
+///
+/// Provides tools for retrieving and searching loads in the system.
+/// All operations use reactive programming for efficient execution.
 @Component
 @Log4j2
 public class LoadsToolProvider {
 
-    @Autowired
-    private LoadsService loadsService;
-    @Autowired
-    private RiflesService riflesService;
-    @Autowired
-    private McpJsonMapper mcpJsonMapper;
+    private final LoadsService loadsService;
+    private final RiflesService riflesService;
+    private final McpJsonMapper mcpJsonMapper;
 
-    /**
-     * Retrieves all loads accessible to the current user.
-     * <p>
-     * Streams loads as they become available for better performance with reactive execution.
-     * Authentication is automatically propagated from the security context.
-     *
-     * @return Flux stream of LoadDto objects
-     * @throws McpError with INTERNAL_ERROR if service discovery fails
-     * @throws McpError with INVALID_REQUEST if authentication fails
-     */
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public LoadsToolProvider(LoadsService loadsService, RiflesService riflesService, McpJsonMapper mcpJsonMapper) {
+        this.loadsService = loadsService;
+        this.riflesService = riflesService;
+        this.mcpJsonMapper = mcpJsonMapper;
+    }
+
+    /// Retrieves all loads accessible to the current user.
+    ///
+    /// Streams loads as they become available for better performance with reactive execution.
+    /// Authentication is automatically propagated from the security context.
+    ///
+    /// @return Flux stream of LoadDto objects
+    /// @throws McpError with INTERNAL_ERROR if service discovery fails
+    /// @throws McpError with INVALID_REQUEST if authentication fails
     @McpTool(description = "Retrieve all available loads in the system", name = "getLoads")
     public Mono<String> getLoads() {
         log.debug("=== LoadsToolProvider.getLoads() called ===");
@@ -65,18 +64,16 @@ public class LoadsToolProvider {
         );
     }
 
-     /**
-     * Retrieves a specific load by its unique identifier.
-     * <p>
-     * Returns detailed information about a single load including all its properties.
-     * Authentication is automatically propagated from the security context.
-     *
-     * @param id the unique identifier of the load to retrieve (must be positive)
-     * @return Mono emitting the requested LoadDto
-     * @throws McpError with INTERNAL_ERROR if service discovery fails
-     * @throws McpError with INVALID_REQUEST if authentication fails
-     * @throws McpError with INVALID_PARAMS if id is null, non-positive, or load not found
-     */
+     /// Retrieves a specific load by its unique identifier.
+     ///
+     /// Returns detailed information about a single load including all its properties.
+     /// Authentication is automatically propagated from the security context.
+     ///
+     /// @param id the unique identifier of the load to retrieve (must be positive)
+     /// @return Mono emitting the requested LoadDto
+     /// @throws McpError with INTERNAL_ERROR if service discovery fails
+     /// @throws McpError with INVALID_REQUEST if authentication fails
+     /// @throws McpError with INVALID_PARAMS if id is null, non-positive, or load not found
     @McpTool(description = "Find a specific load by its unique identifier", name = "getLoad", annotations = @McpTool.McpAnnotations(title = "Get Load by ID", readOnlyHint = true, destructiveHint = false, idempotentHint = true))
     public Mono<String> getLoadById(
             @McpToolParam(description = "Numeric ID of the load to retrieve", required = true) Long id) {
@@ -101,22 +98,20 @@ public class LoadsToolProvider {
         );
     }
 
-    /**
-     * Retrieves comprehensive details for a specific load.
-     * <p>
-     * Uses optimized parallel fetching with Mono.zip() to retrieve load, rifle, and statistics
-     * concurrently. This is inspired by Structured Concurrency (JEP 480) principles,
-     * ensuring all subtasks complete successfully or fail together with proper error handling.
-     * <p>
-     * Authentication is automatically propagated from the security context to all
-     * downstream service calls.
-     *
-     * @param id the unique identifier of the load (must be positive)
-     * @return Mono emitting LoadDetails containing load, rifle, and statistics data
-     * @throws McpError with INTERNAL_ERROR if service discovery fails
-     * @throws McpError with INVALID_REQUEST if authentication fails
-     * @throws McpError with INVALID_PARAMS if id is null, non-positive, or load/rifle not found
-     */
+    /// Retrieves comprehensive details for a specific load.
+    ///
+    /// Uses optimized parallel fetching with Mono.zip() to retrieve load, rifle, and statistics
+    /// concurrently. This is inspired by Structured Concurrency (JEP 480) principles,
+    /// ensuring all subtasks complete successfully or fail together with proper error handling.
+    ///
+    /// Authentication is automatically propagated from the security context to all
+    /// downstream service calls.
+    ///
+    /// @param id the unique identifier of the load (must be positive)
+    /// @return Mono emitting LoadDetails containing load, rifle, and statistics data
+    /// @throws McpError with INTERNAL_ERROR if service discovery fails
+    /// @throws McpError with INVALID_REQUEST if authentication fails
+    /// @throws McpError with INVALID_PARAMS if id is null, non-positive, or load/rifle not found
     @McpTool(description = "Get detailed information for a specific load", name = "getLoadDetails")
     public Mono<String> getLoadDetailsById(
         @McpToolParam(description = "Numeric ID of the load", required = true) Long id) {

@@ -8,20 +8,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 
-/**
- * Unit tests for {@link CacheConfiguration}.
- * Tests Caffeine cache configuration for reactive caching support.
- * 
- * <p>These tests verify that the cache manager can be created and configured correctly
- * using Caffeine, which supports CompletableFuture-based retrieval required for
- * Spring Boot 4.0's reactive caching infrastructure.</p>
- * 
- * <p>Note: These are simplified unit tests that directly test cache functionality without
- * requiring full Spring Boot context initialization. This avoids the need to configure
- * all application dependencies (OAuth2, Eureka, WebFlux, etc.) for cache testing.</p>
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for [CacheConfiguration].
+/// Tests Caffeine cache configuration for reactive caching support.
+///
+/// These tests verify that the cache manager can be created and configured correctly
+/// using Caffeine, which supports CompletableFuture-based retrieval required for
+/// Spring Boot 4.0's reactive caching infrastructure.
+///
+/// Note: These are simplified unit tests that directly test cache functionality without
+/// requiring full Spring Boot context initialization. This avoids the need to configure
+/// all application dependencies (OAuth2, Eureka, WebFlux, etc.) for cache testing.
+///
+/// @author Zhubin Salehi
 class CacheConfigurationTest {
 
     private CacheManager cacheManager;

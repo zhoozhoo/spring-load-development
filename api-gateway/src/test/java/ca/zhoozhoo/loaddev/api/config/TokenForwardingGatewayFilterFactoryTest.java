@@ -19,12 +19,10 @@ import org.springframework.web.server.ServerWebExchange;
 
 import reactor.core.publisher.Mono;
 
-/**
- * Unit tests for {@link TokenForwardingGatewayFilterFactory}.
- * Tests token forwarding logic in the gateway filter.
- * 
- * @author Zhubin Salehi
- */
+/// Unit tests for [TokenForwardingGatewayFilterFactory].
+/// Tests token forwarding logic in the gateway filter.
+///
+/// @author Zhubin Salehi
 class TokenForwardingGatewayFilterFactoryTest {
 
     private TokenForwardingGatewayFilterFactory filterFactory;

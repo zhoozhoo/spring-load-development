@@ -7,7 +7,7 @@ import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 import static reactor.core.publisher.Mono.just;
 
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,11 +24,12 @@ import org.springframework.web.bind.annotation.RestController;
 import ca.zhoozhoo.loaddev.components.model.Primer;
 import ca.zhoozhoo.loaddev.components.service.PrimerService;
 import ca.zhoozhoo.loaddev.security.CurrentUser;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -43,14 +44,11 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * REST controller for primer components with JSR-385/JSR-354.
- * <p>
- * OAuth2-secured CRUD operations with full-text search and multi-tenant isolation.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// REST controller for primer components with JSR-385/JSR-354.
+///
+/// OAuth2-secured CRUD operations with full-text search and multi-tenant isolation.
+///
+/// @author Zhubin Salehi
 @Tag(name = "Primers", description = "Operations on primers belonging to the authenticated user")
 @SecurityScheme(name = "Oauth2Security", type = OAUTH2, flows = @OAuthFlows(authorizationCode = @OAuthFlow(authorizationUrl = "${springdoc.oauth2.authorization-url}", tokenUrl = "${springdoc.oauth2.token-url}", scopes = {
         @OAuthScope(name = "components:view", description = "View access"),
@@ -119,18 +117,8 @@ public class PrimerController {
     public Mono<ResponseEntity<Primer>> createPrimer(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Valid @RequestBody Primer primer) {
-        if (userId == null || userId.isBlank()) {
-            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).<Primer>build());
-        }
         return just(primer)
-                .map(p -> new Primer(
-                        null,
-                        userId,
-                        p.manufacturer(),
-                        p.type(),
-                        p.primerSize(),
-                        p.cost(),
-                        p.quantityPerBox()))
+                .map(p -> p.withOwner(userId))
                 .flatMap(primerService::createPrimer)
                 .doOnNext(savedPrimer -> log.debug("Created new primer with id: {}", savedPrimer.id()))
                 .map(savedPrimer -> status(CREATED).body(savedPrimer));
@@ -149,14 +137,8 @@ public class PrimerController {
             @Parameter(description = "Id of primer") @PathVariable Long id,
             @Valid @RequestBody Primer primer) {
         return primerService.getPrimerById(id, userId)
-                .flatMap(existingPrimer -> primerService.updatePrimer(new Primer(
-                        existingPrimer.id(),
-                        existingPrimer.ownerId(),
-                        primer.manufacturer(),
-                        primer.type(),
-                        primer.primerSize(),
-                        primer.cost(),
-                        primer.quantityPerBox())))
+                .flatMap(existingPrimer -> primerService.updatePrimer(
+                        primer.withIdAndOwner(existingPrimer.id(), existingPrimer.ownerId())))
                 .doOnNext(updatedPrimer -> log.debug("Updated primer with id: {}", updatedPrimer.id()))
                 .map(updatedPrimer -> ok(updatedPrimer))
                 .defaultIfEmpty(notFound().build());

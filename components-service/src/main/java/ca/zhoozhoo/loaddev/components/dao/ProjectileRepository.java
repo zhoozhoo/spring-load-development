@@ -8,11 +8,9 @@ import ca.zhoozhoo.loaddev.components.model.Projectile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * Reactive repository for Projectile entities with multi-tenant filtering and PostgreSQL full-text search.
- *
- * @author Zhubin Salehi
- */
+/// Reactive repository for Projectile entities with multi-tenant filtering and PostgreSQL full-text search.
+///
+/// @author Zhubin Salehi
 public interface ProjectileRepository extends R2dbcRepository<Projectile, Long> {
 
     Flux<Projectile> findAllByOwnerId(String ownerId);

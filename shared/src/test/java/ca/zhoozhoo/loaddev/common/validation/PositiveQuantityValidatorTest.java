@@ -15,11 +15,9 @@ import org.junit.jupiter.api.Test;
 import tech.units.indriya.quantity.Quantities;
 import tech.units.indriya.unit.Units;
 
-/**
- * Unit tests for PositiveQuantityValidator.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for PositiveQuantityValidator.
+///
+/// @author Zhubin Salehi
 @DisplayName("PositiveQuantityValidator Tests")
 class PositiveQuantityValidatorTest {
 

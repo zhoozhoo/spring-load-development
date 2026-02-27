@@ -24,12 +24,10 @@ import ca.zhoozhoo.loaddev.api.security.UmaPermissionToken;
 import ca.zhoozhoo.loaddev.api.security.UmaTokenExchangeService;
 import reactor.core.publisher.Mono;
 
-/**
- * Unit tests for {@link PermissionTokenExchangeFilter}.
- * Tests the token extraction and delegation to UmaTokenExchangeService.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for [PermissionTokenExchangeFilter].
+/// Tests the token extraction and delegation to UmaTokenExchangeService.
+///
+/// @author Zhubin Salehi
 @ExtendWith(MockitoExtension.class)
 class PermissionTokenExchangeFilterTest {
 

@@ -10,14 +10,12 @@ import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.mcp.config.TestSecurityConfig;
 
-/**
- * Integration tests for MCP Server Application.
- * <p>
- * Tests the complete application startup and configuration,
- * ensuring all beans are properly wired and the server starts successfully.
- * 
- * @author Zhubin Salehi
- */
+/// Integration tests for MCP Server Application.
+///
+/// Tests the complete application startup and configuration,
+/// ensuring all beans are properly wired and the server starts successfully.
+///
+/// @author Zhubin Salehi
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)

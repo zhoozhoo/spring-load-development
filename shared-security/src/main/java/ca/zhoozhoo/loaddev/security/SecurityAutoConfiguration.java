@@ -17,23 +17,20 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 
 import reactor.core.publisher.Mono;
 
-/**
- * Auto-configuration for Spring Security OAuth2 Resource Server with reactive WebFlux.
- * <p>
- * Provides default security configuration with:
- * <ul>
- *   <li>JWT authentication with Keycloak permission extraction</li>
- *   <li>Configurable public paths (actuator, swagger, etc.)</li>
- *   <li>Custom JWT principal claim support</li>
- *   <li>Method-level security enabled</li>
- * </ul>
- * <p>
- * Configure via {@code security.*} properties in application configuration.
- *
- * @author Zhubin Salehi
- * @see SecurityProperties
- * @see CurrentUserMethodArgumentResolver
- */
+/// Auto-configuration for Spring Security OAuth2 Resource Server with reactive WebFlux.
+///
+/// Provides default security configuration with:
+///
+/// - JWT authentication with Keycloak permission extraction
+/// - Configurable public paths (actuator, swagger, etc.)
+/// - Custom JWT principal claim support
+/// - Method-level security enabled
+///
+/// Configure via `security.*` properties in application configuration.
+///
+/// @author Zhubin Salehi
+/// @see SecurityProperties
+/// @see CurrentUserMethodArgumentResolver
 @AutoConfiguration
 @ConditionalOnClass(ServerHttpSecurity.class)
 @EnableWebFluxSecurity

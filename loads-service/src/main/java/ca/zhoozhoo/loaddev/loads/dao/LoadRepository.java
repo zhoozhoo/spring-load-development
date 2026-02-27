@@ -6,16 +6,13 @@ import ca.zhoozhoo.loaddev.loads.model.Load;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * Reactive repository interface for {@link Load} entity operations.
- * <p>
- * Provides CRUD operations and custom query methods for ammunition load data,
- * supporting reactive, non-blocking database access with owner-based filtering
- * for multi-tenant data isolation.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Reactive repository interface for [Load] entity operations.
+///
+/// Provides CRUD operations and custom query methods for ammunition load data,
+/// supporting reactive, non-blocking database access with owner-based filtering
+/// for multi-tenant data isolation.
+///
+/// @author Zhubin Salehi
 public interface LoadRepository extends R2dbcRepository<Load, Long> {
 
     Flux<Load> findAllByOwnerId(String ownerId);

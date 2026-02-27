@@ -26,15 +26,12 @@ import ca.zhoozhoo.loaddev.loads.model.Load;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
 import tech.units.indriya.unit.Units;
 
-/**
- * Integration tests for {@link ShotRepository}.
- * <p>
- * Tests R2DBC repository operations for shot velocity data including CRUD operations,
- * custom query methods, and Quantity type persistence for velocity measurements.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Integration tests for [ShotRepository].
+///
+/// Tests R2DBC repository operations for shot velocity data including CRUD operations,
+/// custom query methods, and Quantity type persistence for velocity measurements.
+///
+/// @author Zhubin Salehi
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)

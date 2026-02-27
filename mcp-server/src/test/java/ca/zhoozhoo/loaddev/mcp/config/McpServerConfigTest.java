@@ -13,9 +13,7 @@ import io.micrometer.observation.ObservationRegistry;
 import io.modelcontextprotocol.json.McpJsonMapper;
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Tests for McpServerConfig to verify MCP server bean configuration.
- */
+/// Tests for McpServerConfig to verify MCP server bean configuration.
 @SpringBootTest
 @ActiveProfiles("test")
 class McpServerConfigTest {

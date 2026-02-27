@@ -8,14 +8,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 
-/**
- * Abstract base class for riles service integration tests.
- * Provides Keycloak testcontainer with dynamic property registration.
- * Test classes should extend this class to inherit the Keycloak container
- * setup.
- * 
- * @author Zhubin Salehi
- */
+/// Abstract base class for riles service integration tests.
+/// Provides Keycloak testcontainer with dynamic property registration.
+/// Test classes should extend this class to inherit the Keycloak container
+/// setup.
+///
+/// @author Zhubin Salehi
 public abstract class KeycloakTest {
 
     // Keycloak container is managed as a singleton and closed by JVM shutdown hook
@@ -27,12 +25,10 @@ public abstract class KeycloakTest {
         keycloak.start();
     }
 
-    /**
-     * Dynamically registers Keycloak properties after container starts.
-     * These properties override the static values in application-test.yml
-     * 
-     * @param registry the dynamic property registry
-     */
+    /// Dynamically registers Keycloak properties after container starts.
+    /// These properties override the static values in application-test.yml
+    ///
+    /// @param registry the dynamic property registry
     @DynamicPropertySource
     static void keycloakProperties(DynamicPropertyRegistry registry) {
         var authServerUrl = keycloak.getAuthServerUrl();
@@ -59,24 +55,20 @@ public abstract class KeycloakTest {
         registry.add("spring.webclient.keycloak.base-url", () -> authServerUrl);
     }
 
-    /**
-     * Gets the Keycloak container instance.
-     * 
-     * @return the KeycloakContainer instance
-     */
+    /// Gets the Keycloak container instance.
+    ///
+    /// @return the KeycloakContainer instance
     protected static KeycloakContainer getKeycloakContainer() {
         return keycloak;
     }
 
-    /**
-     * Helper method to obtain an access token from Keycloak using client
-     * credentials flow.
-     * Uses a separate WebClient instance that bypasses the riles service security
-     * to directly
-     * communicate with the Keycloak testcontainer.
-     * 
-     * @return the access token
-     */
+    /// Helper method to obtain an access token from Keycloak using client
+    /// credentials flow.
+    /// Uses a separate WebClient instance that bypasses the riles service security
+    /// to directly
+    /// communicate with the Keycloak testcontainer.
+    ///
+    /// @return the access token
     protected String getAccessToken() {
         return WebClient.builder()
                 .build()
@@ -98,10 +90,8 @@ public abstract class KeycloakTest {
 
     }
 
-    /**
-     * Record for deserializing token response from Keycloak.
-     * Uses Jackson annotations to map JSON field names to Java names.
-     */
+    /// Record for deserializing token response from Keycloak.
+    /// Uses Jackson annotations to map JSON field names to Java names.
     protected record TokenResponse(
             @com.fasterxml.jackson.annotation.JsonProperty("access_token") String accessToken,
             @com.fasterxml.jackson.annotation.JsonProperty("token_type") String tokenType,

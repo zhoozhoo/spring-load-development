@@ -12,12 +12,10 @@ import static ca.zhoozhoo.loaddev.components.model.PrimerSize.SMALL_RIFLE;
 import static ca.zhoozhoo.loaddev.components.model.PrimerSize.SMALL_RIFLE_MAGNUM;
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Unit tests for {@link PrimerSize} enum.
- * Tests enum values and behavior.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for [PrimerSize] enum.
+/// Tests enum values and behavior.
+///
+/// @author Zhubin Salehi
 class PrimerSizeTest {
 
     @Test

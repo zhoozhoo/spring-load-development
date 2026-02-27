@@ -35,16 +35,13 @@ import ca.zhoozhoo.loaddev.loads.model.Load;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
 import tech.units.indriya.unit.Units;
 
-/**
- * Integration tests for ShotsController.
- * <p>
- * Tests all REST endpoints for shot management including CRUD operations,
- * validation, and security. Uses WebTestClient for reactive endpoint testing with
- * mock JWT authentication.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Integration tests for ShotsController.
+///
+/// Tests all REST endpoints for shot management including CRUD operations,
+/// validation, and security. Uses WebTestClient for reactive endpoint testing with
+/// mock JWT authentication.
+///
+/// @author Zhubin Salehi
 @SpringBootTest(properties = "spring.autoconfigure.exclude=ca.zhoozhoo.loaddev.security.SecurityAutoConfiguration")
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient

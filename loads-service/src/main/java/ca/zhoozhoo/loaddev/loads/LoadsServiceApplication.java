@@ -10,17 +10,14 @@ import ca.zhoozhoo.loaddev.common.opentelemetry.ContextPropagationConfiguration;
 import ca.zhoozhoo.loaddev.common.opentelemetry.FilterConfiguration;
 import ca.zhoozhoo.loaddev.common.opentelemetry.OpenTelemetryConfiguration;
 
-/**
- * Main application class for the Loads Service.
- * <p>
- * This service manages ammunition load data, including load configurations, shooting groups,
- * and individual shot velocity data. It provides RESTful APIs for creating, retrieving,
- * updating, and deleting load-related information for authenticated users.
- * </p>
- *
- * @author Zhubin Salehi
- * @version 0.0.8
- */
+/// Main application class for the Loads Service.
+///
+/// This service manages ammunition load data, including load configurations, shooting groups,
+/// and individual shot velocity data. It provides RESTful APIs for creating, retrieving,
+/// updating, and deleting load-related information for authenticated users.
+///
+/// @author Zhubin Salehi
+/// @version 0.0.8
 @SpringBootApplication
 @EnableTransactionManagement
 @EnableDiscoveryClient

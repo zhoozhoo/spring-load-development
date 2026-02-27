@@ -18,14 +18,12 @@ import ca.zhoozhoo.loaddev.common.jackson.QuantityDeserializer;
 import ca.zhoozhoo.loaddev.common.jackson.QuantitySerializer;
 import jakarta.validation.constraints.NotBlank;
 
-/**
- * Rifle firearm specifications for ammunition load development.
- * <p>
- * Includes caliber, barrel length, rifling, and optional zeroing configuration using
- * JSR-385 Quantity types. Each rifle is owned by a specific user for multi-tenant isolation.
- *
- * @author Zhubin Salehi
- */
+/// Rifle firearm specifications for ammunition load development.
+///
+/// Includes caliber, barrel length, rifling, and optional zeroing configuration using
+/// JSR-385 Quantity types. Each rifle is owned by a specific user for multi-tenant isolation.
+///
+/// @author Zhubin Salehi
 @Table(name = "rifles")
 public record Rifle(
 
@@ -51,9 +49,7 @@ public record Rifle(
 
         @Column("zeroing") Zeroing zeroing) {
 
-    /**
-     * Validates rifle specifications: barrel length (4-50 inches).
-     */
+    /// Validates rifle specifications: barrel length (4-50 inches).
     public Rifle {
         // Validate reasonable barrel length (4 to 50 inches equivalent)
         if (barrelLength != null) {
@@ -64,6 +60,16 @@ public record Rifle(
                 );
             }
         }
+    }
+
+    /// Creates a copy of this rifle for a new owner, with id set to null.
+    public Rifle withOwner(String ownerId) {
+        return new Rifle(null, ownerId, name, description, caliber, barrelLength, barrelContour, rifling, zeroing);
+    }
+
+    /// Creates a copy preserving id and ownerId from an existing record.
+    public Rifle withIdAndOwner(Long id, String ownerId) {
+        return new Rifle(id, ownerId, name, description, caliber, barrelLength, barrelContour, rifling, zeroing);
     }
 
     @Override

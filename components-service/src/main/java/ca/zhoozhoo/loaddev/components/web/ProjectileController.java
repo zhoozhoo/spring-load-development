@@ -7,7 +7,7 @@ import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 import static reactor.core.publisher.Mono.just;
 
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,11 +24,12 @@ import org.springframework.web.bind.annotation.RestController;
 import ca.zhoozhoo.loaddev.components.model.Projectile;
 import ca.zhoozhoo.loaddev.components.service.ProjectileService;
 import ca.zhoozhoo.loaddev.security.CurrentUser;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -43,14 +44,11 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * REST controller for projectile components with JSR-385/JSR-354.
- * <p>
- * OAuth2-secured CRUD operations with full-text search and multi-tenant isolation.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// REST controller for projectile components with JSR-385/JSR-354.
+///
+/// OAuth2-secured CRUD operations with full-text search and multi-tenant isolation.
+///
+/// @author Zhubin Salehi
 @Tag(name = "Projectiles", description = "Operations on projectiles belonging to the authenticated user")
 @SecurityScheme(name = "Oauth2Security", type = OAUTH2, flows = @OAuthFlows(authorizationCode = @OAuthFlow(authorizationUrl = "${springdoc.oauth2.authorization-url}", tokenUrl = "${springdoc.oauth2.token-url}", scopes = {
         @OAuthScope(name = "components:view", description = "View access"),
@@ -119,18 +117,8 @@ public class ProjectileController {
     public Mono<ResponseEntity<Projectile>> createProjectile(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Valid @RequestBody Projectile projectile) {
-        if (userId == null || userId.isBlank()) {
-            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).<Projectile>build());
-        }
         return just(projectile)
-                .map(p -> new Projectile(
-                        null,
-                        userId,
-                        p.manufacturer(),
-                        p.weight(),
-                        p.type(),
-                        p.cost(),
-                        p.quantityPerBox()))
+                .map(p -> p.withOwner(userId))
                 .flatMap(projectileService::createProjectile)
                 .doOnNext(savedProjectile -> log.debug("Created new projectile with id: {}", savedProjectile.id()))
                 .map(savedProjectile -> status(CREATED).body(savedProjectile));
@@ -149,14 +137,8 @@ public class ProjectileController {
             @Parameter(description = "Id of projectile") @PathVariable Long id,
             @Valid @RequestBody Projectile projectile) {
         return projectileService.getProjectileById(id, userId)
-                .flatMap(existingProjectile -> projectileService.updateProjectile(new Projectile(
-                        existingProjectile.id(),
-                        existingProjectile.ownerId(),
-                        projectile.manufacturer(),
-                        projectile.weight(),
-                        projectile.type(),
-                        projectile.cost(),
-                        projectile.quantityPerBox())))
+                .flatMap(existingProjectile -> projectileService.updateProjectile(
+                        projectile.withIdAndOwner(existingProjectile.id(), existingProjectile.ownerId())))
                 .doOnNext(updatedProjectile -> log.debug("Updated projectile with id: {}", updatedProjectile.id()))
                 .map(updatedProjectile -> ok(updatedProjectile))
                 .defaultIfEmpty(notFound().build());

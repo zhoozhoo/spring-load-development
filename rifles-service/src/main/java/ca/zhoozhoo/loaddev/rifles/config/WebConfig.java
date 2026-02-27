@@ -7,14 +7,12 @@ import org.springframework.web.reactive.result.method.annotation.ArgumentResolve
 
 import ca.zhoozhoo.loaddev.security.CurrentUserMethodArgumentResolver;
 
-/**
- * WebFlux configuration for custom argument resolvers.
- * <p>
- * Registers {@link CurrentUserMethodArgumentResolver} to inject authenticated user IDs
- * into controller method parameters annotated with {@code @CurrentUser}.
- *
- * @author Zhubin Salehi
- */
+/// WebFlux configuration for custom argument resolvers.
+///
+/// Registers [CurrentUserMethodArgumentResolver] to inject authenticated user IDs
+/// into controller method parameters annotated with `@CurrentUser`.
+///
+/// @author Zhubin Salehi
 @Configuration
 public class WebConfig implements WebFluxConfigurer {
 

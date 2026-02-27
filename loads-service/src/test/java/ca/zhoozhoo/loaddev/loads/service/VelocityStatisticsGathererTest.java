@@ -21,16 +21,13 @@ import org.junit.jupiter.api.Test;
 
 import ca.zhoozhoo.loaddev.loads.service.VelocityStatisticsGatherer.VelocityStats;
 
-/**
- * Unit tests for the {@link VelocityStatisticsGatherer}.
- * <p>
- * Tests the single-pass statistics computation,
- * including average, standard deviation, and extreme spread calculations
- * with proper unit handling.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for the [VelocityStatisticsGatherer].
+///
+/// Tests the single-pass statistics computation,
+/// including average, standard deviation, and extreme spread calculations
+/// with proper unit handling.
+///
+/// @author Zhubin Salehi
 @DisplayName("VelocityStatisticsGatherer Tests")
 class VelocityStatisticsGathererTest {
 
@@ -288,6 +285,63 @@ class VelocityStatisticsGathererTest {
             // Then - standard deviation should never be negative
             assertTrue(stats.standardDeviation().getValue().doubleValue() >= 0.0, 
                 "Standard deviation should never be negative, was: " + stats.standardDeviation().getValue().doubleValue());
+        }
+    }
+
+    @Nested
+    @DisplayName("Stream Gatherer Tests")
+    class StreamGathererTests {
+
+        @Test
+        @DisplayName("Should compute statistics via Stream Gatherer")
+        void shouldComputeStatisticsViaStreamGatherer() {
+            // When
+            var stats = java.util.stream.Stream.of(
+                    getQuantity(2800.0, FEET_PER_SECOND),
+                    getQuantity(2810.0, FEET_PER_SECOND),
+                    getQuantity(2790.0, FEET_PER_SECOND))
+                .gather(VelocityStatisticsGatherer.gatherer(FEET_PER_SECOND))
+                .findFirst()
+                .orElse(VelocityStats.empty(FEET_PER_SECOND));
+
+            // Then
+            assertEquals(3, stats.count());
+            assertEquals(2800.0, stats.average().getValue().doubleValue(), 0.001);
+            assertEquals(20.0, stats.extremeSpread().getValue().doubleValue(), 0.001);
+        }
+
+        @Test
+        @DisplayName("Should produce empty stats for empty stream via Gatherer")
+        void shouldProduceEmptyStatsForEmptyStreamViaGatherer() {
+            // When
+            var stats = java.util.stream.Stream.<Quantity<Speed>>empty()
+                .gather(VelocityStatisticsGatherer.gatherer(FEET_PER_SECOND))
+                .findFirst()
+                .orElse(VelocityStats.empty(FEET_PER_SECOND));
+
+            // Then
+            assertEquals(0, stats.count());
+            assertEquals(0.0, stats.average().getValue().doubleValue());
+        }
+
+        @Test
+        @DisplayName("Should handle unit conversion via Gatherer")
+        void shouldHandleUnitConversionViaGatherer() {
+            // When - velocities in fps, compute in m/s
+            var stats = java.util.stream.Stream.of(
+                    getQuantity(2800.0, FEET_PER_SECOND),
+                    getQuantity(2810.0, FEET_PER_SECOND),
+                    getQuantity(2790.0, FEET_PER_SECOND))
+                .gather(VelocityStatisticsGatherer.gatherer(METRES_PER_SECOND))
+                .findFirst()
+                .orElse(VelocityStats.empty(METRES_PER_SECOND));
+
+            // Then - ~2800 fps = ~853.44 m/s
+            assertEquals(3, stats.count());
+            assertTrue(stats.average().getValue().doubleValue() > 850
+                && stats.average().getValue().doubleValue() < 856,
+                "Average should be ~853 m/s, was: " + stats.average().getValue().doubleValue());
+            assertEquals(METRES_PER_SECOND, stats.average().getUnit());
         }
     }
 

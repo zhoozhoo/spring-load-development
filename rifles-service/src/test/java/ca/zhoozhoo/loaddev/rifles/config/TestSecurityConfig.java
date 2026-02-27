@@ -14,15 +14,12 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import ca.zhoozhoo.loaddev.security.CurrentUserMethodArgumentResolver;
 import reactor.core.publisher.Mono;
 
-/**
- * Test security configuration for the rifles service.
- * <p>
- * Configures security for integration tests with permissive settings.
- * Completely disables security checks for testing purposes.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Test security configuration for the rifles service.
+///
+/// Configures security for integration tests with permissive settings.
+/// Completely disables security checks for testing purposes.
+///
+/// @author Zhubin Salehi
 @TestConfiguration
 @EnableWebFluxSecurity
 public class TestSecurityConfig {

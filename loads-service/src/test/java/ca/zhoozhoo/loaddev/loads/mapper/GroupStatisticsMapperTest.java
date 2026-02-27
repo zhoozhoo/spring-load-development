@@ -28,15 +28,12 @@ import ca.zhoozhoo.loaddev.loads.model.Group;
 import ca.zhoozhoo.loaddev.loads.model.GroupStatistics;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
 
-/**
- * Unit tests for the {@link GroupStatisticsMapper}.
- * <p>
- * Tests the mapping functionality between domain models and DTOs,
- * including Quantity object handling and nested object mapping.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for the [GroupStatisticsMapper].
+///
+/// Tests the mapping functionality between domain models and DTOs,
+/// including Quantity object handling and nested object mapping.
+///
+/// @author Zhubin Salehi
 @DisplayName("GroupStatisticsMapper Tests")
 class GroupStatisticsMapperTest {
 
@@ -56,9 +53,7 @@ class GroupStatisticsMapperTest {
         mapper = getMapper(GroupStatisticsMapper.class);
     }
 
-    /**
-     * Creates a valid Group instance for testing.
-     */
+    /// Creates a valid Group instance for testing.
     private Group createValidGroup() {
         return new Group(
             GROUP_ID,
@@ -71,9 +66,7 @@ class GroupStatisticsMapperTest {
         );
     }
 
-    /**
-     * Creates a valid Shot instance for testing.
-     */
+    /// Creates a valid Shot instance for testing.
     private Shot createValidShot(Long id, double velocity) {
         return new Shot(
             id,
@@ -83,9 +76,7 @@ class GroupStatisticsMapperTest {
         );
     }
 
-    /**
-     * Creates a valid GroupStatistics instance for testing.
-     */
+    /// Creates a valid GroupStatistics instance for testing.
     private GroupStatistics createValidGroupStatistics() {
         var group = createValidGroup();
         var shots = List.of(

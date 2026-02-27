@@ -7,27 +7,25 @@ import javax.money.MonetaryAmount;
 import tools.jackson.core.Version;
 import tools.jackson.databind.module.SimpleModule;
 
-/**
- * Jackson module for serialization and deserialization of JSR-385 unit-of-measure types.
- * <p>
- * Registers custom serializers/deserializers for {@link Unit} and {@link Quantity} using UCUM (Unified Code for Units of
- * Measure) formatting. Once registered, {@link tools.jackson.databind.ObjectMapper} can read/write unit and quantity
- * values in concise interoperable JSON.
- * <p>
- * Registration options:
- * <ul>
- *   <li>Explicit (builder): <pre>{@code var mapper = new ObjectMapper().rebuild().addModule(new QuantityModule()).build();}</pre></li>
- *   <li>Auto-discovery: place this module on the classpath and invoke <pre>{@code var mapper = new ObjectMapper().findAndRegisterModules();}</pre></li>
- *   <li>Helper: <pre>{@code var mapper = QuantityModuleSupport.newObjectMapperWithQuantityModule();}</pre></li>
- * </ul>
- * Module name: {@code UnitJsonSerializationModule}, version: 2.1.0
- *
- * @author Zhubin Salehi
- * @see UnitSerializer
- * @see UnitDeserializer
- * @see QuantityDeserializer
- * @see QuantityModuleSupport
- */
+/// Jackson module for serialization and deserialization of JSR-385 unit-of-measure types.
+///
+/// Registers custom serializers/deserializers for [Unit] and [Quantity] using UCUM (Unified Code for Units of
+/// Measure) formatting. Once registered, [tools.jackson.databind.ObjectMapper] can read/write unit and quantity
+/// values in concise interoperable JSON.
+///
+/// Registration options:
+///
+/// - Explicit (builder): ```{@code var mapper = new ObjectMapper().rebuild().addModule(new QuantityModule()).build();```
+/// - Auto-discovery: place this module on the classpath and invoke ```{@code var mapper = new ObjectMapper().findAndRegisterModules();```
+/// - Helper: ```{@code var mapper = QuantityModuleSupport.newObjectMapperWithQuantityModule();```
+///
+/// Module name: `UnitJsonSerializationModule`, version: 2.1.0
+///
+/// @author Zhubin Salehi
+/// @see UnitSerializer
+/// @see UnitDeserializer
+/// @see QuantityDeserializer
+/// @see QuantityModuleSupport
 public final class QuantityModule extends SimpleModule {
 
     private static final long serialVersionUID = 1L;

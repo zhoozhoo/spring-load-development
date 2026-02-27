@@ -5,7 +5,7 @@ import static org.springframework.http.ResponseEntity.notFound;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ca.zhoozhoo.loaddev.rifles.model.Rifle;
 import ca.zhoozhoo.loaddev.rifles.service.RiflesService;
 import ca.zhoozhoo.loaddev.security.CurrentUser;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -39,16 +40,14 @@ import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-/**
- * REST controller for managing rifle firearm specifications.
- * <p>
- * Provides CRUD operations for rifles with JSR-385 Quantity types for measurements.
- * All endpoints are OAuth2 secured with user-based access control for multi-tenant isolation.
- *
- * @author Zhubin Salehi
- */
+
+/// REST controller for managing rifle firearm specifications.
+///
+/// Provides CRUD operations for rifles with JSR-385 Quantity types for measurements.
+/// All endpoints are OAuth2 secured with user-based access control for multi-tenant isolation.
+///
+/// @author Zhubin Salehi
 @Tag(name = "Rifles", description = "Operations on rifles belonging to the authenticated user")
 @SecurityScheme(
     name = "Oauth2Security", 
@@ -117,19 +116,7 @@ public class RifleController {
     public Mono<ResponseEntity<Rifle>> createRifle(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Parameter(description = "Rifle to create", required = true) @Valid @RequestBody Rifle rifle) {
-                if (userId == null || userId.isBlank()) {
-                        return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).<Rifle>build());
-                }
-        return Mono.just(new Rifle(
-                rifle.id(),
-                userId,
-                rifle.name(),
-                rifle.description(),
-                rifle.caliber(),
-                rifle.barrelLength(),
-                rifle.barrelContour(),
-                rifle.rifling(),
-                rifle.zeroing()))
+        return Mono.just(rifle.withOwner(userId))
                 .flatMap(riflesService::createRifle)
                 .doOnNext(savedRifle -> log.info("Created new rifle with id: {}", savedRifle.id()))
                 .map(savedRifle -> status(CREATED).body(savedRifle));
@@ -149,16 +136,8 @@ public class RifleController {
             @Parameter(description = "Rifle ID", required = true) @PathVariable Long id,
             @Parameter(description = "Updated rifle data", required = true) @Valid @RequestBody Rifle rifle) {
         return riflesService.getRifleById(id, userId)
-                .flatMap(existingRifle -> riflesService.updateRifle(new Rifle(
-                        existingRifle.id(),
-                        existingRifle.ownerId(),
-                        rifle.name(),
-                        rifle.description(),
-                        rifle.caliber(),
-                        rifle.barrelLength(),
-                        rifle.barrelContour(),
-                        rifle.rifling(),
-                        rifle.zeroing())))
+                .flatMap(existingRifle -> riflesService.updateRifle(
+                        rifle.withIdAndOwner(existingRifle.id(), existingRifle.ownerId())))
                 .doOnNext(updatedRifle -> log.info("Updated rifle with id: {}", updatedRifle.id()))
                 .map(updatedRifle -> ok(updatedRifle))
                 .defaultIfEmpty(notFound().build());

@@ -12,12 +12,10 @@ import org.springframework.web.bind.support.WebExchangeBindException;
 
 import reactor.test.StepVerifier;
 
-/**
- * Unit tests for GlobalExceptionHandler.
- * Tests exception handling and response status codes.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for GlobalExceptionHandler.
+/// Tests exception handling and response status codes.
+///
+/// @author Zhubin Salehi
 class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();

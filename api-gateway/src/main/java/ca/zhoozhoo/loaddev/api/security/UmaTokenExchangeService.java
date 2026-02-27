@@ -19,51 +19,48 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ca.zhoozhoo.loaddev.api.config.CacheConfiguration;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import ca.zhoozhoo.loaddev.api.config.SecurityConfiguration;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-/**
- * Service responsible for exchanging OAuth2 access tokens for UMA permission tokens.
- * 
- * <p>This service encapsulates the logic for communicating with Keycloak's token endpoint
- * to obtain User-Managed Access (UMA) permission tokens. These tokens contain resource-specific
- * permissions that can be used for fine-grained authorization decisions.</p>
- * 
- * <p><b>UMA Token Exchange Process:</b></p>
- * <ol>
- *   <li>Receives a standard OAuth2 access token</li>
- *   <li>Constructs a token exchange request with grant type {@code urn:ietf:params:oauth:grant-type:uma-ticket}</li>
- *   <li>Calls Keycloak's token endpoint with client credentials via the Keycloak WebClient</li>
- *   <li>Returns the permission token containing resource permissions</li>
- * </ol>
- * 
- * <p>The service includes automatic retry logic for transient failures, proper error handling,
- * and Spring Cache integration for caching permission tokens.</p>
- * 
- * <p><b>OpenTelemetry Observability:</b></p>
- * <p>This service benefits from automatic OpenTelemetry instrumentation through the injected
- * {@code keycloakWebClient}, which is configured with an {@link io.micrometer.observation.ObservationRegistry}.
- * Each token exchange operation generates observability data:</p>
- * <ul>
- *   <li><b>Distributed Traces:</b> HTTP client spans are created for each Keycloak call, showing
- *       request duration, response status, and correlation with parent gateway spans. Trace context
- *       is propagated using W3C Trace Context headers (traceparent, tracestate).</li>
- *   <li><b>Metrics:</b> Request count, duration histograms, error rates, and retry attempts are
- *       automatically collected and exported to OpenTelemetry collectors.</li>
- *   <li><b>Error Tracking:</b> Failed token exchanges include exception details in span events,
- *       enabling quick diagnosis of authentication issues.</li>
- *   <li><b>Cache Hit/Miss Observability:</b> Spring Cache operations are observable through
- *       Micrometer's cache metrics, showing cache effectiveness for token reuse.</li>
- * </ul>
- * 
- * @author Zhubin Salehi
- * @see <a href="https://docs.kantarainitiative.org/uma/wg/rec-oauth-uma-grant-2.0.html">UMA 2.0 Grant</a>
- * @see CacheConfiguration
- * @see SecurityConfiguration#keycloakWebClient
- */
+/// Service responsible for exchanging OAuth2 access tokens for UMA permission tokens.
+///
+/// This service encapsulates the logic for communicating with Keycloak's token endpoint
+/// to obtain User-Managed Access (UMA) permission tokens. These tokens contain resource-specific
+/// permissions that can be used for fine-grained authorization decisions.
+///
+/// **UMA Token Exchange Process:**
+///
+/// - Receives a standard OAuth2 access token
+/// - Constructs a token exchange request with grant type `urn:ietf:params:oauth:grant-type:uma-ticket`
+/// - Calls Keycloak's token endpoint with client credentials via the Keycloak WebClient
+/// - Returns the permission token containing resource permissions
+///
+/// The service includes automatic retry logic for transient failures, proper error handling,
+/// and Spring Cache integration for caching permission tokens.
+///
+/// **OpenTelemetry Observability:**
+///
+/// This service benefits from automatic OpenTelemetry instrumentation through the injected
+/// `keycloakWebClient`, which is configured with an [io.micrometer.observation.ObservationRegistry].
+/// Each token exchange operation generates observability data:
+///
+/// - **Distributed Traces:** HTTP client spans are created for each Keycloak call, showing
+/// request duration, response status, and correlation with parent gateway spans. Trace context
+/// is propagated using W3C Trace Context headers (traceparent, tracestate).
+/// - **Metrics:** Request count, duration histograms, error rates, and retry attempts are
+/// automatically collected and exported to OpenTelemetry collectors.
+/// - **Error Tracking:** Failed token exchanges include exception details in span events,
+/// enabling quick diagnosis of authentication issues.
+/// - **Cache Hit/Miss Observability:** Spring Cache operations are observable through
+/// Micrometer's cache metrics, showing cache effectiveness for token reuse.
+///
+/// @author Zhubin Salehi
+/// @see <a href="https://docs.kantarainitiative.org/uma/wg/rec-oauth-uma-grant-2.0.html">UMA 2.0 Grant</a>
+/// @see CacheConfiguration
+/// @see SecurityConfiguration#keycloakWebClient
 @Service
 @Log4j2
 public class UmaTokenExchangeService {
@@ -94,32 +91,31 @@ public class UmaTokenExchangeService {
         this.clientSecret = clientSecret;
     }
 
-    /**
-     * Exchanges a standard OAuth2 access token for a UMA permission token.
-     * 
-     * <p>The permission token includes resource-specific permissions that have been
-     * granted to the user based on Keycloak's authorization policies.</p>
-     * 
-     * <p>This method uses Spring Cache abstraction with {@code @Cacheable} annotation.
-     * When caching is enabled, permission tokens are automatically cached using the
-     * access token as the key. Cached tokens are returned immediately without making
-     * a network call to Keycloak.</p>
-     * 
-     * <p><b>OpenTelemetry Tracing:</b></p>
-     * <p>The WebClient call to Keycloak's token endpoint automatically creates a child span
-     * in the distributed trace. This span includes:</p>
-     * <ul>
-     *   <li>HTTP method, URL, and status code</li>
-     *   <li>Request/response timing</li>
-     *   <li>Error details if the exchange fails</li>
-     *   <li>Retry attempt counts and timing</li>
-     * </ul>
-     * <p>Trace context is propagated to Keycloak via W3C Trace Context headers, enabling
-     * end-to-end trace correlation across the gateway and authorization server.</p>
-     * 
-     * @param accessToken the OAuth2 access token to exchange (used as cache key)
-     * @return a Mono emitting the permission token, or an error if exchange fails
-     */
+    /// Exchanges a standard OAuth2 access token for a UMA permission token.
+    ///
+    /// The permission token includes resource-specific permissions that have been
+    /// granted to the user based on Keycloak's authorization policies.
+    ///
+    /// This method uses Spring Cache abstraction with `@Cacheable` annotation.
+    /// When caching is enabled, permission tokens are automatically cached using the
+    /// access token as the key. Cached tokens are returned immediately without making
+    /// a network call to Keycloak.
+    ///
+    /// **OpenTelemetry Tracing:**
+    ///
+    /// The WebClient call to Keycloak's token endpoint automatically creates a child span
+    /// in the distributed trace. This span includes:
+    ///
+    /// - HTTP method, URL, and status code
+    /// - Request/response timing
+    /// - Error details if the exchange fails
+    /// - Retry attempt counts and timing
+    ///
+    /// Trace context is propagated to Keycloak via W3C Trace Context headers, enabling
+    /// end-to-end trace correlation across the gateway and authorization server.
+    ///
+    /// @param accessToken the OAuth2 access token to exchange (used as cache key)
+    /// @return a Mono emitting the permission token, or an error if exchange fails
     @Cacheable(value = CacheConfiguration.UMA_TOKEN_CACHE, key = "#accessToken", unless = "#result == null")
     public Mono<UmaPermissionToken> exchangeForPermissionToken(String accessToken) {
         log.debug("Performing UMA token exchange with Keycloak");
@@ -141,11 +137,9 @@ public class UmaTokenExchangeService {
                 .onErrorMap(WebClientResponseException.class, this::mapWebClientException);
     }
 
-    /**
-     * Builds the form data required for UMA token exchange.
-     * 
-     * @return MultiValueMap containing the token exchange request parameters
-     */
+    /// Builds the form data required for UMA token exchange.
+    ///
+    /// @return MultiValueMap containing the token exchange request parameters
     private MultiValueMap<String, String> buildTokenExchangeRequest() {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", UMA_GRANT_TYPE);
@@ -157,12 +151,10 @@ public class UmaTokenExchangeService {
         return formData;
     }
 
-    /**
-     * Maps the token response to a UmaPermissionToken domain object.
-     * 
-     * @param response the raw token response from Keycloak
-     * @return a UmaPermissionToken containing the access token and metadata
-     */
+    /// Maps the token response to a UmaPermissionToken domain object.
+    ///
+    /// @param response the raw token response from Keycloak
+    /// @return a UmaPermissionToken containing the access token and metadata
     private UmaPermissionToken mapToPermissionToken(TokenResponse response) {
         return new UmaPermissionToken(
                 response.accessToken(),
@@ -172,28 +164,26 @@ public class UmaTokenExchangeService {
         );
     }
 
-    /**
-     * Determines if an error is retryable based on its type.
-     * 
-     * @param throwable the error to check
-     * @return true if the error should trigger a retry
-     */
+    /// Determines if an error is retryable based on its type.
+    /// Uses primitive type patterns (JEP 455) for HTTP status code matching.
+    ///
+    /// @param throwable the error to check
+    /// @return true if the error should trigger a retry
     private boolean isRetryableError(Throwable throwable) {
-        if (throwable instanceof WebClientResponseException wcre) {
-            int statusCode = wcre.getStatusCode().value();
-            // Retry on 5xx server errors and 429 rate limiting
-            return statusCode >= 500 || statusCode == 429;
-        }
-
-        return false;
+        return switch (throwable) {
+            case WebClientResponseException wcre -> switch (wcre.getStatusCode().value()) {
+                case 429 -> true;
+                case int i when i >= 500 -> true;
+                default -> false;
+            };
+            default -> false;
+        };
     }
 
-    /**
-     * Maps WebClient exceptions to more descriptive domain exceptions.
-     * 
-     * @param exception the WebClient exception
-     * @return a TokenExchangeException with contextual information
-     */
+    /// Maps WebClient exceptions to more descriptive domain exceptions.
+    ///
+    /// @param exception the WebClient exception
+    /// @return a TokenExchangeException with contextual information
     private TokenExchangeException mapWebClientException(WebClientResponseException exception) {
         var message = switch (exception.getStatusCode().value()) {
             case 400 -> "Invalid token exchange request: %s".formatted(exception.getResponseBodyAsString());
@@ -206,10 +196,8 @@ public class UmaTokenExchangeService {
         return new TokenExchangeException(message, exception);
     }
 
-    /**
-     * Response object for token endpoint.
-     * Jackson automatically maps snake_case JSON fields to camelCase record components.
-     */
+    /// Response object for token endpoint.
+    /// Jackson automatically maps snake_case JSON fields to camelCase record components.
     private record TokenResponse(
         
             @JsonProperty("access_token") 

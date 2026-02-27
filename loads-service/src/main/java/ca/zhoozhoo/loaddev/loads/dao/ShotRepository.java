@@ -6,16 +6,13 @@ import ca.zhoozhoo.loaddev.loads.model.Shot;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * Reactive repository interface for {@link Shot} entity operations.
- * <p>
- * Provides CRUD operations and custom query methods for individual shot data
- * using javax.measure Quantity API for velocity measurements. Supports owner-based
- * and group-based filtering for secure multi-tenant data access.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Reactive repository interface for [Shot] entity operations.
+///
+/// Provides CRUD operations and custom query methods for individual shot data
+/// using javax.measure Quantity API for velocity measurements. Supports owner-based
+/// and group-based filtering for secure multi-tenant data access.
+///
+/// @author Zhubin Salehi
 public interface ShotRepository extends R2dbcRepository<Shot, Long> {
 
     Flux<Shot> findByGroupIdAndOwnerId(Long groupId, String ownerId);

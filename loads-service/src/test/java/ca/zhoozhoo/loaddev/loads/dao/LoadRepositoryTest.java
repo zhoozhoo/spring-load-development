@@ -17,15 +17,12 @@ import org.springframework.test.context.ActiveProfiles;
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 
-/**
- * Integration tests for {@link LoadRepository}.
- * <p>
- * Tests R2DBC repository operations for load data including CRUD operations,
- * custom query methods, and Quantity type persistence.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Integration tests for [LoadRepository].
+///
+/// Tests R2DBC repository operations for load data including CRUD operations,
+/// custom query methods, and Quantity type persistence.
+///
+/// @author Zhubin Salehi
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)

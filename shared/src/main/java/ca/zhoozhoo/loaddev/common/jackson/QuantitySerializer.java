@@ -9,17 +9,15 @@ import java.math.BigDecimal;
 
 import javax.measure.Quantity;
 
-/**
- * Custom Jackson serializer for JSR-385 {@link Quantity} objects.
- * <p>
- * Writes quantities in the structured form:
- * { "value": <number>, "unit": "<UCUM>" }
- * The optional scale field is omitted; deserializers default to ABSOLUTE when absent.
- * 
- * @author Zhubin Salehi
- * @see Quantity
- * @see QuantityDeserializer
- */
+/// Custom Jackson serializer for JSR-385 [Quantity] objects.
+///
+/// Writes quantities in the structured form:
+/// { "value": <number>, "unit": "<UCUM>" }
+/// The optional scale field is omitted; deserializers default to ABSOLUTE when absent.
+///
+/// @author Zhubin Salehi
+/// @see Quantity
+/// @see QuantityDeserializer
 public class QuantitySerializer extends StdSerializer<Quantity<?>> {
 
     @SuppressWarnings("unchecked")

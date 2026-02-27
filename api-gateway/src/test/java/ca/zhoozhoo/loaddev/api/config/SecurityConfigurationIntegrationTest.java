@@ -14,12 +14,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 import ca.zhoozhoo.loaddev.test.testcontainers.KeycloakTest;
 import io.micrometer.observation.ObservationRegistry;
 
-/**
- * Integration tests for {@link SecurityConfiguration}.
- * Tests the security configuration beans and OAuth2 setup with Keycloak.
- * 
- * @author Zhubin Salehi
- */
+/// Integration tests for [SecurityConfiguration].
+/// Tests the security configuration beans and OAuth2 setup with Keycloak.
+///
+/// @author Zhubin Salehi
 @SpringBootTest
 @ActiveProfiles("test")
 class SecurityConfigurationIntegrationTest extends KeycloakTest {

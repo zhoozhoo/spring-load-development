@@ -13,12 +13,10 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.server.ResponseStatusException;
 
-/**
- * Unit tests for {@link GlobalExceptionHandler}.
- * Tests exception handling and response status codes for all exception handlers.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for [GlobalExceptionHandler].
+/// Tests exception handling and response status codes for all exception handlers.
+///
+/// @author Zhubin Salehi
 class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();

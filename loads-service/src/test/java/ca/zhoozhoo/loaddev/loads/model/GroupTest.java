@@ -19,15 +19,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for the {@link Group} model class.
- * <p>
- * Tests validation logic, equals/hashCode contracts
- * for shooting group records with powder charge, target range, and group size measurements.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for the [Group] model class.
+///
+/// Tests validation logic, equals/hashCode contracts
+/// for shooting group records with powder charge, target range, and group size measurements.
+///
+/// @author Zhubin Salehi
 @DisplayName("Group Model Tests")
 class GroupTest {
 
@@ -36,9 +33,7 @@ class GroupTest {
     private static final Long LOAD_ID = 1L;
     private static final LocalDate TEST_DATE = LocalDate.of(2024, 11, 1);
 
-    /**
-     * Creates a valid Group instance for testing using imperial units.
-     */
+    /// Creates a valid Group instance for testing using imperial units.
     private Group createValidGroup() {
         return new Group(
             1L,
@@ -51,9 +46,7 @@ class GroupTest {
         );
     }
 
-    /**
-     * Creates a valid Group instance using metric units.
-     */
+    /// Creates a valid Group instance using metric units.
     private Group createValidGroupMetric() {
         return new Group(
             2L,

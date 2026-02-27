@@ -27,16 +27,13 @@ import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 import reactor.core.publisher.Flux;
 
-/**
- * Integration tests for LoadsController.
- * <p>
- * Tests all REST endpoints for load management including CRUD operations,
- * validation, and security. Uses WebTestClient for reactive endpoint testing with
- * mock JWT authentication.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Integration tests for LoadsController.
+///
+/// Tests all REST endpoints for load management including CRUD operations,
+/// validation, and security. Uses WebTestClient for reactive endpoint testing with
+/// mock JWT authentication.
+///
+/// @author Zhubin Salehi
 @SpringBootTest(properties = "spring.autoconfigure.exclude=ca.zhoozhoo.loaddev.security.SecurityAutoConfiguration")
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient

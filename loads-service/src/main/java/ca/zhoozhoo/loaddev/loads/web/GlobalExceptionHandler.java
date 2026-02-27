@@ -23,17 +23,14 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
-/**
- * Global exception handler for the Loads Service REST API.
- * <p>
- * This handler provides centralized exception handling for all controllers,
- * converting various exception types into appropriate HTTP responses with
- * meaningful error messages. It handles validation errors, data integrity
- * violations, security exceptions, and general runtime errors.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Global exception handler for the Loads Service REST API.
+///
+/// This handler provides centralized exception handling for all controllers,
+/// converting various exception types into appropriate HTTP responses with
+/// meaningful error messages. It handles validation errors, data integrity
+/// violations, security exceptions, and general runtime errors.
+///
+/// @author Zhubin Salehi
 @RestControllerAdvice
 @Log4j2
 public class GlobalExceptionHandler {

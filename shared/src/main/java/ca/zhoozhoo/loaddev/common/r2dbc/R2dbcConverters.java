@@ -24,24 +24,20 @@ import ca.zhoozhoo.loaddev.common.jackson.QuantityModuleSupport;
 import io.r2dbc.postgresql.codec.Json;
 import systems.uom.ucum.format.UCUMFormat;
 
-/**
- * R2DBC converters for JSR-385 {@link Quantity} and JSR-354 {@link MonetaryAmount} types.
- * <p>
- * Quantity format: {@code {"value": 26.0, "unit": "[in_i]", "scale": "ABSOLUTE"}}<br>
- * MonetaryAmount format: {@code {"amount": 45.99, "currency": "USD"}}
- *
- * @author Zhubin Salehi
- */
+/// R2DBC converters for JSR-385 [Quantity] and JSR-354 [MonetaryAmount] types.
+///
+/// Quantity format: `{"value": 26.0, "unit": "[in_i]", "scale": "ABSOLUTE"`}<br>
+/// MonetaryAmount format: `{"amount": 45.99, "currency": "USD"`}
+///
+/// @author Zhubin Salehi
 public class R2dbcConverters {
 
     private static final UCUMFormat UCUM_FORMAT = UCUMFormat.getInstance(CASE_SENSITIVE);
     private static final ObjectMapper OBJECT_MAPPER = QuantityModuleSupport.newObjectMapperWithQuantityModule();
 
-    /**
-     * Provides all R2DBC converters for JSR-385 and JSR-354 types.
-     *
-     * @return list of converters for reading and writing Quantity and MonetaryAmount objects
-     */
+    /// Provides all R2DBC converters for JSR-385 and JSR-354 types.
+    ///
+    /// @return list of converters for reading and writing Quantity and MonetaryAmount objects
     public static List<Object> getConverters() {
         var converters = new ArrayList<>();
         converters.add(new QuantityToJsonConverter());
@@ -56,10 +52,8 @@ public class R2dbcConverters {
         return converters;
     }
 
-    /**
-     * Converts {@link Quantity} to PostgreSQL JSONB.
-     * Example: {@code {"value": 26.0, "unit": "[in_i]", "scale": "ABSOLUTE"}}
-     */
+    /// Converts [Quantity] to PostgreSQL JSONB.
+    /// Example: `{"value": 26.0, "unit": "[in_i]", "scale": "ABSOLUTE"`}
     @WritingConverter
     public static class QuantityToJsonConverter implements Converter<Quantity<?>, Json> {
 
@@ -70,10 +64,8 @@ public class R2dbcConverters {
         }
     }
 
-    /**
-     * Converts PostgreSQL JSONB to {@link Quantity}.
-     * Example: {@code {"value": 26.0, "unit": "[in_i]"}}
-     */
+    /// Converts PostgreSQL JSONB to [Quantity].
+    /// Example: `{"value": 26.0, "unit": "[in_i]"`}
     @ReadingConverter
     public static class JsonToQuantityConverter implements Converter<Json, Quantity<?>> {
 
@@ -87,10 +79,8 @@ public class R2dbcConverters {
         }
     }
 
-    /**
-     * Converts {@link MonetaryAmount} to PostgreSQL JSONB.
-     * Example: {@code {"amount": 45.99, "currency": "USD"}}
-     */
+    /// Converts [MonetaryAmount] to PostgreSQL JSONB.
+    /// Example: `{"amount": 45.99, "currency": "USD"`}
     @WritingConverter
     public static class MonetaryAmountToJsonConverter implements Converter<MonetaryAmount, Json> {
 
@@ -104,10 +94,8 @@ public class R2dbcConverters {
         }
     }
 
-    /**
-     * Converts PostgreSQL JSONB to {@link MonetaryAmount}.
-     * Example: {@code {"amount": 45.99, "currency": "USD"}}
-     */
+    /// Converts PostgreSQL JSONB to [MonetaryAmount].
+    /// Example: `{"amount": 45.99, "currency": "USD"`}
     @ReadingConverter
     public static class JsonToMonetaryAmountConverter implements Converter<Json, MonetaryAmount> {
 
@@ -121,11 +109,9 @@ public class R2dbcConverters {
         }
     }
 
-    /**
-     * Converts {@code Rifling} to PostgreSQL JSONB.
-     * Example: {@code {"twistRate": {"value": 16.0, "unit": "[in_i]", "scale": "ABSOLUTE"}, "twistDirection": "RIGHT"}}
-     * Note: Uses GenericConverter to explicitly declare supported types and avoid circular dependency.
-     */
+    /// Converts `Rifling` to PostgreSQL JSONB.
+    /// Example: `{"twistRate": {"value": 16.0, "unit": "[in_i]", "scale": "ABSOLUTE"`, "twistDirection": "RIGHT"}}
+    /// Note: Uses GenericConverter to explicitly declare supported types and avoid circular dependency.
     @WritingConverter
     public static class RiflingToJsonConverter implements GenericConverter {
 
@@ -157,10 +143,8 @@ public class R2dbcConverters {
         }
     }
 
-    /**
-     * Converts PostgreSQL JSONB to {@code Rifling}.
-     * Example: {@code {"twistRate": {"value": 16.0, "unit": "[in_i]", "scale": "ABSOLUTE"}, "twistDirection": "RIGHT"}}
-     */
+    /// Converts PostgreSQL JSONB to `Rifling`.
+    /// Example: `{"twistRate": {"value": 16.0, "unit": "[in_i]", "scale": "ABSOLUTE"`, "twistDirection": "RIGHT"}}
     @ReadingConverter
     public static class JsonToRiflingConverter implements GenericConverter {
 
@@ -195,11 +179,9 @@ public class R2dbcConverters {
         }
     }
 
-    /**
-     * Converts {@code Zeroing} to PostgreSQL JSONB.
-     * Example: {@code {"sightHeight": {"value": 1.5, "unit": "[in_i]", "scale": "ABSOLUTE"}, "zeroDistance": {"value": 100.0, "unit": "[in_i]", "scale": "ABSOLUTE"}}}
-     * Note: Uses GenericConverter to explicitly declare supported types and avoid circular dependency.
-     */
+    /// Converts `Zeroing` to PostgreSQL JSONB.
+    /// Example: `{"sightHeight": {"value": 1.5, "unit": "[in_i]", "scale": "ABSOLUTE"`, "zeroDistance": {"value": 100.0, "unit": "[in_i]", "scale": "ABSOLUTE"}}}
+    /// Note: Uses GenericConverter to explicitly declare supported types and avoid circular dependency.
     @WritingConverter
     public static class ZeroingToJsonConverter implements GenericConverter {
 
@@ -231,10 +213,8 @@ public class R2dbcConverters {
         }
     }
 
-    /**
-     * Converts PostgreSQL JSONB to {@code Zeroing}.
-     * Example: {@code {"sightHeight": {"value": 1.5, "unit": "[in_i]", "scale": "ABSOLUTE"}, "zeroDistance": {"value": 100.0, "unit": "[in_i]", "scale": "ABSOLUTE"}}}
-     */
+    /// Converts PostgreSQL JSONB to `Zeroing`.
+    /// Example: `{"sightHeight": {"value": 1.5, "unit": "[in_i]", "scale": "ABSOLUTE"`, "zeroDistance": {"value": 100.0, "unit": "[in_i]", "scale": "ABSOLUTE"}}}
     @ReadingConverter
     public static class JsonToZeroingConverter implements GenericConverter {
 

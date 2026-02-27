@@ -20,16 +20,13 @@ import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.model.Group;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 
-/**
- * Integration tests for {@link GroupRepository}.
- * <p>
- * Tests R2DBC repository operations for group data including CRUD operations,
- * custom query methods, and Quantity type persistence for powder charges,
- * target ranges, and group sizes.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Integration tests for [GroupRepository].
+///
+/// Tests R2DBC repository operations for group data including CRUD operations,
+/// custom query methods, and Quantity type persistence for powder charges,
+/// target ranges, and group sizes.
+///
+/// @author Zhubin Salehi
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)

@@ -21,44 +21,42 @@ import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.deser.std.StdDeserializer;
 
-/**
- * Custom Jackson deserializer for JSR-385 {@link Quantity} objects.
- * <p>
- * Deserializes JSON representations of quantities with the following structure:
- * <pre>
- * {
- *   "value": 26.0,
- *   "unit": "[in_i]",
- *   "scale": "ABSOLUTE"   // optional; defaults to ABSOLUTE when omitted
- * }
- * </pre>
- * Required fields:
- * <ul>
- *   <li><b>value</b> – numeric (mapped to {@link BigDecimal})</li>
- *   <li><b>unit</b> – UCUM string (see {@link UnitDeserializer})</li>
- *   <li><b>scale</b> – (optional) one of {@code ABSOLUTE} or {@code RELATIVE}; defaults to {@code ABSOLUTE} if missing</li>
- * </ul>
- * Validation & error behavior:
- * <ul>
- *   <li>Missing required field (<b>value</b>, <b>unit</b>) → {@code "<field> not found for quantity type."}</li>
- *   <li>Missing optional field (<b>scale</b>) → defaults to {@code ABSOLUTE}</li>
- *   <li>Non-numeric value → {@code Invalid numeric value for 'value' field: ...}</li>
- *   <li>Invalid unit string → {@code Invalid unit value: ...}</li>
- *   <li>Invalid scale enum → {@code Invalid scale '<value>'. Expected ABSOLUTE or RELATIVE}</li>
- * </ul>
- * The deserializer stops at the first validation failure and throws a Jackson mapping exception
- * (e.g., {@link tools.jackson.databind.exc.MismatchedInputException}).
- * <p>
- * Example usage:
- * <pre>
- * ObjectMapper mapper = QuantityModuleSupport.newObjectMapperWithQuantityModule();
- * Quantity<?> q = mapper.readValue("{\n  \"value\": 1.5, \n  \"unit\": \"m\", \n  \"scale\": \"ABSOLUTE\" }", Quantity.class);
- * </pre>
- *
- * @author Zhubin Salehi
- * @see Quantity
- * @see UnitDeserializer
- */
+/// Custom Jackson deserializer for JSR-385 [Quantity] objects.
+///
+/// Deserializes JSON representations of quantities with the following structure:
+/// ```
+/// {
+///   "value": 26.0,
+///   "unit": "[in_i]",
+///   "scale": "ABSOLUTE"   // optional; defaults to ABSOLUTE when omitted
+/// }
+/// ```
+/// Required fields:
+///
+/// - **value** – numeric (mapped to [BigDecimal])
+/// - **unit** – UCUM string (see [UnitDeserializer])
+/// - **scale** – (optional) one of `ABSOLUTE` or `RELATIVE`; defaults to `ABSOLUTE` if missing
+///
+/// Validation & error behavior:
+///
+/// - Missing required field (**value**, **unit**) → `"<field> not found for quantity type."`
+/// - Missing optional field (**scale**) → defaults to `ABSOLUTE`
+/// - Non-numeric value → `Invalid numeric value for 'value' field: ...`
+/// - Invalid unit string → `Invalid unit value: ...`
+/// - Invalid scale enum → `Invalid scale '<value>'. Expected ABSOLUTE or RELATIVE`
+///
+/// The deserializer stops at the first validation failure and throws a Jackson mapping exception
+/// (e.g., [tools.jackson.databind.exc.MismatchedInputException]).
+///
+/// Example usage:
+/// ```
+/// ObjectMapper mapper = QuantityModuleSupport.newObjectMapperWithQuantityModule();
+/// Quantity<?> q = mapper.readValue("{\n  \"value\": 1.5, \n  \"unit\": \"m\", \n  \"scale\": \"ABSOLUTE\" }", Quantity.class);
+/// ```
+///
+/// @author Zhubin Salehi
+/// @see Quantity
+/// @see UnitDeserializer
 @SuppressFBWarnings(value = "SE_NO_SUITABLE_CONSTRUCTOR", justification = "Jackson runtime never Java-serializes deserializer instances; class implements Serializable only for framework compatibility and test expectations.")
 public final class QuantityDeserializer extends StdDeserializer<Quantity<?>> implements Serializable {
 

@@ -10,16 +10,13 @@ import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.ser.std.StdSerializer;
 
 
-/**
- * Jackson serializer for JSR-354 {@link MonetaryAmount} types.
- * <p>
- * Serializes {@link MonetaryAmount} to JSON objects of the form
- * {@code {"amount": 45.99, "currency": "USD"}}.
- * </p>
- *
- * @author Zhubin Salehi
- * @see MonetaryAmountDeserializer
- */
+/// Jackson serializer for JSR-354 [MonetaryAmount] types.
+///
+/// Serializes [MonetaryAmount] to JSON objects of the form
+/// `{"amount": 45.99, "currency": "USD"`}.
+///
+/// @author Zhubin Salehi
+/// @see MonetaryAmountDeserializer
 public class MonetaryAmountSerializer extends StdSerializer<MonetaryAmount> {
 
     public MonetaryAmountSerializer() {

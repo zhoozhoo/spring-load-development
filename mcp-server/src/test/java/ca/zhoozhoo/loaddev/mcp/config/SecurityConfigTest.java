@@ -11,19 +11,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 
-/**
- * Unit tests for SecurityConfig.
- * <p>
- * Tests the security configuration to ensure proper setup of:
- * <ul>
- * <li>OAuth2 resource server with JWT authentication</li>
- * <li>Public access to actuator endpoints</li>
- * <li>Protected access to MCP and SSE endpoints</li>
- * <li>Authentication requirements for other endpoints</li>
- * </ul>
- * 
- * @author Zhubin Salehi
- */
+/// Unit tests for SecurityConfig.
+///
+/// Tests the security configuration to ensure proper setup of:
+///
+/// - OAuth2 resource server with JWT authentication
+/// - Public access to actuator endpoints
+/// - Protected access to MCP and SSE endpoints
+/// - Authentication requirements for other endpoints
+///
+/// @author Zhubin Salehi
 class SecurityConfigTest {
 
     private SecurityConfig securityConfig;
@@ -40,9 +37,7 @@ class SecurityConfigTest {
         when(http.build()).thenReturn(mock(SecurityWebFilterChain.class));
     }
 
-    /**
-     * Tests that the security filter chain bean is created successfully.
-     */
+    /// Tests that the security filter chain bean is created successfully.
     @Test
     void securityWebFilterChain_ShouldCreateFilterChain() {
         // When
@@ -55,9 +50,7 @@ class SecurityConfigTest {
         verify(http).build();
     }
 
-    /**
-     * Tests that the configuration has correct annotations including profile exclusion.
-     */
+    /// Tests that the configuration has correct annotations including profile exclusion.
     @Test
     void securityConfig_ShouldHaveCorrectAnnotations() {
         // Then

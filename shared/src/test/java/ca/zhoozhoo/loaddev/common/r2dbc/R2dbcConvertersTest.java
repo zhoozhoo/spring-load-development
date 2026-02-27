@@ -15,11 +15,9 @@ import ca.zhoozhoo.loaddev.common.r2dbc.R2dbcConverters.MonetaryAmountToJsonConv
 import ca.zhoozhoo.loaddev.common.r2dbc.R2dbcConverters.QuantityToJsonConverter;
 import io.r2dbc.postgresql.codec.Json;
 
-/**
- * Unit tests for R2dbcConverters.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for R2dbcConverters.
+///
+/// @author Zhubin Salehi
 class R2dbcConvertersTest {
 
     private final QuantityToJsonConverter toJsonConverter = new QuantityToJsonConverter();

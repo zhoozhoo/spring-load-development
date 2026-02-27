@@ -12,15 +12,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.core.GrantedAuthority;
 
-/**
- * Edge case tests for {@link KeycloakPermissionsConverter}.
- * <p>
- * Validates converter behavior with malformed claims, missing fields, null values,
- * and mixed data types in the Keycloak authorization structure. Ensures robust
- * handling of invalid or unexpected JWT claim formats.
- *
- * @author Zhubin Salehi
- */
+/// Edge case tests for [KeycloakPermissionsConverter].
+///
+/// Validates converter behavior with malformed claims, missing fields, null values,
+/// and mixed data types in the Keycloak authorization structure. Ensures robust
+/// handling of invalid or unexpected JWT claim formats.
+///
+/// @author Zhubin Salehi
 class KeycloakPermissionsConverterEdgeCasesTest {
 
     private final KeycloakPermissionsConverter converter = new KeycloakPermissionsConverter();

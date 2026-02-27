@@ -7,7 +7,7 @@ import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 import static reactor.core.publisher.Mono.just;
 
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,11 +24,12 @@ import org.springframework.web.bind.annotation.RestController;
 import ca.zhoozhoo.loaddev.components.model.Propellant;
 import ca.zhoozhoo.loaddev.components.service.PropellantService;
 import ca.zhoozhoo.loaddev.security.CurrentUser;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -43,14 +44,11 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * REST controller for propellant components with JSR-385/JSR-354.
- * <p>
- * OAuth2-secured CRUD operations with full-text search and multi-tenant isolation.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// REST controller for propellant components with JSR-385/JSR-354.
+///
+/// OAuth2-secured CRUD operations with full-text search and multi-tenant isolation.
+///
+/// @author Zhubin Salehi
 @Tag(name = "Propellants", description = "Operations on propellants belonging to the authenticated user")
 @SecurityScheme(name = "Oauth2Security", type = OAUTH2, flows = @OAuthFlows(authorizationCode = @OAuthFlow(authorizationUrl = "${springdoc.oauth2.authorization-url}", tokenUrl = "${springdoc.oauth2.token-url}", scopes = {
         @OAuthScope(name = "components:view", description = "View access"),
@@ -119,17 +117,8 @@ public class PropellantController {
     public Mono<ResponseEntity<Propellant>> createPropellant(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Valid @RequestBody Propellant propellant) {
-        if (userId == null || userId.isBlank()) {
-            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).<Propellant>build());
-        }
         return just(propellant)
-                .map(p -> new Propellant(
-                        null,
-                        userId,
-                        p.manufacturer(),
-                        p.type(),
-                        p.cost(),
-                        p.weightPerContainer()))
+                .map(p -> p.withOwner(userId))
                 .flatMap(propellantService::createPropellant)
                 .doOnNext(savedPropellant -> log.debug("Created new propellant with id: {}", savedPropellant.id()))
                 .map(savedPropellant -> status(CREATED).body(savedPropellant));
@@ -149,13 +138,8 @@ public class PropellantController {
             @Valid @RequestBody Propellant propellant) {
         return propellantService.getPropellantById(id, userId)
                 .flatMap(existingPropellant -> 
-                     propellantService.updatePropellant(new Propellant(
-                            existingPropellant.id(),
-                            existingPropellant.ownerId(),
-                            propellant.manufacturer(),
-                            propellant.type(),
-                            propellant.cost(),
-                            propellant.weightPerContainer()))                )
+                     propellantService.updatePropellant(
+                            propellant.withIdAndOwner(existingPropellant.id(), existingPropellant.ownerId())))
                 .doOnNext(updatedPropellant -> log.debug("Updated propellant with id: {}", updatedPropellant.id()))
                 .map(updatedPropellant -> ok(updatedPropellant))
                 .defaultIfEmpty(notFound().build());

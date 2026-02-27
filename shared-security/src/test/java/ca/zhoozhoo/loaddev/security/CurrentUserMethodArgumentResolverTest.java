@@ -17,15 +17,13 @@ import org.springframework.web.server.ServerWebExchangeDecorator;
 
 import reactor.core.publisher.Mono;
 
-/**
- * Unit tests for {@link CurrentUserMethodArgumentResolver}.
- * <p>
- * Verifies parameter support detection, JWT principal extraction, and handling of
- * non-JWT principals. Tests cover the resolver's behavior with various authentication
- * types and parameter configurations.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for [CurrentUserMethodArgumentResolver].
+///
+/// Verifies parameter support detection, JWT principal extraction, and handling of
+/// non-JWT principals. Tests cover the resolver's behavior with various authentication
+/// types and parameter configurations.
+///
+/// @author Zhubin Salehi
 class CurrentUserMethodArgumentResolverTest {
 
     private final CurrentUserMethodArgumentResolver resolver = new CurrentUserMethodArgumentResolver();
