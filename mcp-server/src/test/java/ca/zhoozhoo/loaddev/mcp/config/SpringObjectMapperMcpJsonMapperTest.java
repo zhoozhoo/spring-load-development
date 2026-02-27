@@ -11,9 +11,7 @@ import org.junit.jupiter.api.Test;
 import io.modelcontextprotocol.json.TypeRef;
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Tests for SpringObjectMapperMcpJsonMapper to verify JSON operations.
- */
+/// Tests for SpringObjectMapperMcpJsonMapper to verify JSON operations.
 class SpringObjectMapperMcpJsonMapperTest {
 
     private static final class BeanWithFailingGetter {

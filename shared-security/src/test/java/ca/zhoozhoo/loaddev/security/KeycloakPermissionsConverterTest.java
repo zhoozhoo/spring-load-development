@@ -9,14 +9,12 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.Jwt;
 
-/**
- * Unit tests for {@link KeycloakPermissionsConverter}.
- * <p>
- * Verifies correct extraction of Keycloak permissions from JWT claims and
- * transformation into Spring Security {@code GrantedAuthority} instances.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for [KeycloakPermissionsConverter].
+///
+/// Verifies correct extraction of Keycloak permissions from JWT claims and
+/// transformation into Spring Security `GrantedAuthority` instances.
+///
+/// @author Zhubin Salehi
 class KeycloakPermissionsConverterTest {
 
     private final KeycloakPermissionsConverter converter = new KeycloakPermissionsConverter();

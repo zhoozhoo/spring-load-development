@@ -14,11 +14,9 @@ import org.junit.jupiter.api.Test;
 import tech.units.indriya.quantity.Quantities;
 import tech.units.indriya.unit.Units;
 
-/**
- * Unit tests for NotNullQuantityValidator.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for NotNullQuantityValidator.
+///
+/// @author Zhubin Salehi
 @DisplayName("NotNullQuantityValidator Tests")
 class NotNullQuantityValidatorTest {
 

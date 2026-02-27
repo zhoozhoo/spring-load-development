@@ -17,16 +17,13 @@ import ca.zhoozhoo.loaddev.rifles.model.Rifle;
 import ca.zhoozhoo.loaddev.rifles.model.Rifling;
 import ca.zhoozhoo.loaddev.rifles.model.TwistDirection;
 
-/**
- * Integration tests for {@link RifleRepository} using JSR-385.
- * <p>
- * Tests repository CRUD operations and custom queries with an embedded database,
- * verifying data persistence, retrieval, owner-based filtering, and reactive behavior.
- * Uses JSR-385 Quantity&lt;Length&gt; for type-safe measurements.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Integration tests for [RifleRepository] using JSR-385.
+///
+/// Tests repository CRUD operations and custom queries with an embedded database,
+/// verifying data persistence, retrieval, owner-based filtering, and reactive behavior.
+/// Uses JSR-385 Quantity<Length> for type-safe measurements.
+///
+/// @author Zhubin Salehi
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
@@ -35,10 +32,8 @@ class RifleRepositoryTest {
     @Autowired
     private RifleRepository rifleRepository;
 
-    /**
-     * Helper method to create a Rifling object for testing.
-     * Parses twist rate in format "1:X" and defaults to RIGHT twist direction and 6 grooves.
-     */
+    /// Helper method to create a Rifling object for testing.
+    /// Parses twist rate in format "1:X" and defaults to RIGHT twist direction and 6 grooves.
     private static Rifling rifling(String twistRate) {
         double rate = Double.parseDouble(twistRate.substring(2)); // Parse "1:8" -> 8.0
         return new Rifling(getQuantity(rate, INCH_INTERNATIONAL), TwistDirection.RIGHT, 6);

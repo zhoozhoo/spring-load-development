@@ -8,11 +8,9 @@ import javax.measure.quantity.Length;
 import javax.measure.quantity.Mass;
 import javax.measure.quantity.Speed;
 
-/**
- * Shooting group with ballistic statistics using JSR-385 {@link Quantity} types.
- *
- * @author Zhubin Salehi
- */
+/// Shooting group with ballistic statistics using JSR-385 [Quantity] types.
+///
+/// @author Zhubin Salehi
 public record GroupDto(
 
         LocalDate date,

@@ -7,11 +7,9 @@ import org.springframework.web.reactive.result.method.annotation.ArgumentResolve
 
 import ca.zhoozhoo.loaddev.security.CurrentUserMethodArgumentResolver;
 
-/**
- * WebFlux configuration registering {@link CurrentUserMethodArgumentResolver}.
- *
- * @author Zhubin Salehi
- */
+/// WebFlux configuration registering [CurrentUserMethodArgumentResolver].
+///
+/// @author Zhubin Salehi
 @Configuration
 public class WebConfig implements WebFluxConfigurer {
 

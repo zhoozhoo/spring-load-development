@@ -14,19 +14,15 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.deser.std.StdDeserializer;
 
 
-/**
- * Jackson deserializer for JSR-354 {@link MonetaryAmount} types.
- * <p>
- * Deserializes JSON objects of the form {@code {"amount": 45.99, "currency": "USD"}}
- * into {@link MonetaryAmount}.
- * </p>
- * <p>
- * Validation: both {@code amount} and {@code currency} must be present and non-null.
- * </p>
- *
- * @author Zhubin Salehi
- * @see MonetaryAmountSerializer
- */
+/// Jackson deserializer for JSR-354 [MonetaryAmount] types.
+///
+/// Deserializes JSON objects of the form `{"amount": 45.99, "currency": "USD"`}
+/// into [MonetaryAmount].
+///
+/// Validation: both `amount` and `currency` must be present and non-null.
+///
+/// @author Zhubin Salehi
+/// @see MonetaryAmountSerializer
 public class MonetaryAmountDeserializer extends StdDeserializer<MonetaryAmount> {
 
     public MonetaryAmountDeserializer() {

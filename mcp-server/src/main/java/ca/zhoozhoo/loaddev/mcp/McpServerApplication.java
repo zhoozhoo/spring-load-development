@@ -8,24 +8,21 @@ import org.springframework.context.annotation.Import;
 import ca.zhoozhoo.loaddev.common.opentelemetry.ContextPropagationConfiguration;
 import ca.zhoozhoo.loaddev.common.opentelemetry.OpenTelemetryConfiguration;
 
-/**
- * Main application class for the MCP (Model Context Protocol) server.
- * <p>
- * This Spring Boot application provides MCP tools for managing reloading data,
- * including loads and rifles. It integrates with backend microservices through
- * service discovery and supports OAuth2 JWT authentication.
- * <p>
- * Key features:
- * <ul>
- * <li>MCP tool providers for loads and rifles operations</li>
- * <li>Reactive WebFlux support for streaming data</li>
- * <li>OAuth2 resource server with JWT validation</li>
- * <li>Service discovery integration via Eureka</li>
- * <li>Automatic authentication context propagation</li>
- * </ul>
- * 
- * @author Zhubin Salehi
- */
+/// Main application class for the MCP (Model Context Protocol) server.
+///
+/// This Spring Boot application provides MCP tools for managing reloading data,
+/// including loads and rifles. It integrates with backend microservices through
+/// service discovery and supports OAuth2 JWT authentication.
+///
+/// Key features:
+///
+/// - MCP tool providers for loads and rifles operations
+/// - Reactive WebFlux support for streaming data
+/// - OAuth2 resource server with JWT validation
+/// - Service discovery integration via Eureka
+/// - Automatic authentication context propagation
+///
+/// @author Zhubin Salehi
 @EnableDiscoveryClient
 @SpringBootApplication
 @Import({OpenTelemetryConfiguration.class, ContextPropagationConfiguration.class})

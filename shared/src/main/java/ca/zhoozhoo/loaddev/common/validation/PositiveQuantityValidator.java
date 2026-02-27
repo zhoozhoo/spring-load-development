@@ -6,15 +6,12 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import jakarta.validation.constraints.Positive;
 
-/**
- * Custom validator for @Positive constraint on JSR-385 Quantity types.
- * <p>
- * Validates that a Quantity value is positive (greater than zero).
- * Returns true for null values as @NotNull should be used for null checking.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Custom validator for @Positive constraint on JSR-385 Quantity types.
+///
+/// Validates that a Quantity value is positive (greater than zero).
+/// Returns true for null values as @NotNull should be used for null checking.
+///
+/// @author Zhubin Salehi
 public class PositiveQuantityValidator implements ConstraintValidator<Positive, Quantity<?>> {
 
     @Override

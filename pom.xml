@@ -360,10 +360,10 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>
+                        --enable-preview
                         -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar
                         @{argLine}
                     </argLine>
-                    <argLine>--enable-preview @{argLine}</argLine>
                 </configuration>
             </plugin>
         </plugins>

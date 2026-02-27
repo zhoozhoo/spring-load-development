@@ -42,17 +42,14 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * REST controller for managing individual shot data.
- * <p>
- * This controller provides endpoints for CRUD operations on shot velocity measurements
- * within shooting groups. Each shot represents a single round fired and recorded during
- * load testing. Velocity measurements use type-safe units via javax.measure. All
- * endpoints are secured with OAuth2 authentication and enforce user-based access control.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// REST controller for managing individual shot data.
+///
+/// This controller provides endpoints for CRUD operations on shot velocity measurements
+/// within shooting groups. Each shot represents a single round fired and recorded during
+/// load testing. Velocity measurements use type-safe units via javax.measure. All
+/// endpoints are secured with OAuth2 authentication and enforce user-based access control.
+///
+/// @author Zhubin Salehi
 @Tag(name = "Shots", description = "Operations on shots belonging to the authenticated user")
 @SecurityScheme(
     name = "Oauth2Security", 
@@ -122,11 +119,7 @@ public class ShotsController {
     public Mono<ResponseEntity<Shot>> createShot(
             @Parameter(hidden = true) @CurrentUser String userId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Shot to create") @Valid @RequestBody Shot shot) {
-        return Mono.just(new Shot(
-                null,
-                userId,
-                shot.groupId(),
-                shot.velocity()))
+        return Mono.just(shot.withOwner(userId))
                 .flatMap(shotService::createShot)
                 .map(savedShot -> {
                     log.info("Created new shot with id: {}", savedShot.id());
@@ -148,14 +141,8 @@ public class ShotsController {
             @Parameter(description = "Id of shot") @PathVariable Long id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Shot data to update") @Valid @RequestBody Shot shot) {
         return shotService.getShotById(id, userId)
-                .flatMap(existingShot -> {
-                    Shot updatedShot = new Shot(
-                            existingShot.id(),
-                            existingShot.ownerId(),
-                            shot.groupId(),
-                            shot.velocity());
-                    return shotService.updateShot(updatedShot);
-                })
+                .flatMap(existingShot -> shotService.updateShot(
+                        shot.withIdAndOwner(existingShot.id(), existingShot.ownerId())))
                 .map(updatedShot -> {
                     log.info("Updated shot with id: {}", updatedShot.id());
                     return ok(updatedShot);

@@ -1,31 +1,29 @@
 package ca.zhoozhoo.loaddev.loads.service;
 
+import java.util.stream.Gatherer;
+import java.util.stream.StreamSupport;
+
 import javax.measure.Quantity;
 import javax.measure.Unit;
 import javax.measure.quantity.Speed;
 
 import tech.units.indriya.quantity.Quantities;
 
-/**
- * Utility class for computing ballistic statistics in a single pass.
- * <p>
- * This class efficiently computes count, sum, min, max, and sum of squares
- * for velocity measurements using {@link Quantity}&lt;{@link Speed}&gt;, enabling calculation 
- * of average, standard deviation, and extreme spread without multiple iterations over the data.
- * All velocity values maintain their units throughout the computation.
- * </p>
- * <p>
- * This demonstrates Java 25 best practices for efficient data processing using
- * modern record-based accumulator patterns with type-safe unit handling.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Utility class for computing ballistic statistics in a single pass using
+/// Java 25 Stream Gatherers (JEP 485).
+///
+/// Efficiently computes count, sum, min, max, and sum of squares for velocity
+/// measurements using `Quantity<Speed>`, enabling calculation of average,
+/// standard deviation, and extreme spread without multiple iterations over the data.
+/// All velocity values maintain their units throughout the computation.
+///
+/// Provides both a Stream Gatherer for composable stream pipelines and a convenience
+/// `compute()` method for direct usage.
+///
+/// @author Zhubin Salehi
 public class VelocityStatisticsGatherer {
 
-    /**
-     * Statistics accumulator that tracks velocity measurements.
-     */
+    /// Statistics accumulator that tracks velocity measurements.
     public record VelocityStats(
             int count,
             double sum,
@@ -67,19 +65,41 @@ public class VelocityStatisticsGatherer {
         }
     }
 
-    /**
-     * Computes statistics from a stream of velocities in a single pass.
-     * This is more efficient than making multiple passes over the data.
-     *
-     * @param velocities iterable of velocity Quantity values
-     * @param unit the unit to use for computations (all velocities will be converted to this unit)
-     * @return accumulated statistics
-     */
+    /// Returns a Stream [Gatherer] (JEP 485) that accumulates velocity measurements
+    /// into a single `VelocityStats` result in a single pass.
+    ///
+    /// This enables composable stream pipelines:
+    /// ```java
+    /// var stats = shots.stream()
+    ///     .map(Shot::velocity)
+    ///     .gather(VelocityStatisticsGatherer.gatherer(unit))
+    ///     .findFirst()
+    ///     .orElse(VelocityStats.empty(unit));
+    /// ```
+    ///
+    /// @param unit the unit to use for computations (all velocities will be converted)
+    /// @return a Gatherer that produces a single VelocityStats element
+    public static Gatherer<Quantity<Speed>, VelocityStats[], VelocityStats> gatherer(Unit<Speed> unit) {
+        return Gatherer.ofSequential(
+                () -> new VelocityStats[] { VelocityStats.empty(unit) },
+                Gatherer.Integrator.ofGreedy((state, velocity, _) -> {
+                    state[0] = state[0].add(velocity);
+                    return true;
+                }),
+                (state, downstream) -> downstream.push(state[0])
+        );
+    }
+
+    /// Computes statistics from an iterable of velocities in a single pass
+    /// using the Stream Gatherer internally.
+    ///
+    /// @param velocities iterable of velocity Quantity values
+    /// @param unit the unit to use for computations (all velocities will be converted)
+    /// @return accumulated statistics
     public static VelocityStats compute(Iterable<Quantity<Speed>> velocities, Unit<Speed> unit) {
-        var stats = VelocityStats.empty(unit);
-        for (var velocity : velocities) {
-            stats = stats.add(velocity);
-        }
-        return stats;
+        return StreamSupport.stream(velocities.spliterator(), false)
+                .gather(gatherer(unit))
+                .findFirst()
+                .orElse(VelocityStats.empty(unit));
     }
 }

@@ -8,11 +8,9 @@ import ca.zhoozhoo.loaddev.components.model.Case;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * Reactive repository for Case entities with multi-tenant filtering and PostgreSQL full-text search.
- *
- * @author Zhubin Salehi
- */
+/// Reactive repository for Case entities with multi-tenant filtering and PostgreSQL full-text search.
+///
+/// @author Zhubin Salehi
 public interface CaseRepository extends ReactiveCrudRepository<Case, Long> {
     
     Flux<Case> findAllByOwnerId(String ownerId);

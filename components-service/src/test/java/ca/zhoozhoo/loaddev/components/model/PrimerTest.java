@@ -11,12 +11,10 @@ import static tech.units.indriya.quantity.Quantities.getQuantity;
 
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for {@link Primer} model class.
- * Tests record construction, equality, hashCode, and business logic with JSR-385 and JSR-354 support.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for [Primer] model class.
+/// Tests record construction, equality, hashCode, and business logic with JSR-385 and JSR-354 support.
+///
+/// @author Zhubin Salehi
 class PrimerTest {
 
     @Test

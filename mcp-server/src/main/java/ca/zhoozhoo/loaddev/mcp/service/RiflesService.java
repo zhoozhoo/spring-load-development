@@ -3,6 +3,7 @@ package ca.zhoozhoo.loaddev.mcp.service;
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INTERNAL_ERROR;
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_REQUEST;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.http.HttpStatus;
@@ -14,27 +15,24 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import ca.zhoozhoo.loaddev.mcp.dto.RifleDto;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema.JSONRPCResponse.JSONRPCError;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * Service for managing rifle data operations through the rifles microservice.
- * <p>
- * Provides reactive methods to retrieve rifle information, including individual rifles
- * and collections of rifles. All methods automatically extract and propagate JWT
- * authentication tokens from the reactive security context.
- * <p>
- * This service uses service discovery to locate the rifles-service backend and
- * communicates via WebClient with proper authentication headers.
- * 
- * @author Zhubin Salehi
- * @see ReactiveSecurityContextHolder
- * @see WebClient
- */
+/// Service for managing rifle data operations through the rifles microservice.
+///
+/// Provides reactive methods to retrieve rifle information, including individual rifles
+/// and collections of rifles. All methods automatically extract and propagate JWT
+/// authentication tokens from the reactive security context.
+///
+/// This service uses service discovery to locate the rifles-service backend and
+/// communicates via WebClient with proper authentication headers.
+///
+/// @author Zhubin Salehi
+/// @see ReactiveSecurityContextHolder
+/// @see WebClient
 @Service
 @Log4j2
 public class RiflesService {
@@ -50,18 +48,16 @@ public class RiflesService {
         this.riflesServiceName = riflesServiceName;
     }
 
-    /**
-     * Retrieves all rifles accessible to the authenticated user.
-     * <p>
-     * Automatically extracts the JWT token from the reactive security context and
-     * includes it in the Authorization header when calling the backend rifles-service.
-     * <p>
-     * Uses service discovery to locate the rifles-service instance dynamically.
-     *
-     * @return a Flux emitting RifleDto objects for all accessible rifles
-     * @throws McpError with INTERNAL_ERROR if service discovery fails
-     * @throws McpError with INVALID_REQUEST if authentication fails (401 response)
-     */
+    /// Retrieves all rifles accessible to the authenticated user.
+    ///
+    /// Automatically extracts the JWT token from the reactive security context and
+    /// includes it in the Authorization header when calling the backend rifles-service.
+    ///
+    /// Uses service discovery to locate the rifles-service instance dynamically.
+    ///
+    /// @return a Flux emitting RifleDto objects for all accessible rifles
+    /// @throws McpError with INTERNAL_ERROR if service discovery fails
+    /// @throws McpError with INVALID_REQUEST if authentication fails (401 response)
     public Flux<RifleDto> getRifles() {
         log.debug("RiflesService.getRifles() called");
         
@@ -105,19 +101,17 @@ public class RiflesService {
                 });
     }
 
-    /**
-     * Retrieves a specific rifle by its unique identifier.
-     * <p>
-     * Automatically extracts the JWT token from the reactive security context and
-     * includes it in the Authorization header when calling the backend rifles-service.
-     * <p>
-     * Uses service discovery to locate the rifles-service instance dynamically.
-     *
-     * @param id the unique identifier of the rifle to retrieve
-     * @return a Mono emitting the RifleDto if found
-     * @throws McpError with INTERNAL_ERROR if service discovery fails
-     * @throws McpError with INVALID_REQUEST if authentication fails (401 response)
-     */
+    /// Retrieves a specific rifle by its unique identifier.
+    ///
+    /// Automatically extracts the JWT token from the reactive security context and
+    /// includes it in the Authorization header when calling the backend rifles-service.
+    ///
+    /// Uses service discovery to locate the rifles-service instance dynamically.
+    ///
+    /// @param id the unique identifier of the rifle to retrieve
+    /// @return a Mono emitting the RifleDto if found
+    /// @throws McpError with INTERNAL_ERROR if service discovery fails
+    /// @throws McpError with INVALID_REQUEST if authentication fails (401 response)
     public Mono<RifleDto> getRifleById(Long id) {
         log.debug("RiflesService.getRifleById({}) called", id);
         

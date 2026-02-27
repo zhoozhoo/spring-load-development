@@ -22,16 +22,13 @@ import tech.units.indriya.format.SimpleQuantityFormat;
 import tools.jackson.databind.annotation.JsonDeserialize;
 import tools.jackson.databind.annotation.JsonSerialize;
 
-/**
- * Represents an ammunition load configuration.
- * <p>
- * A load defines a complete recipe for ammunition reloading, including powder type and charge,
- * bullet specifications, primer information, and cartridge measurements. Each load is owned by
- * a specific user and must comply with either imperial or metric measurement units.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Represents an ammunition load configuration.
+///
+/// A load defines a complete recipe for ammunition reloading, including powder type and charge,
+/// bullet specifications, primer information, and cartridge measurements. Each load is owned by
+/// a specific user and must comply with either imperial or metric measurement units.
+///
+/// @author Zhubin Salehi
 @Table(name = "loads")
 public record Load(
 
@@ -88,14 +85,11 @@ public record Load(
 
     private static final QuantityFormat QUANTITY_FORMAT = SimpleQuantityFormat.getInstance();
 
-    /**
-     * Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
-     * <p>
-     * This constructor performs business rule validation beyond what Jakarta Bean Validation
-     * provides, ensuring measurement unit consistency and value constraints using Java 25
-     * enhanced pattern matching.
-     * </p>
-     */
+    /// Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
+    ///
+    /// This constructor performs business rule validation beyond what Jakarta Bean Validation
+    /// provides, ensuring measurement unit consistency and value constraints using Java 25
+    /// enhanced pattern matching.
     public Load {        
         // At least one cartridge measurement must be specified
         if (distanceFromLands == null && caseOverallLength == null) {
@@ -112,11 +106,30 @@ public record Load(
         }
     }
 
-    /**
-     * Custom equals() excluding ownerId to focus on business equality.
-     * Records auto-generate equals() including ALL fields, but ownerId is a
-     * database-level concern and shouldn't affect business object equality.
-     */
+    /// Creates a copy of this load for a new owner, with id set to null.
+    ///
+    /// @param ownerId the owner to assign
+    /// @return a new Load with null id and the given ownerId
+    public Load withOwner(String ownerId) {
+        return new Load(null, ownerId, name, description, powderManufacturer, powderType,
+                bulletManufacturer, bulletType, bulletWeight, primerManufacturer, primerType,
+                distanceFromLands, caseOverallLength, neckTension, rifleId);
+    }
+
+    /// Creates a copy of this load preserving id and ownerId from an existing record.
+    ///
+    /// @param id the id to preserve
+    /// @param ownerId the ownerId to preserve
+    /// @return a new Load with the given id and ownerId
+    public Load withIdAndOwner(Long id, String ownerId) {
+        return new Load(id, ownerId, name, description, powderManufacturer, powderType,
+                bulletManufacturer, bulletType, bulletWeight, primerManufacturer, primerType,
+                distanceFromLands, caseOverallLength, neckTension, rifleId);
+    }
+
+    /// Custom equals() excluding ownerId to focus on business equality.
+    /// Records auto-generate equals() including ALL fields, but ownerId is a
+    /// database-level concern and shouldn't affect business object equality.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

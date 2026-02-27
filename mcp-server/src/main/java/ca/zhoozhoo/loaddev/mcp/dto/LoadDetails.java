@@ -2,13 +2,11 @@ package ca.zhoozhoo.loaddev.mcp.dto;
 
 import java.util.List;
 
-/**
- * Aggregated load performance data combining load, rifle, and shooting groups.
- * <p>
- * Primary data structure returned by {@code getLoadDetailsById} MCP tool.
- *
- * @author Zhubin Salehi
- */
+/// Aggregated load performance data combining load, rifle, and shooting groups.
+///
+/// Primary data structure returned by `getLoadDetailsById` MCP tool.
+///
+/// @author Zhubin Salehi
 public record LoadDetails(
 
         LoadDto load,
@@ -17,9 +15,7 @@ public record LoadDetails(
 
         List<GroupDto> groups) {
 
-    /**
-     * Compact constructor that creates defensive copies of mutable collections.
-     */
+    /// Compact constructor that creates defensive copies of mutable collections.
     public LoadDetails {
         groups = groups != null ? List.copyOf(groups) : List.of();
     }

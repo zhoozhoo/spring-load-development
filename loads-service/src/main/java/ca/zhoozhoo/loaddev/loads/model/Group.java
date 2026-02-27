@@ -26,17 +26,14 @@ import tech.units.indriya.format.SimpleQuantityFormat;
 import tools.jackson.databind.annotation.JsonDeserialize;
 import tools.jackson.databind.annotation.JsonSerialize;
 
-/**
- * Represents a shooting group for a specific load configuration.
- * <p>
- * A group represents a set of shots fired on a specific date using a particular load
- * with a defined powder charge and target distance. The group size (in inches or MOA)
- * measures the accuracy of the load configuration. Each group is associated with a load
- * and owned by a specific user.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Represents a shooting group for a specific load configuration.
+///
+/// A group represents a set of shots fired on a specific date using a particular load
+/// with a defined powder charge and target distance. The group size (in inches or MOA)
+/// measures the accuracy of the load configuration. Each group is associated with a load
+/// and owned by a specific user.
+///
+/// @author Zhubin Salehi
 @Table(name = "groups")
 public record Group(
         @Id Long id,
@@ -69,14 +66,11 @@ public record Group(
             
     private static final QuantityFormat QUANTITY_FORMAT = SimpleQuantityFormat.getInstance();
 
-    /**
-     * Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
-     * <p>
-     * Validates business rules including reasonable ranges for ballistic measurements
-     * using javax.measure Quantity API with proper unit conversions to imperial units
-     * (grains, yards, inches) before validation.
-     * </p>
-     */
+    /// Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
+    ///
+    /// Validates business rules including reasonable ranges for ballistic measurements
+    /// using javax.measure Quantity API with proper unit conversions to imperial units
+    /// (grains, yards, inches) before validation.
     public Group {
         // Validate date is not in the future
         if (date != null && date.isAfter(LocalDate.now())) {
@@ -117,11 +111,19 @@ public record Group(
         }
     }
 
-    /**
-     * Custom equals() excluding ownerId to focus on business equality.
-     * Records auto-generate equals() including ALL fields, but ownerId is a
-     * database-level concern and shouldn't affect business object equality.
-     */
+    /// Creates a copy of this group for a new owner, with id set to null.
+    public Group withOwner(String ownerId) {
+        return new Group(null, ownerId, loadId, date, powderCharge, targetRange, groupSize);
+    }
+
+    /// Creates a copy preserving id and ownerId from an existing record.
+    public Group withIdAndOwner(Long id, String ownerId) {
+        return new Group(id, ownerId, loadId, date, powderCharge, targetRange, groupSize);
+    }
+
+    /// Custom equals() excluding ownerId to focus on business equality.
+    /// Records auto-generate equals() including ALL fields, but ownerId is a
+    /// database-level concern and shouldn't affect business object equality.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

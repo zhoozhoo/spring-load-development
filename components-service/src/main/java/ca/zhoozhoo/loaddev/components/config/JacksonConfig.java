@@ -5,11 +5,9 @@ import org.springframework.context.annotation.Configuration;
 
 import ca.zhoozhoo.loaddev.common.jackson.QuantityModule;
 
-/**
- * Jackson configuration for JSR-385 Quantity types.
- *
- * @author Zhubin Salehi
- */
+/// Jackson configuration for JSR-385 Quantity types.
+///
+/// @author Zhubin Salehi
 @Configuration
 public class JacksonConfig {
 

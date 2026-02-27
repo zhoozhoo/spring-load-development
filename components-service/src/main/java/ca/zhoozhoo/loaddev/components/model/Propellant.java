@@ -23,15 +23,12 @@ import jakarta.validation.constraints.PositiveOrZero;
 import tools.jackson.databind.annotation.JsonDeserialize;
 import tools.jackson.databind.annotation.JsonSerialize;
 
-/**
- * Propellant component with JSR-385 Quantity and JSR-354 MonetaryAmount.
- * <p>
- * Stores weightPerContainer and cost as PostgreSQL JSONB for type-safe calculations.
- * Multi-tenant by ownerId.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Propellant component with JSR-385 Quantity and JSR-354 MonetaryAmount.
+///
+/// Stores weightPerContainer and cost as PostgreSQL JSONB for type-safe calculations.
+/// Multi-tenant by ownerId.
+///
+/// @author Zhubin Salehi
 @Table(name = "propellants")
 public record Propellant(
         @Id Long id,
@@ -57,11 +54,19 @@ public record Propellant(
         @Positive(message = "Weight per container must be positive")
         @Column("weight_per_container") Quantity<Mass> weightPerContainer) implements Component {
 
-    /**
-     * Custom equals() excluding ownerId to focus on business equality.
-     * Records auto-generate equals() including ALL fields, but ownerId is a
-     * database-level concern and shouldn't affect business object equality.
-     */
+    /// Creates a copy of this propellant for a new owner, with id set to null.
+    public Propellant withOwner(String ownerId) {
+        return new Propellant(null, ownerId, manufacturer, type, cost, weightPerContainer);
+    }
+
+    /// Creates a copy preserving id and ownerId from an existing record.
+    public Propellant withIdAndOwner(Long id, String ownerId) {
+        return new Propellant(id, ownerId, manufacturer, type, cost, weightPerContainer);
+    }
+
+    /// Custom equals() excluding ownerId to focus on business equality.
+    /// Records auto-generate equals() including ALL fields, but ownerId is a
+    /// database-level concern and shouldn't affect business object equality.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -11,14 +11,12 @@ import org.springframework.web.bind.support.WebExchangeBindException;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
-/**
- * Global exception handler for REST controllers.
- * <p>
- * Handles validation errors and number format exceptions, returning appropriate
- * HTTP status codes and error messages.
- *
- * @author Zhubin Salehi
- */
+/// Global exception handler for REST controllers.
+///
+/// Handles validation errors and number format exceptions, returning appropriate
+/// HTTP status codes and error messages.
+///
+/// @author Zhubin Salehi
 @RestControllerAdvice
 @Log4j2
 public class GlobalExceptionHandler {

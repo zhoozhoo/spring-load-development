@@ -10,14 +10,12 @@ import ca.zhoozhoo.loaddev.common.opentelemetry.ContextPropagationConfiguration;
 import ca.zhoozhoo.loaddev.common.opentelemetry.FilterConfiguration;
 import ca.zhoozhoo.loaddev.common.opentelemetry.OpenTelemetryConfiguration;
 
-/**
- * Main application class for the Rifles Service.
- * <p>
- * Manages rifle firearm specifications with RESTful APIs for authenticated users
- * in a multi-tenant environment.
- *
- * @author Zhubin Salehi
- */
+/// Main application class for the Rifles Service.
+///
+/// Manages rifle firearm specifications with RESTful APIs for authenticated users
+/// in a multi-tenant environment.
+///
+/// @author Zhubin Salehi
 @SpringBootApplication
 @EnableTransactionManagement
 @EnableDiscoveryClient

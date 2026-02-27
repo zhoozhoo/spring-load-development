@@ -14,10 +14,8 @@ import ca.zhoozhoo.loaddev.mcp.config.SpringObjectMapperMcpJsonMapper;
 import io.modelcontextprotocol.json.McpJsonMapper;
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Unit tests for {@link PreSerializationUtils}.
- * Tests all public methods and error handling paths.
- */
+/// Unit tests for [PreSerializationUtils].
+/// Tests all public methods and error handling paths.
 class PreSerializationUtilsTest {
 
     private McpJsonMapper mapper;

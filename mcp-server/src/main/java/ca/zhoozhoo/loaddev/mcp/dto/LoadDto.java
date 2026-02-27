@@ -4,13 +4,11 @@ import javax.measure.Quantity;
 import javax.measure.quantity.Length;
 import javax.measure.quantity.Mass;
 
-/**
- * Reloading load specifications using JSR-385 {@link Quantity} types.
- * <p>
- * Units are embedded in Quantity instances for type-safe measurements.
- *
- * @author Zhubin Salehi
- */
+/// Reloading load specifications using JSR-385 [Quantity] types.
+///
+/// Units are embedded in Quantity instances for type-safe measurements.
+///
+/// @author Zhubin Salehi
 public record LoadDto(
 
         Long id,

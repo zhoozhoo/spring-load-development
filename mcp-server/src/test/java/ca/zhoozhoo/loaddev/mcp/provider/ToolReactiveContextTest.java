@@ -12,10 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static reactor.util.context.Context.of;
 
-/**
- * Unit tests for {@link ToolReactiveContext}.
- * Tests context propagation for Mono and Flux publishers.
- */
+/// Unit tests for [ToolReactiveContext].
+/// Tests context propagation for Mono and Flux publishers.
 class ToolReactiveContextTest {
 
     @AfterEach

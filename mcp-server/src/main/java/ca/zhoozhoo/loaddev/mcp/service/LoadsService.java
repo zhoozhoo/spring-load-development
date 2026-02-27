@@ -6,6 +6,7 @@ import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -17,27 +18,24 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 
 import ca.zhoozhoo.loaddev.mcp.dto.GroupDto;
 import ca.zhoozhoo.loaddev.mcp.dto.LoadDto;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema.JSONRPCResponse.JSONRPCError;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * Service for managing load data operations through the loads microservice.
- * <p>
- * Provides reactive methods to retrieve load information, including individual loads,
- * collections of loads, and associated group statistics. All methods automatically
- * extract and propagate JWT authentication tokens from the reactive security context.
- * <p>
- * This service uses service discovery to locate the loads-service backend and
- * communicates via WebClient with proper authentication headers.
- * 
- * @author Zhubin Salehi
- * @see ReactiveSecurityContextHolder
- * @see WebClient
- */
+/// Service for managing load data operations through the loads microservice.
+///
+/// Provides reactive methods to retrieve load information, including individual loads,
+/// collections of loads, and associated group statistics. All methods automatically
+/// extract and propagate JWT authentication tokens from the reactive security context.
+///
+/// This service uses service discovery to locate the loads-service backend and
+/// communicates via WebClient with proper authentication headers.
+///
+/// @author Zhubin Salehi
+/// @see ReactiveSecurityContextHolder
+/// @see WebClient
 @Service
 @Log4j2
 public class LoadsService {
@@ -53,18 +51,16 @@ public class LoadsService {
         this.loadsServiceName = loadsServiceName;
     }
 
-    /**
-     * Retrieves all loads accessible to the authenticated user.
-     * <p>
-     * Automatically extracts the JWT token from the reactive security context and
-     * includes it in the Authorization header when calling the backend loads-service.
-     * <p>
-     * Uses service discovery to locate the loads-service instance dynamically.
-     *
-     * @return a Flux emitting LoadDto objects for all accessible loads
-     * @throws McpError with INTERNAL_ERROR if service discovery fails
-     * @throws McpError with INVALID_REQUEST if authentication fails (401 response)
-     */
+    /// Retrieves all loads accessible to the authenticated user.
+    ///
+    /// Automatically extracts the JWT token from the reactive security context and
+    /// includes it in the Authorization header when calling the backend loads-service.
+    ///
+    /// Uses service discovery to locate the loads-service instance dynamically.
+    ///
+    /// @return a Flux emitting LoadDto objects for all accessible loads
+    /// @throws McpError with INTERNAL_ERROR if service discovery fails
+    /// @throws McpError with INVALID_REQUEST if authentication fails (401 response)
     public Flux<LoadDto> getLoads() {
         log.debug("LoadsService.getLoads() called");
         
@@ -113,20 +109,18 @@ public class LoadsService {
                 });
     }
 
-    /**
-     * Retrieves a specific load by its unique identifier.
-     * <p>
-     * Automatically extracts the JWT token from the reactive security context and
-     * includes it in the Authorization header when calling the backend loads-service.
-     * <p>
-     * Uses service discovery to locate the loads-service instance dynamically.
-     *
-     * @param id the unique identifier of the load to retrieve
-     * @return a Mono emitting the LoadDto if found
-     * @throws McpError with INTERNAL_ERROR if service discovery fails
-     * @throws McpError with INVALID_REQUEST if authentication fails (401 response)
-     * @throws McpError with INVALID_PARAMS if the load is not found (404 response)
-     */
+    /// Retrieves a specific load by its unique identifier.
+    ///
+    /// Automatically extracts the JWT token from the reactive security context and
+    /// includes it in the Authorization header when calling the backend loads-service.
+    ///
+    /// Uses service discovery to locate the loads-service instance dynamically.
+    ///
+    /// @param id the unique identifier of the load to retrieve
+    /// @return a Mono emitting the LoadDto if found
+    /// @throws McpError with INTERNAL_ERROR if service discovery fails
+    /// @throws McpError with INVALID_REQUEST if authentication fails (401 response)
+    /// @throws McpError with INVALID_PARAMS if the load is not found (404 response)
     public Mono<LoadDto> getLoadById(Long id) {
         log.debug("LoadsService.getLoadById({}) called", id);
         
@@ -176,21 +170,19 @@ public class LoadsService {
                 });
     }
 
-    /**
-     * Retrieves group statistics for a specific load.
-     * <p>
-     * Fetches shooting group data and statistics associated with the specified load ID.
-     * Automatically extracts the JWT token from the reactive security context and
-     * includes it in the Authorization header when calling the backend loads-service.
-     * <p>
-     * Uses service discovery to locate the loads-service instance dynamically.
-     *
-     * @param id the unique identifier of the load to retrieve statistics for
-     * @return a Flux emitting GroupDto objects containing group statistics
-     * @throws McpError with INTERNAL_ERROR if service discovery fails
-     * @throws McpError with INVALID_REQUEST if authentication fails (401 response)
-     * @throws McpError with INVALID_PARAMS if the load is not found (404 response)
-     */
+    /// Retrieves group statistics for a specific load.
+    ///
+    /// Fetches shooting group data and statistics associated with the specified load ID.
+    /// Automatically extracts the JWT token from the reactive security context and
+    /// includes it in the Authorization header when calling the backend loads-service.
+    ///
+    /// Uses service discovery to locate the loads-service instance dynamically.
+    ///
+    /// @param id the unique identifier of the load to retrieve statistics for
+    /// @return a Flux emitting GroupDto objects containing group statistics
+    /// @throws McpError with INTERNAL_ERROR if service discovery fails
+    /// @throws McpError with INVALID_REQUEST if authentication fails (401 response)
+    /// @throws McpError with INVALID_PARAMS if the load is not found (404 response)
     public Flux<GroupDto> getGroupsByLoadId(Long id) {
         log.debug("LoadsService.getGroupsByLoadId({}) called", id);
         

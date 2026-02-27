@@ -11,12 +11,10 @@ import org.junit.jupiter.api.Test;
 
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Unit tests for {@link MonetaryAmountDeserializer}.
- * Verifies correct parsing and error handling of JSON monetary objects.
- * 
- * @author Zhubin Salehi
- */
+/// Unit tests for [MonetaryAmountDeserializer].
+/// Verifies correct parsing and error handling of JSON monetary objects.
+///
+/// @author Zhubin Salehi
 class MonetaryAmountDeserializerTest {
 
     private final JsonMapper mapper = QuantityModuleSupport.newObjectMapperWithQuantityModule();

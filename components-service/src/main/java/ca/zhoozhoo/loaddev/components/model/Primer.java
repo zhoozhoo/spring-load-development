@@ -23,15 +23,12 @@ import jakarta.validation.constraints.PositiveOrZero;
 import tools.jackson.databind.annotation.JsonDeserialize;
 import tools.jackson.databind.annotation.JsonSerialize;
 
-/**
- * Primer component with JSR-385 Quantity and JSR-354 MonetaryAmount.
- * <p>
- * Stores quantityPerBox and cost as PostgreSQL JSONB for type-safe calculations.
- * Multi-tenant by ownerId.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Primer component with JSR-385 Quantity and JSR-354 MonetaryAmount.
+///
+/// Stores quantityPerBox and cost as PostgreSQL JSONB for type-safe calculations.
+/// Multi-tenant by ownerId.
+///
+/// @author Zhubin Salehi
 @Table("primers")
 public record Primer(
     
@@ -61,11 +58,19 @@ public record Primer(
         @Positive(message = "Quantity per box must be positive")
         @Column("quantity_per_box") Quantity<Dimensionless> quantityPerBox) implements Component {
 
-    /**
-     * Custom equals() excluding ownerId to focus on business equality.
-     * Records auto-generate equals() including ALL fields, but ownerId is a
-     * database-level concern and shouldn't affect business object equality.
-     */
+    /// Creates a copy of this primer for a new owner, with id set to null.
+    public Primer withOwner(String ownerId) {
+        return new Primer(null, ownerId, manufacturer, type, primerSize, cost, quantityPerBox);
+    }
+
+    /// Creates a copy preserving id and ownerId from an existing record.
+    public Primer withIdAndOwner(Long id, String ownerId) {
+        return new Primer(id, ownerId, manufacturer, type, primerSize, cost, quantityPerBox);
+    }
+
+    /// Custom equals() excluding ownerId to focus on business equality.
+    /// Records auto-generate equals() including ALL fields, but ownerId is a
+    /// database-level concern and shouldn't affect business object equality.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

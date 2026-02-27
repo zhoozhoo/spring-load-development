@@ -18,12 +18,10 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.ser.std.StdScalarSerializer;
 
-/**
- * Unit tests for UnitSerializer.
- * Tests JSR-385 Unit serialization to UCUM format.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for UnitSerializer.
+/// Tests JSR-385 Unit serialization to UCUM format.
+///
+/// @author Zhubin Salehi
 class UnitSerializerTest {
 
         private final JsonMapper mapper = new JsonMapper()

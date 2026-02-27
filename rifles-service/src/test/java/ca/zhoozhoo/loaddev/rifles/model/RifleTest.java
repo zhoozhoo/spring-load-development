@@ -7,24 +7,18 @@ import static tech.units.indriya.quantity.Quantities.getQuantity;
 
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for Rifle model validation.
- * Tests JSR-385 quantity validation and edge cases.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for Rifle model validation.
+/// Tests JSR-385 quantity validation and edge cases.
+///
+/// @author Zhubin Salehi
 class RifleTest {
 
-    /**
-     * Helper method to create a Rifling object for testing.
-     */
+    /// Helper method to create a Rifling object for testing.
     private static Rifling rifling(double twistRateInches, TwistDirection direction) {
         return new Rifling(getQuantity(twistRateInches, INCH_INTERNATIONAL), direction, 6);
     }
 
-    /**
-     * Helper method to create a Rifling object with default RIGHT direction.
-     */
+    /// Helper method to create a Rifling object with default RIGHT direction.
     private static Rifling rifling(double twistRateInches) {
         return rifling(twistRateInches, TwistDirection.RIGHT);
     }

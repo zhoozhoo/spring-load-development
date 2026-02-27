@@ -8,11 +8,9 @@ import ca.zhoozhoo.loaddev.components.model.Propellant;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * Reactive repository for Propellant entities with multi-tenant filtering and PostgreSQL full-text search.
- *
- * @author Zhubin Salehi
- */
+/// Reactive repository for Propellant entities with multi-tenant filtering and PostgreSQL full-text search.
+///
+/// @author Zhubin Salehi
 public interface PropellantRepository extends R2dbcRepository<Propellant, Long> {
 
     Flux<Propellant> findAllByOwnerId(String ownerId);

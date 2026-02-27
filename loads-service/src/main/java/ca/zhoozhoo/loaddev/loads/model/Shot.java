@@ -24,16 +24,13 @@ import tech.units.indriya.unit.Units;
 import tools.jackson.databind.annotation.JsonDeserialize;
 import tools.jackson.databind.annotation.JsonSerialize;
 
-/**
- * Represents an individual shot fired as part of a shooting group.
- * <p>
- * A shot records the velocity measurement of a single round fired using javax.measure Quantity API.
- * Multiple shots are grouped together to calculate statistical data such as average velocity,
- * standard deviation, and extreme spread for load performance analysis.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Represents an individual shot fired as part of a shooting group.
+///
+/// A shot records the velocity measurement of a single round fired using javax.measure Quantity API.
+/// Multiple shots are grouped together to calculate statistical data such as average velocity,
+/// standard deviation, and extreme spread for load performance analysis.
+///
+/// @author Zhubin Salehi
 @Table(name = "shots")
 public record Shot(
 
@@ -52,13 +49,10 @@ public record Shot(
 
     private static final QuantityFormat QUANTITY_FORMAT = SimpleQuantityFormat.getInstance();
 
-    /**
-     * Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
-     * <p>
-     * Validates that velocity is within reasonable ballistic ranges for small arms ammunition.
-     * Converts to feet per second before validation to handle any unit system.
-     * </p>
-     */
+    /// Compact constructor with validation logic (Java 25 Flexible Constructor Bodies - JEP 482).
+    ///
+    /// Validates that velocity is within reasonable ballistic ranges for small arms ammunition.
+    /// Converts to feet per second before validation to handle any unit system.
     public Shot {
         // Validate reasonable velocity range (500 to 5000 fps)
         // Most rifle rounds fall between 800-3500 fps
@@ -77,11 +71,19 @@ public record Shot(
         }
     }
 
-    /**
-     * Custom equals() excluding ownerId to focus on business equality.
-     * Records auto-generate equals() including ALL fields, but ownerId is a
-     * database-level concern and shouldn't affect business object equality.
-     */
+    /// Creates a copy of this shot for a new owner, with id set to null.
+    public Shot withOwner(String ownerId) {
+        return new Shot(null, ownerId, groupId, velocity);
+    }
+
+    /// Creates a copy preserving id and ownerId from an existing record.
+    public Shot withIdAndOwner(Long id, String ownerId) {
+        return new Shot(id, ownerId, groupId, velocity);
+    }
+
+    /// Custom equals() excluding ownerId to focus on business equality.
+    /// Records auto-generate equals() including ALL fields, but ownerId is a
+    /// database-level concern and shouldn't affect business object equality.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

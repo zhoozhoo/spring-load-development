@@ -23,15 +23,12 @@ import jakarta.validation.constraints.PositiveOrZero;
 import tools.jackson.databind.annotation.JsonDeserialize;
 import tools.jackson.databind.annotation.JsonSerialize;
 
-/**
- * Projectile component with JSR-385 Quantity and JSR-354 MonetaryAmount.
- * <p>
- * Stores weight and cost as PostgreSQL JSONB for type-safe calculations.
- * Multi-tenant by ownerId.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Projectile component with JSR-385 Quantity and JSR-354 MonetaryAmount.
+///
+/// Stores weight and cost as PostgreSQL JSONB for type-safe calculations.
+/// Multi-tenant by ownerId.
+///
+/// @author Zhubin Salehi
 @Table(name = "projectiles")
 public record Projectile (
 
@@ -62,11 +59,19 @@ public record Projectile (
         @Positive(message = "Quantity per box must be positive")
         @Column("quantity_per_box") Integer quantityPerBox) implements Component {
 
-    /**
-     * Custom equals() excluding ownerId to focus on business equality.
-     * Records auto-generate equals() including ALL fields, but ownerId is a
-     * database-level concern and shouldn't affect business object equality.
-     */
+    /// Creates a copy of this projectile for a new owner, with id set to null.
+    public Projectile withOwner(String ownerId) {
+        return new Projectile(null, ownerId, manufacturer, weight, type, cost, quantityPerBox);
+    }
+
+    /// Creates a copy preserving id and ownerId from an existing record.
+    public Projectile withIdAndOwner(Long id, String ownerId) {
+        return new Projectile(id, ownerId, manufacturer, weight, type, cost, quantityPerBox);
+    }
+
+    /// Custom equals() excluding ownerId to focus on business equality.
+    /// Records auto-generate equals() including ALL fields, but ownerId is a
+    /// database-level concern and shouldn't affect business object equality.
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

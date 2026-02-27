@@ -24,17 +24,14 @@ import ca.zhoozhoo.loaddev.rifles.model.Rifle;
 import ca.zhoozhoo.loaddev.rifles.model.Rifling;
 import ca.zhoozhoo.loaddev.rifles.model.TwistDirection;
 
-/**
- * Integration tests for {@link RifleController} using JSR-385.
- * <p>
- * Tests REST API endpoints for rifle CRUD operations using WebTestClient,
- * verifying HTTP responses, JSON serialization, validation, security integration,
- * and owner-based data isolation with mocked JWT authentication.
- * Uses JSR-385 Quantity&lt;Length&gt; for type-safe measurements.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Integration tests for [RifleController] using JSR-385.
+///
+/// Tests REST API endpoints for rifle CRUD operations using WebTestClient,
+/// verifying HTTP responses, JSON serialization, validation, security integration,
+/// and owner-based data isolation with mocked JWT authentication.
+/// Uses JSR-385 Quantity<Length> for type-safe measurements.
+///
+/// @author Zhubin Salehi
 @SpringBootTest(properties = "spring.autoconfigure.exclude=ca.zhoozhoo.loaddev.security.SecurityAutoConfiguration")
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient
@@ -52,10 +49,8 @@ public class RifleControllerTest {
         rifleRepository.deleteAll().block();
     }
 
-    /**
-     * Helper method to create a Rifling object for testing.
-     * Parses twist rate in format "1:X" and defaults to RIGHT twist direction and 6 grooves.
-     */
+    /// Helper method to create a Rifling object for testing.
+    /// Parses twist rate in format "1:X" and defaults to RIGHT twist direction and 6 grooves.
     private static Rifling rifling(String twistRate) {
         double rate = Double.parseDouble(twistRate.substring(2)); // Parse "1:8" -> 8.0
         return new Rifling(getQuantity(rate, INCH_INTERNATIONAL), TwistDirection.RIGHT, 6);

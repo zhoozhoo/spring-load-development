@@ -13,15 +13,13 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 
 import reactor.core.publisher.Mono;
 
-/**
- * Unit tests for {@link SecurityAutoConfiguration}.
- * <p>
- * Validates auto-configuration bean creation, property binding, and customization
- * of security settings including public paths and principal claim names. Uses
- * {@link ReactiveWebApplicationContextRunner} for isolated context testing.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for [SecurityAutoConfiguration].
+///
+/// Validates auto-configuration bean creation, property binding, and customization
+/// of security settings including public paths and principal claim names. Uses
+/// [ReactiveWebApplicationContextRunner] for isolated context testing.
+///
+/// @author Zhubin Salehi
 class SecurityAutoConfigurationTest {
     
     private final ReactiveWebApplicationContextRunner contextRunner = new ReactiveWebApplicationContextRunner()

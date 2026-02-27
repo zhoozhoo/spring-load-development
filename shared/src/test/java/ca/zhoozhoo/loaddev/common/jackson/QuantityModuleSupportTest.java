@@ -10,9 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Tests for {@link QuantityModuleSupport} and auto-discovery registration path.
- */
+/// Tests for [QuantityModuleSupport] and auto-discovery registration path.
 class QuantityModuleSupportTest {
 
     @Nested

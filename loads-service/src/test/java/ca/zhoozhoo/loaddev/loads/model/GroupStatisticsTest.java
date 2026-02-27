@@ -25,15 +25,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for the {@link GroupStatistics} model class.
- * <p>
- * Tests defensive copying, immutability, equals/hashCode contracts
- * for ballistic statistics including average velocity, standard deviation, and extreme spread.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for the [GroupStatistics] model class.
+///
+/// Tests defensive copying, immutability, equals/hashCode contracts
+/// for ballistic statistics including average velocity, standard deviation, and extreme spread.
+///
+/// @author Zhubin Salehi
 @DisplayName("GroupStatistics Model Tests")
 class GroupStatisticsTest {
 
@@ -43,9 +40,7 @@ class GroupStatisticsTest {
     private static final Long LOAD_ID = 1L;
     private static final LocalDate TEST_DATE = LocalDate.of(2024, 11, 1);
 
-    /**
-     * Creates a valid Group instance for testing.
-     */
+    /// Creates a valid Group instance for testing.
     private Group createTestGroup() {
         return new Group(
             GROUP_ID,
@@ -58,9 +53,7 @@ class GroupStatisticsTest {
         );
     }
 
-    /**
-     * Creates a list of valid Shot instances for testing.
-     */
+    /// Creates a list of valid Shot instances for testing.
     private List<Shot> createTestShots() {
         @SuppressWarnings("unchecked")
         Unit<Speed> feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);
@@ -74,9 +67,7 @@ class GroupStatisticsTest {
         );
     }
 
-    /**
-     * Creates a valid GroupStatistics instance for testing.
-     */
+    /// Creates a valid GroupStatistics instance for testing.
     private GroupStatistics createValidStatistics() {
         @SuppressWarnings("unchecked")
         Unit<Speed> feetPerSecond = (Unit<Speed>) FOOT_INTERNATIONAL.divide(SECOND);

@@ -19,15 +19,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for the {@link Load} model class.
- * <p>
- * Tests validation logic, equals/hashCode contracts.
- * Note: Uses SI units (grams, meters) as imperial units require additional dependencies.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for the [Load] model class.
+///
+/// Tests validation logic, equals/hashCode contracts.
+/// Note: Uses SI units (grams, meters) as imperial units require additional dependencies.
+///
+/// @author Zhubin Salehi
 @DisplayName("Load Model Tests")
 class LoadTest {
 
@@ -42,9 +39,7 @@ class LoadTest {
     private static final String PRIMER_MFG = "CCI";
     private static final String PRIMER_TYPE = "BR-2";
 
-    /**
-     * Creates a valid Load instance for testing with metric units (grams and millimeters).
-     */
+    /// Creates a valid Load instance for testing with metric units (grams and millimeters).
     private Load createValidLoadMetric() {
         return new Load(
             1L,

@@ -11,9 +11,7 @@ import org.springframework.test.context.ActiveProfiles;
 import ca.zhoozhoo.loaddev.common.jackson.QuantityModule;
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Tests for JacksonConfig to verify Jackson configuration and WebFlux codec setup.
- */
+/// Tests for JacksonConfig to verify Jackson configuration and WebFlux codec setup.
 @SpringBootTest
 @ActiveProfiles("test")
 class JacksonConfigTest {

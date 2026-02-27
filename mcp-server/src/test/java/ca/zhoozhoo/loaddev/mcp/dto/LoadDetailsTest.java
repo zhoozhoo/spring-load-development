@@ -12,19 +12,15 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for LoadDetails record.
- * <p>
- * Tests the aggregated data structure combining load, rifle, and shooting group information,
- * including validation of defensive copying of mutable collections.
- * 
- * @author Zhubin Salehi
- */
+/// Unit tests for LoadDetails record.
+///
+/// Tests the aggregated data structure combining load, rifle, and shooting group information,
+/// including validation of defensive copying of mutable collections.
+///
+/// @author Zhubin Salehi
 class LoadDetailsTest {
 
-    /**
-     * Tests creating a LoadDetails with all fields populated.
-     */
+    /// Tests creating a LoadDetails with all fields populated.
     @Test
     void constructor_WithAllFields_ShouldCreateInstance() {
         // When
@@ -45,9 +41,7 @@ class LoadDetailsTest {
         assertThat(loadDetails.groups()).hasSize(2);
     }
 
-    /**
-     * Tests that the compact constructor creates a defensive copy of the groups list.
-     */
+    /// Tests that the compact constructor creates a defensive copy of the groups list.
     @Test
     void constructor_WithMutableList_ShouldCreateDefensiveCopy() {
         // Given
@@ -73,9 +67,7 @@ class LoadDetailsTest {
         assertThat(loadDetails.groups()).hasSize(1);
     }
 
-    /**
-     * Tests that null groups list is converted to empty list.
-     */
+    /// Tests that null groups list is converted to empty list.
     @Test
     void constructor_WithNullGroups_ShouldUseEmptyList() {
         // When
@@ -92,9 +84,7 @@ class LoadDetailsTest {
         assertThat(loadDetails.groups()).isEmpty();
     }
 
-    /**
-     * Tests that the groups list is immutable.
-     */
+    /// Tests that the groups list is immutable.
     @Test
     void groups_ShouldBeImmutable() {
         // Given
@@ -114,9 +104,7 @@ class LoadDetailsTest {
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 
-    /**
-     * Tests creating a LoadDetails with null load and rifle.
-     */
+    /// Tests creating a LoadDetails with null load and rifle.
     @Test
     void constructor_WithNullLoadAndRifle_ShouldCreateInstance() {
         // When
@@ -128,9 +116,7 @@ class LoadDetailsTest {
         assertThat(loadDetails.groups()).isEmpty();
     }
 
-    /**
-     * Tests creating a LoadDetails with empty groups list.
-     */
+    /// Tests creating a LoadDetails with empty groups list.
     @Test
     void constructor_WithEmptyGroups_ShouldCreateInstance() {
         // When
@@ -148,9 +134,7 @@ class LoadDetailsTest {
         assertThat(loadDetails.groups()).isEmpty();
     }
 
-    /**
-     * Tests record equality based on all fields.
-     */
+    /// Tests record equality based on all fields.
     @Test
     void equals_WithSameValues_ShouldBeEqual() {
         // Given
@@ -174,9 +158,7 @@ class LoadDetailsTest {
         assertThat(loadDetails1.hashCode()).isEqualTo(loadDetails2.hashCode());
     }
 
-    /**
-     * Tests record inequality when values differ.
-     */
+    /// Tests record inequality when values differ.
     @Test
     void equals_WithDifferentValues_ShouldNotBeEqual() {
         // Given
@@ -199,9 +181,7 @@ class LoadDetailsTest {
         assertThat(loadDetails1).isNotEqualTo(loadDetails2);
     }
 
-    /**
-     * Tests toString includes all field values.
-     */
+    /// Tests toString includes all field values.
     @Test
     void toString_ShouldIncludeAllFields() {
         // Given

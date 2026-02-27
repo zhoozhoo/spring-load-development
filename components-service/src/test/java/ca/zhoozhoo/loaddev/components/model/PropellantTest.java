@@ -12,13 +12,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for {@link Propellant} model class.
- * Tests record construction, equality, hashCode, JSR-385 Quantity handling,
- * and JSR-354 MonetaryAmount handling.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for [Propellant] model class.
+/// Tests record construction, equality, hashCode, JSR-385 Quantity handling,
+/// and JSR-354 MonetaryAmount handling.
+///
+/// @author Zhubin Salehi
 @DisplayName("Propellant Model Tests")
 class PropellantTest {
 

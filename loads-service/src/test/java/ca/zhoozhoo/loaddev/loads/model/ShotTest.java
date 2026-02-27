@@ -18,15 +18,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for the {@link Shot} model class.
- * <p>
- * Tests validation logic, equals/hashCode contracts,
- * for individual shot velocity measurements.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for the [Shot] model class.
+///
+/// Tests validation logic, equals/hashCode contracts,
+/// for individual shot velocity measurements.
+///
+/// @author Zhubin Salehi
 @DisplayName("Shot Model Tests")
 class ShotTest {
 
@@ -34,9 +31,7 @@ class ShotTest {
     private static final String OWNER_ID = "user123";
     private static final Long GROUP_ID = 1L;
 
-    /**
-     * Creates a valid Shot instance for testing with feet per second.
-     */
+    /// Creates a valid Shot instance for testing with feet per second.
     @SuppressWarnings("unchecked")
     private Shot createValidShot() {
         return new Shot(
@@ -47,9 +42,7 @@ class ShotTest {
         );
     }
 
-    /**
-     * Creates a valid Shot instance using metric units (meters per second).
-     */
+    /// Creates a valid Shot instance using metric units (meters per second).
     @SuppressWarnings("unchecked")
     private Shot createValidShotMetric() {
         return new Shot(

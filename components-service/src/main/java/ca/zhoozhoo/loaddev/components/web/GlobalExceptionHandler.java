@@ -23,11 +23,9 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
-/**
- * Centralized exception handling returning appropriate HTTP status codes.
- *
- * @author Zhubin Salehi
- */
+/// Centralized exception handling returning appropriate HTTP status codes.
+///
+/// @author Zhubin Salehi
 @RestControllerAdvice
 @Log4j2
 public class GlobalExceptionHandler {

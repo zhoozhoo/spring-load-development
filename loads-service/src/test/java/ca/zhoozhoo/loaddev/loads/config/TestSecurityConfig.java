@@ -14,11 +14,9 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import ca.zhoozhoo.loaddev.security.CurrentUserMethodArgumentResolver;
 import reactor.core.publisher.Mono;
 
-/**
- * Test security configuration with disabled CSRF and mock JWT decoder.
- *
- * @author Zhubin Salehi
- */
+/// Test security configuration with disabled CSRF and mock JWT decoder.
+///
+/// @author Zhubin Salehi
 @TestConfiguration
 @EnableWebFluxSecurity
 public class TestSecurityConfig {

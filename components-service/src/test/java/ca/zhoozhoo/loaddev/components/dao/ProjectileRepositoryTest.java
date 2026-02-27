@@ -20,15 +20,12 @@ import org.springframework.test.context.ActiveProfiles;
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.components.model.Projectile;
 
-/**
- * Integration tests for {@link ProjectileRepository}.
- * <p>
- * Tests repository operations including JSR-385 Quantity and JSR-354 MonetaryAmount
- * persistence to/from PostgreSQL JSONB columns.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Integration tests for [ProjectileRepository].
+///
+/// Tests repository operations including JSR-385 Quantity and JSR-354 MonetaryAmount
+/// persistence to/from PostgreSQL JSONB columns.
+///
+/// @author Zhubin Salehi
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)

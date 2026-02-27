@@ -10,11 +10,9 @@ import ca.zhoozhoo.loaddev.common.opentelemetry.ContextPropagationConfiguration;
 import ca.zhoozhoo.loaddev.common.opentelemetry.FilterConfiguration;
 import ca.zhoozhoo.loaddev.common.opentelemetry.OpenTelemetryConfiguration;
 
-/**
- * Components Service managing ammunition component data with multi-tenant RESTful APIs.
- *
- * @author Zhubin Salehi
- */
+/// Components Service managing ammunition component data with multi-tenant RESTful APIs.
+///
+/// @author Zhubin Salehi
 @SpringBootApplication
 @EnableTransactionManagement
 @EnableDiscoveryClient

@@ -6,17 +6,14 @@ import ca.zhoozhoo.loaddev.loads.model.Group;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * Reactive repository interface for {@link Group} entity operations.
- * <p>
- * Provides CRUD operations and custom query methods for shooting group data using
- * javax.measure Quantity API. Groups represent collections of shots fired with
- * a specific load configuration. All queries support owner-based filtering for
- * secure multi-tenant access.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Reactive repository interface for [Group] entity operations.
+///
+/// Provides CRUD operations and custom query methods for shooting group data using
+/// javax.measure Quantity API. Groups represent collections of shots fired with
+/// a specific load configuration. All queries support owner-based filtering for
+/// secure multi-tenant access.
+///
+/// @author Zhubin Salehi
 public interface GroupRepository extends R2dbcRepository<Group, Long> {
 
     Flux<Group> findAllByLoadIdAndOwnerId(Long loadId, String ownerId);

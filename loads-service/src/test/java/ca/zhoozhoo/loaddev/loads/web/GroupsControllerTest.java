@@ -31,16 +31,13 @@ import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
 import ca.zhoozhoo.loaddev.loads.model.Group;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 
-/**
- * Integration tests for GroupsController.
- * <p>
- * Tests all REST endpoints for group management including CRUD operations,
- * validation, and security. Uses WebTestClient for reactive endpoint testing with
- * mock JWT authentication.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// Integration tests for GroupsController.
+///
+/// Tests all REST endpoints for group management including CRUD operations,
+/// validation, and security. Uses WebTestClient for reactive endpoint testing with
+/// mock JWT authentication.
+///
+/// @author Zhubin Salehi
 @SpringBootTest(properties = "spring.autoconfigure.exclude=ca.zhoozhoo.loaddev.security.SecurityAutoConfiguration")
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient

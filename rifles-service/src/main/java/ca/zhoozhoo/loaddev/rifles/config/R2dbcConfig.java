@@ -12,14 +12,12 @@ import org.springframework.transaction.ReactiveTransactionManager;
 import ca.zhoozhoo.loaddev.common.r2dbc.R2dbcConverters;
 import io.r2dbc.spi.ConnectionFactory;
 
-/**
- * R2DBC configuration with JSR-385 Quantity support.
- * <p>
- * Enables reactive PostgreSQL database access with non-blocking operations,
- * reactive transaction management, and custom converters for Quantity types.
- *
- * @author Zhubin Salehi
- */
+/// R2DBC configuration with JSR-385 Quantity support.
+///
+/// Enables reactive PostgreSQL database access with non-blocking operations,
+/// reactive transaction management, and custom converters for Quantity types.
+///
+/// @author Zhubin Salehi
 @Configuration
 @EnableR2dbcRepositories
 public class R2dbcConfig extends AbstractR2dbcConfiguration {

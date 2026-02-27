@@ -6,11 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/**
- * Unit tests for QuantityModule.
- * 
- * @author Zhubin Salehi
- */
+/// Unit tests for QuantityModule.
+///
+/// @author Zhubin Salehi
 class QuantityModuleTest {
 
     @Nested

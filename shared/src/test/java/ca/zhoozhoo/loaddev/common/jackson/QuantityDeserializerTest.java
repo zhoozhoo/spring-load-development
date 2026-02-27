@@ -19,12 +19,10 @@ import tools.jackson.databind.deser.std.StdDeserializer;
 import tools.jackson.databind.exc.MismatchedInputException;
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * Unit tests for QuantityDeserializer.
- * Tests JSR-385 Quantity deserialization and error paths.
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for QuantityDeserializer.
+/// Tests JSR-385 Quantity deserialization and error paths.
+///
+/// @author Zhubin Salehi
 class QuantityDeserializerTest {
 
         private final JsonMapper mapper = new JsonMapper()

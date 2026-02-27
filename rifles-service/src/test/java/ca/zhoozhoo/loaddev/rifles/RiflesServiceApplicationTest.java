@@ -12,12 +12,10 @@ import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.rifles.config.TestSecurityConfig;
 
-/**
- * Integration test for RiflesServiceApplication.
- * Verifies that the Spring application context loads successfully.
- *
- * @author Zhubin Salehi
- */
+/// Integration test for RiflesServiceApplication.
+/// Verifies that the Spring application context loads successfully.
+///
+/// @author Zhubin Salehi
 @SpringBootTest(properties = "spring.autoconfigure.exclude=ca.zhoozhoo.loaddev.security.SecurityAutoConfiguration")
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)

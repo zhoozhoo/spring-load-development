@@ -44,17 +44,14 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * REST controller for managing ammunition load configurations.
- * <p>
- * This controller provides endpoints for CRUD operations on load data with type-safe
- * unit handling via javax.measure, including retrieval of group statistics for load
- * performance analysis. All endpoints are secured with OAuth2 authentication and
- * enforce user-based access control.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// REST controller for managing ammunition load configurations.
+///
+/// This controller provides endpoints for CRUD operations on load data with type-safe
+/// unit handling via javax.measure, including retrieval of group statistics for load
+/// performance analysis. All endpoints are secured with OAuth2 authentication and
+/// enforce user-based access control.
+///
+/// @author Zhubin Salehi
 @Tag(name = "Loads", description = "Operations on loads belonging to the authenticated user")
 @SecurityScheme(
     name = "Oauth2Security", 
@@ -139,22 +136,7 @@ public class LoadsController {
     public Mono<ResponseEntity<Load>> createLoad(
             @Parameter(hidden = true) @CurrentUser String userId, 
             @Valid @RequestBody Load load) {
-        return Mono.just(new Load(
-                null,
-                userId,
-                load.name(),
-                load.description(),
-                load.powderManufacturer(),
-                load.powderType(),
-                load.bulletManufacturer(),
-                load.bulletType(),
-                load.bulletWeight(),
-                load.primerManufacturer(),
-                load.primerType(),
-                load.distanceFromLands(),
-                load.caseOverallLength(),
-                load.neckTension(),
-                load.rifleId()))
+        return Mono.just(load.withOwner(userId))
                 .flatMap(loadService::createLoad)
                 .map(savedLoad -> {
                     log.info("Created new load with id: {}", savedLoad.id());
@@ -175,25 +157,8 @@ public class LoadsController {
             @Parameter(description = "Id of load") @PathVariable Long id,
             @Valid @RequestBody Load load) {
         return loadService.getLoadById(id, userId)
-                .flatMap(existingLoad -> {
-                    Load updatedLoad = new Load(
-                            existingLoad.id(),
-                            existingLoad.ownerId(),
-                            load.name(),
-                            load.description(),
-                            load.powderManufacturer(),
-                            load.powderType(),
-                            load.bulletManufacturer(),
-                            load.bulletType(),
-                            load.bulletWeight(),
-                            load.primerManufacturer(),
-                            load.primerType(),
-                            load.distanceFromLands(),
-                            load.caseOverallLength(),
-                            load.neckTension(),
-                            load.rifleId());
-                    return loadService.updateLoad(updatedLoad);
-                })
+                .flatMap(existingLoad -> loadService.updateLoad(
+                        load.withIdAndOwner(existingLoad.id(), existingLoad.ownerId())))
                 .map(updatedLoad -> {
                     log.info("Updated load with id: {}", updatedLoad.id());
                     return ok(updatedLoad);

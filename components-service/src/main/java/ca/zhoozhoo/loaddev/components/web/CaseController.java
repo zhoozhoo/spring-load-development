@@ -7,7 +7,7 @@ import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 import static reactor.core.publisher.Mono.just;
 
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,11 +24,12 @@ import org.springframework.web.bind.annotation.RestController;
 import ca.zhoozhoo.loaddev.components.model.Case;
 import ca.zhoozhoo.loaddev.components.service.CaseService;
 import ca.zhoozhoo.loaddev.security.CurrentUser;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -43,14 +44,11 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * REST controller for cartridge case components with JSR-385/JSR-354.
- * <p>
- * OAuth2-secured CRUD operations with full-text search and multi-tenant isolation.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// REST controller for cartridge case components with JSR-385/JSR-354.
+///
+/// OAuth2-secured CRUD operations with full-text search and multi-tenant isolation.
+///
+/// @author Zhubin Salehi
 @Tag(name = "Cases", description = "Operations on cases belonging to the authenticated user")
 @SecurityScheme(name = "Oauth2Security", type = OAUTH2, flows = @OAuthFlows(authorizationCode = @OAuthFlow(authorizationUrl = "${springdoc.oauth2.authorization-url}", tokenUrl = "${springdoc.oauth2.token-url}", scopes = {
         @OAuthScope(name = "components:view", description = "View access"),
@@ -119,18 +117,8 @@ public class CaseController {
     public Mono<ResponseEntity<Case>> createCase(
             @Parameter(hidden = true) @CurrentUser String userId,
             @Valid @RequestBody Case casing) {
-        if (userId == null || userId.isBlank()) {
-            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).<Case>build());
-        }
         return just(casing)
-                .map(c -> new Case(
-                        null,
-                        userId,
-                        c.manufacturer(),
-                        c.caliber(),
-                        c.primerSize(),
-                        c.cost(),
-                        c.quantityPerBox()))
+                .map(c -> c.withOwner(userId))
                 .flatMap(caseService::createCase)
                 .doOnNext(savedCase -> log.debug("Created new case with id: {}", savedCase.id()))
                 .map(savedCase -> status(CREATED).body(savedCase));
@@ -149,14 +137,8 @@ public class CaseController {
             @Parameter(description = "Id of case") @PathVariable Long id,
             @Valid @RequestBody Case casing) {
         return caseService.getCaseById(id, userId)
-                .flatMap(existingCase -> caseService.updateCase(new Case(
-                        existingCase.id(),
-                        existingCase.ownerId(),
-                        casing.manufacturer(),
-                        casing.caliber(),
-                        casing.primerSize(),
-                        casing.cost(),
-                        casing.quantityPerBox())))
+                .flatMap(existingCase -> caseService.updateCase(
+                        casing.withIdAndOwner(existingCase.id(), existingCase.ownerId())))
                 .doOnNext(updatedCase -> log.debug("Updated case with id: {}", updatedCase.id()))
                 .map(updatedCase -> ok(updatedCase))
                 .defaultIfEmpty(notFound().build());

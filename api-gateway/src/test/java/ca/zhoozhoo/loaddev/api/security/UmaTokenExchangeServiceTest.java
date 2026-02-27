@@ -21,15 +21,13 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-/**
- * Unit tests for {@link UmaTokenExchangeService}.
- * Tests token exchange logic with mocked WebClient.
- * 
- * <p>Note: Cache testing is handled by integration tests since Spring Cache
- * requires Spring context and AOP proxies to function properly.</p>
- *
- * @author Zhubin Salehi
- */
+/// Unit tests for [UmaTokenExchangeService].
+/// Tests token exchange logic with mocked WebClient.
+///
+/// Note: Cache testing is handled by integration tests since Spring Cache
+/// requires Spring context and AOP proxies to function properly.
+///
+/// @author Zhubin Salehi
 @ExtendWith(MockitoExtension.class)
 class UmaTokenExchangeServiceTest {
 

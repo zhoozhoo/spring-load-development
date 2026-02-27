@@ -10,15 +10,13 @@ import io.modelcontextprotocol.json.McpJsonMapper;
 import io.modelcontextprotocol.json.TypeRef;
 import tools.jackson.databind.json.JsonMapper;
 
-/**
- * MCP JSON mapper using Spring-managed JsonMapper (Jackson 3).
- * <p>
- * Ensures {@link ca.zhoozhoo.loaddev.common.jackson.QuantityModule} is applied for
- * serialization/deserialization of JSR-385 Quantity types.
- *
- * @author Zhubin Salehi
- * @see io.modelcontextprotocol.json.McpJsonMapper
- */
+/// MCP JSON mapper using Spring-managed JsonMapper (Jackson 3).
+///
+/// Ensures [ca.zhoozhoo.loaddev.common.jackson.QuantityModule] is applied for
+/// serialization/deserialization of JSR-385 Quantity types.
+///
+/// @author Zhubin Salehi
+/// @see io.modelcontextprotocol.json.McpJsonMapper
 public class SpringObjectMapperMcpJsonMapper implements McpJsonMapper {
 
     private static final Logger logger = LoggerFactory.getLogger(SpringObjectMapperMcpJsonMapper.class);
@@ -26,14 +24,12 @@ public class SpringObjectMapperMcpJsonMapper implements McpJsonMapper {
 
     private final JsonMapper jsonMapper;
 
-    /**
-     * Constructs mapper with Spring-managed JsonMapper.
-     * <p>
-     * Note: JsonMapper is stored directly (not copied) as it's effectively immutable
-     * after Spring Boot auto-configuration.
-     *
-     * @param jsonMapper the Spring-managed JsonMapper with all modules
-     */
+    /// Constructs mapper with Spring-managed JsonMapper.
+    ///
+    /// Note: JsonMapper is stored directly (not copied) as it's effectively immutable
+    /// after Spring Boot auto-configuration.
+    ///
+    /// @param jsonMapper the Spring-managed JsonMapper with all modules
     @SuppressFBWarnings(value = "EI_EXPOSE_REP2",
         justification = "JsonMapper is effectively immutable after Spring Boot auto-configuration; defensive copy would break lazy initialization")
     public SpringObjectMapperMcpJsonMapper(JsonMapper jsonMapper) {
@@ -96,12 +92,10 @@ public class SpringObjectMapperMcpJsonMapper implements McpJsonMapper {
         return jsonMapper.convertValue(fromValue, jsonMapper.constructType(toValueTypeRef.getType()));
     }
 
-    /**
-     * Gets the type name for logging purposes.
-     *
-     * @param value the object to get the type name for
-     * @return "null" if value is null, otherwise the class name
-     */
+    /// Gets the type name for logging purposes.
+    ///
+    /// @param value the object to get the type name for
+    /// @return "null" if value is null, otherwise the class name
     private String getTypeName(Object value) {
         return value == null ? "null" : value.getClass().getName();
     }

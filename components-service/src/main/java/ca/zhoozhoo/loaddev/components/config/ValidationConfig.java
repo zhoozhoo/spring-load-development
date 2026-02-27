@@ -12,11 +12,9 @@ import jakarta.validation.Validation;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-/**
- * Bean Validation configuration registering custom Quantity validators.
- *
- * @author Zhubin Salehi
- */
+/// Bean Validation configuration registering custom Quantity validators.
+///
+/// @author Zhubin Salehi
 @Configuration
 public class ValidationConfig {
 

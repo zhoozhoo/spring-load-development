@@ -43,18 +43,15 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-/**
- * REST controller for managing shooting groups.
- * <p>
- * This controller provides endpoints for CRUD operations on shooting group data,
- * including retrieval of ballistic statistics for each group. Groups represent
- * collections of shots fired with specific load configurations. All measurements
- * use type-safe units via javax.measure. All endpoints are secured with OAuth2
- * authentication and enforce user-based access control.
- * </p>
- *
- * @author Zhubin Salehi
- */
+/// REST controller for managing shooting groups.
+///
+/// This controller provides endpoints for CRUD operations on shooting group data,
+/// including retrieval of ballistic statistics for each group. Groups represent
+/// collections of shots fired with specific load configurations. All measurements
+/// use type-safe units via javax.measure. All endpoints are secured with OAuth2
+/// authentication and enforce user-based access control.
+///
+/// @author Zhubin Salehi
 @Tag(name = "Groups", description = "Operations on groups belonging to the authenticated user")
 @SecurityScheme(
     name = "Oauth2Security", 
@@ -136,14 +133,7 @@ public class GroupsController {
     @PreAuthorize("hasAuthority('groups:edit')")
     public Mono<ResponseEntity<Group>> createGroup(@Parameter(hidden = true) @CurrentUser String userId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Group to create") @Valid @RequestBody Group group) {
-        var newGroup = new Group(
-                group.id(),
-                userId,
-                group.loadId(),
-                group.date(),
-                group.powderCharge(),
-                group.targetRange(),
-                group.groupSize());
+        var newGroup = group.withOwner(userId);
         return groupService.createGroup(newGroup)
                 .map(savedGroup -> {
                     log.info("Created new group with id: {}", savedGroup.id());
@@ -164,17 +154,8 @@ public class GroupsController {
             @Parameter(in = PATH, description = "Id of group", required = true) @PathVariable Long id,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Group to update") @Valid @RequestBody Group group) {
         return groupService.getGroupById(id, userId)
-                .flatMap(existingGroup -> {
-                    var updatedGroup = new Group(
-                            existingGroup.id(),
-                            existingGroup.ownerId(),
-                            existingGroup.loadId(),
-                            group.date(),
-                            group.powderCharge(),
-                            group.targetRange(),
-                            group.groupSize());
-                    return groupService.updateGroup(updatedGroup);
-                })
+                .flatMap(existingGroup -> groupService.updateGroup(
+                        group.withIdAndOwner(existingGroup.id(), existingGroup.ownerId())))
                 .map(updatedGroup -> {
                     log.info("Updated group with id: {}", updatedGroup.id());
                     return ok(updatedGroup);

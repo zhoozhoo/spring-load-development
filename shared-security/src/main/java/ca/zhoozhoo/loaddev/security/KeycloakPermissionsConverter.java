@@ -13,20 +13,18 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 
-/**
- * Converts Keycloak JWT authorization permissions into Spring Security authorities.
- * <p>
- * Extracts permissions from the {@code authorization.permissions} claim and transforms
- * each permission's resource name and scopes into {@link GrantedAuthority} instances.
- * <p>
- * Authority format: {@code resourceName:scope}
- * <p>
- * Example: A permission with {@code rsname="loads"} and {@code scopes=["read", "write"]}
- * produces authorities: {@code loads:read}, {@code loads:write}
- *
- * @author Zhubin Salehi
- * @see ReactiveJwtGrantedAuthoritiesConverterAdapter
- */
+/// Converts Keycloak JWT authorization permissions into Spring Security authorities.
+///
+/// Extracts permissions from the `authorization.permissions` claim and transforms
+/// each permission's resource name and scopes into [GrantedAuthority] instances.
+///
+/// Authority format: `resourceName:scope`
+///
+/// Example: A permission with `rsname="loads"` and `scopes=["read", "write"]`
+/// produces authorities: `loads:read`, `loads:write`
+///
+/// @author Zhubin Salehi
+/// @see ReactiveJwtGrantedAuthoritiesConverterAdapter
 class KeycloakPermissionsConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
     @Override

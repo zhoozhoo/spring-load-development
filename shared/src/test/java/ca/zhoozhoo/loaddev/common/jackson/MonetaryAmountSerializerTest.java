@@ -13,10 +13,8 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.ser.std.StdSerializer;
 
-/**
- * Unit tests for {@link MonetaryAmountSerializer}.
- * Verifies JSON shape and number precision for JSR-354 monetary amounts.
- */
+/// Unit tests for [MonetaryAmountSerializer].
+/// Verifies JSON shape and number precision for JSR-354 monetary amounts.
 class MonetaryAmountSerializerTest {
 
     private final JsonMapper mapper = QuantityModuleSupport.newObjectMapperWithQuantityModule();
