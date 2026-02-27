@@ -24,13 +24,8 @@ All quantity-like values use JSR-385 (Units of Measurement) with a consistent JS
         - Bullet weight: {"value": 140, "unit": "[gr]", "scale": "ABSOLUTE"}
         - Range: {"value": 100, "unit": "[yd_i]", "scale": "ABSOLUTE"}
         - Velocity: {"value": 2800, "unit": "[ft_i]/s", "scale": "ABSOLUTE"}
-    * HTTP request files for testing API endpoints using VS Code's REST Client extension
-    * A shell script for automated test data loading
-    * Configuration files for environment variables
-    * Full-text search examples for component resources (cases, propellants, primers, projectiles)
 * MonetaryAmount: {"amount": number, "currency": "ISO-4217 code"}
     - Example: {"amount": 89.99, "currency": "CAD"}
-    The test files cover authentication and full CRUD operations for all API services including rifles, loads, groups, shots, and components (cases, propellants, primers, projectiles), plus search endpoints.
 
 Notes:
 * The scale field is optional and defaults to ABSOLUTE when omitted.
