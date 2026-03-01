@@ -1,4 +1,4 @@
-package ca.zhoozhoo.loaddev.components.web;
+package ca.zhoozhoo.loaddev.common.web;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
@@ -23,7 +23,12 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
-/// Centralized exception handling returning appropriate HTTP status codes.
+/// Global exception handler for REST controllers.
+///
+/// Provides centralized exception handling for all controllers,
+/// converting various exception types into appropriate HTTP responses with
+/// meaningful error messages. Handles validation errors, data integrity
+/// violations, security exceptions, and general runtime errors.
 ///
 /// @author Zhubin Salehi
 @RestControllerAdvice
@@ -33,7 +38,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NumberFormatException.class)
     public Mono<ResponseEntity<String>> handleNumberFormatException(NumberFormatException ex) {
         log.error("Number format error: {}", ex.getMessage(), ex);
-
         return just(ResponseEntity.status(BAD_REQUEST)
                 .body("Invalid number format: Please provide valid numeric values"));
     }
