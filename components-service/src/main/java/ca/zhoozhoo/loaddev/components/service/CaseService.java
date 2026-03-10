@@ -1,5 +1,6 @@
 package ca.zhoozhoo.loaddev.components.service;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ca.zhoozhoo.loaddev.components.dao.CaseRepository;
@@ -26,21 +27,23 @@ public class CaseService {
         this.caseRepository = caseRepository;
     }
 
-    /// Retrieves all cases for a specific user.
+    /// Retrieves all cases for a specific user with pagination.
     ///
-    /// @param userId the ID of the user
+    /// @param userId   the ID of the user
+    /// @param pageable pagination parameters
     /// @return a Flux of Case entities
-    public Flux<Case> getAllCases(String userId) {
-        return caseRepository.findAllByOwnerId(userId);
+    public Flux<Case> getAllCases(String userId, Pageable pageable) {
+        return caseRepository.findAllByOwnerId(userId, pageable);
     }
 
-    /// Searches for cases belonging to a user based on a query string.
+    /// Searches for cases belonging to a user based on a query string with pagination.
     ///
-    /// @param userId the ID of the user
-    /// @param query  the search query
+    /// @param userId   the ID of the user
+    /// @param query    the search query
+    /// @param pageable pagination parameters
     /// @return a Flux of matching Case entities
-    public Flux<Case> searchCases(String userId, String query) {
-        return caseRepository.searchByOwnerIdAndQuery(userId, query);
+    public Flux<Case> searchCases(String userId, String query, Pageable pageable) {
+        return caseRepository.searchByOwnerIdAndQuery(userId, query, pageable.getPageSize(), pageable.getOffset());
     }
 
     /// Retrieves a specific case by ID and user ID.

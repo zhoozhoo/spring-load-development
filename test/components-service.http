@@ -23,17 +23,17 @@ grant_type=urn:ietf:params:oauth:grant-type:uma-ticket&client_id={{client_id}}&c
 
 ### Get list of all cases
 # @name GetCases
-GET {{api_gateway_host}}/api/cases
+GET {{api_gateway_host}}/api/v1/cases
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Search cases (full-text)
 # @name SearchCases
-GET {{api_gateway_host}}/api/cases/search?query=Creedmoor
+GET {{api_gateway_host}}/api/v1/cases/search?query=Creedmoor
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Create a new case
 # @name CreateCase
-POST {{api_gateway_host}}/api/cases
+POST {{api_gateway_host}}/api/v1/cases
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -54,12 +54,12 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get the created case by ID
 # @name GetCaseById
-GET {{api_gateway_host}}/api/cases/{{CreateCase.response.body.id}}
+GET {{api_gateway_host}}/api/v1/cases/{{CreateCase.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Update the created case
 # @name UpdateCase
-PUT {{api_gateway_host}}/api/cases/{{CreateCase.response.body.id}}
+PUT {{api_gateway_host}}/api/v1/cases/{{CreateCase.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -80,24 +80,24 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Delete the created case
 # @name DeleteCase
-DELETE {{api_gateway_host}}/api/cases/{{CreateCase.response.body.id}}
+DELETE {{api_gateway_host}}/api/v1/cases/{{CreateCase.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 // ==================== PROPELLANTS ====================
 
 ### Get list of all propellants
 # @name GetPropellants
-GET {{api_gateway_host}}/api/propellants
+GET {{api_gateway_host}}/api/v1/propellants
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Search propellants (full-text)
 # @name SearchPropellants
-GET {{api_gateway_host}}/api/propellants/search?query=H4350
+GET {{api_gateway_host}}/api/v1/propellants/search?query=H4350
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Create a new propellant (Imperial units - pounds)
 # @name CreatePropellant
-POST {{api_gateway_host}}/api/propellants
+POST {{api_gateway_host}}/api/v1/propellants
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -117,12 +117,12 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get the created propellant by ID
 # @name GetPropellantById
-GET {{api_gateway_host}}/api/propellants/{{CreatePropellant.response.body.id}}
+GET {{api_gateway_host}}/api/v1/propellants/{{CreatePropellant.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Update the created propellant (Metric units - kilograms)
 # @name UpdatePropellant
-PUT {{api_gateway_host}}/api/propellants/{{CreatePropellant.response.body.id}}
+PUT {{api_gateway_host}}/api/v1/propellants/{{CreatePropellant.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -142,24 +142,24 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Delete the created propellant
 # @name DeletePropellant
-DELETE {{api_gateway_host}}/api/propellants/{{CreatePropellant.response.body.id}}
+DELETE {{api_gateway_host}}/api/v1/propellants/{{CreatePropellant.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 // ==================== PRIMERS ====================
 
 ### Get list of all primers
 # @name GetPrimers
-GET {{api_gateway_host}}/api/primers
+GET {{api_gateway_host}}/api/v1/primers
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Search primers (full-text)
 # @name SearchPrimers
-GET {{api_gateway_host}}/api/primers/search?query=CCI
+GET {{api_gateway_host}}/api/v1/primers/search?query=CCI
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Create a new primer
 # @name CreatePrimer
-POST {{api_gateway_host}}/api/primers
+POST {{api_gateway_host}}/api/v1/primers
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -180,12 +180,12 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get the created primer by ID
 # @name GetPrimerById
-GET {{api_gateway_host}}/api/primers/{{CreatePrimer.response.body.id}}
+GET {{api_gateway_host}}/api/v1/primers/{{CreatePrimer.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Update the created primer
 # @name UpdatePrimer
-PUT {{api_gateway_host}}/api/primers/{{CreatePrimer.response.body.id}}
+PUT {{api_gateway_host}}/api/v1/primers/{{CreatePrimer.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -206,24 +206,24 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Delete the created primer
 # @name DeletePrimer
-DELETE {{api_gateway_host}}/api/primers/{{CreatePrimer.response.body.id}}
+DELETE {{api_gateway_host}}/api/v1/primers/{{CreatePrimer.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 // ==================== PROJECTILES ====================
 
 ### Get list of all projectiles
 # @name GetProjectiles
-GET {{api_gateway_host}}/api/projectiles
+GET {{api_gateway_host}}/api/v1/projectiles
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Search projectiles (full-text)
 # @name SearchProjectiles
-GET {{api_gateway_host}}/api/projectiles/search?query=ELD
+GET {{api_gateway_host}}/api/v1/projectiles/search?query=ELD
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Create a new projectile (Imperial units - grains)
 # @name CreateProjectile
-POST {{api_gateway_host}}/api/projectiles
+POST {{api_gateway_host}}/api/v1/projectiles
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -244,12 +244,12 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Get the created projectile by ID
 # @name GetProjectileById
-GET {{api_gateway_host}}/api/projectiles/{{CreateProjectile.response.body.id}}
+GET {{api_gateway_host}}/api/v1/projectiles/{{CreateProjectile.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Update the created projectile (Metric units - grams)
 # @name UpdateProjectile
-PUT {{api_gateway_host}}/api/projectiles/{{CreateProjectile.response.body.id}}
+PUT {{api_gateway_host}}/api/v1/projectiles/{{CreateProjectile.response.body.id}}
 Content-Type: application/json
 Authorization: Bearer {{Authenticate.response.body.access_token}}
 
@@ -270,5 +270,5 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
 
 ### Delete the created projectile
 # @name DeleteProjectile
-DELETE {{api_gateway_host}}/api/projectiles/{{CreateProjectile.response.body.id}}
+DELETE {{api_gateway_host}}/api/v1/projectiles/{{CreateProjectile.response.body.id}}
 Authorization: Bearer {{Authenticate.response.body.access_token}}

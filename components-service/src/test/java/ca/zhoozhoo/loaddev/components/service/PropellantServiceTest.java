@@ -1,8 +1,10 @@
 package ca.zhoozhoo.loaddev.components.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -11,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import ca.zhoozhoo.loaddev.components.dao.PropellantRepository;
 import ca.zhoozhoo.loaddev.components.model.Propellant;
@@ -34,25 +38,25 @@ class PropellantServiceTest {
     @Test
     void getAllPropellants_ShouldReturnFluxOfPropellants() {
         Propellant propellant = new Propellant(1L, "user1", "Brand", "Model", null, null);
-        when(propellantRepository.findAllByOwnerId(anyString())).thenReturn(Flux.just(propellant));
+        when(propellantRepository.findAllByOwnerId(anyString(), any(Pageable.class))).thenReturn(Flux.just(propellant));
 
-        StepVerifier.create(propellantService.getAllPropellants("user1"))
+        StepVerifier.create(propellantService.getAllPropellants("user1", PageRequest.of(0, 20)))
                 .expectNext(propellant)
                 .verifyComplete();
 
-        verify(propellantRepository).findAllByOwnerId("user1");
+        verify(propellantRepository).findAllByOwnerId(eq("user1"), any(Pageable.class));
     }
 
     @Test
     void searchPropellants_ShouldReturnFluxOfPropellants() {
         Propellant propellant = new Propellant(1L, "user1", "Brand", "Model", null, null);
-        when(propellantRepository.searchByOwnerIdAndQuery(anyString(), anyString())).thenReturn(Flux.just(propellant));
+        when(propellantRepository.searchByOwnerIdAndQuery(anyString(), anyString(), anyInt(), anyLong())).thenReturn(Flux.just(propellant));
 
-        StepVerifier.create(propellantService.searchPropellants("user1", "query"))
+        StepVerifier.create(propellantService.searchPropellants("user1", "query", PageRequest.of(0, 20)))
                 .expectNext(propellant)
                 .verifyComplete();
 
-        verify(propellantRepository).searchByOwnerIdAndQuery("user1", "query");
+        verify(propellantRepository).searchByOwnerIdAndQuery(eq("user1"), eq("query"), anyInt(), anyLong());
     }
 
     @Test

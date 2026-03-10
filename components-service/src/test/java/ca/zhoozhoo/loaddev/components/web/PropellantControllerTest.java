@@ -50,7 +50,7 @@ public class PropellantControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/propellants")
+                .uri("/v1/propellants")
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -69,7 +69,7 @@ public class PropellantControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri(uriBuilder -> uriBuilder.path("/propellants/search").queryParam("query", "Hodgdon H4350").build())
+                .uri(uriBuilder -> uriBuilder.path("/v1/propellants/search").queryParam("query", "Hodgdon H4350").build())
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -92,7 +92,7 @@ public class PropellantControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/propellants/{id}", savedPropellant.id())
+                .uri("/v1/propellants/{id}", savedPropellant.id())
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -110,7 +110,7 @@ public class PropellantControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/propellants/999")
+                .uri("/v1/propellants/999")
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -127,7 +127,7 @@ public class PropellantControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .post()
-                .uri("/propellants")
+                .uri("/v1/propellants")
                 .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(propellant), Propellant.class)
@@ -156,7 +156,7 @@ public class PropellantControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .post()
-                .uri("/propellants")
+                .uri("/v1/propellants")
                 .header("Authorization", "Bearer " + userId)
                 .body(just(invalidPropellant), Propellant.class)
                 .exchange()
@@ -188,7 +188,7 @@ public class PropellantControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .put()
-                .uri("/propellants/{id}", savedPropellant.id())
+                .uri("/v1/propellants/{id}", savedPropellant.id())
                 .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(updatedPropellant), Propellant.class)
@@ -215,7 +215,7 @@ public class PropellantControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .put()
-                .uri("/propellants/999")
+                .uri("/v1/propellants/999")
                 .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(propellant), Propellant.class)
@@ -233,7 +233,7 @@ public class PropellantControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .delete()
-                .uri("/propellants/{id}", savedPropellant.id())
+                .uri("/v1/propellants/{id}", savedPropellant.id())
                 .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNoContent();
@@ -242,7 +242,7 @@ public class PropellantControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/propellants/{id}", savedPropellant.id())
+                .uri("/v1/propellants/{id}", savedPropellant.id())
                 .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -256,7 +256,7 @@ public class PropellantControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .delete()
-                .uri("/propellants/999")
+                .uri("/v1/propellants/999")
                 .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();

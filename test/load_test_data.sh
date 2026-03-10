@@ -40,7 +40,7 @@ load_config() {
     fi
     
      # Derive API base from API gateway host
-     API_BASE="${API_GATEWAY_HOST%/}/api"
+     API_BASE="${API_GATEWAY_HOST%/}/api/v1"
     
     print_success "Configuration loaded successfully"
     print_info "Authorization Host: ${AUTHORIZATION_HOST}"
@@ -310,8 +310,8 @@ verify_services() {
     fi
     
     # Check API Gateway
-    if ! curl -s --connect-timeout 5 "${API_BASE%/api}/actuator/health" > /dev/null; then
-        print_error "API Gateway is not accessible at ${API_BASE%/api}"
+    if ! curl -s --connect-timeout 5 "${API_BASE%/api/v1}/actuator/health" > /dev/null; then
+        print_error "API Gateway is not accessible at ${API_BASE%/api/v1}"
         print_info "Please ensure the API Gateway is running on port 8080"
         exit 1
     fi

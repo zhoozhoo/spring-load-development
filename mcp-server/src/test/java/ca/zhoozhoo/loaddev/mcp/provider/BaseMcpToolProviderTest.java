@@ -314,8 +314,8 @@ public abstract class BaseMcpToolProviderTest {
     ///
     /// Handles:
     ///
-    /// - GET /rifles - Returns array of rifles
-    /// - GET /rifles/{id} - Returns single rifle or 404 for ID 999
+    /// - GET /v1/rifles - Returns array of rifles
+    /// - GET /v1/rifles/{id} - Returns single rifle or 404 for ID 999
     ///
     /// This dispatcher is reusable across test classes that need to mock
     /// the rifles-service API.
@@ -331,12 +331,12 @@ public abstract class BaseMcpToolProviderTest {
                     return notFound();
                 }
                 
-                if (path.equals("/rifles")) {
+                if (path.equals("/v1/rifles")) {
                     return jsonResponse("[" + RIFLE_JSON + "]");
                 }
                 
-                if (path.startsWith("/rifles/")) {
-                    String idPart = extractIdFromPath(path, "/rifles/");
+                if (path.startsWith("/v1/rifles/")) {
+                    String idPart = extractIdFromPath(path, "/v1/rifles/");
                     
                     if ("999".equals(idPart)) {
                         return notFoundError("Rifle not found");
@@ -354,9 +354,9 @@ public abstract class BaseMcpToolProviderTest {
     ///
     /// Handles:
     ///
-    /// - GET /loads - Returns array of loads
-    /// - GET /loads/{id} - Returns single load or 404 for ID 999
-    /// - GET /loads/{id}/statistics - Returns load statistics
+    /// - GET /v1/loads - Returns array of loads
+    /// - GET /v1/loads/{id} - Returns single load or 404 for ID 999
+    /// - GET /v1/loads/{id}/statistics - Returns load statistics
     ///
     /// This dispatcher is reusable across test classes that need to mock
     /// the loads-service API.
@@ -372,12 +372,12 @@ public abstract class BaseMcpToolProviderTest {
                     return notFound();
                 }
                 
-                if (path.equals("/loads")) {
+                if (path.equals("/v1/loads")) {
                     return jsonResponse("[" + LOAD_JSON + "]");
                 }
                 
-                if (path.startsWith("/loads/")) {
-                    String idPart = extractIdFromPath(path, "/loads/");
+                if (path.startsWith("/v1/loads/")) {
+                    String idPart = extractIdFromPath(path, "/v1/loads/");
                     
                     if ("999".equals(idPart)) {
                         return notFoundError("Load not found");

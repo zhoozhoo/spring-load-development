@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
@@ -144,7 +145,7 @@ class PropellantRepositoryTest {
 
         propellantRepository.saveAll(just(propellant1, propellant2)).blockLast();
 
-        create(propellantRepository.findAllByOwnerId(userId))
+        create(propellantRepository.findAllByOwnerId(userId, PageRequest.of(0, 20)))
                 .expectNextMatches(p -> p.manufacturer().equals("Hodgdon"))
                 .expectNextMatches(p -> p.manufacturer().equals("IMR"))
                 .verifyComplete();
@@ -155,7 +156,7 @@ class PropellantRepositoryTest {
         var ownerId = randomUUID().toString();
         propellantRepository.saveAll(just(createTestPropellant(ownerId))).blockLast();
 
-        create(propellantRepository.searchByOwnerIdAndQuery(ownerId, "Hodgdon H4350"))
+        create(propellantRepository.searchByOwnerIdAndQuery(ownerId, "Hodgdon H4350", 20, 0L))
                 .expectNextMatches(p -> p.manufacturer().equals("Hodgdon"))
                 .verifyComplete();
     }
@@ -165,7 +166,7 @@ class PropellantRepositoryTest {
         var ownerId = randomUUID().toString();
         propellantRepository.saveAll(just(createTestPropellant(ownerId))).blockLast();
 
-        create(propellantRepository.searchByOwnerIdAndQuery(ownerId, "H4350 Varget"))
+        create(propellantRepository.searchByOwnerIdAndQuery(ownerId, "H4350 Varget", 20, 0L))
                 .expectNextCount(0)
                 .verifyComplete();
     }
@@ -218,11 +219,11 @@ class PropellantRepositoryTest {
         propellantRepository.save(createTestPropellant(user1)).block();
         propellantRepository.save(createTestPropellant(user2)).block();
 
-        create(propellantRepository.findAllByOwnerId(user1))
+        create(propellantRepository.findAllByOwnerId(user1, PageRequest.of(0, 20)))
                 .expectNextCount(1)
                 .verifyComplete();
 
-        create(propellantRepository.findAllByOwnerId(user2))
+        create(propellantRepository.findAllByOwnerId(user2, PageRequest.of(0, 20)))
                 .expectNextCount(1)
                 .verifyComplete();
     }

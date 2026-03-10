@@ -152,7 +152,7 @@ data:
                 - id: loads-service
                   uri: http://loads-service.{{ .Values.namespace | default "default" }}.svc.cluster.local:8080
                   predicates:
-                    - Path=/api/loads/**,/api/groups/**,/api/shots/**,/loads-service/v3/api-docs
+                    - Path=/api/v1/loads/**,/api/v1/groups/**,/api/v1/shots/**,/loads-service/v3/api-docs
                   filters:
                     - StripPrefix=1
                     - TokenForwarding
@@ -164,7 +164,7 @@ data:
                 - id: rifles-service
                   uri: http://rifles-service.{{ .Values.namespace | default "default" }}.svc.cluster.local:8080
                   predicates:
-                    - Path=/api/rifles/**,/rifles-service/v3/api-docs
+                    - Path=/api/v1/rifles/**,/rifles-service/v3/api-docs
                   filters:
                     - StripPrefix=1
                     - TokenForwarding
@@ -176,7 +176,7 @@ data:
                 - id: components-service
                   uri: http://components-service.{{ .Values.namespace | default "default" }}.svc.cluster.local:8080
                   predicates:
-                    - Path=/api/projectiles/**,/api/cases/**,/api/propellants/**,/api/primers/**,/components-service/v3/api-docs
+                    - Path=/api/v1/projectiles/**,/api/v1/cases/**,/api/v1/propellants/**,/api/v1/primers/**,/components-service/v3/api-docs
                   filters:
                     - StripPrefix=1
                     - TokenForwarding

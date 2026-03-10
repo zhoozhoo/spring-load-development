@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
@@ -138,7 +139,7 @@ class PrimerRepositoryTest {
 
         primerRepository.saveAll(just(primer1, primer2)).blockLast();
 
-        create(primerRepository.findAllByOwnerId(userId))
+        create(primerRepository.findAllByOwnerId(userId, PageRequest.of(0, 20)))
                 .expectNextMatches(p -> p.manufacturer().equals("CCI"))
                 .expectNextMatches(p -> p.manufacturer().equals("Winchester"))
                 .verifyComplete();
@@ -150,7 +151,7 @@ class PrimerRepositoryTest {
 
         primerRepository.saveAll(just(createTestPrimer(ownerId))).blockLast();
 
-        create(primerRepository.searchByOwnerIdAndQuery(ownerId, "CCI BR-4"))
+        create(primerRepository.searchByOwnerIdAndQuery(ownerId, "CCI BR-4", 20, 0L))
                 .expectNextMatches(pp -> pp.manufacturer().equals("CCI"))
                 .verifyComplete();
     }
@@ -161,7 +162,7 @@ class PrimerRepositoryTest {
 
         primerRepository.saveAll(just(createTestPrimer(ownerId))).blockLast();
 
-        create(primerRepository.searchByOwnerIdAndQuery(ownerId, "CCI 45o"))
+        create(primerRepository.searchByOwnerIdAndQuery(ownerId, "CCI 45o", 20, 0L))
                 .expectNextCount(0)
                 .verifyComplete();
     }

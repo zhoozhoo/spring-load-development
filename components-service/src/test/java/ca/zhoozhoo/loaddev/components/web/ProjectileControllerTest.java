@@ -50,7 +50,7 @@ public class ProjectileControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/projectiles")
+                .uri("/v1/projectiles")
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -69,7 +69,7 @@ public class ProjectileControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri(uriBuilder -> uriBuilder.path("/projectiles/search").queryParam("query", "Hornady ELD-X").build())
+                .uri(uriBuilder -> uriBuilder.path("/v1/projectiles/search").queryParam("query", "Hornady ELD-X").build())
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -92,7 +92,7 @@ public class ProjectileControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/projectiles/{id}", savedProjectile.id())
+                .uri("/v1/projectiles/{id}", savedProjectile.id())
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -110,7 +110,7 @@ public class ProjectileControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/projectiles/999")
+                .uri("/v1/projectiles/999")
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -127,7 +127,7 @@ public class ProjectileControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .post()
-                .uri("/projectiles")
+                .uri("/v1/projectiles")
                 .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(projectile), Projectile.class)
@@ -157,7 +157,7 @@ public class ProjectileControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .post()
-                .uri("/projectiles")
+                .uri("/v1/projectiles")
                 .header("Authorization", "Bearer " + userId)
                 .body(just(invalidProjectile), Projectile.class)
                 .exchange()
@@ -191,7 +191,7 @@ public class ProjectileControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .put()
-                .uri("/projectiles/{id}", savedProjectile.id())
+                .uri("/v1/projectiles/{id}", savedProjectile.id())
                 .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(updatedProjectile), Projectile.class)
@@ -219,7 +219,7 @@ public class ProjectileControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .put()
-                .uri("/projectiles/999")
+                .uri("/v1/projectiles/999")
                 .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(projectile), Projectile.class)
@@ -237,7 +237,7 @@ public class ProjectileControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .delete()
-                .uri("/projectiles/{id}", savedProjectile.id())
+                .uri("/v1/projectiles/{id}", savedProjectile.id())
                 .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNoContent();
@@ -246,7 +246,7 @@ public class ProjectileControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/projectiles/{id}", savedProjectile.id())
+                .uri("/v1/projectiles/{id}", savedProjectile.id())
                 .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -260,7 +260,7 @@ public class ProjectileControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .delete()
-                .uri("/projectiles/999")
+                .uri("/v1/projectiles/999")
                 .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();

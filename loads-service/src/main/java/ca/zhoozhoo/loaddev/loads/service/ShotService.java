@@ -1,5 +1,6 @@
 package ca.zhoozhoo.loaddev.loads.service;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
@@ -25,13 +26,14 @@ public class ShotService {
         this.shotRepository = shotRepository;
     }
 
-    /// Retrieves all shots for a specific group and user.
+    /// Retrieves all shots for a specific group and user with pagination.
     ///
-    /// @param groupId the ID of the group
-    /// @param userId  the ID of the user
+    /// @param groupId  the ID of the group
+    /// @param userId   the ID of the user
+    /// @param pageable pagination parameters
     /// @return a Flux of Shot entities
-    public Flux<Shot> getAllShots(Long groupId, String userId) {
-        return shotRepository.findByGroupIdAndOwnerId(groupId, userId);
+    public Flux<Shot> getAllShots(Long groupId, String userId, Pageable pageable) {
+        return shotRepository.findByGroupIdAndOwnerId(groupId, userId, pageable);
     }
 
     /// Retrieves a specific shot by ID and user ID.

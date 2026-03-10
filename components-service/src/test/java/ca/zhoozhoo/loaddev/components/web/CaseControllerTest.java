@@ -50,7 +50,7 @@ public class CaseControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/cases")
+                .uri("/v1/cases")
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -69,7 +69,7 @@ public class CaseControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri(uriBuilder -> uriBuilder.path("/cases/search").queryParam("query", "Lapua 6.5 Creedmoor").build())
+                .uri(uriBuilder -> uriBuilder.path("/v1/cases/search").queryParam("query", "Lapua 6.5 Creedmoor").build())
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -92,7 +92,7 @@ public class CaseControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/cases/{id}", savedCase.id())
+                .uri("/v1/cases/{id}", savedCase.id())
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -110,7 +110,7 @@ public class CaseControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/cases/999")
+                .uri("/v1/cases/999")
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -127,7 +127,7 @@ public class CaseControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .post()
-                .uri("/cases")
+                .uri("/v1/cases")
                 .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(casing), Case.class)
@@ -157,7 +157,7 @@ public class CaseControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .post()
-                .uri("/cases")
+                .uri("/v1/cases")
                 .header("Authorization", "Bearer " + userId)
                 .body(just(invalidCase), Case.class)
                 .exchange()
@@ -191,7 +191,7 @@ public class CaseControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .put()
-                .uri("/cases/{id}", savedCase.id())
+                .uri("/v1/cases/{id}", savedCase.id())
                 .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(updatedCase), Case.class)
@@ -219,7 +219,7 @@ public class CaseControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .put()
-                .uri("/cases/999")
+                .uri("/v1/cases/999")
                 .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(casing), Case.class)
@@ -237,7 +237,7 @@ public class CaseControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:delete")))
                 .delete()
-                .uri("/cases/{id}", savedCase.id())
+                .uri("/v1/cases/{id}", savedCase.id())
                 .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNoContent();
@@ -246,7 +246,7 @@ public class CaseControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/cases/{id}", savedCase.id())
+                .uri("/v1/cases/{id}", savedCase.id())
                 .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -260,7 +260,7 @@ public class CaseControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:delete")))
                 .delete()
-                .uri("/cases/999")
+                .uri("/v1/cases/999")
                 .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();

@@ -58,7 +58,7 @@ public class RifleControllerTest {
 
     @Test
     void getAllRifles() {
-        webTestClient.get().uri("/rifles")
+        webTestClient.get().uri("/v1/rifles")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -91,7 +91,7 @@ public class RifleControllerTest {
         webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("rifles:view")))
                 .get()
-                .uri("/rifles")
+                .uri("/v1/rifles")
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -111,7 +111,7 @@ public class RifleControllerTest {
         webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("rifles:view")))
                 .get()
-                .uri("/rifles/{id}", rifleRepository.save(new Rifle(null, userId,
+                .uri("/v1/rifles/{id}", rifleRepository.save(new Rifle(null, userId,
                         "Remington 700",
                         "Custom Remington 700 in 6.5 Creedmoor with Krieger barrel",
                         "6.5 Creedmoor",
@@ -128,7 +128,7 @@ public class RifleControllerTest {
 
     @Test
     void getRifleByIdNotFound() {
-        webTestClient.get().uri("/rifles/999")
+        webTestClient.get().uri("/v1/rifles/999")
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -141,7 +141,7 @@ public class RifleControllerTest {
         webTestClient.mutateWith(mockJwt().jwt(token -> token.claim("sub", userId))
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("rifles:edit")))
                 .post()
-                .uri("/rifles")
+                .uri("/v1/rifles")
                 .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(fromValue(new Rifle(null, userId,
@@ -188,7 +188,7 @@ public class RifleControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"), new SimpleGrantedAuthority("rifles:edit"),
                         new SimpleGrantedAuthority("rifles:view")))
                 .put()
-                .uri("/rifles/{id}", rifleRepository.save(new Rifle(null, userId,
+                .uri("/v1/rifles/{id}", rifleRepository.save(new Rifle(null, userId,
                         "Tikka T3x",
                         "Factory Tikka T3x Tactical",
                         ".308 Winchester",
@@ -215,7 +215,7 @@ public class RifleControllerTest {
     @Test
     void updateRifleNotFound() {
         webTestClient.put()
-                .uri("/rifles/999")
+                .uri("/v1/rifles/999")
                 .contentType(APPLICATION_JSON)
                 .body(fromValue(new Rifle(null, randomUUID().toString(), "Test Rifle", "Description",
                         "Caliber", getQuantity(20.0, INCH_INTERNATIONAL), "Contour", rifling("1:10"), null)))
@@ -235,13 +235,13 @@ public class RifleControllerTest {
                 .block().id();
 
         webTestClient.mutateWith(jwt)
-                .delete().uri("/rifles/{id}", savedRifleId)
+                .delete().uri("/v1/rifles/{id}", savedRifleId)
                 .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNoContent();
 
         webTestClient.mutateWith(jwt)
-                .get().uri("/rifles/{id}", savedRifleId)
+                .get().uri("/v1/rifles/{id}", savedRifleId)
                 .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -249,7 +249,7 @@ public class RifleControllerTest {
 
     @Test
     void deleteRifleNotFound() {
-        webTestClient.delete().uri("/rifles/999")
+        webTestClient.delete().uri("/v1/rifles/999")
                 .exchange()
                 .expectStatus().isNotFound();
     }

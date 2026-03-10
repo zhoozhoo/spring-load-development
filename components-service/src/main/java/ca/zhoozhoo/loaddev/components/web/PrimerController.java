@@ -8,6 +8,7 @@ import static org.springframework.http.ResponseEntity.status;
 import static reactor.core.publisher.Mono.just;
 
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -56,7 +57,7 @@ import reactor.core.publisher.Mono;
         @OAuthScope(name = "components:delete", description = "Delete access")
 })))
 @RestController
-@RequestMapping("/primers")
+@RequestMapping(path = "/primers", version = "1")
 @Log4j2
 @PreAuthorize("hasRole('RELOADER')")
 public class PrimerController {
@@ -74,8 +75,11 @@ public class PrimerController {
             @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Primer.class))) })
     @GetMapping
     @PreAuthorize("hasAuthority('components:view')")
-    public Flux<Primer> getAllPrimers(@Parameter(hidden = true) @CurrentUser String userId) {
-        return primerService.getAllPrimers(userId);
+    public Flux<Primer> getAllPrimers(
+            @Parameter(hidden = true) @CurrentUser String userId,
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
+        return primerService.getAllPrimers(userId, PageRequest.of(page, size));
     }
 
     @Operation(summary = "Full-text search primers", security = {
@@ -84,9 +88,12 @@ public class PrimerController {
             @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Primer.class))) })
     @GetMapping("/search")
     @PreAuthorize("hasAuthority('components:view')")
-    public Flux<Primer> searchPrimers(@Parameter(hidden = true) @CurrentUser String userId,
-            @Parameter(description = "Full text search query") @RequestParam("query") String query) {
-        return primerService.searchPrimers(userId, query);
+    public Flux<Primer> searchPrimers(
+            @Parameter(hidden = true) @CurrentUser String userId,
+            @Parameter(description = "Full text search query") @RequestParam("query") String query,
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
+        return primerService.searchPrimers(userId, query, PageRequest.of(page, size));
     }
 
     @Operation(summary = "Get a primer by its id", security = {

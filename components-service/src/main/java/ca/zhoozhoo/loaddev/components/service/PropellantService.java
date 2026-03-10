@@ -1,5 +1,6 @@
 package ca.zhoozhoo.loaddev.components.service;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ca.zhoozhoo.loaddev.components.dao.PropellantRepository;
@@ -26,21 +27,23 @@ public class PropellantService {
         this.propellantRepository = propellantRepository;
     }
 
-    /// Retrieves all propellants for a specific user.
+    /// Retrieves all propellants for a specific user with pagination.
     ///
-    /// @param userId the ID of the user
+    /// @param userId   the ID of the user
+    /// @param pageable pagination parameters
     /// @return a Flux of Propellant entities
-    public Flux<Propellant> getAllPropellants(String userId) {
-        return propellantRepository.findAllByOwnerId(userId);
+    public Flux<Propellant> getAllPropellants(String userId, Pageable pageable) {
+        return propellantRepository.findAllByOwnerId(userId, pageable);
     }
 
-    /// Searches for propellants belonging to a user based on a query string.
+    /// Searches for propellants belonging to a user based on a query string with pagination.
     ///
-    /// @param userId the ID of the user
-    /// @param query  the search query
+    /// @param userId   the ID of the user
+    /// @param query    the search query
+    /// @param pageable pagination parameters
     /// @return a Flux of matching Propellant entities
-    public Flux<Propellant> searchPropellants(String userId, String query) {
-        return propellantRepository.searchByOwnerIdAndQuery(userId, query);
+    public Flux<Propellant> searchPropellants(String userId, String query, Pageable pageable) {
+        return propellantRepository.searchByOwnerIdAndQuery(userId, query, pageable.getPageSize(), pageable.getOffset());
     }
 
     /// Retrieves a specific propellant by ID and user ID.

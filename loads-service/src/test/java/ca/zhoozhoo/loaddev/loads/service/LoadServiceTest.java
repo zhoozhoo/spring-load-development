@@ -1,6 +1,7 @@
 package ca.zhoozhoo.loaddev.loads.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static systems.uom.ucum.UCUM.GRAIN;
 import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
@@ -10,6 +11,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
 import ca.zhoozhoo.loaddev.loads.model.Load;
@@ -30,9 +33,9 @@ class LoadServiceTest {
     @Test
     void getAllLoads_ShouldReturnFluxOfLoads() {
         Load load = new Load(1L, "user1", "Load 1", "Desc", "Powder", "Type", "Bullet", "Type", Quantities.getQuantity(100.0, GRAIN), "Primer", "Type", Quantities.getQuantity(0.020, INCH_INTERNATIONAL), Quantities.getQuantity(2.800, INCH_INTERNATIONAL), Quantities.getQuantity(0.002, INCH_INTERNATIONAL), 1L);
-        when(loadRepository.findAllByOwnerId("user1")).thenReturn(Flux.just(load));
+        when(loadRepository.findAllByOwnerId(eq("user1"), any(Pageable.class))).thenReturn(Flux.just(load));
 
-        StepVerifier.create(loadService.getAllLoads("user1"))
+        StepVerifier.create(loadService.getAllLoads("user1", PageRequest.of(0, 20)))
                 .expectNext(load)
                 .verifyComplete();
     }

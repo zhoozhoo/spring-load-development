@@ -1,6 +1,7 @@
 package ca.zhoozhoo.loaddev.loads.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
@@ -8,6 +9,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
 import ca.zhoozhoo.loaddev.loads.model.Shot;
@@ -29,9 +32,9 @@ class ShotServiceTest {
     @Test
     void getAllShots_ShouldReturnFluxOfShots() {
         Shot shot = new Shot(1L, "user1", 1L, Quantities.getQuantity(1000, Units.METRE_PER_SECOND));
-        when(shotRepository.findByGroupIdAndOwnerId(1L, "user1")).thenReturn(Flux.just(shot));
+        when(shotRepository.findByGroupIdAndOwnerId(eq(1L), eq("user1"), any(Pageable.class))).thenReturn(Flux.just(shot));
 
-        StepVerifier.create(shotService.getAllShots(1L, "user1"))
+        StepVerifier.create(shotService.getAllShots(1L, "user1", PageRequest.of(0, 20)))
                 .expectNext(shot)
                 .verifyComplete();
     }

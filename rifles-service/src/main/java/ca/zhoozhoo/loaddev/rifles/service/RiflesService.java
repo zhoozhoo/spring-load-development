@@ -1,5 +1,6 @@
 package ca.zhoozhoo.loaddev.rifles.service;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ca.zhoozhoo.loaddev.rifles.dao.RifleRepository;
 import ca.zhoozhoo.loaddev.rifles.model.Rifle;
@@ -15,8 +16,8 @@ public class RiflesService {
         this.rifleRepository = rifleRepository;
     }
 
-    public Flux<Rifle> getAllRifles(String userId) {
-        return rifleRepository.findAllByOwnerId(userId);
+    public Flux<Rifle> getAllRifles(String userId, Pageable pageable) {
+        return rifleRepository.findAllByOwnerId(userId, pageable);
     }
 
     public Mono<Rifle> getRifleById(Long id, String userId) {

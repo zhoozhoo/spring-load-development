@@ -145,13 +145,13 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
                 if (path == null) {
                     return new okhttp3.mockwebserver.MockResponse().setResponseCode(404);
                 }
-                if (path.equals("/rifles")) {
+                if (path.equals("/v1/rifles")) {
                     return new okhttp3.mockwebserver.MockResponse()
                             .setResponseCode(200)
                             .setHeader("Content-Type", "application/json")
                             .setBody("[" + RIFLE_WITH_QUANTITIES_JSON + "]");
                 }
-                if (path.startsWith("/rifles/")) {
+                if (path.startsWith("/v1/rifles/")) {
                     return new okhttp3.mockwebserver.MockResponse()
                             .setResponseCode(200)
                             .setHeader("Content-Type", "application/json")
