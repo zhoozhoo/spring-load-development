@@ -50,7 +50,7 @@ public class PrimerControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/primers")
+                .uri("/v1/primers")
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -69,7 +69,7 @@ public class PrimerControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri(uriBuilder -> uriBuilder.path("/primers/search").queryParam("query", "CCI BR-4").build())
+                .uri(uriBuilder -> uriBuilder.path("/v1/primers/search").queryParam("query", "CCI BR-4").build())
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -92,7 +92,7 @@ public class PrimerControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/primers/{id}", savedPrimer.id())
+                .uri("/v1/primers/{id}", savedPrimer.id())
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -110,7 +110,7 @@ public class PrimerControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/primers/999")
+                .uri("/v1/primers/999")
                 .header("Authorization", "Bearer " + userId)
                 .accept(APPLICATION_JSON)
                 .exchange()
@@ -127,7 +127,7 @@ public class PrimerControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .post()
-                .uri("/primers")
+                .uri("/v1/primers")
                 .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(primer), Primer.class)
@@ -157,7 +157,7 @@ public class PrimerControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .post()
-                .uri("/primers")
+                .uri("/v1/primers")
                 .header("Authorization", "Bearer " + userId)
                 .body(just(invalidPrimer), Primer.class)
                 .exchange()
@@ -191,7 +191,7 @@ public class PrimerControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .put()
-                .uri("/primers/{id}", savedPrimer.id())
+                .uri("/v1/primers/{id}", savedPrimer.id())
                 .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(updatedPrimer), Primer.class)
@@ -219,7 +219,7 @@ public class PrimerControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .put()
-                .uri("/primers/999")
+                .uri("/v1/primers/999")
                 .header("Authorization", "Bearer " + userId)
                 .contentType(APPLICATION_JSON)
                 .body(just(primer), Primer.class)
@@ -237,7 +237,7 @@ public class PrimerControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .delete()
-                .uri("/primers/{id}", savedPrimer.id())
+                .uri("/v1/primers/{id}", savedPrimer.id())
                 .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNoContent();
@@ -246,7 +246,7 @@ public class PrimerControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:view")))
                 .get()
-                .uri("/primers/{id}", savedPrimer.id())
+                .uri("/v1/primers/{id}", savedPrimer.id())
                 .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -260,7 +260,7 @@ public class PrimerControllerTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_RELOADER"),
                         new SimpleGrantedAuthority("components:edit")))
                 .delete()
-                .uri("/primers/999")
+                .uri("/v1/primers/999")
                 .header("Authorization", "Bearer " + userId)
                 .exchange()
                 .expectStatus().isNotFound();

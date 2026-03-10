@@ -8,6 +8,7 @@ import java.util.List;
 import javax.measure.Unit;
 import javax.measure.quantity.Speed;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
@@ -48,13 +49,14 @@ public class GroupService {
         this.groupStatisticsMapper = groupStatisticsMapper;
     }
 
-    /// Retrieves all groups for a specific load and user.
+    /// Retrieves all groups for a specific load and user with pagination.
     ///
-    /// @param loadId the ID of the load
-    /// @param userId the ID of the user
+    /// @param loadId   the ID of the load
+    /// @param userId   the ID of the user
+    /// @param pageable pagination parameters
     /// @return a Flux of Group entities
-    public Flux<Group> getAllGroups(Long loadId, String userId) {
-        return groupRepository.findAllByLoadIdAndOwnerId(loadId, userId);
+    public Flux<Group> getAllGroups(Long loadId, String userId, Pageable pageable) {
+        return groupRepository.findAllByLoadIdAndOwnerId(loadId, userId, pageable);
     }
 
     /// Retrieves a specific group by ID and user ID.

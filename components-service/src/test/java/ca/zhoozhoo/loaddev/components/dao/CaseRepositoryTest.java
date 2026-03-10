@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
@@ -137,7 +138,7 @@ class CaseRepositoryTest {
 
         caseRepository.saveAll(just(case1, case2)).blockLast();
 
-        create(caseRepository.findAllByOwnerId(userId))
+        create(caseRepository.findAllByOwnerId(userId, PageRequest.of(0, 20)))
                 .expectNextMatches(c -> c.manufacturer().equals("Lapua"))
                 .expectNextMatches(c -> c.manufacturer().equals("Starline"))
                 .verifyComplete();
@@ -149,7 +150,7 @@ class CaseRepositoryTest {
 
         caseRepository.saveAll(just(createTestCase(userId))).blockLast();
 
-        create(caseRepository.searchByOwnerIdAndQuery(userId, "Lapua 6.5 Creedmoor"))
+        create(caseRepository.searchByOwnerIdAndQuery(userId, "Lapua 6.5 Creedmoor", 20, 0L))
                 .expectNextMatches(cc -> cc.manufacturer().equals("Lapua"))
                 .verifyComplete();
     }
@@ -160,7 +161,7 @@ class CaseRepositoryTest {
 
         caseRepository.saveAll(just(createTestCase(ownerId))).blockLast();
 
-        create(caseRepository.searchByOwnerIdAndQuery(ownerId, "Lapua 6mm BR"))
+        create(caseRepository.searchByOwnerIdAndQuery(ownerId, "Lapua 6mm BR", 20, 0L))
                 .expectNextCount(0)
                 .verifyComplete();
     }

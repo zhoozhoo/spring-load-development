@@ -1,5 +1,6 @@
 package ca.zhoozhoo.loaddev.components.service;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ca.zhoozhoo.loaddev.components.dao.PrimerRepository;
@@ -26,21 +27,23 @@ public class PrimerService {
         this.primerRepository = primerRepository;
     }
 
-    /// Retrieves all primers for a specific user.
+    /// Retrieves all primers for a specific user with pagination.
     ///
-    /// @param userId the ID of the user
+    /// @param userId   the ID of the user
+    /// @param pageable pagination parameters
     /// @return a Flux of Primer entities
-    public Flux<Primer> getAllPrimers(String userId) {
-        return primerRepository.findAllByOwnerId(userId);
+    public Flux<Primer> getAllPrimers(String userId, Pageable pageable) {
+        return primerRepository.findAllByOwnerId(userId, pageable);
     }
 
-    /// Searches for primers belonging to a user based on a query string.
+    /// Searches for primers belonging to a user based on a query string with pagination.
     ///
-    /// @param userId the ID of the user
-    /// @param query  the search query
+    /// @param userId   the ID of the user
+    /// @param query    the search query
+    /// @param pageable pagination parameters
     /// @return a Flux of matching Primer entities
-    public Flux<Primer> searchPrimers(String userId, String query) {
-        return primerRepository.searchByOwnerIdAndQuery(userId, query);
+    public Flux<Primer> searchPrimers(String userId, String query, Pageable pageable) {
+        return primerRepository.searchByOwnerIdAndQuery(userId, query, pageable.getPageSize(), pageable.getOffset());
     }
 
     /// Retrieves a specific primer by ID and user ID.

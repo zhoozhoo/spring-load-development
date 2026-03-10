@@ -1,6 +1,7 @@
 package ca.zhoozhoo.loaddev.loads.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static systems.uom.ucum.UCUM.GRAIN;
 import static systems.uom.ucum.UCUM.INCH_INTERNATIONAL;
@@ -15,6 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
 import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
@@ -46,9 +49,9 @@ class GroupServiceTest {
     @Test
     void getAllGroups_ShouldReturnFluxOfGroups() {
         Group group = new Group(1L, "user1", 1L, LocalDate.now(), Quantities.getQuantity(40.0, GRAIN), Quantities.getQuantity(100.0, YARD_INTERNATIONAL), Quantities.getQuantity(1.0, INCH_INTERNATIONAL));
-        when(groupRepository.findAllByLoadIdAndOwnerId(1L, "user1")).thenReturn(Flux.just(group));
+        when(groupRepository.findAllByLoadIdAndOwnerId(eq(1L), eq("user1"), any(Pageable.class))).thenReturn(Flux.just(group));
 
-        StepVerifier.create(groupService.getAllGroups(1L, "user1"))
+        StepVerifier.create(groupService.getAllGroups(1L, "user1", PageRequest.of(0, 20)))
                 .expectNext(group)
                 .verifyComplete();
     }

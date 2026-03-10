@@ -1,3 +1,4 @@
+ca.zhoozhoo.loaddev.common.autoconfigure.ApiVersionAutoConfiguration
 ca.zhoozhoo.loaddev.common.autoconfigure.GlobalExceptionHandlerAutoConfiguration
 ca.zhoozhoo.loaddev.common.autoconfigure.QuantityModuleAutoConfiguration
 ca.zhoozhoo.loaddev.common.autoconfigure.R2dbcAutoConfiguration

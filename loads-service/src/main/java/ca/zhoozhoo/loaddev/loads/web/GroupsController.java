@@ -8,6 +8,7 @@ import static org.springframework.http.ResponseEntity.notFound;
 import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.zhoozhoo.loaddev.loads.dto.GroupStatisticsDto;
@@ -70,7 +72,7 @@ import reactor.core.publisher.Mono;
     )
 )
 @RestController
-@RequestMapping("/groups")
+@RequestMapping(path = "/groups", version = "1")
 @Log4j2
 @PreAuthorize("hasRole('RELOADER')")
 public class GroupsController {
@@ -89,8 +91,10 @@ public class GroupsController {
     @PreAuthorize("hasAuthority('groups:view')")
     public Flux<Group> getAllGroupsByLoadId(
             @Parameter(hidden = true) @CurrentUser String userId,
-            @Parameter(in = PATH, description = "Id of load", required = true) @PathVariable Long loadId) {
-        return groupService.getAllGroups(loadId, userId);
+            @Parameter(in = PATH, description = "Id of load", required = true) @PathVariable Long loadId,
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
+        return groupService.getAllGroups(loadId, userId, PageRequest.of(page, size));
     }
 
     @Operation(summary = "Get a group by its id", description = "Retrieves detailed information about a specific group by its identifier.")

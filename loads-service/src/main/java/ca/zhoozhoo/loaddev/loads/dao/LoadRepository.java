@@ -1,5 +1,6 @@
 package ca.zhoozhoo.loaddev.loads.dao;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 
 import ca.zhoozhoo.loaddev.loads.model.Load;
@@ -15,7 +16,7 @@ import reactor.core.publisher.Mono;
 /// @author Zhubin Salehi
 public interface LoadRepository extends R2dbcRepository<Load, Long> {
 
-    Flux<Load> findAllByOwnerId(String ownerId);
+    Flux<Load> findAllByOwnerId(String ownerId, Pageable pageable);
 
     Flux<Load> findByNameAndOwnerId(String name, String ownerId);
 

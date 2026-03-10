@@ -6,6 +6,7 @@ import static org.springframework.http.ResponseEntity.ok;
 import static org.springframework.http.ResponseEntity.status;
 
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -66,7 +68,7 @@ import reactor.core.publisher.Mono;
     )
 )
 @RestController
-@RequestMapping("/rifles")
+@RequestMapping(path = "/rifles", version = "1")
 @Log4j2
 @PreAuthorize("hasRole('RELOADER')")
 public class RifleController {
@@ -83,8 +85,11 @@ public class RifleController {
     @ApiResponse(responseCode = "200", description = "Successfully retrieved list of rifles", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Rifle.class))))
     @GetMapping
     @PreAuthorize("hasAuthority('rifles:view')")
-    public Flux<Rifle> getAllRifles(@Parameter(hidden = true) @CurrentUser String userId) {
-        return riflesService.getAllRifles(userId);
+    public Flux<Rifle> getAllRifles(
+            @Parameter(hidden = true) @CurrentUser String userId,
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
+        return riflesService.getAllRifles(userId, PageRequest.of(page, size));
     }
 
     @Operation(summary = "Get rifle by ID", description = "Retrieves a specific rifle by its ID for the authenticated user")

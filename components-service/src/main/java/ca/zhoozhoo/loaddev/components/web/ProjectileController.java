@@ -8,6 +8,7 @@ import static org.springframework.http.ResponseEntity.status;
 import static reactor.core.publisher.Mono.just;
 
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -56,7 +57,7 @@ import reactor.core.publisher.Mono;
         @OAuthScope(name = "components:delete", description = "Delete access")
 })))
 @RestController
-@RequestMapping("/projectiles")
+@RequestMapping(path = "/projectiles", version = "1")
 @Log4j2
 @PreAuthorize("hasRole('RELOADER')")
 public class ProjectileController {
@@ -74,8 +75,11 @@ public class ProjectileController {
             @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Projectile.class))) })
     @GetMapping
     @PreAuthorize("hasAuthority('components:view')")
-    public Flux<Projectile> getAllProjectiles(@Parameter(hidden = true) @CurrentUser String userId) {
-        return projectileService.getAllProjectiles(userId);
+    public Flux<Projectile> getAllProjectiles(
+            @Parameter(hidden = true) @CurrentUser String userId,
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
+        return projectileService.getAllProjectiles(userId, PageRequest.of(page, size));
     }
 
     @Operation(summary = "Full-text search projectiles", security = {
@@ -84,9 +88,12 @@ public class ProjectileController {
             @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Projectile.class))) })
     @GetMapping("/search")
     @PreAuthorize("hasAuthority('components:view')")
-    public Flux<Projectile> searchProjectiles(@Parameter(hidden = true) @CurrentUser String userId,
-                                               @Parameter(description = "Full text search query") @RequestParam("query") String query) {
-        return projectileService.searchProjectiles(userId, query);
+    public Flux<Projectile> searchProjectiles(
+            @Parameter(hidden = true) @CurrentUser String userId,
+            @Parameter(description = "Full text search query") @RequestParam("query") String query,
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "20") int size) {
+        return projectileService.searchProjectiles(userId, query, PageRequest.of(page, size));
     }
 
     @Operation(summary = "Get a projectile by its id", security = {

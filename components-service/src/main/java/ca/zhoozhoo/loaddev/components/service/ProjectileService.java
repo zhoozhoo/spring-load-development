@@ -1,5 +1,6 @@
 package ca.zhoozhoo.loaddev.components.service;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ca.zhoozhoo.loaddev.components.dao.ProjectileRepository;
@@ -26,21 +27,23 @@ public class ProjectileService {
         this.projectileRepository = projectileRepository;
     }
 
-    /// Retrieves all projectiles for a specific user.
+    /// Retrieves all projectiles for a specific user with pagination.
     ///
-    /// @param userId the ID of the user
+    /// @param userId   the ID of the user
+    /// @param pageable pagination parameters
     /// @return a Flux of Projectile entities
-    public Flux<Projectile> getAllProjectiles(String userId) {
-        return projectileRepository.findAllByOwnerId(userId);
+    public Flux<Projectile> getAllProjectiles(String userId, Pageable pageable) {
+        return projectileRepository.findAllByOwnerId(userId, pageable);
     }
 
-    /// Searches for projectiles belonging to a user based on a query string.
+    /// Searches for projectiles belonging to a user based on a query string with pagination.
     ///
-    /// @param userId the ID of the user
-    /// @param query  the search query
+    /// @param userId   the ID of the user
+    /// @param query    the search query
+    /// @param pageable pagination parameters
     /// @return a Flux of matching Projectile entities
-    public Flux<Projectile> searchProjectiles(String userId, String query) {
-        return projectileRepository.searchByOwnerIdAndQuery(userId, query);
+    public Flux<Projectile> searchProjectiles(String userId, String query, Pageable pageable) {
+        return projectileRepository.searchByOwnerIdAndQuery(userId, query, pageable.getPageSize(), pageable.getOffset());
     }
 
     /// Retrieves a specific projectile by ID and user ID.

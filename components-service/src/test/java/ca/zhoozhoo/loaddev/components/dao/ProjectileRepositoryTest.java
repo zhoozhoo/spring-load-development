@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.components.config.TestSecurityConfig;
@@ -160,7 +161,7 @@ class ProjectileRepositoryTest {
 
         projectileRepository.saveAll(just(projectile1, projectile2)).blockLast();
 
-        create(projectileRepository.findAllByOwnerId(userId))
+        create(projectileRepository.findAllByOwnerId(userId, PageRequest.of(0, 20)))
                 .expectNextMatches(p -> p.manufacturer().equals("Hornady"))
                 .expectNextMatches(p -> p.manufacturer().equals("Berger"))
                 .verifyComplete();
@@ -171,7 +172,7 @@ class ProjectileRepositoryTest {
         var userId = randomUUID().toString();
         projectileRepository.saveAll(just(createTestProjectile(userId))).blockLast();
 
-        create(projectileRepository.searchByOwnerIdAndQuery(userId, "Hornady ELD 168"))
+        create(projectileRepository.searchByOwnerIdAndQuery(userId, "Hornady ELD 168", 20, 0L))
                 .expectNextMatches(p -> p.manufacturer().equals("Hornady"))
                 .verifyComplete();
     }
@@ -181,7 +182,7 @@ class ProjectileRepositoryTest {
         var userId = randomUUID().toString();
         projectileRepository.saveAll(just(createTestProjectile(userId))).blockLast();
 
-        create(projectileRepository.searchByOwnerIdAndQuery(userId, "Sierra MatchKing"))
+        create(projectileRepository.searchByOwnerIdAndQuery(userId, "Sierra MatchKing", 20, 0L))
                 .expectNextCount(0)
                 .verifyComplete();
     }
@@ -236,11 +237,11 @@ class ProjectileRepositoryTest {
         projectileRepository.save(createTestProjectile(user1)).block();
         projectileRepository.save(createTestProjectile(user2)).block();
 
-        create(projectileRepository.findAllByOwnerId(user1))
+        create(projectileRepository.findAllByOwnerId(user1, PageRequest.of(0, 20)))
                 .expectNextCount(1)
                 .verifyComplete();
 
-        create(projectileRepository.findAllByOwnerId(user2))
+        create(projectileRepository.findAllByOwnerId(user2, PageRequest.of(0, 20)))
                 .expectNextCount(1)
                 .verifyComplete();
     }

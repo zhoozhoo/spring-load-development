@@ -243,6 +243,30 @@ http://localhost:8080/swagger-ui.html
 
 Alternatively, use the `.http` files in the top-level `test/` directory with the VS Code REST Client extension for manual testing.  (link:test/README.adoc[API Testing Guide])
 
+=== API Versioning
+
+All REST endpoints are versioned using Spring Framework 7's native URL path prefix versioning.
+The `/v{version}` prefix is automatically added to all `@RestController` endpoints via
+`PathMatchConfigurer.addPathPrefix`, and the version is resolved from path segment 0.
+The default version is `1`.
+
+*Examples:*
+
+* `GET /api/v1/loads` - List all loads
+* `GET /api/v1/rifles/1` - Get rifle by ID
+* `GET /api/v1/cases/search?query=Lapua` - Search cases
+
+=== Pagination
+
+All list endpoints support pagination via `page` and `size` query parameters:
+
+* `page` (default: `0`) - Zero-based page number
+* `size` (default: `20`) - Number of items per page
+
+*Example:*
+
+`GET /api/v1/loads?page=0&size=10` returns the first 10 loads.
+
 === Services Architecture
 
 The application is composed of the following services:
@@ -804,10 +828,10 @@ The Components Service provides full-text search functionality for all component
 
 *Example Search Queries:*
 
-* Find all Lapua cases: `GET /api/cases/search?query=Lapua`
-* Search for H4350 powder: `GET /api/propellants/search?query=H4350`
-* Find 140 grain bullets: `GET /api/projectiles/search?query=140`
-* Search for CCI primers: `GET /api/primers/search?query=CCI`
+* Find all Lapua cases: `GET /api/v1/cases/search?query=Lapua`
+* Search for H4350 powder: `GET /api/v1/propellants/search?query=H4350`
+* Find 140 grain bullets: `GET /api/v1/projectiles/search?query=140`
+* Search for CCI primers: `GET /api/v1/primers/search?query=CCI`
 
 For more details on search functionality and API usage, refer to the link:test/README.adoc[API Testing Guide].
 

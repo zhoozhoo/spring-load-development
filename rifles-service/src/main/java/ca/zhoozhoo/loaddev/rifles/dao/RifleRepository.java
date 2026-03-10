@@ -1,5 +1,6 @@
 package ca.zhoozhoo.loaddev.rifles.dao;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 
 import ca.zhoozhoo.loaddev.rifles.model.Rifle;
@@ -13,7 +14,7 @@ import reactor.core.publisher.Mono;
 /// @author Zhubin Salehi
 public interface RifleRepository extends R2dbcRepository<Rifle, Long> {
 
-    Flux<Rifle> findAllByOwnerId(String ownerId);
+    Flux<Rifle> findAllByOwnerId(String ownerId, Pageable pageable);
 
     Mono<Rifle> findByIdAndOwnerId(Long id, String ownerId);
 }

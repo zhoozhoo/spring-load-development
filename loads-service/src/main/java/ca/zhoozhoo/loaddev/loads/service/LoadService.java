@@ -1,5 +1,6 @@
 package ca.zhoozhoo.loaddev.loads.service;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
@@ -25,12 +26,13 @@ public class LoadService {
         this.loadRepository = loadRepository;
     }
 
-    /// Retrieves all loads for a specific user.
+    /// Retrieves all loads for a specific user with pagination.
     ///
-    /// @param userId the ID of the user
+    /// @param userId   the ID of the user
+    /// @param pageable pagination parameters
     /// @return a Flux of Load entities
-    public Flux<Load> getAllLoads(String userId) {
-        return loadRepository.findAllByOwnerId(userId);
+    public Flux<Load> getAllLoads(String userId, Pageable pageable) {
+        return loadRepository.findAllByOwnerId(userId, pageable);
     }
 
     /// Retrieves a specific load by ID and user ID.

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
@@ -119,7 +120,7 @@ class LoadRepositoryTest {
         
         loadRepository.saveAll(just(load1, load2)).blockLast();
 
-        create(loadRepository.findAllByOwnerId(ownerId))
+        create(loadRepository.findAllByOwnerId(ownerId, PageRequest.of(0, 20)))
                 .expectNextMatches(l -> 
                     l.ownerId().equals(ownerId) &&
                     l.name().equals(NAME) &&

@@ -1,8 +1,10 @@
 package ca.zhoozhoo.loaddev.components.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -11,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import ca.zhoozhoo.loaddev.components.dao.PrimerRepository;
 import ca.zhoozhoo.loaddev.components.model.Primer;
@@ -35,25 +39,25 @@ class PrimerServiceTest {
     @Test
     void getAllPrimers_ShouldReturnFluxOfPrimers() {
         Primer primer = new Primer(1L, "user1", "Brand", "Model", PrimerSize.LARGE_RIFLE, null, null);
-        when(primerRepository.findAllByOwnerId(anyString())).thenReturn(Flux.just(primer));
+        when(primerRepository.findAllByOwnerId(anyString(), any(Pageable.class))).thenReturn(Flux.just(primer));
 
-        StepVerifier.create(primerService.getAllPrimers("user1"))
+        StepVerifier.create(primerService.getAllPrimers("user1", PageRequest.of(0, 20)))
                 .expectNext(primer)
                 .verifyComplete();
 
-        verify(primerRepository).findAllByOwnerId("user1");
+        verify(primerRepository).findAllByOwnerId(eq("user1"), any(Pageable.class));
     }
 
     @Test
     void searchPrimers_ShouldReturnFluxOfPrimers() {
         Primer primer = new Primer(1L, "user1", "Brand", "Model", PrimerSize.LARGE_RIFLE, null, null);
-        when(primerRepository.searchByOwnerIdAndQuery(anyString(), anyString())).thenReturn(Flux.just(primer));
+        when(primerRepository.searchByOwnerIdAndQuery(anyString(), anyString(), anyInt(), anyLong())).thenReturn(Flux.just(primer));
 
-        StepVerifier.create(primerService.searchPrimers("user1", "query"))
+        StepVerifier.create(primerService.searchPrimers("user1", "query", PageRequest.of(0, 20)))
                 .expectNext(primer)
                 .verifyComplete();
 
-        verify(primerRepository).searchByOwnerIdAndQuery("user1", "query");
+        verify(primerRepository).searchByOwnerIdAndQuery(eq("user1"), eq("query"), anyInt(), anyLong());
     }
 
     @Test

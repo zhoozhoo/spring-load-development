@@ -1,8 +1,10 @@
 package ca.zhoozhoo.loaddev.components.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -11,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import ca.zhoozhoo.loaddev.components.dao.CaseRepository;
 import ca.zhoozhoo.loaddev.components.model.Case;
@@ -35,25 +39,25 @@ class CaseServiceTest {
     @Test
     void getAllCases_ShouldReturnFluxOfCases() {
         Case caseItem = new Case(1L, "user1", "Brand", "Caliber", PrimerSize.LARGE_RIFLE, null, null);
-        when(caseRepository.findAllByOwnerId(anyString())).thenReturn(Flux.just(caseItem));
+        when(caseRepository.findAllByOwnerId(anyString(), any(Pageable.class))).thenReturn(Flux.just(caseItem));
 
-        StepVerifier.create(caseService.getAllCases("user1"))
+        StepVerifier.create(caseService.getAllCases("user1", PageRequest.of(0, 20)))
                 .expectNext(caseItem)
                 .verifyComplete();
         
-        verify(caseRepository).findAllByOwnerId("user1");
+        verify(caseRepository).findAllByOwnerId(eq("user1"), any(Pageable.class));
     }
 
     @Test
     void searchCases_ShouldReturnFluxOfCases() {
         Case caseItem = new Case(1L, "user1", "Brand", "Caliber", PrimerSize.LARGE_RIFLE, null, null);
-        when(caseRepository.searchByOwnerIdAndQuery(anyString(), anyString())).thenReturn(Flux.just(caseItem));
+        when(caseRepository.searchByOwnerIdAndQuery(anyString(), anyString(), anyInt(), anyLong())).thenReturn(Flux.just(caseItem));
 
-        StepVerifier.create(caseService.searchCases("user1", "query"))
+        StepVerifier.create(caseService.searchCases("user1", "query", PageRequest.of(0, 20)))
                 .expectNext(caseItem)
                 .verifyComplete();
 
-        verify(caseRepository).searchByOwnerIdAndQuery("user1", "query");
+        verify(caseRepository).searchByOwnerIdAndQuery(eq("user1"), eq("query"), anyInt(), anyLong());
     }
 
     @Test

@@ -69,7 +69,7 @@ public class RiflesService {
                     null)));
         }
 
-        String uri = "%s/rifles".formatted(instances.getFirst().getUri());
+        String uri = "%s/v1/rifles".formatted(instances.getFirst().getUri());
         log.debug("Target URI: {}", uri);
 
         return ReactiveSecurityContextHolder.getContext()
@@ -123,7 +123,7 @@ public class RiflesService {
                     null)));
         }
 
-        String uri = "%s/rifles/%d".formatted(instances.getFirst().getUri(), id);
+        String uri = "%s/v1/rifles/%d".formatted(instances.getFirst().getUri(), id);
         log.debug("Target URI: {}", uri);
 
         return ReactiveSecurityContextHolder.getContext()

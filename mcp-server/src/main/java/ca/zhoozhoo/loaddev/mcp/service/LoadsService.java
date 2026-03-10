@@ -72,7 +72,7 @@ public class LoadsService {
                     null)));
         }
 
-        String uri = "%s/loads".formatted(instances.getFirst().getUri());
+        String uri = "%s/v1/loads".formatted(instances.getFirst().getUri());
         log.debug("Target URI: {}", uri);
 
         return ReactiveSecurityContextHolder.getContext()
@@ -132,7 +132,7 @@ public class LoadsService {
                     null)));
         }
 
-        String uri = "%s/loads/%d".formatted(instances.getFirst().getUri(), id);
+        String uri = "%s/v1/loads/%d".formatted(instances.getFirst().getUri(), id);
         log.debug("Target URI: {}", uri);
 
         return ReactiveSecurityContextHolder.getContext()
@@ -194,7 +194,7 @@ public class LoadsService {
                     null)));
         }
 
-        String uri = "%s/loads/%d/statistics".formatted(instances.getFirst().getUri(), id);
+        String uri = "%s/v1/loads/%d/statistics".formatted(instances.getFirst().getUri(), id);
         log.debug("Target URI: {}", uri);
 
         return ReactiveSecurityContextHolder.getContext()
