@@ -3,15 +3,15 @@ package ca.zhoozhoo.loaddev.mcp.provider;
 import static ca.zhoozhoo.loaddev.mcp.provider.PreSerializationUtils.serialize;
 import static io.modelcontextprotocol.spec.McpSchema.ErrorCodes.INVALID_PARAMS;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.springaicommunity.mcp.annotation.McpTool;
-import org.springaicommunity.mcp.annotation.McpToolParam;
+import org.springframework.ai.mcp.annotation.McpTool;
+import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.ai.model.tool.internal.ToolCallReactiveContextHolder;
 import org.springframework.stereotype.Component;
 
 import ca.zhoozhoo.loaddev.mcp.dto.LoadDetails;
 import ca.zhoozhoo.loaddev.mcp.service.LoadsService;
 import ca.zhoozhoo.loaddev.mcp.service.RiflesService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.modelcontextprotocol.json.McpJsonMapper;
 import io.modelcontextprotocol.spec.McpError;
 import io.modelcontextprotocol.spec.McpSchema.JSONRPCResponse.JSONRPCError;

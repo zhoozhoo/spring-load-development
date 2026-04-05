@@ -13,15 +13,15 @@ global:
     microservices: "0.1.1-SNAPSHOT"
     
     # Observability stack
-    loki: "3.6.5"
-    tempo: "2.10.0"
-    prometheus: "v3.9.1"
-    grafana: "12.3.3"
-    otelCollector: "0.145.0"
+    loki: "3.7.0"
+    tempo: "2.10.3"
+    prometheus: "v3.11.0"
+    grafana: "12.4.2"
+    otelCollector: "0.149.0"
     
     # Identity and database
     keycloak: "26.5"
-    postgresql: "18.2"
+    postgresql: "18.3"
 
 # Observability subchart (Grafana, Prometheus, Loki, Tempo, OTEL Collector)
 observability:

@@ -2,7 +2,7 @@ package ca.zhoozhoo.loaddev.mcp.provider;
 
 import java.util.List;
 
-import org.springaicommunity.mcp.annotation.McpResource;
+import org.springframework.ai.mcp.annotation.McpResource;
 import org.springframework.stereotype.Service;
 
 import ca.zhoozhoo.loaddev.mcp.dto.LoadDto;
@@ -24,7 +24,7 @@ import reactor.core.publisher.Mono;
 /// JWT tokens from the security context.
 ///
 /// @author Zhubin Salehi
-/// @see org.springaicommunity.mcp.annotation.McpResource
+/// @see org.springframework.ai.mcp.annotation.McpResource
 @Service
 public class LoadResourceProvider {
 

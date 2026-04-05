@@ -243,7 +243,7 @@ Both PostgreSQL instances use *StatefulSets* for stable network identity and per
 * *Database*: `loadsdb`
 * *Credentials*: `user` / `password`
 * *Storage*: 8Gi persistent volume (managed by volumeClaimTemplates)
-* *Version*: PostgreSQL 18.2
+* *Version*: PostgreSQL 18.3
 * *Replicas*: 1 (configurable via `postgresql.replicas`)
 * *Purpose*: For Spring Boot microservices data storage
 
@@ -255,7 +255,7 @@ Both PostgreSQL instances use *StatefulSets* for stable network identity and per
 * *Database*: `keycloak`
 * *Credentials*: `user` / `password`
 * *Storage*: 8Gi persistent volume (managed by volumeClaimTemplates)
-* *Version*: PostgreSQL 18.2
+* *Version*: PostgreSQL 18.3
 * *Replicas*: 1 (configurable via `keycloakPostgresql.replicas`)
 * *Purpose*: Dedicated for Keycloak authentication data
 
@@ -333,7 +333,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Tempo (Distributed Tracing)
 
-* *Version*: 2.10.0
+* *Version*: 2.10.3
 * *Port*: 30200
 * *Storage*: Local filesystem with 10Gi persistent volume
 * *Features*: OTLP receivers, metrics generation, trace querying
@@ -349,7 +349,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Grafana (Visualization)
 
-* *Version*: 12.3.3
+* *Version*: 12.4.2
 * *Port*: 30000
 * *Authentication*: Anonymous access enabled (Admin role)
 * *Datasources*: Pre-configured Loki, Tempo, and Prometheus
@@ -360,7 +360,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== OpenTelemetry Collector
 
-* *Version*: 0.145.0
+* *Version*: 0.149.0
 * *Namespace*: `observability`
 * *GRPC Port*: 30317
 * *Metrics Port*: 30889
@@ -390,15 +390,15 @@ global:
     microservices: "0.1.1-SNAPSHOT"
     
     # Observability stack
-    loki: "3.6.5"
-    tempo: "2.10.0"
-    prometheus: "v3.8.1"
-    grafana: "12.3.3"
-    otelCollector: "0.145.0"
+    loki: "3.7.0"
+    tempo: "2.10.3"
+    prometheus: "v3.11.0"
+    grafana: "12.4.2"
+    otelCollector: "0.149.0"
     
     # Identity and database
     keycloak: "26.5"
-    postgresql: "18.2"
+    postgresql: "18.3"
 ----
 
 To upgrade all microservices to a new version, simply change `global.versions.microservices`:
@@ -1026,7 +1026,7 @@ spring-load-development/
     │   │   └── _helpers.tpl   # Observability helper functions
     │   └── charts/             # Observability sub-subcharts
     │       ├── grafana/        # Grafana sub-subchart
-    │       │   ├── Chart.yaml  # Version: 0.1.1-SNAPSHOT, AppVersion: 12.3.3
+    │       │   ├── Chart.yaml  # Version: 0.1.1-SNAPSHOT, AppVersion: 12.4.2
     │       │   ├── values.yaml # Grafana-specific configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # Grafana helper functions
@@ -1037,7 +1037,7 @@ spring-load-development/
     │       │       ├── pvc.yaml          # Persistent storage
     │       │       └── service.yaml      # Grafana service with NodePort 30000
     │       ├── loki/            # Loki sub-subchart
-    │       │   ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 3.6.5
+    │       │   ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 3.7.0
     │       │   ├── values.yaml  # Loki-specific configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # Loki helper functions
@@ -1047,7 +1047,7 @@ spring-load-development/
     │       │       ├── pvc.yaml          # Persistent storage
     │       │       └── service.yaml      # Loki service with NodePort 30100
     │       ├── otel-collector/  # OpenTelemetry Collector sub-subchart
-    │       │   ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 0.145.0
+    │       │   ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 0.149.0
     │       │   ├── values.yaml  # OTel Collector configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # OTel Collector helper functions
@@ -1066,7 +1066,7 @@ spring-load-development/
     │       │       ├── pvc.yaml          # Persistent storage
     │       │       └── service.yaml      # Prometheus service with NodePort 30091
     │       └── tempo/           # Tempo sub-subchart
-    │           ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 2.10.0
+    │           ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 2.10.3
     │           ├── values.yaml  # Tempo-specific configuration
     │           └── templates/
     │               ├── _helpers.tpl      # Tempo helper functions
