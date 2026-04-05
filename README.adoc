@@ -59,8 +59,8 @@ This project uses the following key versions:
 * *Spring Cloud*: 2025.1.1
 * *Spring AI*: 2.0
 * *SpringDoc OpenAPI*: 3.0.0
-* *MapStruct*: 1.6.3
-* *OpenTelemetry Instrumentation*: 2.25.0 (+ alpha)
+* *MapStruct*: 1.7.0.Beta1
+* *OpenTelemetry Instrumentation*: 2.26.1 (+ alpha)
 * *Maven*: 4.0.0-rc-5 or later
 * *PostgreSQL*: 18.3
 * *Keycloak*: 26.5
