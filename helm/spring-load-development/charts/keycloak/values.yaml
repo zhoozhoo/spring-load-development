@@ -5,7 +5,7 @@ namespace: keycloak
 image:
   registry: quay.io
   repository: keycloak/keycloak
-  tag: "26.5"
+  tag: "26.6"
 
 auth:
   adminUser: admin

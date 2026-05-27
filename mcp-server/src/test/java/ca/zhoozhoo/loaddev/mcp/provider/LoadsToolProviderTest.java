@@ -190,7 +190,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         var content = result.content().get(0);
         assertThat(content).isInstanceOf(TextContent.class);
         var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Load ID must be a positive number");
+        assertThat(textContent.text()).contains("structuredContent does not match tool outputSchema");
+        assertThat(textContent.text()).contains("required property 'id' not found");
     }
 
     /// Tests getLoad with a zero ID parameter.
@@ -262,7 +263,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
         assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Load ID must be a positive number");
+        assertThat(((TextContent) result.content().get(0)).text()).contains("structuredContent does not match tool outputSchema");
+        assertThat(((TextContent) result.content().get(0)).text()).contains("required property 'id' not found");
     }
 
     /// Tests getLoadDetails with a zero ID parameter.
