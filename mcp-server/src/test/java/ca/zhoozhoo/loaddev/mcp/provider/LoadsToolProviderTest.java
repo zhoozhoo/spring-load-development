@@ -130,7 +130,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Validates that the result is not null and indicates no errors.
     @Test
     void getLoads() {
-        var loadsResult = client.callTool(new CallToolRequest("getLoads", Map.of())).block();
+        var loadsResult = client.callTool(new CallToolRequest("getLoads", Map.of(), null)).block();
 
         assertThat(loadsResult).isNotNull();
         assertThat(loadsResult.isError()).isFalse();
@@ -146,7 +146,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Validates that the result is not null and indicates no errors.
     @Test
     void getLoadById() {
-        var loadResult = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L))).block();
+        var loadResult = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L), null)).block();
 
         assertThat(loadResult).isNotNull();
         assertThat(loadResult.isError()).isFalse();
@@ -168,7 +168,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Validates that the result is not null.
     @Test
     void getLoadDetails() {
-        var loadDetailsResult = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L))).block();
+        var loadDetailsResult = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L), null)).block();
 
         assertThat(loadDetailsResult).isNotNull();
     }
@@ -182,7 +182,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message indicates ID must be positive
     @Test
     void getLoadById_NullId() {
-        var result = client.callTool(new CallToolRequest("getLoad", Map.of())).block();
+        var result = client.callTool(new CallToolRequest("getLoad", Map.of(), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -203,7 +203,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message indicates ID must be positive
     @Test
     void getLoadById_ZeroId() {
-        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 0L))).block();
+        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 0L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -221,7 +221,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message indicates ID must be positive
     @Test
     void getLoadById_NegativeId() {
-        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", -1L))).block();
+        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", -1L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -239,7 +239,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message contains error details
     @Test
     void getLoadById_NotFound() {
-        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 999L))).block();
+        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 999L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -257,7 +257,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message indicates ID must be positive
     @Test
     void getLoadDetails_NullId() {
-        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of())).block();
+        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of(), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -276,7 +276,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message indicates ID must be positive
     @Test
     void getLoadDetails_ZeroId() {
-        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 0L))).block();
+        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 0L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -294,7 +294,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message indicates ID must be positive
     @Test
     void getLoadDetails_NegativeId() {
-        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", -1L))).block();
+        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", -1L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -312,7 +312,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message contains error details
     @Test
     void getLoadDetails_NotFound() {
-        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 999L))).block();
+        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 999L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -340,7 +340,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
             }
         });
 
-        var result = client.callTool(new CallToolRequest("getLoads", Map.of())).block();
+        var result = client.callTool(new CallToolRequest("getLoads", Map.of(), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -371,7 +371,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
             }
         });
 
-        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L))).block();
+        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -402,7 +402,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
             }
         });
 
-        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L))).block();
+        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -426,7 +426,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
                 .thenReturn(null);
 
-        var result = client.callTool(new CallToolRequest("getLoads", Map.of())).block();
+        var result = client.callTool(new CallToolRequest("getLoads", Map.of(), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -452,7 +452,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
                 .thenReturn(java.util.List.of());
 
-        var result = client.callTool(new CallToolRequest("getLoads", Map.of())).block();
+        var result = client.callTool(new CallToolRequest("getLoads", Map.of(), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -478,7 +478,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
                 .thenReturn(null);
 
-        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L))).block();
+        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -502,7 +502,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
                 .thenReturn(java.util.List.of());
 
-        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L))).block();
+        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -526,7 +526,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
                 .thenReturn(null);
 
-        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L))).block();
+        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -550,7 +550,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
                 .thenReturn(java.util.List.of());
 
-        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L))).block();
+        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();

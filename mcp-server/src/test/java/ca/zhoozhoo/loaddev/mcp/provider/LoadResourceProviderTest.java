@@ -122,7 +122,7 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
     /// text/plain format.
     @Test
     void getLoadById() {
-        var resourceResult = client.readResource(new ReadResourceRequest("load://1")).block();
+        var resourceResult = client.readResource(new ReadResourceRequest("load://1", null)).block();
 
         assertThat(resourceResult).isNotNull();
         assertThat(resourceResult.contents()).isNotEmpty();
@@ -160,7 +160,7 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
     @Test
     void getLoadById_NotFound() {
         // The MCP framework throws an McpError when a resource is not found
-        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://999")).block())
+        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://999", null)).block())
                 .isInstanceOf(io.modelcontextprotocol.spec.McpError.class)
                 .hasMessageContaining("Load not found with ID: 999");
     }
@@ -172,7 +172,7 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
     /// is working correctly.
     @Test
     void getLoadById_DifferentId() {
-        var resourceResult = client.readResource(new ReadResourceRequest("load://2")).block();
+        var resourceResult = client.readResource(new ReadResourceRequest("load://2", null)).block();
 
         assertThat(resourceResult).isNotNull();
         assertThat(resourceResult.contents()).isNotEmpty();
@@ -207,7 +207,7 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
         });
 
         // The MCP framework should throw an McpError when authentication fails
-        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://1")).block())
+        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://1", null)).block())
                 .isInstanceOf(io.modelcontextprotocol.spec.McpError.class)
                 .hasMessageContaining("Authentication failed");
 
@@ -224,7 +224,7 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
     @Test
     void getLoadById_NullId() {
         // The MCP framework should throw an McpError when ID is missing/empty
-        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://")).block())
+        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://", null)).block())
                 .isInstanceOf(io.modelcontextprotocol.spec.McpError.class);
     }
 
@@ -237,7 +237,7 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
     @Test
     void getLoadById_ZeroId() {
         // This test documents current behavior - may return error or mock response
-        assertThat(client.readResource(new ReadResourceRequest("load://0")).block()).isNotNull();
+        assertThat(client.readResource(new ReadResourceRequest("load://0", null)).block()).isNotNull();
         // The result depends on mock implementation - we just verify it doesn't crash
     }
 
@@ -250,7 +250,7 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
     @Test
     void getLoadById_NegativeId() {
         // This test documents current behavior - may return error or mock response
-        assertThat(client.readResource(new ReadResourceRequest("load://-1")).block()).isNotNull();
+        assertThat(client.readResource(new ReadResourceRequest("load://-1", null)).block()).isNotNull();
         // The result depends on mock implementation - we just verify it doesn't crash
     }
 
@@ -263,7 +263,7 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
     @Test
     void getLoadById_InvalidIdFormat() {
         // The MCP framework should throw an McpError when ID is not a valid number
-        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://invalid")).block())
+        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://invalid", null)).block())
                 .isInstanceOf(io.modelcontextprotocol.spec.McpError.class);
     }
 
@@ -280,7 +280,7 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
                 .thenReturn(null);
 
         // The MCP framework should throw an McpError when service discovery fails
-        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://1")).block())
+        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://1", null)).block())
                 .isInstanceOf(io.modelcontextprotocol.spec.McpError.class);
 
         // Restore original mock for other tests
@@ -300,7 +300,7 @@ public class LoadResourceProviderTest extends BaseMcpToolProviderTest {
                 .thenReturn(java.util.List.of());
 
         // The MCP framework should throw an McpError when service discovery fails
-        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://1")).block())
+        assertThatThrownBy(() -> client.readResource(new ReadResourceRequest("load://1", null)).block())
                 .isInstanceOf(io.modelcontextprotocol.spec.McpError.class);
 
         // Restore original mock for other tests

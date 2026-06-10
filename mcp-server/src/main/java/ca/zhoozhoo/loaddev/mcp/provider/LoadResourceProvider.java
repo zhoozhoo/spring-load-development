@@ -49,8 +49,12 @@ public class LoadResourceProvider {
     @McpResource(uri = "load://{id}", name = "Load", description = "Provides load information for a given ID")
     public Mono<ReadResourceResult> getLoadById(ReadResourceRequest request, String id) {
         return loadsService.getLoadById(Long.parseLong(id))
-                .map(load -> new ReadResourceResult(
-                        List.of(new TextResourceContents(request.uri(), "text/plain", formatLoadInfo(load)))));
+            .map(load -> {
+                var contents = TextResourceContents.builder(request.uri(), formatLoadInfo(load))
+                    .mimeType("text/plain")
+                    .build();
+                return ReadResourceResult.builder(List.of(contents)).build();
+            });
     }
 
     /// Formats load information into a human-readable text representation.

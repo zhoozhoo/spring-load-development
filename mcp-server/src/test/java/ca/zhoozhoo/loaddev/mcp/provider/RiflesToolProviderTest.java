@@ -100,7 +100,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
     /// Validates that the result is not null and indicates no errors.
     @Test
     void getRifles() {
-        var riflesResult = client.callTool(new CallToolRequest("getRifles", Map.of())).block();
+        var riflesResult = client.callTool(new CallToolRequest("getRifles", Map.of(), null)).block();
 
         assertThat(riflesResult).isNotNull();
         assertThat(riflesResult.isError()).isFalse();
@@ -116,7 +116,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
     /// Validates that the result is not null and indicates no errors.
     @Test
     void getRifleById() {
-        var rifleResult = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
+        var rifleResult = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L), null)).block();
 
         assertThat(rifleResult).isNotNull();
         assertThat(rifleResult.isError()).isFalse();
@@ -161,7 +161,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
             }
         });
 
-        var rifleResult = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
+        var rifleResult = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L), null)).block();
 
         assertThat(rifleResult).isNotNull();
         assertThat(rifleResult.isError()).isFalse();
@@ -209,7 +209,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
         /// Expected: isError = true, error message contains authentication or error details
     @Test
     void getRifleById_NotFound() {
-        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 999L))).block();
+        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 999L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -239,7 +239,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
             }
         });
 
-        var result = client.callTool(new CallToolRequest("getRifles", Map.of())).block();
+        var result = client.callTool(new CallToolRequest("getRifles", Map.of(), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -272,7 +272,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
             }
         });
 
-        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
+        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -298,7 +298,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("rifles-service"))
                 .thenReturn(null);
 
-        var result = client.callTool(new CallToolRequest("getRifles", Map.of())).block();
+        var result = client.callTool(new CallToolRequest("getRifles", Map.of(), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -324,7 +324,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("rifles-service"))
                 .thenReturn(java.util.List.of());
 
-        var result = client.callTool(new CallToolRequest("getRifles", Map.of())).block();
+        var result = client.callTool(new CallToolRequest("getRifles", Map.of(), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -350,7 +350,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("rifles-service"))
                 .thenReturn(null);
 
-        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
+        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -376,7 +376,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("rifles-service"))
                 .thenReturn(java.util.List.of());
 
-        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
+        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
