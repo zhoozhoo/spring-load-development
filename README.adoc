@@ -63,12 +63,12 @@ This project uses the following key versions:
 * *OpenTelemetry Instrumentation*: 2.26.1 (+ alpha)
 * *Maven*: 4.0.0-rc-5 or later
 * *PostgreSQL*: 18.4
-* *Keycloak*: 26.6
-* *Grafana*: 13.0.1
-* *Loki*: 3.7.2
-* *Tempo*: 2.10.5
-* *Prometheus*: v3.11.3
-* *OpenTelemetry Collector*: 0.153.0
+* *Keycloak*: 26.7
+* *Grafana*: 13.1.1
+* *Loki*: 3.7.3
+* *Tempo*: 3.0.2
+* *Prometheus*: v3.13.1
+* *OpenTelemetry Collector*: 0.157.0
 
 == Getting Started
 

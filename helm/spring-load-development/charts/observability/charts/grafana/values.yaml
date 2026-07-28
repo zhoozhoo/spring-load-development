@@ -3,7 +3,7 @@ namespace: observability
 
 image:
   repository: grafana/grafana
-  tag: "13.0.1"
+  tag: "13.1.1"
 
 auth:
   disable_login_form: true
