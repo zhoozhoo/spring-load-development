@@ -10,7 +10,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -78,14 +77,16 @@ public class LoadsService {
         return ReactiveSecurityContextHolder.getContext()
                 .doOnNext(ctx -> {
                     log.debug("ReactiveSecurityContextHolder returned context: {}", ctx);
-                    log.debug("Authentication present: {}", ctx.getAuthentication() != null);
-                    if (ctx.getAuthentication() != null) {
-                        log.debug("Authentication type: {}", ctx.getAuthentication().getClass().getName());
-                        log.debug("Is authenticated: {}", ctx.getAuthentication().isAuthenticated());
-                        log.debug("Principal: {}", ctx.getAuthentication().getPrincipal());
+                    if (ctx != null) {
+                        log.debug("Authentication present: {}", ctx.getAuthentication() != null);
+                        if (ctx.getAuthentication() != null) {
+                            log.debug("Authentication type: {}", ctx.getAuthentication().getClass().getName());
+                            log.debug("Is authenticated: {}", ctx.getAuthentication().isAuthenticated());
+                            log.debug("Principal: {}", ctx.getAuthentication().getPrincipal());
+                        }
                     }
                 })
-                .map(SecurityContext::getAuthentication)
+                .map(ctx -> ctx != null ? ctx.getAuthentication() : null)
                 .flatMapMany(auth -> {
                     log.debug("Extracting token from authentication");
                     String token = ((Jwt) auth.getCredentials()).getTokenValue();
@@ -140,7 +141,7 @@ public class LoadsService {
                     log.debug("ReactiveSecurityContextHolder returned context: {}", ctx);
                     log.debug("Authentication present: {}", ctx.getAuthentication() != null);
                 })
-                .map(SecurityContext::getAuthentication)
+                .map(ctx -> ctx != null ? ctx.getAuthentication() : null)
                 .flatMap(auth -> {
                     log.debug("Extracting token from authentication");
                     String token = ((Jwt) auth.getCredentials()).getTokenValue();
@@ -202,7 +203,7 @@ public class LoadsService {
                     log.debug("ReactiveSecurityContextHolder returned context: {}", ctx);
                     log.debug("Authentication present: {}", ctx.getAuthentication() != null);
                 })
-                .map(SecurityContext::getAuthentication)
+                .map(ctx -> ctx != null ? ctx.getAuthentication() : null)
                 .flatMapMany(auth -> {
                     log.debug("Extracting token from authentication");
                     String token = ((Jwt) auth.getCredentials()).getTokenValue();

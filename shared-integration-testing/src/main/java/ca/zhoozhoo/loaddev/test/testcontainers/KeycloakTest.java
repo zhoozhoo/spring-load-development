@@ -18,7 +18,7 @@ public abstract class KeycloakTest {
 
     // Keycloak container is managed as a singleton and closed by JVM shutdown hook
     @SuppressWarnings("resource")
-    protected static final KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:26.6")
+    protected static final KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:26.7")
             .withRealmImportFile("realm.json");
 
     static {
@@ -85,7 +85,7 @@ public abstract class KeycloakTest {
                         """)
                 .retrieve()
                 .bodyToMono(TokenResponse.class)
-                .map(TokenResponse::accessToken)
+                .map(response -> response.accessToken())
                 .block();
 
     }
