@@ -27,4 +27,16 @@
         <Class name="~.*MapperImpl"/>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>
+
+    <!-- Exclude NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE false positives in LoadsService/RiflesService.
+         Authentication is safely null-checked via Mono.justOrEmpty(...).switchIfEmpty(Mono.error(...))
+         before being passed to the downstream flatMap/flatMapMany lambda, but SpotBugs cannot correlate
+         the null-check across separate lambda boundaries in the reactive chain. -->
+    <Match>
+        <Or>
+            <Class name="ca.zhoozhoo.loaddev.mcp.service.LoadsService"/>
+            <Class name="ca.zhoozhoo.loaddev.mcp.service.RiflesService"/>
+        </Or>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    </Match>
 </FindBugsFilter>

@@ -76,7 +76,9 @@ public class RiflesService {
                     log.debug("ReactiveSecurityContextHolder returned context: {}", ctx);
                     log.debug("Authentication present: {}", ctx.getAuthentication() != null);
                 })
-                .map(ctx -> ctx.getAuthentication())
+                .flatMap(ctx -> Mono.justOrEmpty(ctx.getAuthentication()))
+                .switchIfEmpty(Mono.error(new McpError(new JSONRPCError(
+                        INVALID_REQUEST, "Authentication failed", null))))
                 .flatMapMany(auth -> {
                     log.debug("Extracting token from authentication");
                     String token = ((Jwt) auth.getCredentials()).getTokenValue();
@@ -130,7 +132,9 @@ public class RiflesService {
                     log.debug("ReactiveSecurityContextHolder returned context: {}", ctx);
                     log.debug("Authentication present: {}", ctx.getAuthentication() != null);
                 })
-                .map(ctx -> ctx.getAuthentication())
+                .flatMap(ctx -> Mono.justOrEmpty(ctx.getAuthentication()))
+                .switchIfEmpty(Mono.error(new McpError(new JSONRPCError(
+                        INVALID_REQUEST, "Authentication failed", null))))
                 .flatMap(auth -> {
                     log.debug("Extracting token from authentication");
                     String token = ((Jwt) auth.getCredentials()).getTokenValue();

@@ -78,15 +78,18 @@ public class LoadsService {
                 .doOnNext(ctx -> {
                     log.debug("ReactiveSecurityContextHolder returned context: {}", ctx);
                     if (ctx != null) {
-                        log.debug("Authentication present: {}", ctx.getAuthentication() != null);
-                        if (ctx.getAuthentication() != null) {
-                            log.debug("Authentication type: {}", ctx.getAuthentication().getClass().getName());
-                            log.debug("Is authenticated: {}", ctx.getAuthentication().isAuthenticated());
-                            log.debug("Principal: {}", ctx.getAuthentication().getPrincipal());
+                        var contextAuth = ctx.getAuthentication();
+                        log.debug("Authentication present: {}", contextAuth != null);
+                        if (contextAuth != null) {
+                            log.debug("Authentication type: {}", contextAuth.getClass().getName());
+                            log.debug("Is authenticated: {}", contextAuth.isAuthenticated());
+                            log.debug("Principal: {}", contextAuth.getPrincipal());
                         }
                     }
                 })
-                .map(ctx -> ctx != null ? ctx.getAuthentication() : null)
+                .flatMap(ctx -> Mono.justOrEmpty(ctx.getAuthentication()))
+                .switchIfEmpty(Mono.error(new McpError(new JSONRPCError(
+                        INVALID_REQUEST, "Authentication failed", null))))
                 .flatMapMany(auth -> {
                     log.debug("Extracting token from authentication");
                     String token = ((Jwt) auth.getCredentials()).getTokenValue();
@@ -141,7 +144,9 @@ public class LoadsService {
                     log.debug("ReactiveSecurityContextHolder returned context: {}", ctx);
                     log.debug("Authentication present: {}", ctx.getAuthentication() != null);
                 })
-                .map(ctx -> ctx != null ? ctx.getAuthentication() : null)
+                .flatMap(ctx -> Mono.justOrEmpty(ctx.getAuthentication()))
+                .switchIfEmpty(Mono.error(new McpError(new JSONRPCError(
+                        INVALID_REQUEST, "Authentication failed", null))))
                 .flatMap(auth -> {
                     log.debug("Extracting token from authentication");
                     String token = ((Jwt) auth.getCredentials()).getTokenValue();
@@ -203,7 +208,9 @@ public class LoadsService {
                     log.debug("ReactiveSecurityContextHolder returned context: {}", ctx);
                     log.debug("Authentication present: {}", ctx.getAuthentication() != null);
                 })
-                .map(ctx -> ctx != null ? ctx.getAuthentication() : null)
+                .flatMap(ctx -> Mono.justOrEmpty(ctx.getAuthentication()))
+                .switchIfEmpty(Mono.error(new McpError(new JSONRPCError(
+                        INVALID_REQUEST, "Authentication failed", null))))
                 .flatMapMany(auth -> {
                     log.debug("Extracting token from authentication");
                     String token = ((Jwt) auth.getCredentials()).getTokenValue();
