@@ -62,13 +62,13 @@ This project uses the following key versions:
 * *MapStruct*: 1.7.0.Beta1
 * *OpenTelemetry Instrumentation*: 2.26.1 (+ alpha)
 * *Maven*: 4.0.0-rc-5 or later
-* *PostgreSQL*: 18.4
+* *PostgreSQL*: 18.6
 * *Keycloak*: 26.7
-* *Grafana*: 13.1.1
-* *Loki*: 3.7.3
-* *Tempo*: 3.0.2
-* *Prometheus*: v3.13.1
-* *OpenTelemetry Collector*: 0.157.0
+* *Grafana*: 13.2.0
+* *Loki*: 3.7.6
+* *Tempo*: 3.0.3
+* *Prometheus*: v3.14.0
+* *OpenTelemetry Collector*: 0.159.0
 
 == Getting Started
 

@@ -3,7 +3,7 @@ namespace: observability
 
 image:
   repository: prom/prometheus
-  tag: "v3.13.1"
+  tag: "v3.14.0"
 
 config:
   global:
