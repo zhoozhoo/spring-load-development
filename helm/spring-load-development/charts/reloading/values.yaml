@@ -9,6 +9,8 @@ imageRegistry: "zhoozhoo.ca"
 # OpenTelemetry Collector endpoint for microservices
 otelCollector:
   grpcEndpoint: "http://otel-collector-service.observability.svc.cluster.local:4317"
+  # Micrometer's OTLP metrics exporter only speaks HTTP, so it needs the collector's HTTP port, not the gRPC one
+  httpEndpoint: "http://otel-collector-service.observability.svc.cluster.local:4318"
 
 # Keycloak integration
 keycloak:

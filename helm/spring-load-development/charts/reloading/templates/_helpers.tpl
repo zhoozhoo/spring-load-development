@@ -99,6 +99,9 @@ Generate environment variables common to all microservices
 {{- define "reloading.microservice.commonEnv" -}}
 {{- $componentName := .componentName }}
 {{- $context := .context }}
+# All modules are compiled with --enable-preview (JEP 455/507 primitive type patterns), so the JVM needs the matching runtime flag to load any class.
+- name: JDK_JAVA_OPTIONS
+  value: "--enable-preview"
 - name: SPRING_PROFILES_ACTIVE
   value: "kubernetes"
 - name: SPRING_APPLICATION_NAME
@@ -107,6 +110,9 @@ Generate environment variables common to all microservices
   value: {{ $context.Values.otelCollector.grpcEndpoint | default "http://otel-collector-service.observability.svc.cluster.local:4317" }}
 - name: OTEL_EXPORTER_OTLP_PROTOCOL
   value: "grpc"
+# Micrometer's OTLP metrics registry is HTTP-only; point it at the collector's HTTP receiver, not the shared gRPC endpoint above
+- name: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+  value: {{ printf "%s/v1/metrics" ($context.Values.otelCollector.httpEndpoint | default "http://otel-collector-service.observability.svc.cluster.local:4318") }}
 - name: KEYCLOAK_BASE_URL
   value: {{ $context.Values.keycloak.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:8080" }}
 {{- end }}
