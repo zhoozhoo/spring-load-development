@@ -52,7 +52,7 @@ class KeycloakPermissionsConverterEdgeCasesTest {
     void scopesProduceAuthorities() {
         assertThat(converter.convert(jwt(Map.of("authorization",
                 Map.of("permissions", List.of(Map.of("rsname", "loads", "scopes", List.of("edit", "view"))))))))
-                .extracting(GrantedAuthority::getAuthority)
+                .extracting((GrantedAuthority auth) -> auth != null ? auth.getAuthority() : null)
                 .containsExactlyInAnyOrder("loads:edit", "loads:view");
     }
 
@@ -62,7 +62,7 @@ class KeycloakPermissionsConverterEdgeCasesTest {
         assertThat(converter.convert(jwt(Map.of("authorization",
                 Map.of("permissions",
                         List.of(Map.of("rsname", "groups", "scopes", List.of("list", 42, new Object(), "delete"))))))))
-                .extracting(GrantedAuthority::getAuthority)
+                .extracting((GrantedAuthority auth) -> auth != null ? auth.getAuthority() : null)
                 .containsExactlyInAnyOrder("groups:list", "groups:delete");
     }
 

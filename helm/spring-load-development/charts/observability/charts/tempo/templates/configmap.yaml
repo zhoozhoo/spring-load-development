@@ -43,13 +43,6 @@ data:
             http:
               endpoint: {{ (index .Values.config.distributor.receivers.otlp.protocols.http).endpoint }}
     
-    ingester:
-      max_block_duration: {{ .Values.config.ingester.max_block_duration }}
-    
-    compactor:
-      compaction:
-        block_retention: {{ .Values.config.compactor.compaction.block_retention }}
-    
     metrics_generator:
       registry:
         external_labels:
@@ -60,8 +53,6 @@ data:
         remote_write:
           - url: {{ (index .Values.config.metrics_generator.storage.remote_write 0).url }}
             send_exemplars: {{ (index .Values.config.metrics_generator.storage.remote_write 0).send_exemplars }}
-      traces_storage:
-        path: {{ .Values.config.metrics_generator.traces_storage.path }}
     
     storage:
       trace:
@@ -70,9 +61,13 @@ data:
           path: {{ .Values.config.storage.trace.wal.path }}
         local:
           path: {{ .Values.config.storage.trace.local.path }}
+        block:
+          version: {{ .Values.config.storage.trace.block.version }}
     
     overrides:
       defaults:
+        compaction:
+          block_retention: {{ .Values.config.overrides.defaults.compaction.block_retention }}
         cost_attribution:
           dimensions: {{ toYaml .Values.config.overrides.defaults.cost_attribution.dimensions | nindent 12 }}
         metrics_generator:

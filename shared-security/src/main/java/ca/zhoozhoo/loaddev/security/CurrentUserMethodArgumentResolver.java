@@ -38,7 +38,7 @@ public class CurrentUserMethodArgumentResolver implements HandlerMethodArgumentR
             @NonNull ServerWebExchange exchange) {
         return exchange.getPrincipal()
                 .cast(Authentication.class)
-                .map(Authentication::getPrincipal)
+                .map(auth -> auth.getPrincipal())
                 .mapNotNull(principal -> switch (principal) {
                     case Jwt jwt -> jwt.getSubject();
                     case null, default -> null;

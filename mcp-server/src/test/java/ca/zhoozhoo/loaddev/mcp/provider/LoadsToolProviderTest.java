@@ -1,6 +1,7 @@
 package ca.zhoozhoo.loaddev.mcp.provider;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.util.Map;
@@ -130,7 +131,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Validates that the result is not null and indicates no errors.
     @Test
     void getLoads() {
-        var loadsResult = client.callTool(new CallToolRequest("getLoads", Map.of())).block();
+        var loadsResult = client.callTool(new CallToolRequest("getLoads", Map.of(), null)).block();
 
         assertThat(loadsResult).isNotNull();
         assertThat(loadsResult.isError()).isFalse();
@@ -146,7 +147,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Validates that the result is not null and indicates no errors.
     @Test
     void getLoadById() {
-        var loadResult = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L))).block();
+        var loadResult = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L), null)).block();
 
         assertThat(loadResult).isNotNull();
         assertThat(loadResult.isError()).isFalse();
@@ -168,7 +169,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Validates that the result is not null.
     @Test
     void getLoadDetails() {
-        var loadDetailsResult = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L))).block();
+        var loadDetailsResult = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L), null)).block();
 
         assertThat(loadDetailsResult).isNotNull();
     }
@@ -182,7 +183,7 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message indicates ID must be positive
     @Test
     void getLoadById_NullId() {
-        var result = client.callTool(new CallToolRequest("getLoad", Map.of())).block();
+        var result = client.callTool(new CallToolRequest("getLoad", Map.of(), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -190,7 +191,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         var content = result.content().get(0);
         assertThat(content).isInstanceOf(TextContent.class);
         var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Load ID must be a positive number");
+        assertThat(textContent.text()).contains("input validation failed");
+        assertThat(textContent.text()).contains("required property 'id' not found");
     }
 
     /// Tests getLoad with a zero ID parameter.
@@ -202,13 +204,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message indicates ID must be positive
     @Test
     void getLoadById_ZeroId() {
-        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 0L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Load ID must be a positive number");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoad", Map.of("id", 0L), null)).block())
+            .hasMessage("Load ID must be a positive number");
     }
 
     /// Tests getLoad with a negative ID parameter.
@@ -220,13 +217,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message indicates ID must be positive
     @Test
     void getLoadById_NegativeId() {
-        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", -1L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Load ID must be a positive number");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoad", Map.of("id", -1L), null)).block())
+            .hasMessage("Load ID must be a positive number");
     }
 
     /// Tests getLoad with a non-existent load ID.
@@ -238,13 +230,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message contains error details
     @Test
     void getLoadById_NotFound() {
-        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 999L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Error invoking method");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoad", Map.of("id", 999L), null)).block())
+            .hasMessage("Load not found with ID: 999");
     }
 
     /// Tests getLoadDetails with a null ID parameter.
@@ -256,13 +243,14 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message indicates ID must be positive
     @Test
     void getLoadDetails_NullId() {
-        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of())).block();
+        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of(), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
         assertThat(result.content()).isNotEmpty();
         assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Load ID must be a positive number");
+        assertThat(((TextContent) result.content().get(0)).text()).contains("input validation failed");
+        assertThat(((TextContent) result.content().get(0)).text()).contains("required property 'id' not found");
     }
 
     /// Tests getLoadDetails with a zero ID parameter.
@@ -274,13 +262,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message indicates ID must be positive
     @Test
     void getLoadDetails_ZeroId() {
-        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 0L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Load ID must be a positive number");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 0L), null)).block())
+            .hasMessage("Load ID must be a positive number");
     }
 
     /// Tests getLoadDetails with a negative ID parameter.
@@ -292,13 +275,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message indicates ID must be positive
     @Test
     void getLoadDetails_NegativeId() {
-        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", -1L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Load ID must be a positive number");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", -1L), null)).block())
+            .hasMessage("Load ID must be a positive number");
     }
 
     /// Tests getLoadDetails with a non-existent load ID.
@@ -310,13 +288,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
     /// Expected: isError = true, error message contains error details
     @Test
     void getLoadDetails_NotFound() {
-        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 999L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Error invoking method");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 999L), null)).block())
+            .hasMessage("Load not found with ID: 999");
     }
 
     /// Tests getLoads with authentication failure (401 response).
@@ -338,13 +311,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
             }
         });
 
-        var result = client.callTool(new CallToolRequest("getLoads", Map.of())).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Authentication failed");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoads", Map.of(), null)).block())
+            .hasMessage("Authentication failed");
 
         // Restore original dispatcher for other tests
         mockLoadsServer.setDispatcher(createLoadsDispatcher());
@@ -369,13 +337,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
             }
         });
 
-        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Authentication failed");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L), null)).block())
+            .hasMessage("Authentication failed");
 
         // Restore original dispatcher for other tests
         mockLoadsServer.setDispatcher(createLoadsDispatcher());
@@ -400,13 +363,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
             }
         });
 
-        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Authentication failed");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L), null)).block())
+            .hasMessage("Authentication failed");
 
         // Restore original dispatcher for other tests
         mockLoadsServer.setDispatcher(createLoadsDispatcher());
@@ -424,15 +382,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
                 .thenReturn(null);
 
-        var result = client.callTool(new CallToolRequest("getLoads", Map.of())).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Error invoking method");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoads", Map.of(), null)).block())
+            .hasMessage("Service loads-service not found in discovery");
 
         // Restore original mock for other tests
         mockServiceDiscovery();
@@ -450,15 +401,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
                 .thenReturn(java.util.List.of());
 
-        var result = client.callTool(new CallToolRequest("getLoads", Map.of())).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Error invoking method");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoads", Map.of(), null)).block())
+            .hasMessage("Service loads-service not found in discovery");
 
         // Restore original mock for other tests
         mockServiceDiscovery();
@@ -476,13 +420,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
                 .thenReturn(null);
 
-        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Error invoking method");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L), null)).block())
+            .hasMessage("Service loads-service not found in discovery");
 
         // Restore original mock for other tests
         mockServiceDiscovery();
@@ -500,13 +439,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
                 .thenReturn(java.util.List.of());
 
-        var result = client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Error invoking method");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoad", Map.of("id", 1L), null)).block())
+            .hasMessage("Service loads-service not found in discovery");
 
         // Restore original mock for other tests
         mockServiceDiscovery();
@@ -524,13 +458,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
                 .thenReturn(null);
 
-        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Error invoking method");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L), null)).block())
+            .hasMessage("Service loads-service not found in discovery");
 
         // Restore original mock for other tests
         mockServiceDiscovery();
@@ -548,13 +477,8 @@ public class LoadsToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("loads-service"))
                 .thenReturn(java.util.List.of());
 
-        var result = client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        assertThat(result.content().get(0)).isInstanceOf(TextContent.class);
-        assertThat(((TextContent) result.content().get(0)).text()).contains("Error invoking method");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getLoadDetails", Map.of("id", 1L), null)).block())
+            .hasMessage("Service loads-service not found in discovery");
 
         // Restore original mock for other tests
         mockServiceDiscovery();

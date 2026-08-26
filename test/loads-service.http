@@ -215,7 +215,7 @@ Authorization: Bearer {{Authenticate.response.body.access_token}}
   "date": "2024-01-15",
   "loadId": {{CreateLoad.response.body.id}},
   "powderCharge": {
-    "value": 26.5,
+    "value": 26.6,
     "unit": "[gr]",
     "scale": "ABSOLUTE"
   },

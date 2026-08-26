@@ -170,6 +170,7 @@ public abstract class BaseMcpToolProviderTest {
     ///
     /// Creates a client connected to the test server on the random port,
     /// then initializes it for use in tests.
+    @SuppressWarnings("removal")
     protected void initializeMcpClient() {
         transport = new WebFluxSseClientTransport(
             WebClient.builder().baseUrl("http://localhost:" + port),

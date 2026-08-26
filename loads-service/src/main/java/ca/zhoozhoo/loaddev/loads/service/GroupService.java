@@ -5,6 +5,7 @@ import static tech.units.indriya.unit.Units.SECOND;
 
 import java.util.List;
 
+import javax.measure.Quantity;
 import javax.measure.Unit;
 import javax.measure.quantity.Speed;
 
@@ -134,7 +135,11 @@ public class GroupService {
 
         // Single-pass statistics computation using Stream Gatherer (JEP 485)
         var stats = shots.stream()
-                .map(Shot::velocity)
+                .<Quantity<Speed>>mapMulti((shot, downstream) -> {
+                    if (shot != null && shot.velocity() != null) {
+                        downstream.accept(shot.velocity());
+                    }
+                })
                 .gather(VelocityStatisticsGatherer.gatherer(velocityUnit))
                 .findFirst()
                 .orElse(VelocityStatisticsGatherer.VelocityStats.empty(velocityUnit));

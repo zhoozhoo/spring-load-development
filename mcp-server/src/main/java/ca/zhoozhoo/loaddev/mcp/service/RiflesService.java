@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -77,7 +76,9 @@ public class RiflesService {
                     log.debug("ReactiveSecurityContextHolder returned context: {}", ctx);
                     log.debug("Authentication present: {}", ctx.getAuthentication() != null);
                 })
-                .map(SecurityContext::getAuthentication)
+                .flatMap(ctx -> Mono.justOrEmpty(ctx.getAuthentication()))
+                .switchIfEmpty(Mono.error(new McpError(new JSONRPCError(
+                        INVALID_REQUEST, "Authentication failed", null))))
                 .flatMapMany(auth -> {
                     log.debug("Extracting token from authentication");
                     String token = ((Jwt) auth.getCredentials()).getTokenValue();
@@ -131,7 +132,9 @@ public class RiflesService {
                     log.debug("ReactiveSecurityContextHolder returned context: {}", ctx);
                     log.debug("Authentication present: {}", ctx.getAuthentication() != null);
                 })
-                .map(SecurityContext::getAuthentication)
+                .flatMap(ctx -> Mono.justOrEmpty(ctx.getAuthentication()))
+                .switchIfEmpty(Mono.error(new McpError(new JSONRPCError(
+                        INVALID_REQUEST, "Authentication failed", null))))
                 .flatMap(auth -> {
                     log.debug("Extracting token from authentication");
                     String token = ((Jwt) auth.getCredentials()).getTokenValue();

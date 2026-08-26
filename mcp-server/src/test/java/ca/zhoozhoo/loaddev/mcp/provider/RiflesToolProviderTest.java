@@ -1,6 +1,7 @@
 package ca.zhoozhoo.loaddev.mcp.provider;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.util.Map;
@@ -100,7 +101,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
     /// Validates that the result is not null and indicates no errors.
     @Test
     void getRifles() {
-        var riflesResult = client.callTool(new CallToolRequest("getRifles", Map.of())).block();
+        var riflesResult = client.callTool(new CallToolRequest("getRifles", Map.of(), null)).block();
 
         assertThat(riflesResult).isNotNull();
         assertThat(riflesResult.isError()).isFalse();
@@ -116,7 +117,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
     /// Validates that the result is not null and indicates no errors.
     @Test
     void getRifleById() {
-        var rifleResult = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
+        var rifleResult = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L), null)).block();
 
         assertThat(rifleResult).isNotNull();
         assertThat(rifleResult.isError()).isFalse();
@@ -161,7 +162,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
             }
         });
 
-        var rifleResult = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
+        var rifleResult = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L), null)).block();
 
         assertThat(rifleResult).isNotNull();
         assertThat(rifleResult.isError()).isFalse();
@@ -209,7 +210,7 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
         /// Expected: isError = true, error message contains authentication or error details
     @Test
     void getRifleById_NotFound() {
-        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 999L))).block();
+        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 999L), null)).block();
 
         assertThat(result).isNotNull();
         assertThat(result.isError()).isTrue();
@@ -239,15 +240,8 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
             }
         });
 
-        var result = client.callTool(new CallToolRequest("getRifles", Map.of())).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Error invoking method");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getRifles", Map.of(), null)).block())
+            .hasMessage("Authentication failed");
 
         // Restore original dispatcher for other tests
         mockRiflesServer.setDispatcher(createRiflesDispatcher());
@@ -272,15 +266,8 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
             }
         });
 
-        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Error invoking method");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L), null)).block())
+            .hasMessage("Authentication failed");
 
         // Restore original dispatcher for other tests
         mockRiflesServer.setDispatcher(createRiflesDispatcher());
@@ -298,15 +285,8 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("rifles-service"))
                 .thenReturn(null);
 
-        var result = client.callTool(new CallToolRequest("getRifles", Map.of())).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Error invoking method");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getRifles", Map.of(), null)).block())
+            .hasMessage("Service rifles-service not found in discovery");
 
         // Restore original mock for other tests
         mockServiceDiscovery();
@@ -324,15 +304,8 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("rifles-service"))
                 .thenReturn(java.util.List.of());
 
-        var result = client.callTool(new CallToolRequest("getRifles", Map.of())).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Error invoking method");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getRifles", Map.of(), null)).block())
+            .hasMessage("Service rifles-service not found in discovery");
 
         // Restore original mock for other tests
         mockServiceDiscovery();
@@ -350,15 +323,8 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("rifles-service"))
                 .thenReturn(null);
 
-        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Error invoking method");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L), null)).block())
+            .hasMessage("Service rifles-service not found in discovery");
 
         // Restore original mock for other tests
         mockServiceDiscovery();
@@ -376,15 +342,8 @@ public class RiflesToolProviderTest extends BaseMcpToolProviderTest {
         org.mockito.Mockito.when(discoveryClient.getInstances("rifles-service"))
                 .thenReturn(java.util.List.of());
 
-        var result = client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L))).block();
-
-        assertThat(result).isNotNull();
-        assertThat(result.isError()).isTrue();
-        assertThat(result.content()).isNotEmpty();
-        var content = result.content().get(0);
-        assertThat(content).isInstanceOf(TextContent.class);
-        var textContent = (TextContent) content;
-        assertThat(textContent.text()).contains("Error invoking method");
+        assertThatThrownBy(() -> client.callTool(new CallToolRequest("getRifleById", Map.of("id", 1L), null)).block())
+            .hasMessage("Service rifles-service not found in discovery");
 
         // Restore original mock for other tests
         mockServiceDiscovery();

@@ -3,7 +3,7 @@ namespace: observability
 
 image:
   repository: grafana/tempo
-  tag: "2.10.3"
+  tag: "3.0.3"
 
 config:
   stream_over_http_enabled: true
@@ -39,13 +39,6 @@ config:
           http:
             endpoint: "0.0.0.0:4318"
   
-  compactor:
-    compaction:
-      block_retention: 1h
-  
-  ingester:
-    max_block_duration: 1m
-  
   metrics_generator:
     registry:
       external_labels:
@@ -56,8 +49,6 @@ config:
       remote_write:
         - url: http://prometheus-service.observability.svc.cluster.local:9090/api/v1/write
           send_exemplars: true
-    traces_storage:
-      path: /var/tempo/generator/traces
   
   storage:
     trace:
@@ -66,13 +57,17 @@ config:
         path: /var/tempo/wal
       local:
         path: /var/tempo/blocks
+      block:
+        version: vParquet4
   
   overrides:
     defaults:
+      compaction:
+        block_retention: 1h
       cost_attribution:
         dimensions: {}
       metrics_generator:
-        processors: [service-graphs, span-metrics, local-blocks]
+        processors: [service-graphs, span-metrics]
         generate_native_histograms: both
 
 persistence:

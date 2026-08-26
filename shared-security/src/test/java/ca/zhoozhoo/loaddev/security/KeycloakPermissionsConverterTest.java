@@ -30,7 +30,7 @@ class KeycloakPermissionsConverterTest {
                 .issuedAt(now())
                 .expiresAt(now().plusSeconds(60))
                 .build()))
-                .extracting(Object::toString)
+                .extracting(auth -> auth.toString())
                 .containsExactlyInAnyOrder("loads:read", "loads:write", "rifles:read");
     }
 
