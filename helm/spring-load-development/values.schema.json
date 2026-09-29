@@ -61,6 +61,10 @@
             "postgresql": {
               "type": "string",
               "description": "PostgreSQL version for databases"
+            },
+            "kafka": {
+              "type": "string",
+              "description": "Kafka version for domain event streaming"
             }
           }
         }
@@ -133,6 +137,20 @@
         "namespace": {
           "type": "string",
           "description": "Namespace for Spring Boot microservices"
+        }
+      }
+    },
+    "kafka": {
+      "type": "object",
+      "description": "Kafka subchart (single-broker KRaft event streaming for domain events)",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable Kafka"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "Namespace for Kafka"
         }
       }
     }

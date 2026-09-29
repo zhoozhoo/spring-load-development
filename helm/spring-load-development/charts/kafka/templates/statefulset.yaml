@@ -1,0 +1,94 @@
+{{- if .Values.kafka.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kafka
+  namespace: {{ .Values.kafka.namespace }}
+  labels:
+    app: kafka
+    {{- include "kafka.labels" . | nindent 4 }}
+spec:
+  serviceName: kafka-service
+  replicas: {{ .Values.kafka.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      securityContext:
+        {{- include "kafka.podSecurityContext" . | nindent 8 }}
+      containers:
+        - name: kafka
+          image: "{{ .Values.kafka.image.repository }}:{{ if .Values.global }}{{ .Values.global.versions.kafka | default .Values.kafka.image.tag }}{{ else }}{{ .Values.kafka.image.tag }}{{ end }}"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            {{- include "kafka.containerSecurityContext" . | nindent 12 }}
+          {{- if .Values.kafka.resources }}
+          resources:
+            {{- toYaml .Values.kafka.resources | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: kafka-config
+          ports:
+            - name: client
+              containerPort: {{ .Values.kafka.ports.client }}
+              protocol: TCP
+            - name: controller
+              containerPort: {{ .Values.kafka.ports.controller }}
+              protocol: TCP
+          volumeMounts:
+            - name: kafka-storage
+              mountPath: /var/lib/kafka/data
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:{{ .Values.kafka.ports.client }}
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 6
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:{{ .Values.kafka.ports.client }}
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:{{ .Values.kafka.ports.client }}
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 6
+  volumeClaimTemplates:
+    - metadata:
+        name: kafka-storage
+        labels:
+          app: kafka
+          {{- include "kafka.labels" . | nindent 10 }}
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.kafka.persistence.size }}
+        {{- if .Values.kafka.persistence.storageClass }}
+        {{- if (eq "-" .Values.kafka.persistence.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: {{ .Values.kafka.persistence.storageClass }}
+        {{- end }}
+        {{- end }}
+{{- end }}

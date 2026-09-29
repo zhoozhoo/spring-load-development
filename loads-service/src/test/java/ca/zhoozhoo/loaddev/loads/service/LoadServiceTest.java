@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
+import ca.zhoozhoo.loaddev.loads.events.LoadEventPublisher;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -27,12 +28,15 @@ class LoadServiceTest {
     @Mock
     private LoadRepository loadRepository;
 
+    @Mock
+    private LoadEventPublisher loadEventPublisher;
+
     @InjectMocks
     private LoadService loadService;
 
     @Test
     void getAllLoads_ShouldReturnFluxOfLoads() {
-        Load load = new Load(1L, "user1", "Load 1", "Desc", "Powder", "Type", "Bullet", "Type", Quantities.getQuantity(100.0, GRAIN), "Primer", "Type", Quantities.getQuantity(0.020, INCH_INTERNATIONAL), Quantities.getQuantity(2.800, INCH_INTERNATIONAL), Quantities.getQuantity(0.002, INCH_INTERNATIONAL), 1L);
+        var load = new Load(1L, "user1", "Load 1", "Desc", "Powder", "Type", "Bullet", "Type", Quantities.getQuantity(100.0, GRAIN), "Primer", "Type", Quantities.getQuantity(0.020, INCH_INTERNATIONAL), Quantities.getQuantity(2.800, INCH_INTERNATIONAL), Quantities.getQuantity(0.002, INCH_INTERNATIONAL), 1L);
         when(loadRepository.findAllByOwnerId(eq("user1"), any(Pageable.class))).thenReturn(Flux.just(load));
 
         StepVerifier.create(loadService.getAllLoads("user1", PageRequest.of(0, 20)))
@@ -42,7 +46,7 @@ class LoadServiceTest {
 
     @Test
     void getLoadById_ShouldReturnLoad_WhenFound() {
-        Load load = new Load(1L, "user1", "Load 1", "Desc", "Powder", "Type", "Bullet", "Type", Quantities.getQuantity(100.0, GRAIN), "Primer", "Type", Quantities.getQuantity(0.020, INCH_INTERNATIONAL), Quantities.getQuantity(2.800, INCH_INTERNATIONAL), Quantities.getQuantity(0.002, INCH_INTERNATIONAL), 1L);
+        var load = new Load(1L, "user1", "Load 1", "Desc", "Powder", "Type", "Bullet", "Type", Quantities.getQuantity(100.0, GRAIN), "Primer", "Type", Quantities.getQuantity(0.020, INCH_INTERNATIONAL), Quantities.getQuantity(2.800, INCH_INTERNATIONAL), Quantities.getQuantity(0.002, INCH_INTERNATIONAL), 1L);
         when(loadRepository.findByIdAndOwnerId(1L, "user1")).thenReturn(Mono.just(load));
 
         StepVerifier.create(loadService.getLoadById(1L, "user1"))
@@ -52,9 +56,10 @@ class LoadServiceTest {
 
     @Test
     void createLoad_ShouldReturnCreatedLoad() {
-        Load load = new Load(null, "user1", "Load 1", "Desc", "Powder", "Type", "Bullet", "Type", Quantities.getQuantity(100.0, GRAIN), "Primer", "Type", Quantities.getQuantity(0.020, INCH_INTERNATIONAL), Quantities.getQuantity(2.800, INCH_INTERNATIONAL), Quantities.getQuantity(0.002, INCH_INTERNATIONAL), 1L);
-        Load savedLoad = new Load(1L, "user1", "Load 1", "Desc", "Powder", "Type", "Bullet", "Type", Quantities.getQuantity(100.0, GRAIN), "Primer", "Type", Quantities.getQuantity(0.020, INCH_INTERNATIONAL), Quantities.getQuantity(2.800, INCH_INTERNATIONAL), Quantities.getQuantity(0.002, INCH_INTERNATIONAL), 1L);
+        var load = new Load(null, "user1", "Load 1", "Desc", "Powder", "Type", "Bullet", "Type", Quantities.getQuantity(100.0, GRAIN), "Primer", "Type", Quantities.getQuantity(0.020, INCH_INTERNATIONAL), Quantities.getQuantity(2.800, INCH_INTERNATIONAL), Quantities.getQuantity(0.002, INCH_INTERNATIONAL), 1L);
+        var savedLoad = new Load(1L, "user1", "Load 1", "Desc", "Powder", "Type", "Bullet", "Type", Quantities.getQuantity(100.0, GRAIN), "Primer", "Type", Quantities.getQuantity(0.020, INCH_INTERNATIONAL), Quantities.getQuantity(2.800, INCH_INTERNATIONAL), Quantities.getQuantity(0.002, INCH_INTERNATIONAL), 1L);
         when(loadRepository.save(any(Load.class))).thenReturn(Mono.just(savedLoad));
+        when(loadEventPublisher.publishCreated(any(Load.class))).thenReturn(Mono.empty());
 
         StepVerifier.create(loadService.createLoad(load))
                 .expectNext(savedLoad)
@@ -63,8 +68,9 @@ class LoadServiceTest {
 
     @Test
     void updateLoad_ShouldReturnUpdatedLoad() {
-        Load load = new Load(1L, "user1", "Load 1", "Desc", "Powder", "Type", "Bullet", "Type", Quantities.getQuantity(100.0, GRAIN), "Primer", "Type", Quantities.getQuantity(0.020, INCH_INTERNATIONAL), Quantities.getQuantity(2.800, INCH_INTERNATIONAL), Quantities.getQuantity(0.002, INCH_INTERNATIONAL), 1L);
+        var load = new Load(1L, "user1", "Load 1", "Desc", "Powder", "Type", "Bullet", "Type", Quantities.getQuantity(100.0, GRAIN), "Primer", "Type", Quantities.getQuantity(0.020, INCH_INTERNATIONAL), Quantities.getQuantity(2.800, INCH_INTERNATIONAL), Quantities.getQuantity(0.002, INCH_INTERNATIONAL), 1L);
         when(loadRepository.save(any(Load.class))).thenReturn(Mono.just(load));
+        when(loadEventPublisher.publishUpdated(any(Load.class))).thenReturn(Mono.empty());
 
         StepVerifier.create(loadService.updateLoad(load))
                 .expectNext(load)
@@ -73,8 +79,9 @@ class LoadServiceTest {
 
     @Test
     void deleteLoad_ShouldComplete() {
-        Load load = new Load(1L, "user1", "Load 1", "Desc", "Powder", "Type", "Bullet", "Type", Quantities.getQuantity(100.0, GRAIN), "Primer", "Type", Quantities.getQuantity(0.020, INCH_INTERNATIONAL), Quantities.getQuantity(2.800, INCH_INTERNATIONAL), Quantities.getQuantity(0.002, INCH_INTERNATIONAL), 1L);
+        var load = new Load(1L, "user1", "Load 1", "Desc", "Powder", "Type", "Bullet", "Type", Quantities.getQuantity(100.0, GRAIN), "Primer", "Type", Quantities.getQuantity(0.020, INCH_INTERNATIONAL), Quantities.getQuantity(2.800, INCH_INTERNATIONAL), Quantities.getQuantity(0.002, INCH_INTERNATIONAL), 1L);
         when(loadRepository.delete(load)).thenReturn(Mono.empty());
+        when(loadEventPublisher.publishDeleted(any(Load.class))).thenReturn(Mono.empty());
 
         StepVerifier.create(loadService.deleteLoad(load))
                 .verifyComplete();

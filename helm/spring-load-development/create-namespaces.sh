@@ -11,6 +11,7 @@ NAMESPACES=(
   "postgres"
   "keycloak"
   "observability"
+  "kafka"
   "reloading"
 )
 
@@ -28,4 +29,4 @@ echo ""
 echo "All required namespaces have been created successfully!"
 echo ""
 echo "Namespaces created:"
-kubectl get namespaces -l name --no-headers 2>/dev/null | grep -E "postgres|keycloak|observability|reloading" || kubectl get namespaces | grep -E "postgres|keycloak|observability|reloading"
+kubectl get namespaces -l name --no-headers 2>/dev/null | grep -E "postgres|keycloak|observability|kafka|reloading" || kubectl get namespaces | grep -E "postgres|keycloak|observability|kafka|reloading"

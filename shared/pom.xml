@@ -125,10 +125,19 @@
             <artifactId>opentelemetry-log4j-appender-2.17</artifactId>
         </dependency>
 
+        <!-- Reactor Kafka (optional - for KafkaDomainEventPublisher / event-driven integration) -->
+        <dependency>
+            <groupId>io.projectreactor.kafka</groupId>
+            <artifactId>reactor-kafka</artifactId>
+            <version>${reactor-kafka.version}</version>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Annotations -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>${projectlombok.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -167,6 +176,7 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
+                            <version>${projectlombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>

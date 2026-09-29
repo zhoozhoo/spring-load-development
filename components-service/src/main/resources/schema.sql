@@ -125,3 +125,24 @@ FOR EACH ROW EXECUTE FUNCTION cases_update_search_vector();
 
 CREATE INDEX IF NOT EXISTS idx_cases_search_vector ON cases USING GIN (search_vector);
 CREATE INDEX IF NOT EXISTS idx_cases_text_trgm ON cases USING GIN ((coalesce(manufacturer,'') || ' ' || coalesce(caliber,'')) gin_trgm_ops);
+
+-- Transactional outbox for reliable, at-least-once delivery of domain events to Kafka.
+-- See ca.zhoozhoo.loaddev.common.events.outbox (shared module).
+CREATE TABLE IF NOT EXISTS outbox_events (
+    id BIGSERIAL PRIMARY KEY,
+    event_id VARCHAR(36) NOT NULL UNIQUE,
+    topic VARCHAR(255) NOT NULL,
+    aggregate_type VARCHAR(255) NOT NULL,
+    aggregate_id VARCHAR(255) NOT NULL,
+    owner_id VARCHAR(255),
+    event_type VARCHAR(255) NOT NULL,
+    payload TEXT NOT NULL,
+    occurred_at TIMESTAMPTZ NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    attempts INTEGER NOT NULL DEFAULT 0,
+    last_error TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    published_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_outbox_events_status ON outbox_events (status, id);

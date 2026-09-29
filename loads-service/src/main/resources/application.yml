@@ -4,6 +4,12 @@ spring:
   config:
     import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
 
+loaddev:
+  events:
+    kafka:
+      enabled: true
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
 ---
 spring:
   config:

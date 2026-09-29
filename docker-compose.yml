@@ -156,6 +156,32 @@ services:
     command: ["start-dev", "--import-realm"]
     restart: unless-stopped
 
+  kafka:
+    image: apache/kafka:${KAFKA_VERSION}
+    container_name: kafka
+    environment:
+      KAFKA_NODE_ID: 1
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID}
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    restart: unless-stopped
+
   config-server:
     image: zhoozhoo.ca/spring-load-development/config-server:${PROJECT_VERSION}
     container_name: config-server
@@ -309,6 +335,7 @@ services:
       - SPRING_R2DBC_URL=r2dbc:postgresql://db:5432/loadsdb
       - SPRING_R2DBC_USERNAME=user
       - SPRING_R2DBC_PASSWORD=password
+      - LOADDEV_EVENTS_KAFKA_BOOTSTRAPSERVERS=kafka:9092
       - THC_PATH=/actuator/health/readiness
       - THC_PORT=8082
     depends_on:
@@ -320,6 +347,8 @@ services:
         condition: service_healthy
       otel-collector:
         condition: service_started
+      kafka:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "/workspace/health-check"]
       interval: 10s
@@ -364,3 +393,4 @@ volumes:
   loki_data:
   prometheus_data:
   otel_logs:
+  kafka_data:

@@ -1,0 +1,25 @@
+{{- if .Values.kafka.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-service
+  namespace: {{ .Values.kafka.namespace }}
+  labels:
+    app: kafka
+    {{- include "kafka.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.kafka.service.type }}
+  # clusterIP: None would be ideal for StatefulSet DNS, but a headless service is only
+  # required once this scales beyond a single broker.
+  ports:
+    - port: {{ .Values.kafka.ports.client }}
+      targetPort: client
+      protocol: TCP
+      name: client
+    - port: {{ .Values.kafka.ports.controller }}
+      targetPort: controller
+      protocol: TCP
+      name: controller
+  selector:
+    app: kafka
+{{- end }}

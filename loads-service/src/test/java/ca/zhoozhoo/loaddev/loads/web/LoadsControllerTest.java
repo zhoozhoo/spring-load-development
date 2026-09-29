@@ -2,6 +2,9 @@ package ca.zhoozhoo.loaddev.loads.web;
 
 import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers.mockJwt;
 import static reactor.core.publisher.Mono.just;
@@ -18,14 +21,17 @@ import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTest
 import org.springframework.context.annotation.Import;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import ca.zhoozhoo.loaddev.common.events.DomainEventPublisher;
 import ca.zhoozhoo.loaddev.loads.config.TestSecurityConfig;
 import ca.zhoozhoo.loaddev.loads.dao.GroupRepository;
 import ca.zhoozhoo.loaddev.loads.dao.LoadRepository;
 import ca.zhoozhoo.loaddev.loads.dao.ShotRepository;
 import ca.zhoozhoo.loaddev.loads.model.Load;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /// Integration tests for LoadsController.
 ///
@@ -53,8 +59,13 @@ class LoadsControllerTest {
     @Autowired
     private GroupRepository groupRepository;
 
+    @MockitoBean
+    private DomainEventPublisher domainEventPublisher;
+
     @BeforeEach
     void setUp() {
+        when(domainEventPublisher.publish(anyString(), any())).thenReturn(Mono.empty());
+
         shotRepository.deleteAll().block();
         groupRepository.deleteAll().block();
         loadRepository.deleteAll().block();

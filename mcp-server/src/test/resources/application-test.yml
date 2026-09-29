@@ -23,6 +23,13 @@ eureka:
   client:
     enabled: false
 
+loaddev:
+  events:
+    kafka:
+      enabled: false
+    component-read-model:
+      enabled: false
+
 management:
   logging:
     export:

@@ -10,11 +10,12 @@ This Helm chart deploys the complete Spring Load Development application stack o
 
 == Overview
 
-The Helm chart uses a **modular subchart architecture** with 4 independent subcharts:
+The Helm chart uses a **modular subchart architecture** with 5 independent subcharts:
 
 * *Observability Subchart* - Loki, Tempo, Prometheus, Grafana, and OpenTelemetry Collector for monitoring and tracing
 * *Keycloak Subchart* - Authentication and authorization server with dedicated PostgreSQL database and realm configuration  
 * *PostgreSQL Subchart* - Separate database instances for microservices and Keycloak
+* *Kafka Subchart* - Single-broker KRaft-mode Apache Kafka for domain event streaming (`loads-events`, `rifles-events`, `cases-events`, `primers-events`, `projectiles-events`, `propellants-events` topics)
 * *Reloading Subchart* - Spring Boot microservices (API Gateway, Loads Service, Components Service, Rifles Service, and MCP Server)
 
 Each subchart can be enabled/disabled independently and configured separately, providing maximum flexibility and maintainability.
@@ -29,26 +30,23 @@ This chart intentionally omits Spring Cloud *Config Server*, *Discovery (Eureka)
 
 To add these, extend `values.yaml` and duplicate a microservice stanza in `microservices.yaml` using the existing helper templates.
 
-=== Externalized Configuration
+=== Configuration Source of Truth
 
-Application configuration (profiles, ports, Keycloak, logging) is sourced from the separate Git repository:
+The Helm chart is the authoritative configuration source for the Spring Boot services in this project. The current runtime settings for ports, security, gateway routing, logging, and observability are defined in:
 
-https://github.com/zhoozhoo/spring-load-development-config
+* `values.yaml` – global and subchart defaults
+* `charts/reloading/values.yaml` – per-service runtime settings
+* `charts/reloading/templates/configmaps.yaml` – rendered Spring Boot configuration snippets as ConfigMaps
 
-Key files in that repository map directly to services:
+The separate Git repository at https://github.com/zhoozhoo/spring-load-development-config can still be used for legacy or external Config Server scenarios, but it is no longer the main configuration authority for this project. The chart values and generated ConfigMaps are what the running Kubernetes deployment actually consumes.
 
-* `application.yml` – shared defaults consumed by all services via Config Server
-* `api-gateway.yml`, `loads-service.yml`, `rifles-service.yml`, `components-service.yml`, `mcp-server.yml` – service‑specific overrides
-* `discovery-server.yml` – infrastructure service settings
-* `log4j2.xml` / `log4j2.yaml` – centralized logging configuration
+When deploying with this Helm chart (which excludes Config Server/Eureka), the supported pattern is to:
 
-When deploying with this Helm chart (which excludes Config Server/Eureka), you can either:
+1. Define environment and service config in the parent chart values
+2. Inject generated ConfigMaps into the containers through the chart templates
+3. Keep local and fallback settings in Docker Compose or environment variables only when needed
 
-1. Bake required properties into container images (environment variables / Spring Boot `SPRING_` bindings)
-2. Create ConfigMaps & Secrets from the above YAMLs and mount/translate them to env vars
-3. Add a lightweight Spring Cloud Config Server Deployment referencing the config repo (recommended if frequent changes)
-
-Example (create ConfigMap from `api-gateway.yml`):
+Example (gateway config rendered by the chart):
 
 [source,bash]
 ----
@@ -84,6 +82,16 @@ The chart includes the following Spring Boot microservices:
 * *Rifles Service* (`rifles-service`) - Rifle data management service
 * *MCP Server* (`mcp-server`) - Model Context Protocol server
 
+=== Event Streaming
+
+The `kafka` subchart deploys a single-broker, KRaft-mode Apache Kafka instance in its own `kafka` namespace, reachable at `kafka-service.kafka.svc.cluster.local:9092`. Every microservice deployment receives a `LOADDEV_EVENTS_KAFKA_BOOTSTRAPSERVERS` environment variable pointing at this broker (see `charts/reloading/templates/_helpers.tpl`), but only services that add the `reactor-kafka` dependency actually publish or consume events.
+
+`loads-service`, `rifles-service`, and `components-service` publish domain events (`Load`/`Rifle`/`Case`/`Primer`/`Projectile`/`Propellant` created/updated/deleted) using a transactional outbox pattern: writes are first persisted to an `outbox_events` table in the same database transaction as the triggering change, then relayed to Kafka asynchronously by a scheduled `OutboxRelay`. This guarantees at-least-once delivery even across Kafka outages or service restarts, unlike publishing to Kafka directly from the write path. `mcp-server` consumes the four component topics to materialize a proof-of-concept in-memory read model (see link:../../mcp-server/README.adoc[MCP Server Guide]).
+
+See the root link:../../docs/enhancement-roadmap.md[enhancement roadmap] for the event-driven integration plan and remaining next steps (a durable/shared read model, consumers for `loads-events`/`rifles-events`, and a dead-letter/retry policy for the relay).
+
+Disable Kafka with `--set kafka.enabled=false` if event publishing is not needed for a given deployment.
+
 == Architecture
 
 [source,mermaid]
@@ -103,6 +111,9 @@ flowchart LR
     RS[Rifles Service]
     MCP[MCP Server]
   end
+  subgraph Events
+    KAFKA[(Kafka)]
+  end
   subgraph Observability
     OTEL[OTel Collector]
     LOKI[Loki]
@@ -114,6 +125,10 @@ flowchart LR
   GW --> LS & CS & RS & MCP
   PG1 --> LS & CS & RS & MCP
   PG2 --> KC
+  LS --> KAFKA
+  CS --> KAFKA
+  RS --> KAFKA
+  KAFKA -.-> MCP
   GW --> KC
   LS --> KC
   CS --> KC
@@ -137,11 +152,13 @@ flowchart LR
   classDef svc fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
   classDef obs fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
   classDef user fill:#ffebee,stroke:#c62828,stroke-width:2px
+  classDef events fill:#fce4ec,stroke:#ad1457,stroke-width:2px
   class PG1,PG2 db
   class KC auth
   class GW,LS,CS,RS,MCP svc
   class OTEL,LOKI,TEMPO,PROM,GRAF obs
   class USER user
+  class KAFKA events
 ....
 
 == Quick Start
@@ -165,13 +182,14 @@ cd spring-load-development/helm/spring-load-development
 helm dependency update
 
 # Step 2: Create required namespaces
-# The chart requires 4 namespaces: postgres, keycloak, observability, reloading
+# The chart requires 5 namespaces: postgres, keycloak, observability, kafka, reloading
 ./create-namespaces.sh
 
 # Or create them manually:
 # kubectl create namespace postgres
 # kubectl create namespace keycloak
 # kubectl create namespace observability
+# kubectl create namespace kafka
 # kubectl create namespace reloading
 
 # Step 3: Deploy the complete stack
@@ -333,14 +351,14 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Tempo (Distributed Tracing)
 
-* *Version*: 3.0.3
+* *Version*: 3.1.0
 * *Port*: 30200
 * *Storage*: Local filesystem with 10Gi persistent volume
 * *Features*: OTLP receivers, metrics generation, trace querying
 
 ==== Prometheus (Metrics)
 
-* *Version*: v3.7.6
+* *Version*: v3.7.8
 * *Namespace*: `observability`
 * *Port*: 30091
 * *Storage*: 10Gi persistent volume
@@ -349,7 +367,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== Grafana (Visualization)
 
-* *Version*: 13.2.0
+* *Version*: 13.2.3
 * *Port*: 30000
 * *Authentication*: Anonymous access enabled (Admin role)
 * *Datasources*: Pre-configured Loki, Tempo, and Prometheus
@@ -360,7 +378,7 @@ NOTE: StatefulSets provide better guarantees for database workloads compared to 
 
 ==== OpenTelemetry Collector
 
-* *Version*: 0.159.0
+* *Version*: 0.162.0
 * *Namespace*: `observability`
 * *GRPC Port*: 30317
 * *Metrics Port*: 30889
@@ -390,11 +408,11 @@ global:
     microservices: "0.1.1-SNAPSHOT"
     
     # Observability stack
-    loki: "3.7.6"
-    tempo: "3.0.3"
-    prometheus: "v3.14.0"
-    grafana: "13.2.0"
-    otelCollector: "0.159.0"
+    loki: "3.7.8"
+    tempo: "3.1.0"
+    prometheus: "v3.15.0"
+    grafana: "13.2.3"
+    otelCollector: "0.162.0"
     
     # Identity and database
     keycloak: "26.7"
@@ -1026,7 +1044,7 @@ spring-load-development/
     │   │   └── _helpers.tpl   # Observability helper functions
     │   └── charts/             # Observability sub-subcharts
     │       ├── grafana/        # Grafana sub-subchart
-    │       │   ├── Chart.yaml  # Version: 0.1.1-SNAPSHOT, AppVersion: 13.2.0
+    │       │   ├── Chart.yaml  # Version: 0.1.1-SNAPSHOT, AppVersion: 13.2.3
     │       │   ├── values.yaml # Grafana-specific configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # Grafana helper functions
@@ -1037,7 +1055,7 @@ spring-load-development/
     │       │       ├── pvc.yaml          # Persistent storage
     │       │       └── service.yaml      # Grafana service with NodePort 30000
     │       ├── loki/            # Loki sub-subchart
-    │       │   ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 3.7.6
+    │       │   ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 3.7.8
     │       │   ├── values.yaml  # Loki-specific configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # Loki helper functions
@@ -1047,7 +1065,7 @@ spring-load-development/
     │       │       ├── pvc.yaml          # Persistent storage
     │       │       └── service.yaml      # Loki service with NodePort 30100
     │       ├── otel-collector/  # OpenTelemetry Collector sub-subchart
-    │       │   ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 0.159.0
+    │       │   ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 0.162.0
     │       │   ├── values.yaml  # OTel Collector configuration
     │       │   └── templates/
     │       │       ├── _helpers.tpl      # OTel Collector helper functions
@@ -1066,7 +1084,7 @@ spring-load-development/
     │       │       ├── pvc.yaml          # Persistent storage
     │       │       └── service.yaml      # Prometheus service with NodePort 30091
     │       └── tempo/           # Tempo sub-subchart
-    │           ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 3.0.3
+    │           ├── Chart.yaml   # Version: 0.1.1-SNAPSHOT, AppVersion: 3.1.0
     │           ├── values.yaml  # Tempo-specific configuration
     │           └── templates/
     │               ├── _helpers.tpl      # Tempo helper functions

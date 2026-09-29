@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import ca.zhoozhoo.loaddev.components.dao.CaseRepository;
+import ca.zhoozhoo.loaddev.components.events.CaseEventPublisher;
 import ca.zhoozhoo.loaddev.components.model.Case;
 import ca.zhoozhoo.loaddev.components.model.PrimerSize;
 import reactor.core.publisher.Flux;
@@ -29,11 +30,14 @@ class CaseServiceTest {
     @Mock
     private CaseRepository caseRepository;
 
+    @Mock
+    private CaseEventPublisher caseEventPublisher;
+
     private CaseService caseService;
 
     @BeforeEach
     void setUp() {
-        caseService = new CaseService(caseRepository);
+        caseService = new CaseService(caseRepository, caseEventPublisher);
     }
 
     @Test
@@ -76,34 +80,40 @@ class CaseServiceTest {
     void createCase_ShouldReturnSavedCase() {
         Case caseItem = new Case(1L, "user1", "Brand", "Caliber", PrimerSize.LARGE_RIFLE, null, null);
         when(caseRepository.save(any(Case.class))).thenReturn(Mono.just(caseItem));
+        when(caseEventPublisher.publishCreated(caseItem)).thenReturn(Mono.empty());
 
         StepVerifier.create(caseService.createCase(caseItem))
                 .expectNext(caseItem)
                 .verifyComplete();
 
         verify(caseRepository).save(caseItem);
+        verify(caseEventPublisher).publishCreated(caseItem);
     }
 
     @Test
     void updateCase_ShouldReturnUpdatedCase() {
         Case caseItem = new Case(1L, "user1", "Brand", "Caliber", PrimerSize.LARGE_RIFLE, null, null);
         when(caseRepository.save(any(Case.class))).thenReturn(Mono.just(caseItem));
+        when(caseEventPublisher.publishUpdated(caseItem)).thenReturn(Mono.empty());
 
         StepVerifier.create(caseService.updateCase(caseItem))
                 .expectNext(caseItem)
                 .verifyComplete();
 
         verify(caseRepository).save(caseItem);
+        verify(caseEventPublisher).publishUpdated(caseItem);
     }
 
     @Test
     void deleteCase_ShouldComplete() {
         Case caseItem = new Case(1L, "user1", "Brand", "Caliber", PrimerSize.LARGE_RIFLE, null, null);
         when(caseRepository.delete(any(Case.class))).thenReturn(Mono.empty());
+        when(caseEventPublisher.publishDeleted(caseItem)).thenReturn(Mono.empty());
 
         StepVerifier.create(caseService.deleteCase(caseItem))
                 .verifyComplete();
 
         verify(caseRepository).delete(caseItem);
+        verify(caseEventPublisher).publishDeleted(caseItem);
     }
 }

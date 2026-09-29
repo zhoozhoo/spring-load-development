@@ -10,18 +10,21 @@ global:
   # Single source of truth for all container versions
   versions:
     # Spring Boot microservices
-    microservices: "0.1.1-SNAPSHOT"
+    microservices: "0.1.2-SNAPSHOT"
     
     # Observability stack
-    loki: "3.7.6"
-    tempo: "3.0.3"
-    prometheus: "v3.14.0"
-    grafana: "13.2.0"
-    otelCollector: "0.159.0"
+    loki: "3.7.8"
+    tempo: "3.1.0"
+    prometheus: "v3.15.0"
+    grafana: "13.2.3"
+    otelCollector: "0.162.0-amd64"
     
     # Identity and database
     keycloak: "26.7"
     postgresql: "18.6"
+
+    # Event streaming
+    kafka: "4.3.1"
 
 # Observability subchart (Grafana, Prometheus, Loki, Tempo, OTEL Collector)
 observability:
@@ -40,6 +43,11 @@ postgresql:
     namespace: postgres
   keycloakPostgresql:
     namespace: keycloak
+
+# Kafka subchart (event streaming for domain events)
+kafka:
+  enabled: true
+  namespace: kafka
 
 # Reloading subchart (Spring Boot Microservices)
 reloading:

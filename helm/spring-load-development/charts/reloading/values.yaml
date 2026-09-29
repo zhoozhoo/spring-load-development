@@ -12,6 +12,10 @@ otelCollector:
   # Micrometer's OTLP metrics exporter only speaks HTTP, so it needs the collector's HTTP port, not the gRPC one
   httpEndpoint: "http://otel-collector-service.observability.svc.cluster.local:4318"
 
+# Kafka bootstrap servers for domain event publishing (opt-in per service via reactor-kafka dependency)
+kafka:
+  bootstrapServers: "kafka-service.kafka.svc.cluster.local:9092"
+
 # Keycloak integration
 keycloak:
   baseUrl: "http://keycloak-service.keycloak.svc.cluster.local:8080"

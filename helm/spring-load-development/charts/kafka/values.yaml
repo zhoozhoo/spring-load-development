@@ -1,0 +1,44 @@
+# Apache Kafka (KRaft mode) - single broker for domain event streaming
+kafka:
+  enabled: true
+  namespace: kafka
+  replicas: 1  # Single-broker KRaft combined mode; scale out requires a proper multi-node quorum
+  image:
+    repository: apache/kafka
+    tag: "4.3.1"
+
+  nodeId: 1
+  clusterId: "MkU3OEVBNTcwNTJENDM2Qk"  # KRaft cluster id (22-char base64); override for production
+  controllerQuorumVoters: "1@localhost:9093"  # Single-broker local KRaft mode
+
+  ports:
+    client: 9092
+    controller: 9093
+
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: ""
+
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+
+  service:
+    type: ClusterIP
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# Pod Disruption Budget (single instance; only useful once a multi-broker quorum is configured)
+podDisruptionBudget:
+  enabled: false
+  kafka:
+    minAvailable: 0

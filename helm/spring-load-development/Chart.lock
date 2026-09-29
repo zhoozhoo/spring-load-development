@@ -8,8 +8,11 @@ dependencies:
 - name: postgresql
   repository: ""
   version: 0.1.1-SNAPSHOT
+- name: kafka
+  repository: ""
+  version: 0.1.1-SNAPSHOT
 - name: reloading
   repository: ""
   version: 0.1.1-SNAPSHOT
-digest: sha256:3f452ddd0f195d86c7778eaef4c201539fd2384a54596bb75d0bfffb68b25d96
-generated: "2026-05-07T16:21:05.362794666-04:00"
+digest: sha256:e99f32eda9a4ff171115d511ae100e68ed2d92c56ff324007bf99340781d417b
+generated: "2026-08-31T12:36:56.179483732-04:00"

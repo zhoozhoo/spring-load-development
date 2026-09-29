@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import ca.zhoozhoo.loaddev.components.dao.ProjectileRepository;
+import ca.zhoozhoo.loaddev.components.events.ProjectileEventPublisher;
 import ca.zhoozhoo.loaddev.components.model.Projectile;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,11 +29,14 @@ class ProjectileServiceTest {
     @Mock
     private ProjectileRepository projectileRepository;
 
+    @Mock
+    private ProjectileEventPublisher projectileEventPublisher;
+
     private ProjectileService projectileService;
 
     @BeforeEach
     void setUp() {
-        projectileService = new ProjectileService(projectileRepository);
+        projectileService = new ProjectileService(projectileRepository, projectileEventPublisher);
     }
 
     @Test
@@ -75,34 +79,40 @@ class ProjectileServiceTest {
     void createProjectile_ShouldReturnSavedProjectile() {
         Projectile projectile = new Projectile(1L, "user1", "Brand", null, "Model", null, 100);
         when(projectileRepository.save(any(Projectile.class))).thenReturn(Mono.just(projectile));
+        when(projectileEventPublisher.publishCreated(projectile)).thenReturn(Mono.empty());
 
         StepVerifier.create(projectileService.createProjectile(projectile))
                 .expectNext(projectile)
                 .verifyComplete();
 
         verify(projectileRepository).save(projectile);
+        verify(projectileEventPublisher).publishCreated(projectile);
     }
 
     @Test
     void updateProjectile_ShouldReturnUpdatedProjectile() {
         Projectile projectile = new Projectile(1L, "user1", "Brand", null, "Model", null, 100);
         when(projectileRepository.save(any(Projectile.class))).thenReturn(Mono.just(projectile));
+        when(projectileEventPublisher.publishUpdated(projectile)).thenReturn(Mono.empty());
 
         StepVerifier.create(projectileService.updateProjectile(projectile))
                 .expectNext(projectile)
                 .verifyComplete();
 
         verify(projectileRepository).save(projectile);
+        verify(projectileEventPublisher).publishUpdated(projectile);
     }
 
     @Test
     void deleteProjectile_ShouldComplete() {
         Projectile projectile = new Projectile(1L, "user1", "Brand", null, "Model", null, 100);
         when(projectileRepository.delete(any(Projectile.class))).thenReturn(Mono.empty());
+        when(projectileEventPublisher.publishDeleted(projectile)).thenReturn(Mono.empty());
 
         StepVerifier.create(projectileService.deleteProjectile(projectile))
                 .verifyComplete();
 
         verify(projectileRepository).delete(projectile);
+        verify(projectileEventPublisher).publishDeleted(projectile);
     }
 }

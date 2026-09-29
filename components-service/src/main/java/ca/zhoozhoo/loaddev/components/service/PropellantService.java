@@ -2,8 +2,10 @@ package ca.zhoozhoo.loaddev.components.service;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ca.zhoozhoo.loaddev.components.dao.PropellantRepository;
+import ca.zhoozhoo.loaddev.components.events.PropellantEventPublisher;
 import ca.zhoozhoo.loaddev.components.model.Propellant;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,12 +21,15 @@ import reactor.core.publisher.Mono;
 public class PropellantService {
 
     private final PropellantRepository propellantRepository;
+    private final PropellantEventPublisher propellantEventPublisher;
 
     /// Constructs a new PropellantService with required repository.
     ///
     /// @param propellantRepository the repository for Propellant entities
-    public PropellantService(PropellantRepository propellantRepository) {
+    /// @param propellantEventPublisher the publisher for Propellant domain events
+    public PropellantService(PropellantRepository propellantRepository, PropellantEventPublisher propellantEventPublisher) {
         this.propellantRepository = propellantRepository;
+        this.propellantEventPublisher = propellantEventPublisher;
     }
 
     /// Retrieves all propellants for a specific user with pagination.
@@ -59,23 +64,29 @@ public class PropellantService {
     ///
     /// @param propellant the Propellant entity to create
     /// @return a Mono containing the created Propellant
+    @Transactional
     public Mono<Propellant> createPropellant(Propellant propellant) {
-        return propellantRepository.save(propellant);
+        return propellantRepository.save(propellant)
+                .flatMap(saved -> propellantEventPublisher.publishCreated(saved).thenReturn(saved));
     }
 
     /// Updates an existing propellant.
     ///
     /// @param propellant the Propellant entity to update
     /// @return a Mono containing the updated Propellant
+    @Transactional
     public Mono<Propellant> updatePropellant(Propellant propellant) {
-        return propellantRepository.save(propellant);
+        return propellantRepository.save(propellant)
+                .flatMap(saved -> propellantEventPublisher.publishUpdated(saved).thenReturn(saved));
     }
 
     /// Deletes a propellant.
     ///
     /// @param propellant the Propellant entity to delete
     /// @return a Mono<Void> that completes when deletion is finished
+    @Transactional
     public Mono<Void> deletePropellant(Propellant propellant) {
-        return propellantRepository.delete(propellant);
+        return propellantRepository.delete(propellant)
+                .then(propellantEventPublisher.publishDeleted(propellant));
     }
 }

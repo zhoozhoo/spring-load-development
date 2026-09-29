@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import ca.zhoozhoo.loaddev.components.dao.PrimerRepository;
+import ca.zhoozhoo.loaddev.components.events.PrimerEventPublisher;
 import ca.zhoozhoo.loaddev.components.model.Primer;
 import ca.zhoozhoo.loaddev.components.model.PrimerSize;
 import reactor.core.publisher.Flux;
@@ -29,11 +30,14 @@ class PrimerServiceTest {
     @Mock
     private PrimerRepository primerRepository;
 
+    @Mock
+    private PrimerEventPublisher primerEventPublisher;
+
     private PrimerService primerService;
 
     @BeforeEach
     void setUp() {
-        primerService = new PrimerService(primerRepository);
+        primerService = new PrimerService(primerRepository, primerEventPublisher);
     }
 
     @Test
@@ -76,34 +80,40 @@ class PrimerServiceTest {
     void createPrimer_ShouldReturnSavedPrimer() {
         Primer primer = new Primer(1L, "user1", "Brand", "Model", PrimerSize.LARGE_RIFLE, null, null);
         when(primerRepository.save(any(Primer.class))).thenReturn(Mono.just(primer));
+        when(primerEventPublisher.publishCreated(primer)).thenReturn(Mono.empty());
 
         StepVerifier.create(primerService.createPrimer(primer))
                 .expectNext(primer)
                 .verifyComplete();
 
         verify(primerRepository).save(primer);
+        verify(primerEventPublisher).publishCreated(primer);
     }
 
     @Test
     void updatePrimer_ShouldReturnUpdatedPrimer() {
         Primer primer = new Primer(1L, "user1", "Brand", "Model", PrimerSize.LARGE_RIFLE, null, null);
         when(primerRepository.save(any(Primer.class))).thenReturn(Mono.just(primer));
+        when(primerEventPublisher.publishUpdated(primer)).thenReturn(Mono.empty());
 
         StepVerifier.create(primerService.updatePrimer(primer))
                 .expectNext(primer)
                 .verifyComplete();
 
         verify(primerRepository).save(primer);
+        verify(primerEventPublisher).publishUpdated(primer);
     }
 
     @Test
     void deletePrimer_ShouldComplete() {
         Primer primer = new Primer(1L, "user1", "Brand", "Model", PrimerSize.LARGE_RIFLE, null, null);
         when(primerRepository.delete(any(Primer.class))).thenReturn(Mono.empty());
+        when(primerEventPublisher.publishDeleted(primer)).thenReturn(Mono.empty());
 
         StepVerifier.create(primerService.deletePrimer(primer))
                 .verifyComplete();
 
         verify(primerRepository).delete(primer);
+        verify(primerEventPublisher).publishDeleted(primer);
     }
 }

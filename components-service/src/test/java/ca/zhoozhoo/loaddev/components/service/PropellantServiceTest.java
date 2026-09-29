@@ -17,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import ca.zhoozhoo.loaddev.components.dao.PropellantRepository;
+import ca.zhoozhoo.loaddev.components.events.PropellantEventPublisher;
 import ca.zhoozhoo.loaddev.components.model.Propellant;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,11 +29,14 @@ class PropellantServiceTest {
     @Mock
     private PropellantRepository propellantRepository;
 
+    @Mock
+    private PropellantEventPublisher propellantEventPublisher;
+
     private PropellantService propellantService;
 
     @BeforeEach
     void setUp() {
-        propellantService = new PropellantService(propellantRepository);
+        propellantService = new PropellantService(propellantRepository, propellantEventPublisher);
     }
 
     @Test
@@ -75,34 +79,40 @@ class PropellantServiceTest {
     void createPropellant_ShouldReturnSavedPropellant() {
         Propellant propellant = new Propellant(1L, "user1", "Brand", "Model", null, null);
         when(propellantRepository.save(any(Propellant.class))).thenReturn(Mono.just(propellant));
+        when(propellantEventPublisher.publishCreated(propellant)).thenReturn(Mono.empty());
 
         StepVerifier.create(propellantService.createPropellant(propellant))
                 .expectNext(propellant)
                 .verifyComplete();
 
         verify(propellantRepository).save(propellant);
+        verify(propellantEventPublisher).publishCreated(propellant);
     }
 
     @Test
     void updatePropellant_ShouldReturnUpdatedPropellant() {
         Propellant propellant = new Propellant(1L, "user1", "Brand", "Model", null, null);
         when(propellantRepository.save(any(Propellant.class))).thenReturn(Mono.just(propellant));
+        when(propellantEventPublisher.publishUpdated(propellant)).thenReturn(Mono.empty());
 
         StepVerifier.create(propellantService.updatePropellant(propellant))
                 .expectNext(propellant)
                 .verifyComplete();
 
         verify(propellantRepository).save(propellant);
+        verify(propellantEventPublisher).publishUpdated(propellant);
     }
 
     @Test
     void deletePropellant_ShouldComplete() {
         Propellant propellant = new Propellant(1L, "user1", "Brand", "Model", null, null);
         when(propellantRepository.delete(any(Propellant.class))).thenReturn(Mono.empty());
+        when(propellantEventPublisher.publishDeleted(propellant)).thenReturn(Mono.empty());
 
         StepVerifier.create(propellantService.deletePropellant(propellant))
                 .verifyComplete();
 
         verify(propellantRepository).delete(propellant);
+        verify(propellantEventPublisher).publishDeleted(propellant);
     }
 }

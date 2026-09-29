@@ -13,7 +13,7 @@ This directory contains comprehensive testing resources for the Spring Load Deve
 
 The test files cover authentication and full CRUD operations for all API services including rifles, loads, groups, shots, and components (cases, propellants, primers, projectiles).
 
-Configuration values (ports, Keycloak realm, OTEL endpoint) originate from the shared config repository `spring-load-development-config`. If you modify any of the YAML files there (e.g. `api-gateway.yml`), refresh your locally running services or re-run docker-compose to pick up changes.
+Configuration values (ports, Keycloak realm, OTEL endpoint, gateway routes) are defined primarily in the Helm chart under `helm/spring-load-development`, with Docker Compose values coming from the root `.env` file and `docker-compose.yml`. If you change chart settings or Kubernetes config maps, re-apply the Helm release or refresh the stack; the legacy external config repo is no longer the primary source of truth for runtime configuration.
 
 === Data shapes used in requests
 

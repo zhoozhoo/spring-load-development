@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kafka
+description: Apache Kafka (KRaft mode, single broker) for domain event streaming
+type: application
+version: 0.1.1-SNAPSHOT
+appVersion: "4.3.1"

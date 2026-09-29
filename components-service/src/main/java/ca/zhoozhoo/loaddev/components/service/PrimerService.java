@@ -2,8 +2,10 @@ package ca.zhoozhoo.loaddev.components.service;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ca.zhoozhoo.loaddev.components.dao.PrimerRepository;
+import ca.zhoozhoo.loaddev.components.events.PrimerEventPublisher;
 import ca.zhoozhoo.loaddev.components.model.Primer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,12 +21,15 @@ import reactor.core.publisher.Mono;
 public class PrimerService {
 
     private final PrimerRepository primerRepository;
+    private final PrimerEventPublisher primerEventPublisher;
 
     /// Constructs a new PrimerService with required repository.
     ///
     /// @param primerRepository the repository for Primer entities
-    public PrimerService(PrimerRepository primerRepository) {
+    /// @param primerEventPublisher the publisher for Primer domain events
+    public PrimerService(PrimerRepository primerRepository, PrimerEventPublisher primerEventPublisher) {
         this.primerRepository = primerRepository;
+        this.primerEventPublisher = primerEventPublisher;
     }
 
     /// Retrieves all primers for a specific user with pagination.
@@ -59,23 +64,29 @@ public class PrimerService {
     ///
     /// @param primer the Primer entity to create
     /// @return a Mono containing the created Primer
+    @Transactional
     public Mono<Primer> createPrimer(Primer primer) {
-        return primerRepository.save(primer);
+        return primerRepository.save(primer)
+                .flatMap(saved -> primerEventPublisher.publishCreated(saved).thenReturn(saved));
     }
 
     /// Updates an existing primer.
     ///
     /// @param primer the Primer entity to update
     /// @return a Mono containing the updated Primer
+    @Transactional
     public Mono<Primer> updatePrimer(Primer primer) {
-        return primerRepository.save(primer);
+        return primerRepository.save(primer)
+                .flatMap(saved -> primerEventPublisher.publishUpdated(saved).thenReturn(saved));
     }
 
     /// Deletes a primer.
     ///
     /// @param primer the Primer entity to delete
     /// @return a Mono<Void> that completes when deletion is finished
+    @Transactional
     public Mono<Void> deletePrimer(Primer primer) {
-        return primerRepository.delete(primer);
+        return primerRepository.delete(primer)
+                .then(primerEventPublisher.publishDeleted(primer));
     }
 }

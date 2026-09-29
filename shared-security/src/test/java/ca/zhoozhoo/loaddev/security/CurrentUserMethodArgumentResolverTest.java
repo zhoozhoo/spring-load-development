@@ -28,7 +28,6 @@ class CurrentUserMethodArgumentResolverTest {
 
     private final CurrentUserMethodArgumentResolver resolver = new CurrentUserMethodArgumentResolver();
 
-    @SuppressWarnings("unused")
     void sample(@CurrentUser String userId, String other) {
     }
 

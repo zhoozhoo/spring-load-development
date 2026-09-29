@@ -18,6 +18,9 @@ dependencies:
   - name: postgresql
     version: 0.1.1-SNAPSHOT
     condition: postgresql.enabled
+  - name: kafka
+    version: 0.1.1-SNAPSHOT
+    condition: kafka.enabled
   - name: reloading
     version: 0.1.1-SNAPSHOT
     condition: reloading.enabled

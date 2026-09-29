@@ -6,7 +6,7 @@ image:https://github.com/zhoozhoo/spring-load-development/actions/workflows/gith
 image:https://img.shields.io/github/license/zhoozhoo/spring-load-development["License", link="https://github.com/zhoozhoo/spring-load-development/blob/main/LICENSE"]
 
 // Technology Stack
-image:https://img.shields.io/badge/Java-26-blue?logo=openjdk["Java 26"]
+image:https://img.shields.io/badge/Java-27-blue?logo=openjdk["Java 27"]
 image:https://img.shields.io/badge/Spring%20Boot-4.1.1-green?logo=springboot["Spring Boot 4.1.1"]
 image:https://img.shields.io/badge/Spring%20Cloud-2025.1.3-green?logo=spring["Spring Cloud 2025.1.3"]
 image:https://img.shields.io/badge/Spring%20AI-2.0.1-green?logo=spring["Spring AI 2.0.1"]
@@ -17,6 +17,7 @@ image:https://img.shields.io/badge/PostgreSQL-18-blue?logo=postgresql["PostgreSQ
 image:https://img.shields.io/badge/Kubernetes-ready-blue?logo=kubernetes["Kubernetes"]
 image:https://img.shields.io/badge/Helm-4-blue?logo=helm["Helm 4"]
 image:https://img.shields.io/badge/Docker-Compose-blue?logo=docker["Docker Compose"]
+image:https://img.shields.io/badge/Apache%20Kafka-4.3.1-231F20?logo=apachekafka&logoColor=white["Apache Kafka 4.3.1"]
 image:https://img.shields.io/badge/OpenTelemetry-1.65.0-blue?logo=opentelemetry["OpenTelemetry 1.65.0"]
 image:https://img.shields.io/badge/Keycloak-26-blue["Keycloak 26"]
 
@@ -64,11 +65,11 @@ This project uses the following key versions:
 * *Maven*: 4.0.0-rc-6 or later
 * *PostgreSQL*: 18.6
 * *Keycloak*: 26.7
-* *Grafana*: 13.2.0
-* *Loki*: 3.7.6
-* *Tempo*: 3.0.3
-* *Prometheus*: v3.14.0
-* *OpenTelemetry Collector*: 0.159.0
+* *Grafana*: 13.2.3
+* *Loki*: 3.7.8
+* *Tempo*: 3.1.0
+* *Prometheus*: v3.15.0
+* *OpenTelemetry Collector*: 0.162.0
 
 == Getting Started
 
@@ -281,12 +282,27 @@ The application is composed of the following services:
 * *Common Library*: Shared DTOs, mappers, utilities (not a runtime service)
 * *Integration Tests Module*: End‑to‑end verification (build-time only)
 
-=== Configuration Repository
+=== Event-Driven Integration
 
-The centralized configuration for all services is stored in a separate GitHub repository:
-https://github.com/zhoozhoo/spring-load-development-config
+`loads-service`, `rifles-service`, and `components-service` publish domain events (create/update/delete) to Apache Kafka for cross-service integration, using a transactional outbox pattern:
 
-The Config Server automatically picks up configuration files from this repository at startup.
+* Each write is persisted to an `outbox_events` table in the *same database transaction* as the triggering change (via the `shared` module's `OutboxEventStore`), so an event is never silently lost even if Kafka is unavailable at write time.
+* A scheduled `OutboxRelay` polls the outbox table and relays pending events to Kafka asynchronously, marking them published or recording a retryable failed attempt.
+* `mcp-server` consumes the Components Service topics (`cases-events`, `primers-events`, `projectiles-events`, `propellants-events`) to materialize a proof-of-concept in-memory read model.
+
+A service opts in to publishing simply by adding the `reactor-kafka` dependency; a single-broker KRaft-mode Kafka runs via `docker-compose.yml` locally and the `helm/spring-load-development/charts/kafka` subchart in Kubernetes. See link:docs/enhancement-roadmap.md[the enhancement roadmap] for the full event-driven integration plan and remaining next steps.
+
+=== Configuration Source of Truth
+
+The most current configuration for the Spring Boot services is maintained in the Helm chart under:
+
+* link:helm/spring-load-development/values.yaml[helm/spring-load-development/values.yaml]
+* link:helm/spring-load-development/charts/reloading/templates/configmaps.yaml[helm/spring-load-development/charts/reloading/templates/configmaps.yaml]
+* link:helm/spring-load-development/charts/reloading/values.yaml[helm/spring-load-development/charts/reloading/values.yaml]
+
+These files are the authoritative source for service ports, OAuth2 settings, gateway routes, observability exporters, and Kubernetes-specific runtime configuration. The separate GitHub repository at https://github.com/zhoozhoo/spring-load-development-config is still useful as a legacy/config-server reference, but it is not the primary runtime configuration for this project anymore.
+
+For local Docker Compose development, the stack also uses the root `.env` file and the service definitions in link:docker-compose.yml[docker-compose.yml].
 
 === Security
 
@@ -395,6 +411,7 @@ flowchart TB
             DC_PG[(PostgreSQL<br/>:5432)]
             DC_KC[Keycloak<br/>:7080]
             DC_KC_DB[(Keycloak DB<br/>:5433)]
+            DC_KAFKA[(Kafka<br/>:9092)]
         end
 
         subgraph "Observability"
@@ -420,6 +437,12 @@ flowchart TB
     %% MCP Server calls downstream services
     DC_MCP -.->|HTTP| DC_LOADS
     DC_MCP -.->|HTTP| DC_RIFLES
+
+    %% Domain events via transactional outbox
+    DC_LOADS -->|events| DC_KAFKA
+    DC_RIFLES -->|events| DC_KAFKA
+    DC_COMP -->|events| DC_KAFKA
+    DC_KAFKA -.->|consume| DC_MCP
 
     %% Auth connections
     DC_GW -->|OAuth2/UMA| DC_KC
@@ -460,7 +483,7 @@ flowchart TB
     class User clientStyle
     class DC_GW,DC_LOADS,DC_RIFLES,DC_COMP,DC_MCP appStyle
     class DC_CONFIG,DC_DISC supportStyle
-    class DC_PG,DC_KC,DC_KC_DB infraStyle
+    class DC_PG,DC_KC,DC_KC_DB,DC_KAFKA infraStyle
     class DC_GRAF,DC_LOKI,DC_TEMPO,DC_PROM,DC_OTEL obsStyle
 ....
 
@@ -499,6 +522,10 @@ flowchart TB
             K8S_KC[Keycloak<br/>NodePort: 30080]
         end
 
+        subgraph "Namespace: kafka"
+            K8S_KAFKA[(Kafka<br/>KRaft mode)]
+        end
+
         subgraph "Namespace: observability"
             K8S_GRAF[Grafana<br/>NodePort: 30000<br/>5Gi PVC]
             K8S_LOKI[Loki<br/>10Gi PVC]
@@ -522,6 +549,12 @@ flowchart TB
     %% MCP Server calls downstream services
     K8S_MCP -.->|HTTP| K8S_LOADS
     K8S_MCP -.->|HTTP| K8S_RIFLES
+
+    %% Domain events via transactional outbox
+    K8S_LOADS -->|events| K8S_KAFKA
+    K8S_RIFLES -->|events| K8S_KAFKA
+    K8S_COMP -->|events| K8S_KAFKA
+    K8S_KAFKA -.->|consume| K8S_MCP
 
     %% ConfigMaps (replaces Config Server in K8s)
     K8S_CM -.-> K8S_GW
@@ -559,7 +592,7 @@ flowchart TB
     class User clientStyle
     class K8S_GW,K8S_LOADS,K8S_RIFLES,K8S_COMP,K8S_MCP appStyle
     class K8S_CM configStyle
-    class K8S_PG,K8S_KC_PG,K8S_KC infraStyle
+    class K8S_PG,K8S_KC_PG,K8S_KC,K8S_KAFKA infraStyle
     class K8S_GRAF,K8S_LOKI,K8S_TEMPO,K8S_PROM,K8S_OTEL obsStyle
 ....
 
@@ -652,6 +685,7 @@ flowchart LR
     end
 
     Postgres[(PostgreSQL 18)]
+    Kafka[(Kafka)]
 
     User -->|REST| APIGateway
     Copilot -->|MCP SSE| APIGateway
@@ -668,6 +702,12 @@ flowchart LR
     %% MCP Server calls downstream services, not DB
     MCPServer -.->|HTTP| LoadsService
     MCPServer -.->|HTTP| RiflesService
+
+    %% Domain events via transactional outbox
+    LoadsService -->|events| Kafka
+    RiflesService -->|events| Kafka
+    ComponentsService -->|events| Kafka
+    Kafka -.->|consume| MCPServer
 
     %% Auth
     APIGateway -->|OAuth2/UMA| Keycloak
@@ -709,7 +749,7 @@ flowchart LR
     class APIGateway,LoadsService,RiflesService,ComponentsService,MCPServer serviceStyle
     class ConfigServer,DiscoveryServer infraStyle
     class Keycloak authStyle
-    class Postgres dataStyle
+    class Postgres,Kafka dataStyle
     class OTEL,Prom,Loki,Tempo,Graf obsStyle
 ....
 
@@ -806,6 +846,24 @@ erDiagram
         JSONB cost NOT NULL "MonetaryAmount"
         JSONB quantity_per_box NOT NULL "Quantity Dimensionless"
         TSVECTOR search_vector "GIN indexed"
+    }
+
+    %% ── Transactional Outbox (identical table in loads-service, rifles-service, and components-service) ──
+    OUTBOX_EVENTS {
+        BIGSERIAL id PK
+        VARCHAR event_id UK
+        VARCHAR topic NOT NULL
+        VARCHAR aggregate_type NOT NULL
+        VARCHAR aggregate_id NOT NULL
+        VARCHAR owner_id
+        VARCHAR event_type NOT NULL
+        TEXT payload NOT NULL "serialized DomainEvent payload"
+        TIMESTAMPTZ occurred_at NOT NULL
+        VARCHAR status "PENDING / PUBLISHED / FAILED"
+        INTEGER attempts
+        TEXT last_error
+        TIMESTAMPTZ created_at
+        TIMESTAMPTZ published_at
     }
 
     %% Relationships

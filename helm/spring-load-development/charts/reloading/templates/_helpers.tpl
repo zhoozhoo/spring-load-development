@@ -115,6 +115,8 @@ Generate environment variables common to all microservices
   value: {{ printf "%s/v1/metrics" ($context.Values.otelCollector.httpEndpoint | default "http://otel-collector-service.observability.svc.cluster.local:4318") }}
 - name: KEYCLOAK_BASE_URL
   value: {{ $context.Values.keycloak.baseUrl | default "http://keycloak-service.keycloak.svc.cluster.local:8080" }}
+- name: LOADDEV_EVENTS_KAFKA_BOOTSTRAPSERVERS
+  value: {{ $context.Values.kafka.bootstrapServers | default "kafka-service.kafka.svc.cluster.local:9092" }}
 {{- end }}
 
 {{/*

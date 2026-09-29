@@ -2,8 +2,10 @@ package ca.zhoozhoo.loaddev.components.service;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import ca.zhoozhoo.loaddev.components.dao.CaseRepository;
+import ca.zhoozhoo.loaddev.components.events.CaseEventPublisher;
 import ca.zhoozhoo.loaddev.components.model.Case;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,12 +21,15 @@ import reactor.core.publisher.Mono;
 public class CaseService {
 
     private final CaseRepository caseRepository;
+    private final CaseEventPublisher caseEventPublisher;
 
     /// Constructs a new CaseService with required repository.
     ///
     /// @param caseRepository the repository for Case entities
-    public CaseService(CaseRepository caseRepository) {
+    /// @param caseEventPublisher the publisher for Case domain events
+    public CaseService(CaseRepository caseRepository, CaseEventPublisher caseEventPublisher) {
         this.caseRepository = caseRepository;
+        this.caseEventPublisher = caseEventPublisher;
     }
 
     /// Retrieves all cases for a specific user with pagination.
@@ -59,23 +64,29 @@ public class CaseService {
     ///
     /// @param caseItem the Case entity to create
     /// @return a Mono containing the created Case
+    @Transactional
     public Mono<Case> createCase(Case caseItem) {
-        return caseRepository.save(caseItem);
+        return caseRepository.save(caseItem)
+                .flatMap(saved -> caseEventPublisher.publishCreated(saved).thenReturn(saved));
     }
 
     /// Updates an existing case.
     ///
     /// @param caseItem the Case entity to update
     /// @return a Mono containing the updated Case
+    @Transactional
     public Mono<Case> updateCase(Case caseItem) {
-        return caseRepository.save(caseItem);
+        return caseRepository.save(caseItem)
+                .flatMap(saved -> caseEventPublisher.publishUpdated(saved).thenReturn(saved));
     }
 
     /// Deletes a case.
     ///
     /// @param caseItem the Case entity to delete
     /// @return a Mono<Void> that completes when deletion is finished
+    @Transactional
     public Mono<Void> deleteCase(Case caseItem) {
-        return caseRepository.delete(caseItem);
+        return caseRepository.delete(caseItem)
+                .then(caseEventPublisher.publishDeleted(caseItem));
     }
 }

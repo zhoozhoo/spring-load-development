@@ -15,6 +15,7 @@ The MCP (Model Context Protocol) Server provides AI-assisted tools for the Sprin
 * *SSE Transport*: Server-Sent Events for real-time communication with AI clients
 * *Type-Safe JSON*: Proper serialization of JSR-385 Quantity types and monetary amounts
 * *Service Integration*: Seamless integration with Loads, Rifles, and Components services via API Gateway
+* *Domain Event Consumer*: Consumes Kafka domain events from Components Service to materialize a lightweight in-memory read model
 
 === MCP Tools Provided
 
@@ -40,13 +41,21 @@ flowchart LR
     Gateway --> CompSvc[Components]
     Gateway --> Keycloak[Keycloak Auth]
     Tools -->|Auth| Keycloak
+    Kafka[(Kafka<br/>component topics)] --> Consumer[ComponentEventConsumer]
+    Consumer --> ReadModel[(In-memory<br/>Read Model)]
     classDef client fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
     classDef mcp fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
     classDef svc fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef events fill:#fce4ec,stroke:#ad1457,stroke-width:2px
     class Copilot client
     class SSE,Tools,Mapper mcp
     class Gateway,LoadsSvc,RiflesSvc,CompSvc,Keycloak svc
+    class Kafka,Consumer,ReadModel events
 ....
+
+== Domain event consumption
+
+`ComponentEventConsumer` subscribes to the `cases-events`, `primers-events`, `projectiles-events`, and `propellants-events` Kafka topics (via `reactor-kafka`'s `KafkaReceiver`) and materializes a simple in-memory read model, deduplicated by event ID. It is intentionally minimal — a proof-of-concept for consuming the domain events published by Components Service (see the root link:../docs/enhancement-roadmap.md[enhancement roadmap] for the full event-driven integration plan) rather than a production read-side store. It is disabled by default; enable it with `loaddev.events.component-read-model.enabled=true`.
 
 == Quantity JSON serialization
 
@@ -98,17 +107,15 @@ To connect GitHub Copilot to this server, you need to configure the `.vscode/mcp
 
 TIP: Make sure the port number matches your local MCP server configuration. The default is 8080 when running through the API Gateway.
 
-== External Configuration Source
+== Configuration Source
 
-The MCP Server inherits its runtime properties (e.g. logging, Keycloak issuer, database connection) from the shared configuration repository:
+The MCP Server runtime configuration is primarily defined in the Helm chart, which is the project’s current source of truth for Kubernetes-based deployment:
 
-https://github.com/zhoozhoo/spring-load-development-config
+* link:../helm/spring-load-development/values.yaml[helm/spring-load-development/values.yaml]
+* link:../helm/spring-load-development/charts/reloading/templates/configmaps.yaml[helm/spring-load-development/charts/reloading/templates/configmaps.yaml]
+* link:../helm/spring-load-development/charts/reloading/values.yaml[helm/spring-load-development/charts/reloading/values.yaml]
 
-Relevant files:
-
-* `application.yml` – common defaults (e.g. OTEL exporter endpoints)
-* `mcp-server.yml` – MCP specific settings (ports, feature toggles)
-* `log4j2.xml` / `log4j2.yaml` – consistent logging layout across all services
+The repository at https://github.com/zhoozhoo/spring-load-development-config remains useful as a legacy reference and for Spring Cloud Config-based local setups, but the Helm chart is now the authoritative place for service configuration, Keycloak integration, OTEL exporters, and gateway settings.
 
 If running without Spring Cloud Config (Helm chart default), mount or inject required properties as environment variables. For example:
 

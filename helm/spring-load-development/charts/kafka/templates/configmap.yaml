@@ -1,0 +1,22 @@
+{{- if .Values.kafka.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kafka-config
+  namespace: {{ .Values.kafka.namespace }}
+  labels:
+    app: kafka
+    {{- include "kafka.labels" . | nindent 4 }}
+data:
+  KAFKA_NODE_ID: {{ .Values.kafka.nodeId | default 1 | quote }}
+  CLUSTER_ID: {{ .Values.kafka.clusterId | quote }}
+  KAFKA_PROCESS_ROLES: "broker,controller"
+  KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:{{ .Values.kafka.ports.client }},CONTROLLER://0.0.0.0:{{ .Values.kafka.ports.controller }}"
+  KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka-service.{{ .Values.kafka.namespace }}.svc.cluster.local:{{ .Values.kafka.ports.client }}"
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+  KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+  KAFKA_CONTROLLER_QUORUM_VOTERS: {{ .Values.kafka.controllerQuorumVoters | default (printf "%s@localhost:%v" (.Values.kafka.nodeId | default 1) .Values.kafka.ports.controller) | quote }}
+  KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+  KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+  KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+{{- end }}

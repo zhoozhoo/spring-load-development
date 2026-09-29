@@ -18,6 +18,11 @@ eureka:
   client:
     enabled: false
 
+loaddev:
+  events:
+    kafka:
+      enabled: false
+
 management:
   logging:
     export:
