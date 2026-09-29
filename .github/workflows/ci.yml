@@ -16,11 +16,11 @@ jobs:
     steps:
     - uses: actions/checkout@v7
 
-    - name: Set up JDK 26
+    - name: Set up JDK 27
       uses: actions/setup-java@v6
       with:
-        java-version: '26'
-        distribution: 'temurin'
+        java-version: '27'
+        distribution: 'liberica'
 
     - name: Run tests with coverage
       run: ./mvnw -B clean compile test-compile test jacoco:report jacoco:check
@@ -33,11 +33,11 @@ jobs:
     steps:
     - uses: actions/checkout@v7
 
-    - name: Set up JDK 26
+    - name: Set up JDK 27
       uses: actions/setup-java@v6
       with:
-        java-version: '26'
-        distribution: 'temurin'
+        java-version: '27'
+        distribution: 'liberica'
 
     - name: Run SpotBugs
       run: ./mvnw -B compile spotbugs:check
@@ -75,11 +75,11 @@ jobs:
     steps:
     - uses: actions/checkout@v7
 
-    - name: Set up JDK 26
+    - name: Set up JDK 27
       uses: actions/setup-java@v6
       with:
-        java-version: '26'
-        distribution: 'temurin'
+        java-version: '27'
+        distribution: 'liberica'
 
     - name: Package application
       run: ./mvnw -B package -DskipTests
